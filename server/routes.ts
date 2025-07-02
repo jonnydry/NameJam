@@ -1,0 +1,95 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { NameGeneratorService } from "./services/nameGenerator";
+import { NameVerifierService } from "./services/nameVerifier";
+import { generateNameRequestSchema } from "@shared/schema";
+import { z } from "zod";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  const nameGenerator = new NameGeneratorService();
+  const nameVerifier = new NameVerifierService();
+
+  // Generate names endpoint
+  app.post("/api/generate-names", async (req, res) => {
+    try {
+      const request = generateNameRequestSchema.parse(req.body);
+      
+      // Generate names
+      const names = await nameGenerator.generateNames(request);
+      
+      // Verify each name and store results
+      const results = await Promise.all(
+        names.map(async (name) => {
+          const verification = await nameVerifier.verifyName(name, request.type);
+          
+          // Store in database
+          const storedName = await storage.createGeneratedName({
+            name,
+            type: request.type,
+            wordCount: request.wordCount,
+            verificationStatus: verification.status,
+            verificationDetails: verification.details || null,
+          });
+
+          return {
+            id: storedName.id,
+            name: storedName.name,
+            type: storedName.type,
+            wordCount: storedName.wordCount,
+            verification
+          };
+        })
+      );
+
+      res.json({ results });
+    } catch (error) {
+      console.error("Error generating names:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid request parameters", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to generate names" });
+      }
+    }
+  });
+
+  // Get recent generated names
+  app.get("/api/recent-names", async (req, res) => {
+    try {
+      const type = req.query.type as string;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      let names;
+      if (type && (type === 'band' || type === 'song')) {
+        names = await storage.getGeneratedNamesByType(type, limit);
+      } else {
+        names = await storage.getGeneratedNames(limit);
+      }
+
+      res.json({ names });
+    } catch (error) {
+      console.error("Error fetching recent names:", error);
+      res.status(500).json({ error: "Failed to fetch recent names" });
+    }
+  });
+
+  // Verify specific name
+  app.post("/api/verify-name", async (req, res) => {
+    try {
+      const { name, type } = req.body;
+      
+      if (!name || !type || !['band', 'song'].includes(type)) {
+        return res.status(400).json({ error: "Name and valid type (band/song) are required" });
+      }
+
+      const verification = await nameVerifier.verifyName(name, type);
+      res.json({ verification });
+    } catch (error) {
+      console.error("Error verifying name:", error);
+      res.status(500).json({ error: "Failed to verify name" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}

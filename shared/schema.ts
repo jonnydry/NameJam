@@ -1,0 +1,37 @@
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+export const generatedNames = pgTable("generated_names", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // 'band' or 'song'
+  wordCount: integer("word_count").notNull(),
+  verificationStatus: text("verification_status").notNull(), // 'available', 'similar', 'taken'
+  verificationDetails: text("verification_details"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertGeneratedNameSchema = createInsertSchema(generatedNames).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertGeneratedName = z.infer<typeof insertGeneratedNameSchema>;
+export type GeneratedName = typeof generatedNames.$inferSelect;
+
+export const generateNameRequestSchema = z.object({
+  type: z.enum(['band', 'song']),
+  wordCount: z.number().min(1).max(6),
+  count: z.number().min(1).max(10).default(3),
+});
+
+export type GenerateNameRequest = z.infer<typeof generateNameRequestSchema>;
+
+export const verificationResult = z.object({
+  status: z.enum(['available', 'similar', 'taken']),
+  details: z.string().optional(),
+  similarNames: z.array(z.string()).optional(),
+});
+
+export type VerificationResult = z.infer<typeof verificationResult>;
