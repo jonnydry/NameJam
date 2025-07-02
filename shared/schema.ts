@@ -32,6 +32,11 @@ export const verificationResult = z.object({
   status: z.enum(['available', 'similar', 'taken']),
   details: z.string().optional(),
   similarNames: z.array(z.string()).optional(),
+  verificationLinks: z.array(z.object({
+    name: z.string(),
+    url: z.string(),
+    source: z.string()
+  })).optional(),
 });
 
 export type VerificationResult = z.infer<typeof verificationResult>;

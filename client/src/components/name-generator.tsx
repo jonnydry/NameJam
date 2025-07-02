@@ -18,6 +18,11 @@ interface GenerationResult {
     status: 'available' | 'similar' | 'taken';
     details?: string;
     similarNames?: string[];
+    verificationLinks?: Array<{
+      name: string;
+      url: string;
+      source: string;
+    }>;
   };
 }
 
