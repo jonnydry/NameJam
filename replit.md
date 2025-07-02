@@ -1,8 +1,8 @@
-# Name Harmonics - Band & Song Name Generator
+# NameJam - Band & Song Name Generator
 
 ## Overview
 
-Name Harmonics is a modern web application that generates unique band names and song titles with real-time verification. The application combines creative name generation with web-powered availability checking to help musicians and artists find memorable, unique names for their projects.
+NameJam is a modern web application that generates unique band names and song titles with real-time verification. The application combines creative name generation with web-powered availability checking to help musicians and artists find memorable, unique names for their projects.
 
 ## System Architecture
 
@@ -98,6 +98,7 @@ Name Harmonics is a modern web application that generates unique band names and 
 
 Changelog:
 - July 02, 2025. Initial setup
+- July 02, 2025. Added search functionality for custom name verification and renamed app to "NameJam"
 
 ## User Preferences
 

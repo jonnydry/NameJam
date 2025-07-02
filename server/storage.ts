@@ -46,7 +46,8 @@ export class MemStorage implements IStorage {
     const name: GeneratedName = { 
       ...insertName, 
       id, 
-      createdAt: new Date() 
+      createdAt: new Date(),
+      verificationDetails: insertName.verificationDetails || null
     };
     this.generatedNames.set(id, name);
     return name;

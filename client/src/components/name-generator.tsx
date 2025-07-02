@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingAnimation } from "./loading-animation";
 import { ResultCard } from "./result-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Music, Users, Wand2, RefreshCw } from "lucide-react";
+import { Music, Users, Wand2, RefreshCw, Search } from "lucide-react";
 
 interface GenerationResult {
   id: number;
@@ -24,6 +25,8 @@ export function NameGenerator() {
   const [nameType, setNameType] = useState<'band' | 'song'>('band');
   const [wordCount, setWordCount] = useState(2);
   const [results, setResults] = useState<GenerationResult[]>([]);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
   const { toast } = useToast();
 
   const generateMutation = useMutation({
@@ -37,6 +40,7 @@ export function NameGenerator() {
     },
     onSuccess: (data) => {
       setResults(data.results);
+      setSearchResult(null); // Clear search result when generating new names
       toast({
         title: "Names generated successfully!",
         description: `Generated ${data.results.length} unique ${nameType} names.`,
@@ -52,12 +56,52 @@ export function NameGenerator() {
     },
   });
 
+  const searchMutation = useMutation({
+    mutationFn: async () => {
+      if (!searchInput.trim()) {
+        throw new Error('Please enter a name to search');
+      }
+      const response = await apiRequest('POST', '/api/verify-name', {
+        name: searchInput.trim(),
+        type: nameType
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const searchResult: GenerationResult = {
+        id: Date.now(), // Temporary ID for display
+        name: searchInput.trim(),
+        type: nameType,
+        wordCount: searchInput.trim().split(' ').length,
+        verification: data.verification
+      };
+      setSearchResult(searchResult);
+      setResults([]); // Clear generated results when searching
+      toast({
+        title: "Name verified!",
+        description: `Checked availability of "${searchInput.trim()}".`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error verifying name:', error);
+      toast({
+        title: "Verification failed",
+        description: error instanceof Error ? error.message : "Failed to verify name. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleGenerate = () => {
     generateMutation.mutate();
   };
 
   const handleGenerateMore = () => {
     generateMutation.mutate();
+  };
+
+  const handleSearch = () => {
+    searchMutation.mutate();
   };
 
   const copyToClipboard = async (name: string) => {
@@ -145,8 +189,36 @@ export function NameGenerator() {
         </div>
       </div>
 
+      {/* Search Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-medium text-neutral-600 mb-2">Check Your Own Name</h3>
+          <p className="text-sm text-neutral-600">Enter a name you've thought of to verify its availability</p>
+        </div>
+        
+        <div className="flex space-x-3 max-w-md mx-auto">
+          <Input
+            type="text"
+            placeholder={`Enter a ${nameType} name...`}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            className="flex-1"
+            disabled={searchMutation.isPending}
+          />
+          <Button
+            onClick={handleSearch}
+            disabled={searchMutation.isPending || !searchInput.trim()}
+            className="inline-flex items-center px-6 py-2 bg-musical-purple hover:bg-purple-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <Search className="w-4 h-4 mr-2" />
+            Check
+          </Button>
+        </div>
+      </div>
+
       {/* Loading States */}
-      {generateMutation.isPending && (
+      {(generateMutation.isPending || searchMutation.isPending) && (
         <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-8">
           <LoadingAnimation 
             stage={generateMutation.isPending ? 'generating' : 'verifying'}
@@ -154,7 +226,20 @@ export function NameGenerator() {
         </div>
       )}
 
-      {/* Results */}
+      {/* Search Result */}
+      {searchResult && !searchMutation.isPending && (
+        <div className="space-y-4">
+          <div className="animate-slide-up">
+            <ResultCard
+              result={searchResult}
+              nameType={nameType}
+              onCopy={copyToClipboard}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Generated Results */}
       {results.length > 0 && !generateMutation.isPending && (
         <div className="space-y-4">
           {results.map((result, index) => (
@@ -187,13 +272,13 @@ export function NameGenerator() {
       )}
 
       {/* Empty State */}
-      {results.length === 0 && !generateMutation.isPending && (
+      {results.length === 0 && !searchResult && !generateMutation.isPending && !searchMutation.isPending && (
         <div className="text-center py-12">
           <div className="text-neutral-600 mb-4">
             <Music className="w-16 h-16 text-neutral-200 mx-auto" />
           </div>
           <p className="text-lg text-neutral-600 mb-2">Ready to generate unique names</p>
-          <p className="text-sm text-neutral-600">Click "Generate Names" to start creating</p>
+          <p className="text-sm text-neutral-600">Click "Generate Names" to start creating or search for a specific name</p>
         </div>
       )}
     </div>
