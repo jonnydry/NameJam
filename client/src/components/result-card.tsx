@@ -93,8 +93,22 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
         </p>
         
         {verification.similarNames && verification.similarNames.length > 0 && (
-          <div className="mt-3 text-xs text-neutral-600 bg-neutral-50 rounded p-2">
-            Found: {verification.similarNames.join(', ')}
+          <div className="mt-4 bg-neutral-50 rounded-lg p-3">
+            <h4 className="text-sm font-medium text-neutral-600 mb-2">
+              {verification.status === 'taken' ? 'Suggested Alternatives:' : 'Similar Names Found:'}
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {verification.similarNames.map((similarName, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-white border border-neutral-200 text-neutral-600 hover:border-google-blue cursor-pointer transition-colors"
+                  onClick={() => onCopy(similarName)}
+                >
+                  {similarName}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-neutral-600 mt-2">Click any suggestion to copy it</p>
           </div>
         )}
       </div>
