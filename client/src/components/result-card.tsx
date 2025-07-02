@@ -1,10 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
+import { Copy, ExternalLink } from "lucide-react";
 
 interface VerificationResult {
   status: 'available' | 'similar' | 'taken';
   details?: string;
   similarNames?: string[];
+  verificationLinks?: Array<{
+    name: string;
+    url: string;
+    source: string;
+  }>;
 }
 
 interface GenerationResult {
@@ -109,6 +114,30 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
               ))}
             </div>
             <p className="text-xs text-neutral-600 mt-2">Click any suggestion to copy it</p>
+          </div>
+        )}
+
+        {/* Verification Links */}
+        {verification.verificationLinks && verification.verificationLinks.length > 0 && (
+          <div className="mt-4 bg-blue-50 rounded-lg p-3 border border-blue-100">
+            <h4 className="text-sm font-medium text-neutral-600 mb-2">
+              Verify Availability:
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {verification.verificationLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-white border border-blue-200 text-blue-700 hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                >
+                  {link.name}
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </a>
+              ))}
+            </div>
+            <p className="text-xs text-blue-600 mt-2">Click links to search and verify this name's availability</p>
           </div>
         )}
       </div>

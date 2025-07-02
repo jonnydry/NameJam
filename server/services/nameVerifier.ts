@@ -3,19 +3,8 @@ import type { VerificationResult } from "@shared/schema";
 export class NameVerifierService {
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
     try {
-      // Simulate verification logic
-      // In a real implementation, this would:
-      // 1. Search music databases (Spotify, Last.fm, MusicBrainz)
-      // 2. Check trademark databases
-      // 3. Search social media platforms
-      // 4. Use search engines to find existing artists/songs
-
-      const searchQueries = [
-        `"${name}" ${type}`,
-        `${name} band site:spotify.com`,
-        `${name} artist site:last.fm`,
-        `${name} musician`
-      ];
+      // Generate verification links that users can actually use
+      const verificationLinks = this.generateVerificationLinks(name, type);
 
       // Simulate different verification outcomes
       const randomOutcome = Math.random();
@@ -24,7 +13,8 @@ export class NameVerifierService {
         // 40% chance of being available
         return {
           status: 'available',
-          details: `Great news! No existing ${type} found with this name.`
+          details: `Great news! No existing ${type} found with this name.`,
+          verificationLinks
         };
       } else if (randomOutcome < 0.7) {
         // 30% chance of similar names
@@ -32,7 +22,8 @@ export class NameVerifierService {
         return {
           status: 'similar',
           details: `Similar names exist. Here are some thematic alternatives:`,
-          similarNames
+          similarNames,
+          verificationLinks
         };
       } else {
         // 30% chance of being taken
@@ -41,7 +32,8 @@ export class NameVerifierService {
         return {
           status: 'taken',
           details: `Already in use by ${existingInfo}. Try these alternatives:`,
-          similarNames
+          similarNames,
+          verificationLinks
         };
       }
     } catch (error) {
@@ -51,6 +43,41 @@ export class NameVerifierService {
         details: 'Verification unavailable - proceed with caution'
       };
     }
+  }
+
+  private generateVerificationLinks(name: string, type: 'band' | 'song'): Array<{name: string, url: string, source: string}> {
+    const encodedName = encodeURIComponent(`"${name}"`);
+    const encodedNameType = encodeURIComponent(`"${name}" ${type}`);
+    
+    const links = [
+      {
+        name: 'Spotify Search',
+        url: `https://open.spotify.com/search/${encodedName}`,
+        source: 'Spotify'
+      },
+      {
+        name: 'Google Search',
+        url: `https://www.google.com/search?q=${encodedNameType}`,
+        source: 'Google'
+      }
+    ];
+
+    // Add different third link based on type
+    if (type === 'band') {
+      links.push({
+        name: 'Bandcamp Search',
+        url: `https://bandcamp.com/search?q=${encodedName}`,
+        source: 'Bandcamp'
+      });
+    } else {
+      links.push({
+        name: 'YouTube Search',
+        url: `https://www.youtube.com/results?search_query=${encodedName}`,
+        source: 'YouTube'
+      });
+    }
+
+    return links;
   }
 
   private generateSimilarNames(name: string): string[] {
