@@ -24,6 +24,10 @@ export const generateNameRequestSchema = z.object({
   type: z.enum(['band', 'song']),
   wordCount: z.number().min(1).max(6),
   count: z.number().min(1).max(10).default(3),
+  mood: z.enum([
+    'dark', 'bright', 'mysterious', 'energetic', 'melancholy', 'ethereal',
+    'aggressive', 'peaceful', 'nostalgic', 'futuristic', 'romantic', 'epic'
+  ]).optional(),
 });
 
 export type GenerateNameRequest = z.infer<typeof generateNameRequestSchema>;
