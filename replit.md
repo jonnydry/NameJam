@@ -41,10 +41,11 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Results**: Returns availability status (available/similar/taken) with detailed explanations
 
 ### Data Storage
-- **Schema**: `shared/schema.ts` defines the database structure
+- **Schema**: `shared/schema.ts` defines the database structure using Drizzle ORM
 - **Storage Interface**: `server/storage.ts` provides abstraction layer
-- **Implementation**: Memory storage for development, PostgreSQL for production
+- **Implementation**: PostgreSQL database with Drizzle ORM for persistent storage
 - **Tables**: `generated_names` table stores generation history and verification results
+- **Database**: Uses Neon Database serverless PostgreSQL for scalable data persistence
 
 ### UI Components
 - **Generator Interface**: `client/src/components/name-generator.tsx`
@@ -99,6 +100,7 @@ NameJam is a modern web application that generates unique band names and song ti
 Changelog:
 - July 02, 2025. Initial setup
 - July 02, 2025. Added search functionality for custom name verification and renamed app to "NameJam"
+- July 04, 2025. Added PostgreSQL database with Drizzle ORM for persistent data storage
 
 ## User Preferences
 
