@@ -32,9 +32,10 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Location**: `server/services/nameGenerator.ts`
 - **Purpose**: Generates creative band and song names using advanced grammatical patterns
 - **Strategy**: Uses multiple generation patterns including grammatical structures, poetic repetition, atmospheric combinations, and narrative flows
-- **Customization**: Supports different word counts (1-6 words) and generation types (band/song)
+- **Customization**: Supports different word counts (1-6 words), generation types (band/song), and thematic mood selection
 - **Advanced Logic**: For 4+ word combinations, employs varied grammatical patterns to create more natural and poetic results
 - **Pattern Types**: Article-adjective-noun structures, parallel constructions, repetitive patterns, atmospheric combinations, and narrative sequences
+- **Mood Themes**: 12 different mood options (dark, bright, mysterious, energetic, melancholy, ethereal, aggressive, peaceful, nostalgic, futuristic, romantic, epic) that filter word choices to match the desired emotional tone
 
 ### Name Verification Service
 - **Location**: `server/services/nameVerifier.ts`
@@ -104,6 +105,7 @@ Changelog:
 - July 02, 2025. Added search functionality for custom name verification and renamed app to "NameJam"
 - July 04, 2025. Added PostgreSQL database with Drizzle ORM for persistent data storage
 - July 04, 2025. Enhanced name generation with advanced grammatical patterns and poetic variations for 4+ word combinations
+- July 04, 2025. Added thematic mood selector with 12 emotional themes to customize name generation tone and style
 
 ## User Preferences
 

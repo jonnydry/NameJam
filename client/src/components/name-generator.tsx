@@ -7,7 +7,7 @@ import { LoadingAnimation } from "./loading-animation";
 import { ResultCard } from "./result-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Music, Users, Wand2, RefreshCw, Search } from "lucide-react";
+import { Music, Users, Wand2, RefreshCw, Search, Palette } from "lucide-react";
 
 interface GenerationResult {
   id: number;
@@ -29,6 +29,7 @@ interface GenerationResult {
 export function NameGenerator() {
   const [nameType, setNameType] = useState<'band' | 'song'>('band');
   const [wordCount, setWordCount] = useState(2);
+  const [mood, setMood] = useState<string>('none');
   const [results, setResults] = useState<GenerationResult[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
@@ -39,7 +40,8 @@ export function NameGenerator() {
       const response = await apiRequest('POST', '/api/generate-names', {
         type: nameType,
         wordCount,
-        count: 3
+        count: 3,
+        ...(mood && mood !== 'none' && { mood })
       });
       return response.json();
     },
@@ -177,6 +179,34 @@ export function NameGenerator() {
               <SelectItem value="4">4 words</SelectItem>
               <SelectItem value="5">5 words</SelectItem>
               <SelectItem value="6">6 words</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Mood Selector */}
+        <div className="flex items-center justify-center space-x-4 mb-6">
+          <label htmlFor="mood" className="text-sm font-medium text-neutral-600 flex items-center">
+            <Palette className="w-4 h-4 mr-2" />
+            Mood:
+          </label>
+          <Select value={mood} onValueChange={setMood}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Any mood" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Any mood</SelectItem>
+              <SelectItem value="dark">🌑 Dark</SelectItem>
+              <SelectItem value="bright">☀️ Bright</SelectItem>
+              <SelectItem value="mysterious">🔮 Mysterious</SelectItem>
+              <SelectItem value="energetic">⚡ Energetic</SelectItem>
+              <SelectItem value="melancholy">🌧️ Melancholy</SelectItem>
+              <SelectItem value="ethereal">✨ Ethereal</SelectItem>
+              <SelectItem value="aggressive">🔥 Aggressive</SelectItem>
+              <SelectItem value="peaceful">🕊️ Peaceful</SelectItem>
+              <SelectItem value="nostalgic">📚 Nostalgic</SelectItem>
+              <SelectItem value="futuristic">🚀 Futuristic</SelectItem>
+              <SelectItem value="romantic">💕 Romantic</SelectItem>
+              <SelectItem value="epic">⚔️ Epic</SelectItem>
             </SelectContent>
           </Select>
         </div>
