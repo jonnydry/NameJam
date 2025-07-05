@@ -41,9 +41,10 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ### Name Verification Service
 - **Location**: `server/services/nameVerifier.ts`
-- **Purpose**: Verifies name availability by checking against existing artists and songs
-- **Methods**: Simulates web searches across music databases, trademark databases, and social platforms
-- **Results**: Returns availability status (available/similar/taken) with detailed explanations
+- **Purpose**: Provides name availability checking with realistic verification simulation
+- **Methods**: Currently simulates web searches (no real API connections without keys)
+- **Results**: Returns availability status (available/similar/taken) with verification links for manual checking
+- **Limitation**: Without real API keys, verification relies on heuristics and may miss existing famous names
 
 ### Data Storage
 - **Schema**: `shared/schema.ts` defines the database structure using Drizzle ORM
