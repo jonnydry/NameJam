@@ -30,12 +30,14 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ### Name Generation Service
 - **Location**: `server/services/nameGenerator.ts`
-- **Purpose**: Generates creative band and song names using advanced grammatical patterns
+- **Purpose**: Generates creative band and song names using advanced grammatical patterns with enhanced humor and wordplay
 - **Strategy**: Uses multiple generation patterns including grammatical structures, poetic repetition, atmospheric combinations, and narrative flows
 - **Customization**: Supports different word counts (1-6 words), generation types (band/song), and thematic mood selection
 - **Advanced Logic**: For 4+ word combinations, employs varied grammatical patterns to create more natural and poetic results
 - **Pattern Types**: Article-adjective-noun structures, parallel constructions, repetitive patterns, atmospheric combinations, and narrative sequences
 - **Mood Themes**: 12 different mood options (dark, bright, mysterious, energetic, melancholy, ethereal, aggressive, peaceful, nostalgic, futuristic, romantic, epic) that filter word choices to match the desired emotional tone
+- **Enhanced Humor**: Specialized patterns for 3-5 word combinations featuring wordplay, contradictions, questions, temporal paradoxes, and absurd scenarios
+- **Expanded Vocabulary**: Includes humorous and unexpected words (bananas, ninjas, kazoos, etc.) to create more entertaining and surprising results
 
 ### Name Verification Service
 - **Location**: `server/services/nameVerifier.ts`
@@ -108,6 +110,7 @@ Changelog:
 - July 04, 2025. Added thematic mood selector with 12 emotional themes to customize name generation tone and style
 - July 05, 2025. Implemented dark grayscale theme with animated gradient buttons and improved UI/UX
 - July 05, 2025. Code optimization and quality improvements: enhanced error handling, accessibility, performance optimizations
+- July 05, 2025. Enhanced name generation with humor and grammatical creativity for 3-5 word combinations: added unexpected vocabulary, wordplay patterns, contradictions, questions, and absurd scenarios
 
 ## User Preferences
 
