@@ -32,14 +32,6 @@ export const generateNameRequestSchema = z.object({
 
 export type GenerateNameRequest = z.infer<typeof generateNameRequestSchema>;
 
-export const socialMediaResult = z.object({
-  platform: z.string(),
-  handle: z.string(),
-  status: z.enum(['available', 'taken', 'unknown']),
-  url: z.string().optional(),
-  profileExists: z.boolean().optional()
-});
-
 export const verificationResult = z.object({
   status: z.enum(['available', 'similar', 'taken']),
   details: z.string().optional(),
@@ -49,11 +41,9 @@ export const verificationResult = z.object({
     url: z.string(),
     source: z.string()
   })).optional(),
-  socialMedia: z.array(socialMediaResult).optional()
 });
 
 export type VerificationResult = z.infer<typeof verificationResult>;
-export type SocialMediaResult = z.infer<typeof socialMediaResult>;
 
 // Stash item schema for saved names
 export const stashItem = z.object({
