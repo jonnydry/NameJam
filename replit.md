@@ -44,7 +44,7 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Purpose**: Provides real name availability checking against music databases
 - **Famous Names Database**: 50+ well-known bands and songs for immediate detection
 - **API Integration**: Last.fm and MusicBrainz for comprehensive music database searches
-- **Strict Matching Logic**: Filters out false positives and single-word matches
+- **Differentiated Logic**: Stricter verification for bands (unique names required) vs more lenient for songs (shared titles allowed)
 - **Results**: Returns accurate availability status (available/similar/taken) with verification links
 
 ### Data Storage
