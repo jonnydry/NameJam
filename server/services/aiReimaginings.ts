@@ -341,24 +341,86 @@ Return only the new ${wordCount}-word song titles, one per line, without explana
   }
 
   private generateFallbackReimaginings(type: 'band' | 'song', count: number, wordCount: number = 2, mood?: string): string[] {
-    // Fallback reimaginings organized by word count
-    const fallbacks = type === 'band' ? {
-      1: ["Scarab", "Crimson", "Steel", "Neon", "Velvet", "Crystal", "Midnight", "Electric", "Shadow", "Golden", "Fractal", "Obsidian"],
-      2: ["Scarab Symphony", "Crimson Waters", "Steel Airship", "Neon Prophets", "Velvet Thunder", "Crystal Rebellion", "Midnight Architects", "Electric Poets", "Shadow Mechanics", "Golden Sirens", "Fractal Dreams", "Obsidian Echoes"],
-      3: ["Scarab Symphony Orchestra", "Crimson Water Dreams", "Steel Airship Voyage", "Neon Prophet Society", "Velvet Thunder Storm", "Crystal Rebellion Army"],
-      4: ["Ancient Scarab Symphony Orchestra", "Crimson Waters of Time", "Steel Airship Midnight Voyage", "Neon Prophet Society Guild"],
-      5: ["Ancient Scarab Symphony Orchestra Guild", "Crimson Waters of Time Eternal", "Steel Airship Midnight Voyage Society"],
-      6: ["Ancient Scarab Symphony Orchestra Guild Masters", "Crimson Waters of Time Eternal Dreams"]
-    } : {
-      1: ["Ethereal", "Cosmic", "Silent", "Broken", "Digital", "Fading", "Whispered", "Neon", "Lost", "Beautiful", "Infinite", "Paper"],
-      2: ["Ethereal Reverie", "Cosmic Wanderer", "Silent Thunder", "Broken Mirrors", "Digital Sunset", "Fading Starlight", "Whispered Secrets", "Neon Nights", "Lost Translation", "Beautiful Chaos", "Infinite Loop", "Paper Hearts"],
-      3: ["Ethereal Dream Reverie", "Cosmic Wanderer Soul", "Silent Thunder Storm", "Broken Mirror Dreams", "Digital Sunset Sky", "Fading Starlight Memory"],
-      4: ["Ethereal Dream Reverie Song", "Cosmic Wanderer Soul Journey", "Silent Thunder Storm Calling", "Broken Mirror Dreams Tonight"],
-      5: ["Ethereal Dream Reverie Song Tonight", "Cosmic Wanderer Soul Journey Home", "Silent Thunder Storm Calling You"],
-      6: ["Ethereal Dream Reverie Song Tonight Forever", "Cosmic Wanderer Soul Journey Home Again"]
-    };
+    // Generate dynamic fallback reimaginings by combining famous name elements randomly
+    const result: string[] = [];
+    const maxAttempts = count * 5; // Prevent infinite loops
+    let attempts = 0;
 
-    const wordCountFallbacks = fallbacks[wordCount as keyof typeof fallbacks] || fallbacks[2];
-    return wordCountFallbacks.slice(0, count);
+    while (result.length < count && attempts < maxAttempts) {
+      attempts++;
+      
+      // Get random source names to reimagine
+      const sourceNames = type === 'band' 
+        ? this.getRandomBands(3) 
+        : this.getRandomSongs(3);
+      
+      // Create a dynamic reimagining based on the word count
+      const reimagined = this.createDynamicReimaging(sourceNames, wordCount, type, mood);
+      
+      // Add if unique
+      if (reimagined && !result.includes(reimagined)) {
+        result.push(reimagined);
+      }
+    }
+
+    // Fallback to static list if dynamic generation fails
+    if (result.length < count) {
+      const staticFallbacks = type === 'band' ? {
+        1: ["Scarab", "Crimson", "Steel", "Neon", "Velvet", "Crystal", "Midnight", "Electric", "Shadow", "Golden", "Fractal", "Obsidian", "Quantum", "Prism", "Ember", "Flux", "Phoenix", "Vortex", "Nexus", "Eclipse"],
+        2: ["Scarab Symphony", "Crimson Waters", "Steel Airship", "Neon Prophets", "Velvet Thunder", "Crystal Rebellion", "Midnight Architects", "Electric Poets", "Shadow Mechanics", "Golden Sirens", "Fractal Dreams", "Obsidian Echoes", "Quantum Storm", "Prism Light", "Ember Forge", "Flux Theory"],
+        3: ["Scarab Symphony Orchestra", "Crimson Water Dreams", "Steel Airship Voyage", "Neon Prophet Society", "Velvet Thunder Storm", "Crystal Rebellion Army", "Midnight Archive Project", "Electric Poetry Guild", "Shadow Mechanic Union", "Golden Siren Circle"],
+        4: ["Ancient Scarab Symphony Orchestra", "Crimson Waters of Time", "Steel Airship Midnight Voyage", "Neon Prophet Society Guild", "Velvet Thunder Storm Brigade", "Crystal Rebellion Army Corps", "Midnight Archive Project Team", "Electric Poetry Guild House"],
+        5: ["Ancient Scarab Symphony Orchestra Guild", "Crimson Waters of Time Eternal", "Steel Airship Midnight Voyage Society", "Neon Prophet Society Guild Masters", "Velvet Thunder Storm Brigade Unit"],
+        6: ["Ancient Scarab Symphony Orchestra Guild Masters", "Crimson Waters of Time Eternal Dreams", "Steel Airship Midnight Voyage Society Corps", "Neon Prophet Society Guild House Rules"]
+      } : {
+        1: ["Ethereal", "Cosmic", "Silent", "Broken", "Digital", "Fading", "Whispered", "Neon", "Lost", "Beautiful", "Infinite", "Paper", "Quantum", "Prism", "Ember", "Flux", "Phoenix", "Vortex", "Nexus", "Eclipse"],
+        2: ["Ethereal Reverie", "Cosmic Wanderer", "Silent Thunder", "Broken Mirrors", "Digital Sunset", "Fading Starlight", "Whispered Secrets", "Neon Nights", "Lost Translation", "Beautiful Chaos", "Infinite Loop", "Paper Hearts", "Quantum Dreams", "Prism Light"],
+        3: ["Ethereal Dream Reverie", "Cosmic Wanderer Soul", "Silent Thunder Storm", "Broken Mirror Dreams", "Digital Sunset Sky", "Fading Starlight Memory", "Whispered Secret Garden", "Neon Night Vision", "Lost Translation Error", "Beautiful Chaos Theory"],
+        4: ["Ethereal Dream Reverie Song", "Cosmic Wanderer Soul Journey", "Silent Thunder Storm Calling", "Broken Mirror Dreams Tonight", "Digital Sunset Sky Falling", "Fading Starlight Memory Lane", "Whispered Secret Garden Party", "Neon Night Vision Quest"],
+        5: ["Ethereal Dream Reverie Song Tonight", "Cosmic Wanderer Soul Journey Home", "Silent Thunder Storm Calling You", "Broken Mirror Dreams Tonight Forever", "Digital Sunset Sky Falling Down"],
+        6: ["Ethereal Dream Reverie Song Tonight Forever", "Cosmic Wanderer Soul Journey Home Again", "Silent Thunder Storm Calling You Back", "Broken Mirror Dreams Tonight Forever Lost"]
+      };
+
+      const staticOptions = staticFallbacks[wordCount as keyof typeof staticFallbacks] || staticFallbacks[2];
+      const shuffled = [...staticOptions].sort(() => 0.5 - Math.random());
+      
+      // Fill remaining slots with shuffled static options
+      for (const option of shuffled) {
+        if (result.length >= count) break;
+        if (!result.includes(option)) {
+          result.push(option);
+        }
+      }
+    }
+
+    return result.slice(0, count);
+  }
+
+  private createDynamicReimaging(sourceNames: string[], wordCount: number, type: 'band' | 'song', mood?: string): string {
+    // Extract meaningful words from source names
+    const words = sourceNames.join(' ').split(' ')
+      .filter(word => word.length > 2 && !['the', 'and', 'of', 'in', 'on', 'at', 'to', 'for', 'with'].includes(word.toLowerCase()));
+    
+    // Additional creative words to mix in
+    const creativeWords = [
+      'Ancient', 'Modern', 'Silent', 'Electric', 'Golden', 'Silver', 'Cosmic', 'Digital',
+      'Midnight', 'Crystal', 'Shadow', 'Neon', 'Velvet', 'Steel', 'Quantum', 'Prism',
+      'Symphony', 'Echo', 'Vision', 'Dream', 'Storm', 'Light', 'Fire', 'Water',
+      'Society', 'Guild', 'Circle', 'Union', 'Project', 'Theory', 'Archive', 'Forge'
+    ];
+
+    const allWords = [...words, ...creativeWords];
+    const selectedWords: string[] = [];
+
+    // Build name according to word count
+    for (let i = 0; i < wordCount; i++) {
+      const availableWords = allWords.filter(word => !selectedWords.includes(word));
+      if (availableWords.length === 0) break;
+      
+      const randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
+      selectedWords.push(randomWord);
+    }
+
+    return selectedWords.join(' ');
   }
 }
