@@ -1,6 +1,13 @@
-import type { VerificationResult } from "@shared/schema";
+import type { VerificationResult, SocialMediaResult } from "@shared/schema";
+import { SocialMediaVerifierService } from './socialMediaVerifier';
 
 export class NameVerifierService {
+  private socialMediaVerifier: SocialMediaVerifierService;
+
+  constructor() {
+    this.socialMediaVerifier = new SocialMediaVerifierService();
+  }
+
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
     try {
       // Generate verification links that users can actually use
@@ -19,13 +26,17 @@ export class NameVerifierService {
         console.log('Search verification failed, using availability heuristics');
       }
 
+      // Check social media availability for all cases
+      const socialMediaResults = await this.socialMediaVerifier.checkSocialMediaAvailability(name);
+
       // CORRECT LOGIC: No results = Available, Results found = Check further
       if (searchResults.length === 0) {
         // No search results found = Name is likely AVAILABLE
         return {
           status: 'available',
           details: `Great news! No existing ${type} found with this name.`,
-          verificationLinks
+          verificationLinks,
+          socialMedia: socialMediaResults
         };
       }
 
@@ -42,7 +53,8 @@ export class NameVerifierService {
           status: 'taken',
           details: `Already in use by ${existingInfo}. Try these alternatives:`,
           similarNames,
-          verificationLinks
+          verificationLinks,
+          socialMedia: socialMediaResults
         };
       } else {
         // Similar results found but no exact match = SIMILAR
@@ -51,16 +63,26 @@ export class NameVerifierService {
           status: 'similar',
           details: `Similar names exist. Here are some thematic alternatives:`,
           similarNames,
-          verificationLinks
+          verificationLinks,
+          socialMedia: socialMediaResults
         };
       }
     } catch (error) {
       console.error('Error verifying name:', error);
       // Default to available if verification fails completely
+      // For error cases, still try to get social media results but don't fail if they error
+      let socialMediaResults: SocialMediaResult[] = [];
+      try {
+        socialMediaResults = await this.socialMediaVerifier.checkSocialMediaAvailability(name);
+      } catch (error) {
+        console.warn('Social media verification failed:', error);
+      }
+
       return {
         status: 'available',
         details: 'Verification temporarily unavailable - name appears to be available.',
-        verificationLinks: this.generateVerificationLinks(name, type)
+        verificationLinks: this.generateVerificationLinks(name, type),
+        socialMedia: socialMediaResults
       };
     }
   }
