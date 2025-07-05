@@ -130,18 +130,18 @@ export function NameGenerator() {
   return (
     <div className="space-y-6">
       {/* Controls Panel */}
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
         {/* Type Toggle */}
         <div className="flex justify-center mb-6">
-          <div className="inline-flex rounded-lg bg-neutral-50 p-1">
+          <div className="inline-flex rounded-lg bg-muted p-1">
             <Button
               variant={nameType === 'band' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setNameType('band')}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 nameType === 'band'
-                  ? 'bg-google-blue text-white shadow-sm hover:bg-google-blue'
-                  : 'text-neutral-600 hover:text-google-blue'
+                  ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary'
+                  : 'text-muted-foreground hover:text-primary'
               }`}
             >
               <Users className="w-4 h-4 mr-2" />
@@ -153,8 +153,8 @@ export function NameGenerator() {
               onClick={() => setNameType('song')}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 nameType === 'song'
-                  ? 'bg-google-blue text-white shadow-sm hover:bg-google-blue'
-                  : 'text-neutral-600 hover:text-google-blue'
+                  ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary'
+                  : 'text-muted-foreground hover:text-primary'
               }`}
             >
               <Music className="w-4 h-4 mr-2" />
@@ -165,7 +165,7 @@ export function NameGenerator() {
 
         {/* Word Count Selector */}
         <div className="flex items-center justify-center space-x-4 mb-6">
-          <label htmlFor="wordCount" className="text-sm font-medium text-neutral-600">
+          <label htmlFor="wordCount" className="text-sm font-medium text-muted-foreground">
             Number of words:
           </label>
           <Select value={wordCount.toString()} onValueChange={(value) => setWordCount(parseInt(value))}>
@@ -185,7 +185,7 @@ export function NameGenerator() {
 
         {/* Mood Selector */}
         <div className="flex items-center justify-center space-x-4 mb-6">
-          <label htmlFor="mood" className="text-sm font-medium text-neutral-600 flex items-center">
+          <label htmlFor="mood" className="text-sm font-medium text-muted-foreground flex items-center">
             <Palette className="w-4 h-4 mr-2" />
             Mood:
           </label>
@@ -225,10 +225,10 @@ export function NameGenerator() {
       </div>
 
       {/* Search Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
         <div className="text-center mb-4">
-          <h3 className="text-lg font-medium text-neutral-600 mb-2">Check Your Own Name</h3>
-          <p className="text-sm text-neutral-600">Enter a name you've thought of to verify its availability</p>
+          <h3 className="text-lg font-medium text-foreground mb-2">Check Your Own Name</h3>
+          <p className="text-sm text-muted-foreground">Enter a name you've thought of to verify its availability</p>
         </div>
         
         <div className="flex space-x-3 max-w-md mx-auto">
@@ -244,7 +244,7 @@ export function NameGenerator() {
           <Button
             onClick={handleSearch}
             disabled={searchMutation.isPending || !searchInput.trim()}
-            className="inline-flex items-center px-6 py-2 bg-musical-purple hover:bg-purple-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+            className="inline-flex items-center"
           >
             <Search className="w-4 h-4 mr-2" />
             Check
@@ -254,7 +254,7 @@ export function NameGenerator() {
 
       {/* Loading States */}
       {(generateMutation.isPending || searchMutation.isPending) && (
-        <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-8">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-8">
           <LoadingAnimation 
             stage={generateMutation.isPending ? 'generating' : 'verifying'}
           />
