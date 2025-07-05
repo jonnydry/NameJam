@@ -70,29 +70,33 @@ export class NameVerifierService {
         };
       }
 
-      // Check for close/similar matches with much stricter criteria
+      // Check for close/similar matches with different criteria for bands vs songs
       const closeMatches = searchResults.filter(result => {
         const resultName = result.name?.toLowerCase().trim() || '';
         const searchName = name.toLowerCase().trim();
         
-        // Ignore single-word results unless they're very long or are the exact search
-        if (resultName.split(' ').length === 1 && resultName.length < 6 && resultName !== searchName) {
-          return false;
+        if (type === 'band') {
+          // BAND LOGIC: Stricter - band names should be unique
+          // Ignore single-word results unless they're the exact search or long/unique words
+          if (resultName.split(' ').length === 1 && resultName.length < 8 && resultName !== searchName) {
+            return false;
+          }
+          
+          // For bands: exact match or very close similarity required
+          const isExact = resultName === searchName;
+          const similarity = this.calculateSimilarity(resultName, searchName);
+          const lengthRatio = Math.min(resultName.length, searchName.length) / Math.max(resultName.length, searchName.length);
+          
+          return isExact || (similarity > 0.9 && lengthRatio > 0.8);
+        } else {
+          // SONG LOGIC: More lenient - multiple songs can have same title
+          // Only flag if exact match or very similar with same/similar artist
+          const isExact = resultName === searchName;
+          
+          // For songs, we're more lenient since many songs can share titles
+          // Only consider it taken if it's an exact match
+          return isExact;
         }
-        
-        // Only consider it similar if:
-        // 1. Exact match
-        // 2. One name completely contains the other AND both have multiple words
-        // 3. Very high similarity (>90%) AND similar length
-        const isExact = resultName === searchName;
-        const resultWords = resultName.split(' ').length;
-        const searchWords = searchName.split(' ').length;
-        const containsSearch = resultName.includes(searchName) && resultWords > 1 && searchWords > 1;
-        const containsResult = searchName.includes(resultName) && resultWords > 1 && searchWords > 1;
-        const similarity = this.calculateSimilarity(resultName, searchName);
-        const lengthRatio = Math.min(resultName.length, searchName.length) / Math.max(resultName.length, searchName.length);
-        
-        return isExact || containsSearch || containsResult || (similarity > 0.9 && lengthRatio > 0.8);
       });
 
       if (closeMatches.length > 0) {
