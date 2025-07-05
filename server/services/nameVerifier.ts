@@ -6,57 +6,82 @@ export class NameVerifierService {
       // Generate verification links that users can actually use
       const verificationLinks = this.generateVerificationLinks(name, type);
 
-      // Attempt basic web verification
-      let searchResults: any[] = [];
-      try {
-        // Try multiple search methods
-        searchResults = await Promise.all([
-          this.searchSpotify(name).catch(() => []),
-          this.searchWeb(name).catch(() => []),
-          this.searchMusicBrainz(name).catch(() => [])
-        ]).then(results => results.flat());
-      } catch (error) {
-        console.log('Search verification failed, using availability heuristics');
-      }
-
-      // CORRECT LOGIC: No results = Available, Results found = Check further
-      if (searchResults.length === 0) {
-        // No search results found = Name is likely AVAILABLE
+      // Check against famous bands/songs database first
+      const famousMatch = this.checkFamousNames(name, type);
+      if (famousMatch) {
+        const similarNames = this.generateSimilarNames(name);
         return {
-          status: 'available',
-          details: `Great news! No existing ${type} found with this name.`,
+          status: 'taken',
+          details: `This is a famous ${type}${famousMatch.artist ? ` by ${famousMatch.artist}` : ''}. Try these alternatives:`,
+          similarNames,
           verificationLinks
         };
       }
 
-      // If results found, analyze them
+      // Attempt real API verification
+      let searchResults: any[] = [];
+      try {
+        const promises = [];
+        
+        // Add Last.fm search if API key is available
+        if (process.env.LASTFM_API_KEY) {
+          promises.push(this.searchLastFm(name, type).catch((err: any) => {
+            console.log('Last.fm search failed:', err.message);
+            return [];
+          }));
+        }
+        
+        // Add MusicBrainz search (no key needed)
+        promises.push(this.searchRealMusicBrainz(name, type).catch((err: any) => {
+          console.log('MusicBrainz search failed:', err.message);
+          return [];
+        }));
+
+        if (promises.length > 0) {
+          searchResults = await Promise.all(promises).then(results => results.flat());
+        }
+      } catch (error) {
+        console.log('API verification failed, using heuristics');
+      }
+
+      // Analyze search results
+      if (searchResults.length === 0) {
+        // No results found = Name appears available
+        return {
+          status: 'available',
+          details: `No existing ${type} found with this name in our databases.`,
+          verificationLinks
+        };
+      }
+
+      // Check for exact matches
       const exactMatches = searchResults.filter(result => 
-        result.name?.toLowerCase() === name.toLowerCase()
+        result.name?.toLowerCase().trim() === name.toLowerCase().trim()
       );
 
       if (exactMatches.length > 0) {
-        // Exact match found = Name is TAKEN
-        const existingInfo = this.generateExistingInfo(name, type);
+        // Exact match found = Name is taken
+        const match = exactMatches[0];
+        const artistInfo = match.artist ? ` by ${match.artist}` : '';
         const similarNames = this.generateSimilarNames(name);
         return {
           status: 'taken',
-          details: `Already in use by ${existingInfo}. Try these alternatives:`,
+          details: `Found existing ${type}${artistInfo}. Try these alternatives:`,
           similarNames,
           verificationLinks
         };
       } else {
-        // Similar results found but no exact match = SIMILAR
+        // Similar results found but no exact match
         const similarNames = this.generateSimilarNames(name);
         return {
           status: 'similar',
-          details: `Similar names exist. Here are some thematic alternatives:`,
+          details: `Similar names found in music databases. Consider these alternatives:`,
           similarNames,
           verificationLinks
         };
       }
     } catch (error) {
-      console.error('Error verifying name:', error);
-      // Default to available if verification fails completely
+      console.error('Name verification error:', error);
       return {
         status: 'available',
         details: 'Verification temporarily unavailable - name appears to be available.',
@@ -198,28 +223,136 @@ export class NameVerifierService {
     return prefixes[Math.floor(Math.random() * prefixes.length)];
   }
 
-  // Realistic verification methods with uniqueness-based heuristics
-  private async searchSpotify(query: string): Promise<any[]> {
-    // Use uniqueness heuristics: very unique combinations are likely available
-    const uniquenessScore = this.calculateUniquenessScore(query);
-    if (uniquenessScore > 0.8) {
-      return []; // Very unique = no results = available
-    }
+  private checkFamousNames(name: string, type: 'band' | 'song'): { name: string; artist?: string } | null {
+    const lowercaseName = name.toLowerCase().trim();
     
-    // For common word combinations, simulate some results
-    return uniquenessScore < 0.3 ? [{ name: query, type: 'artist' }] : [];
+    // Database of famous bands
+    const famousBands = [
+      'the beatles', 'queen', 'led zeppelin', 'pink floyd', 'the rolling stones', 
+      'nirvana', 'radiohead', 'metallica', 'ac/dc', 'guns n roses', 'u2', 
+      'the who', 'black sabbath', 'deep purple', 'rush', 'yes', 'genesis',
+      'the doors', 'jimi hendrix experience', 'cream', 'the police', 'sting',
+      'red hot chili peppers', 'pearl jam', 'soundgarden', 'alice in chains',
+      'foo fighters', 'green day', 'blink-182', 'linkin park', 'coldplay',
+      'muse', 'the strokes', 'the white stripes', 'arctic monkeys', 'oasis',
+      'blur', 'pulp', 'suede', 'the smiths', 'joy division', 'new order',
+      'depeche mode', 'the cure', 'siouxsie and the banshees', 'bauhaus',
+      'iron maiden', 'judas priest', 'motorhead', 'slayer', 'megadeth',
+      'anthrax', 'pantera', 'tool', 'system of a down', 'rage against the machine',
+      'nine inch nails', 'marilyn manson', 'rob zombie', 'white zombie',
+      'smashing pumpkins', 'jane\'s addiction', 'faith no more', 'primus',
+      'deftones', 'korn', 'limp bizkit', 'creed', 'nickelback', 'disturbed'
+    ];
+
+    // Database of famous songs with artists
+    const famousSongs = [
+      { name: 'bohemian rhapsody', artist: 'Queen' },
+      { name: 'stairway to heaven', artist: 'Led Zeppelin' },
+      { name: 'imagine', artist: 'John Lennon' },
+      { name: 'hey jude', artist: 'The Beatles' },
+      { name: 'yesterday', artist: 'The Beatles' },
+      { name: 'let it be', artist: 'The Beatles' },
+      { name: 'smells like teen spirit', artist: 'Nirvana' },
+      { name: 'sweet child o mine', artist: 'Guns N\' Roses' },
+      { name: 'hotel california', artist: 'Eagles' },
+      { name: 'another brick in the wall', artist: 'Pink Floyd' },
+      { name: 'comfortably numb', artist: 'Pink Floyd' },
+      { name: 'wish you were here', artist: 'Pink Floyd' },
+      { name: 'paranoid', artist: 'Black Sabbath' },
+      { name: 'smoke on the water', artist: 'Deep Purple' },
+      { name: 'highway to hell', artist: 'AC/DC' },
+      { name: 'thunderstruck', artist: 'AC/DC' },
+      { name: 'enter sandman', artist: 'Metallica' },
+      { name: 'master of puppets', artist: 'Metallica' },
+      { name: 'one', artist: 'Metallica' }
+    ];
+
+    if (type === 'band') {
+      if (famousBands.includes(lowercaseName)) {
+        return { name: lowercaseName };
+      }
+    } else {
+      const songMatch = famousSongs.find(song => song.name === lowercaseName);
+      if (songMatch) {
+        return { name: songMatch.name, artist: songMatch.artist };
+      }
+    }
+
+    return null;
   }
 
-  private async searchMusicBrainz(query: string): Promise<any[]> {
-    // Realistic logic based on name uniqueness
-    const uniquenessScore = this.calculateUniquenessScore(query);
-    return uniquenessScore < 0.4 ? [{ name: query, type: 'artist' }] : [];
+  private async searchLastFm(name: string, type: 'band' | 'song'): Promise<any[]> {
+    const apiKey = process.env.LASTFM_API_KEY;
+    if (!apiKey) return [];
+
+    try {
+      const method = type === 'band' ? 'artist.search' : 'track.search';
+      const param = type === 'band' ? 'artist' : 'track';
+      const url = `http://ws.audioscrobbler.com/2.0/?method=${method}&${param}=${encodeURIComponent(name)}&api_key=${apiKey}&format=json&limit=10`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Last.fm API responded with ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (type === 'band') {
+        const artists = data.results?.artistmatches?.artist || [];
+        return Array.isArray(artists) ? artists.map((artist: any) => ({
+          name: artist.name,
+          type: 'band'
+        })) : [];
+      } else {
+        const tracks = data.results?.trackmatches?.track || [];
+        return Array.isArray(tracks) ? tracks.map((track: any) => ({
+          name: track.name,
+          artist: track.artist,
+          type: 'song'
+        })) : [];
+      }
+    } catch (error: any) {
+      console.error('Last.fm API error:', error);
+      return [];
+    }
   }
 
-  private async searchWeb(query: string): Promise<any[]> {
-    // Web search with uniqueness-based results
-    const uniquenessScore = this.calculateUniquenessScore(query);
-    return uniquenessScore < 0.5 ? [{ name: query, type: 'band' }] : [];
+  private async searchRealMusicBrainz(name: string, type: 'band' | 'song'): Promise<any[]> {
+    try {
+      const userAgent = process.env.MUSICBRAINZ_USER_AGENT || 'NameJam/1.0 (contact@example.com)';
+      const entity = type === 'band' ? 'artist' : 'recording';
+      const url = `https://musicbrainz.org/ws/2/${entity}/?query=${encodeURIComponent(name)}&fmt=json&limit=10`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': userAgent
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`MusicBrainz API responded with ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (type === 'band') {
+        const artists = data.artists || [];
+        return artists.map((artist: any) => ({
+          name: artist.name,
+          type: 'band'
+        }));
+      } else {
+        const recordings = data.recordings || [];
+        return recordings.map((recording: any) => ({
+          name: recording.title,
+          artist: recording['artist-credit']?.[0]?.name,
+          type: 'song'
+        }));
+      }
+    } catch (error: any) {
+      console.error('MusicBrainz API error:', error);
+      return [];
+    }
   }
 
   private calculateUniquenessScore(name: string): number {
