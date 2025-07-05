@@ -28,6 +28,7 @@ export const generateNameRequestSchema = z.object({
     'dark', 'bright', 'mysterious', 'energetic', 'melancholy', 'ethereal',
     'aggressive', 'peaceful', 'nostalgic', 'futuristic', 'romantic', 'epic'
   ]).optional(),
+  includeAiReimaginings: z.boolean().default(false),
 });
 
 export type GenerateNameRequest = z.infer<typeof generateNameRequestSchema>;

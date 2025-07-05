@@ -7,7 +7,9 @@ import { LoadingAnimation } from "./loading-animation";
 import { ResultCard } from "./result-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Music, Users, Wand2, RefreshCw, Search, Palette } from "lucide-react";
+import { Music, Users, Wand2, RefreshCw, Search, Palette, Sparkles } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface GenerationResult {
   id: number;
@@ -30,6 +32,7 @@ export function NameGenerator() {
   const [nameType, setNameType] = useState<'band' | 'song'>('band');
   const [wordCount, setWordCount] = useState(2);
   const [mood, setMood] = useState<string>('none');
+  const [includeAiReimaginings, setIncludeAiReimaginings] = useState(false);
   const [results, setResults] = useState<GenerationResult[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
@@ -41,6 +44,7 @@ export function NameGenerator() {
         type: nameType,
         wordCount,
         count: 3,
+        includeAiReimaginings,
         ...(mood && mood !== 'none' && { mood })
       });
       const data = await response.json();
@@ -236,6 +240,24 @@ export function NameGenerator() {
               <SelectItem value="epic">⚔️ Epic</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* AI Reimaginings Toggle */}
+        <div className="flex items-center justify-center space-x-3 py-4 border-t border-border">
+          <Checkbox
+            id="ai-reimaginings"
+            checked={includeAiReimaginings}
+            onCheckedChange={(checked) => setIncludeAiReimaginings(!!checked)}
+            className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+          />
+          <Label 
+            htmlFor="ai-reimaginings" 
+            className="text-sm font-medium text-foreground cursor-pointer flex items-center"
+          >
+            <Sparkles className="w-4 h-4 mr-1 text-blue-500" />
+            Include AI Reimaginings
+          </Label>
+          <div className="text-xs text-muted-foreground">(creative twists on famous names)</div>
         </div>
 
         {/* Generate Button */}

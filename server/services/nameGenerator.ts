@@ -1,4 +1,5 @@
 import type { GenerateNameRequest } from "@shared/schema";
+import { AiReimaginingsService } from './aiReimaginings';
 
 interface WordSource {
   adjectives: string[];
@@ -8,6 +9,8 @@ interface WordSource {
 }
 
 export class NameGeneratorService {
+  private aiReimaginings: AiReimaginingsService;
+  
   private wordSources: WordSource = {
     adjectives: [],
     nouns: [],
@@ -16,6 +19,7 @@ export class NameGeneratorService {
   };
 
   constructor() {
+    this.aiReimaginings = new AiReimaginingsService();
     this.initializeWordSources().then(() => {
       // Fetch fresh words from web sources after base initialization
       this.fetchWordsFromWeb();
@@ -94,17 +98,43 @@ export class NameGeneratorService {
   }
 
   async generateNames(request: GenerateNameRequest): Promise<string[]> {
-    const { type, wordCount, count, mood } = request;
+    const { type, wordCount, count, mood, includeAiReimaginings } = request;
     const names: string[] = [];
 
-    for (let i = 0; i < count; i++) {
-      const name = await this.generateSingleName(type, wordCount);
+    // Calculate split between traditional and AI names
+    const aiCount = includeAiReimaginings ? Math.ceil(count * 0.4) : 0; // 40% AI reimaginings
+    const traditionalCount = count - aiCount;
+
+    // Generate traditional names
+    for (let i = 0; i < traditionalCount; i++) {
+      const name = await this.generateSingleName(type, wordCount, mood);
       if (!names.includes(name)) {
         names.push(name);
       }
     }
 
-    // If we don't have enough unique names, generate more
+    // Generate AI reimaginings if requested
+    if (includeAiReimaginings && aiCount > 0) {
+      try {
+        const aiNames = await this.aiReimaginings.generateAiReimaginings(type, aiCount, mood);
+        for (const aiName of aiNames) {
+          if (!names.includes(aiName) && aiName.trim().length > 0) {
+            names.push(aiName);
+          }
+        }
+      } catch (error) {
+        console.error('AI reimaginings failed, generating traditional names instead:', error);
+        // Fallback to traditional generation if AI fails
+        while (names.length < count) {
+          const name = await this.generateSingleName(type, wordCount, mood);
+          if (!names.includes(name)) {
+            names.push(name);
+          }
+        }
+      }
+    }
+
+    // If we don't have enough unique names, generate more traditional ones
     while (names.length < count) {
       const name = await this.generateSingleName(type, wordCount, mood);
       if (!names.includes(name)) {
@@ -112,7 +142,7 @@ export class NameGeneratorService {
       }
     }
 
-    return names;
+    return names.slice(0, count);
   }
 
   private async generateSingleName(type: string, wordCount: number, mood?: string): Promise<string> {
