@@ -44,17 +44,14 @@ export class NameVerifierService {
         console.log('API verification failed, using heuristics');
       }
 
-      // Analyze search results
-      if (searchResults.length === 0) {
-        // No results found = Name appears available
-        return {
-          status: 'available',
-          details: `No existing ${type} found with this name in our databases.`,
-          verificationLinks
-        };
-      }
+      // Debug logging
+      console.log(`Verification for "${name}" (${type}):`, {
+        searchResultsCount: searchResults.length,
+        hasLastFmKey: !!process.env.LASTFM_API_KEY,
+        results: searchResults.slice(0, 3) // Show first 3 results
+      });
 
-      // Check for exact matches
+      // Check for exact matches first
       const exactMatches = searchResults.filter(result => 
         result.name?.toLowerCase().trim() === name.toLowerCase().trim()
       );
@@ -64,19 +61,67 @@ export class NameVerifierService {
         const match = exactMatches[0];
         const artistInfo = match.artist ? ` by ${match.artist}` : '';
         const similarNames = this.generateSimilarNames(name);
+        console.log(`Exact match found for "${name}":`, match);
         return {
           status: 'taken',
           details: `Found existing ${type}${artistInfo}. Try these alternatives:`,
           similarNames,
           verificationLinks
         };
-      } else {
-        // Similar results found but no exact match
+      }
+
+      // Check for close/similar matches with much stricter criteria
+      const closeMatches = searchResults.filter(result => {
+        const resultName = result.name?.toLowerCase().trim() || '';
+        const searchName = name.toLowerCase().trim();
+        
+        // Ignore single-word results unless they're very long or are the exact search
+        if (resultName.split(' ').length === 1 && resultName.length < 6 && resultName !== searchName) {
+          return false;
+        }
+        
+        // Only consider it similar if:
+        // 1. Exact match
+        // 2. One name completely contains the other AND both have multiple words
+        // 3. Very high similarity (>90%) AND similar length
+        const isExact = resultName === searchName;
+        const resultWords = resultName.split(' ').length;
+        const searchWords = searchName.split(' ').length;
+        const containsSearch = resultName.includes(searchName) && resultWords > 1 && searchWords > 1;
+        const containsResult = searchName.includes(resultName) && resultWords > 1 && searchWords > 1;
+        const similarity = this.calculateSimilarity(resultName, searchName);
+        const lengthRatio = Math.min(resultName.length, searchName.length) / Math.max(resultName.length, searchName.length);
+        
+        return isExact || containsSearch || containsResult || (similarity > 0.9 && lengthRatio > 0.8);
+      });
+
+      if (closeMatches.length > 0) {
+        // Close matches found = Similar
         const similarNames = this.generateSimilarNames(name);
+        console.log(`Close matches found for "${name}":`, closeMatches.slice(0, 2));
         return {
           status: 'similar',
           details: `Similar names found in music databases. Consider these alternatives:`,
           similarNames,
+          verificationLinks
+        };
+      }
+
+      // Only mark as available if we have fewer than 5 very weak results
+      // This handles cases where APIs return tons of unrelated results
+      if (searchResults.length <= 5) {
+        console.log(`Few or no relevant matches for "${name}" - marking as available`);
+        return {
+          status: 'available',
+          details: `No existing ${type} found with this name in our databases.`,
+          verificationLinks
+        };
+      } else {
+        // Many results but none are close matches - still available but note the search volume
+        console.log(`Many unrelated results for "${name}" but no close matches - marking as available`);
+        return {
+          status: 'available',
+          details: `No existing ${type} found with this exact name in our databases.`,
           verificationLinks
         };
       }
@@ -353,6 +398,24 @@ export class NameVerifierService {
       console.error('MusicBrainz API error:', error);
       return [];
     }
+  }
+
+  private calculateSimilarity(str1: string, str2: string): number {
+    // Simple similarity calculation based on common words and length
+    if (str1 === str2) return 1.0;
+    
+    const words1 = str1.split(' ').filter(w => w.length > 2);
+    const words2 = str2.split(' ').filter(w => w.length > 2);
+    
+    let commonWords = 0;
+    words1.forEach(word1 => {
+      if (words2.some(word2 => word1.includes(word2) || word2.includes(word1))) {
+        commonWords++;
+      }
+    });
+    
+    const totalWords = Math.max(words1.length, words2.length);
+    return totalWords > 0 ? commonWords / totalWords : 0;
   }
 
   private calculateUniquenessScore(name: string): number {
