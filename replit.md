@@ -38,7 +38,7 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Mood Themes**: 12 different mood options (dark, bright, mysterious, energetic, melancholy, ethereal, aggressive, peaceful, nostalgic, futuristic, romantic, epic) that filter word choices to match the desired emotional tone
 - **Enhanced Humor**: Specialized patterns for 3-5 word combinations featuring wordplay, contradictions, questions, temporal paradoxes, and absurd scenarios
 - **Expanded Vocabulary**: Includes humorous and unexpected words (bananas, ninjas, kazoos, etc.) to create more entertaining and surprising results
-- **AI Reimaginings**: OpenAI-powered creative reinterpretations of famous band/song names with flexible word counts and artistic wordplay that maintain thematic essence while being completely original
+- **AI Reimaginings**: OpenAI-powered creative reinterpretations drawing from 150+ famous bands and 120+ iconic songs across all genres and eras, generating artistic variations with flexible word counts that maintain thematic essence while being completely original
 
 ### Name Verification Service
 - **Location**: `server/services/nameVerifier.ts`
