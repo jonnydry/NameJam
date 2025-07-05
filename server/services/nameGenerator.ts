@@ -116,7 +116,7 @@ export class NameGeneratorService {
     // Generate AI reimaginings if requested
     if (includeAiReimaginings && aiCount > 0) {
       try {
-        const aiNames = await this.aiReimaginings.generateAiReimaginings(type, aiCount, mood);
+        const aiNames = await this.aiReimaginings.generateAiReimaginings(type, aiCount, wordCount, mood);
         for (const aiName of aiNames) {
           if (!names.includes(aiName) && aiName.trim().length > 0) {
             names.push(aiName);

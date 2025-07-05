@@ -242,25 +242,38 @@ export class AiReimaginingsService {
     "Mr. Brightside", "Somebody Told Me", "When You Were Young", "Human"
   ];
 
-  async generateAiReimaginings(type: 'band' | 'song', count: number = 3, mood?: string): Promise<string[]> {
+  async generateAiReimaginings(type: 'band' | 'song', count: number = 3, wordCount: number = 2, mood?: string): Promise<string[]> {
     try {
       const sourceNames = type === 'band' 
         ? this.getRandomBands(Math.min(count * 2, 10))
         : this.getRandomSongs(Math.min(count * 2, 10));
 
       const moodInstruction = mood ? ` with a ${mood} mood/feeling` : '';
+      const wordCountGuidance = this.getWordCountGuidance(wordCount);
       
       const prompt = type === 'band' 
-        ? `Create ${count} creative reimaginings of these famous band names${moodInstruction}. Transform the concepts, themes, or wordplay while keeping the essence recognizable but completely original. Use any word count (1-6 words). Be creative with synonyms, metaphors, and related concepts:
+        ? `Create ${count} creative reimaginings of these famous band names${moodInstruction}. Transform the concepts, themes, or wordplay while keeping the essence recognizable but completely original.
 
-${sourceNames.join(', ')}
+REQUIREMENTS:
+- Use EXACTLY ${wordCount} word${wordCount > 1 ? 's' : ''} per name
+- ${wordCountGuidance}
+- Be creative with synonyms, metaphors, and related concepts
+- Avoid copyright issues - make them completely original
 
-Return only the new band names, one per line, without explanations or original names.`
-        : `Create ${count} creative reimaginings of these famous song titles${moodInstruction}. Transform the concepts, themes, or wordplay while keeping the essence recognizable but completely original. Use any word count (1-6 words). Be creative with synonyms, metaphors, and related concepts:
+SOURCE NAMES: ${sourceNames.join(', ')}
 
-${sourceNames.join(', ')}
+Return only the new ${wordCount}-word band names, one per line, without explanations or original names.`
+        : `Create ${count} creative reimaginings of these famous song titles${moodInstruction}. Transform the concepts, themes, or wordplay while keeping the essence recognizable but completely original.
 
-Return only the new song titles, one per line, without explanations or original titles.`;
+REQUIREMENTS:
+- Use EXACTLY ${wordCount} word${wordCount > 1 ? 's' : ''} per title
+- ${wordCountGuidance}
+- Be creative with synonyms, metaphors, and related concepts
+- Avoid copyright issues - make them completely original
+
+SOURCE TITLES: ${sourceNames.join(', ')}
+
+Return only the new ${wordCount}-word song titles, one per line, without explanations or original titles.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -294,7 +307,7 @@ Return only the new song titles, one per line, without explanations or original 
     } catch (error) {
       console.error('OpenAI API error:', error);
       // Fallback to manual reimaginings if AI fails
-      return this.generateFallbackReimaginings(type, count, mood);
+      return this.generateFallbackReimaginings(type, count, wordCount, mood);
     }
   }
 
@@ -308,18 +321,44 @@ Return only the new song titles, one per line, without explanations or original 
     return shuffled.slice(0, count);
   }
 
-  private generateFallbackReimaginings(type: 'band' | 'song', count: number, mood?: string): string[] {
-    // Simple fallback reimaginings if AI fails
-    const fallbacks = type === 'band' ? [
-      "Scarab Symphony", "Crimson Waters", "Steel Airship", "Neon Prophets",
-      "Velvet Thunder", "Crystal Rebellion", "Midnight Architects", "Electric Poets",
-      "Shadow Mechanics", "Golden Sirens", "Fractal Dreams", "Obsidian Echoes"
-    ] : [
-      "Ethereal Reverie", "Cosmic Wanderer", "Silent Thunder", "Broken Mirrors",
-      "Digital Sunset", "Fading Starlight", "Whispered Secrets", "Neon Nights",
-      "Lost in Translation", "Beautiful Chaos", "Infinite Loop", "Paper Hearts"
-    ];
+  private getWordCountGuidance(wordCount: number): string {
+    switch (wordCount) {
+      case 1:
+        return "Use single powerful words that evoke strong imagery or concepts";
+      case 2:
+        return "Use adjective-noun or noun-noun combinations for maximum impact";
+      case 3:
+        return "Create humorous or unexpected combinations with wordplay and contradictions";
+      case 4:
+        return "Build atmospheric or poetic patterns with varied grammatical structures";
+      case 5:
+        return "Develop narrative flows or repetitive patterns for memorable phrases";
+      case 6:
+        return "Create epic, descriptive phrases with rich storytelling elements";
+      default:
+        return "Focus on creative word combinations that flow naturally";
+    }
+  }
 
-    return fallbacks.slice(0, count);
+  private generateFallbackReimaginings(type: 'band' | 'song', count: number, wordCount: number = 2, mood?: string): string[] {
+    // Fallback reimaginings organized by word count
+    const fallbacks = type === 'band' ? {
+      1: ["Scarab", "Crimson", "Steel", "Neon", "Velvet", "Crystal", "Midnight", "Electric", "Shadow", "Golden", "Fractal", "Obsidian"],
+      2: ["Scarab Symphony", "Crimson Waters", "Steel Airship", "Neon Prophets", "Velvet Thunder", "Crystal Rebellion", "Midnight Architects", "Electric Poets", "Shadow Mechanics", "Golden Sirens", "Fractal Dreams", "Obsidian Echoes"],
+      3: ["Scarab Symphony Orchestra", "Crimson Water Dreams", "Steel Airship Voyage", "Neon Prophet Society", "Velvet Thunder Storm", "Crystal Rebellion Army"],
+      4: ["Ancient Scarab Symphony Orchestra", "Crimson Waters of Time", "Steel Airship Midnight Voyage", "Neon Prophet Society Guild"],
+      5: ["Ancient Scarab Symphony Orchestra Guild", "Crimson Waters of Time Eternal", "Steel Airship Midnight Voyage Society"],
+      6: ["Ancient Scarab Symphony Orchestra Guild Masters", "Crimson Waters of Time Eternal Dreams"]
+    } : {
+      1: ["Ethereal", "Cosmic", "Silent", "Broken", "Digital", "Fading", "Whispered", "Neon", "Lost", "Beautiful", "Infinite", "Paper"],
+      2: ["Ethereal Reverie", "Cosmic Wanderer", "Silent Thunder", "Broken Mirrors", "Digital Sunset", "Fading Starlight", "Whispered Secrets", "Neon Nights", "Lost Translation", "Beautiful Chaos", "Infinite Loop", "Paper Hearts"],
+      3: ["Ethereal Dream Reverie", "Cosmic Wanderer Soul", "Silent Thunder Storm", "Broken Mirror Dreams", "Digital Sunset Sky", "Fading Starlight Memory"],
+      4: ["Ethereal Dream Reverie Song", "Cosmic Wanderer Soul Journey", "Silent Thunder Storm Calling", "Broken Mirror Dreams Tonight"],
+      5: ["Ethereal Dream Reverie Song Tonight", "Cosmic Wanderer Soul Journey Home", "Silent Thunder Storm Calling You"],
+      6: ["Ethereal Dream Reverie Song Tonight Forever", "Cosmic Wanderer Soul Journey Home Again"]
+    };
+
+    const wordCountFallbacks = fallbacks[wordCount as keyof typeof fallbacks] || fallbacks[2];
+    return wordCountFallbacks.slice(0, count);
   }
 }
