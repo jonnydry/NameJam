@@ -43,7 +43,11 @@ export function NameGenerator() {
         count: 3,
         ...(mood && mood !== 'none' && { mood })
       });
-      return response.json();
+      const data = await response.json();
+      if (!data.results || !Array.isArray(data.results)) {
+        throw new Error('Invalid response format');
+      }
+      return data;
     },
     onSuccess: (data) => {
       setResults(data.results);
@@ -65,14 +69,22 @@ export function NameGenerator() {
 
   const searchMutation = useMutation({
     mutationFn: async () => {
-      if (!searchInput.trim()) {
+      const trimmedInput = searchInput.trim();
+      if (!trimmedInput) {
         throw new Error('Please enter a name to search');
       }
+      if (trimmedInput.length > 100) {
+        throw new Error('Name is too long. Please use 100 characters or less.');
+      }
       const response = await apiRequest('POST', '/api/verify-name', {
-        name: searchInput.trim(),
+        name: trimmedInput,
         type: nameType
       });
-      return response.json();
+      const data = await response.json();
+      if (!data.verification) {
+        throw new Error('Invalid verification response');
+      }
+      return data;
     },
     onSuccess: (data) => {
       const searchResult: GenerationResult = {
@@ -113,15 +125,26 @@ export function NameGenerator() {
 
   const copyToClipboard = async (name: string) => {
     try {
-      await navigator.clipboard.writeText(name);
+      if (!navigator.clipboard) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = name;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } else {
+        await navigator.clipboard.writeText(name);
+      }
       toast({
         title: "Copied to clipboard!",
         description: `"${name}" has been copied to your clipboard.`,
       });
     } catch (error) {
+      console.error('Copy failed:', error);
       toast({
         title: "Copy failed",
-        description: "Failed to copy to clipboard.",
+        description: "Failed to copy to clipboard. Please copy manually.",
         variant: "destructive",
       });
     }
@@ -143,8 +166,10 @@ export function NameGenerator() {
                   ? 'btn-gradient text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-primary'
               }`}
+              aria-pressed={nameType === 'band'}
+              aria-label="Generate band names"
             >
-              <Users className="w-4 h-4 mr-2" />
+              <Users className="w-4 h-4 mr-2" aria-hidden="true" />
               Band Name
             </Button>
             <Button
@@ -156,8 +181,10 @@ export function NameGenerator() {
                   ? 'btn-gradient text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-primary'
               }`}
+              aria-pressed={nameType === 'song'}
+              aria-label="Generate song names"
             >
-              <Music className="w-4 h-4 mr-2" />
+              <Music className="w-4 h-4 mr-2" aria-hidden="true" />
               Song Name
             </Button>
           </div>
@@ -237,9 +264,15 @@ export function NameGenerator() {
             placeholder={`Enter a ${nameType} name...`}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !searchMutation.isPending && searchInput.trim()) {
+                handleSearch();
+              }
+            }}
             className="flex-1"
             disabled={searchMutation.isPending}
+            maxLength={100}
+            aria-label={`Enter ${nameType} name to verify`}
           />
           <Button
             onClick={handleSearch}
