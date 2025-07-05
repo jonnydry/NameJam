@@ -54,9 +54,15 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ### UI Components
 - **Generator Interface**: `client/src/components/name-generator.tsx`
-- **Result Display**: `client/src/components/result-card.tsx`
+- **Result Display**: `client/src/components/result-card.tsx` with heart button for stash functionality
 - **Loading States**: `client/src/components/loading-animation.tsx`
 - **Branding**: Custom fermata logo component for musical theming
+- **Stash Management**: `client/src/components/stash.tsx` displays saved names with timestamps and actions
+
+### State Management
+- **Stash Context**: `client/src/context/stash-context.tsx` provides React Context for sharing stash state
+- **Local Storage**: Persistent storage for saved names across browser sessions
+- **Real-time Updates**: Context-based state ensures immediate UI updates when names are added/removed
 
 ## Data Flow
 
@@ -111,6 +117,7 @@ Changelog:
 - July 05, 2025. Implemented dark grayscale theme with animated gradient buttons and improved UI/UX
 - July 05, 2025. Code optimization and quality improvements: enhanced error handling, accessibility, performance optimizations
 - July 05, 2025. Enhanced name generation with humor and grammatical creativity for 3-5 word combinations: added unexpected vocabulary, wordplay patterns, contradictions, questions, and absurd scenarios
+- July 05, 2025. Implemented "Stash" feature with React Context for saving favorite names, local storage persistence, and real-time UI updates
 
 ## User Preferences
 
