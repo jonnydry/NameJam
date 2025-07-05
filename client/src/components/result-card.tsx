@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy, ExternalLink, Heart, HeartIcon } from "lucide-react";
+import { useStash } from "@/hooks/use-stash";
+import { useToast } from "@/hooks/use-toast";
 
 interface VerificationResult {
   status: 'available' | 'similar' | 'taken';
@@ -28,6 +30,32 @@ interface ResultCardProps {
 
 export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
   const { name, verification } = result;
+  const { addToStash, isInStash } = useStash();
+  const { toast } = useToast();
+
+  const handleAddToStash = () => {
+    if (isInStash(name, nameType)) {
+      toast({
+        title: "Already in stash",
+        description: `"${name}" is already saved in your stash.`,
+      });
+      return;
+    }
+
+    const success = addToStash({
+      name,
+      type: nameType,
+      wordCount: result.wordCount,
+      verification
+    });
+
+    if (success) {
+      toast({
+        title: "Added to stash!",
+        description: `"${name}" has been saved to your stash.`,
+      });
+    }
+  };
   
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -77,14 +105,29 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
             {getStatusText(verification.status)}
           </span>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onCopy(name)}
-          className="text-muted-foreground hover:text-primary transition-colors p-2"
-        >
-          <Copy className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center space-x-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleAddToStash}
+            className={`transition-colors p-2 ${
+              isInStash(name, nameType) 
+                ? 'text-red-500 hover:text-red-600' 
+                : 'text-muted-foreground hover:text-red-500'
+            }`}
+            title={isInStash(name, nameType) ? 'Already in stash' : 'Add to stash'}
+          >
+            <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onCopy(name)}
+            className="text-muted-foreground hover:text-primary transition-colors p-2"
+          >
+            <Copy className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
       
       <div className="text-center">
