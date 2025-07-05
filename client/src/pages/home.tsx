@@ -1,5 +1,6 @@
 import { NameGenerator } from "@/components/name-generator";
 import { FermataLogo } from "@/components/fermata-logo";
+import { Stash } from "@/components/stash";
 
 export default function Home() {
   return (
@@ -22,8 +23,8 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-2xl mx-auto">
+      <main className="flex-1 px-4 py-12">
+        <div className="max-w-7xl mx-auto">
           {/* Logo and Title Section */}
           <div className="text-center mb-12">
             <div className="mb-6">
@@ -33,8 +34,18 @@ export default function Home() {
             <p className="text-lg text-muted-foreground font-roboto">Generate unique band names and song titles</p>
           </div>
 
-          {/* Name Generator Component */}
-          <NameGenerator />
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Name Generator - Takes 2/3 on large screens */}
+            <div className="lg:col-span-2">
+              <NameGenerator />
+            </div>
+            
+            {/* Stash - Takes 1/3 on large screens */}
+            <div className="lg:col-span-1">
+              <Stash />
+            </div>
+          </div>
         </div>
       </main>
 

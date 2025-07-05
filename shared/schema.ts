@@ -44,3 +44,15 @@ export const verificationResult = z.object({
 });
 
 export type VerificationResult = z.infer<typeof verificationResult>;
+
+// Stash item schema for saved names
+export const stashItem = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.enum(['band', 'song']),
+  wordCount: z.number(),
+  savedAt: z.string(), // ISO date string
+  verification: verificationResult
+});
+
+export type StashItem = z.infer<typeof stashItem>;
