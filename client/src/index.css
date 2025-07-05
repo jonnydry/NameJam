@@ -3,24 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0, 0%, 3%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(0, 0%, 10%);
-  --muted-foreground: hsl(0, 0%, 63%);
-  --popover: hsl(0, 0%, 8%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(0, 0%, 8%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(0, 0%, 15%);
-  --input: hsl(0, 0%, 12%);
+  --background: hsl(0, 0%, 7%);
+  --foreground: hsl(0, 0%, 95%);
+  --muted: hsl(0, 0%, 12%);
+  --muted-foreground: hsl(0, 0%, 65%);
+  --popover: hsl(0, 0%, 12%);
+  --popover-foreground: hsl(0, 0%, 95%);
+  --card: hsl(0, 0%, 12%);
+  --card-foreground: hsl(0, 0%, 95%);
+  --border: hsl(0, 0%, 20%);
+  --input: hsl(0, 0%, 16%);
   --primary: hsl(195, 100%, 50%);
-  --primary-foreground: hsl(0, 0%, 3%);
-  --secondary: hsl(0, 0%, 12%);
-  --secondary-foreground: hsl(0, 0%, 98%);
+  --primary-foreground: hsl(0, 0%, 7%);
+  --secondary: hsl(0, 0%, 16%);
+  --secondary-foreground: hsl(0, 0%, 95%);
   --accent: hsl(195, 100%, 50%);
-  --accent-foreground: hsl(0, 0%, 3%);
+  --accent-foreground: hsl(0, 0%, 7%);
   --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(0, 0%, 98%);
+  --destructive-foreground: hsl(0, 0%, 95%);
   --ring: hsl(195, 100%, 50%);
   --radius: 0.5rem;
   
@@ -171,6 +171,18 @@
   }
 }
 
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .animate-musical-note {
   animation: musicalNote 1.5s ease-in-out infinite;
 }
@@ -181,6 +193,24 @@
 
 .animate-fade-in {
   animation: fadeIn 1.5s ease-out;
+}
+
+.animate-gradient {
+  background: linear-gradient(-45deg, hsl(195, 100%, 50%), hsl(210, 100%, 60%), hsl(185, 100%, 45%), hsl(200, 100%, 55%));
+  background-size: 400% 400%;
+  animation: gradientShift 3s ease infinite;
+}
+
+.btn-gradient {
+  background: linear-gradient(-45deg, hsl(195, 100%, 50%), hsl(210, 100%, 60%), hsl(185, 100%, 45%), hsl(200, 100%, 55%));
+  background-size: 400% 400%;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  animation: gradientShift 2s ease infinite;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 184, 255, 0.3);
 }
 
 /* Fermata symbol styles */
