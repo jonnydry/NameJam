@@ -140,7 +140,7 @@ export function NameGenerator() {
               onClick={() => setNameType('band')}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 nameType === 'band'
-                  ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary'
+                  ? 'btn-gradient text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-primary'
               }`}
             >
@@ -153,7 +153,7 @@ export function NameGenerator() {
               onClick={() => setNameType('song')}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 nameType === 'song'
-                  ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary'
+                  ? 'btn-gradient text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-primary'
               }`}
             >
@@ -216,7 +216,7 @@ export function NameGenerator() {
           <Button
             onClick={handleGenerate}
             disabled={generateMutation.isPending}
-            className="inline-flex items-center px-8 py-3 bg-google-blue hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105"
+            className="inline-flex items-center px-8 py-3 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
           >
             <Wand2 className="w-4 h-4 mr-2" />
             Generate Names
@@ -244,7 +244,7 @@ export function NameGenerator() {
           <Button
             onClick={handleSearch}
             disabled={searchMutation.isPending || !searchInput.trim()}
-            className="inline-flex items-center"
+            className="inline-flex items-center btn-gradient text-primary-foreground font-medium"
           >
             <Search className="w-4 h-4 mr-2" />
             Check
@@ -297,7 +297,7 @@ export function NameGenerator() {
               onClick={handleGenerateMore}
               variant="outline"
               disabled={generateMutation.isPending}
-              className="inline-flex items-center px-6 py-2 bg-white border border-neutral-200 text-neutral-600 hover:text-google-blue hover:border-google-blue font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+              className="inline-flex items-center px-6 py-2 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Generate More Names
