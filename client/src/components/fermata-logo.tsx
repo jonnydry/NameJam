@@ -8,7 +8,7 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
   const containerSize = isLarge ? "w-16 h-16" : "w-10 h-10";
 
   return (
-    <div className={`${containerSize} ${className} relative flex items-center justify-center animate-fade-in`}>
+    <div className={`${containerSize} ${className} relative flex items-center justify-center animate-fade-in mx-auto`}>
       {/* Question mark (base) */}
       <svg 
         viewBox="0 0 24 24" 
