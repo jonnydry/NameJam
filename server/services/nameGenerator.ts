@@ -401,7 +401,8 @@ export class NameGeneratorService {
   }
 
   private generateLongForm(type: string, wordCount: number, mood?: string): string {
-    const filteredSources = this.getFilteredWordSources(mood);
+    // Use synchronous mood filtering for long form generation
+    const filteredSources = mood ? this.getStaticMoodFilteredWords(mood) : this.wordSources;
     
     // Define grammatical patterns for longer names (4+ words)
     const patterns = [
@@ -442,7 +443,22 @@ export class NameGeneratorService {
   }
 
   private buildPattern(structure: string[], wordSources?: WordSource): string {
+    // Add defensive programming for structure parameter
+    if (!structure || !Array.isArray(structure) || structure.length === 0) {
+      console.error('Invalid structure passed to buildPattern:', structure);
+      return 'Mysterious Sound'; // fallback
+    }
+    
     const sources = wordSources || this.wordSources;
+    
+    // Ensure sources are valid - fallback to base if empty
+    const validSources = {
+      adjectives: (sources.adjectives && sources.adjectives.length > 0) ? sources.adjectives : this.wordSources.adjectives,
+      nouns: (sources.nouns && sources.nouns.length > 0) ? sources.nouns : this.wordSources.nouns,
+      verbs: (sources.verbs && sources.verbs.length > 0) ? sources.verbs : this.wordSources.verbs,
+      musicalTerms: (sources.musicalTerms && sources.musicalTerms.length > 0) ? sources.musicalTerms : this.wordSources.musicalTerms
+    };
+    
     const words: string[] = [];
     const articles = ['The', 'A', 'An', 'These', 'Those', 'Every', 'All'];
     const prepositions = ['of', 'in', 'on', 'under', 'through', 'beyond', 'within', 'across'];
@@ -455,16 +471,16 @@ export class NameGeneratorService {
           word = articles[Math.floor(Math.random() * articles.length)];
           break;
         case 'adjective':
-          word = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+          word = validSources.adjectives[Math.floor(Math.random() * validSources.adjectives.length)];
           break;
         case 'noun':
-          word = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+          word = validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)];
           break;
         case 'verb':
-          word = sources.verbs[Math.floor(Math.random() * sources.verbs.length)];
+          word = validSources.verbs[Math.floor(Math.random() * validSources.verbs.length)];
           break;
         case 'musical':
-          word = sources.musicalTerms[Math.floor(Math.random() * sources.musicalTerms.length)];
+          word = validSources.musicalTerms[Math.floor(Math.random() * validSources.musicalTerms.length)];
           break;
         case 'preposition':
           word = prepositions[Math.floor(Math.random() * prepositions.length)];
@@ -475,10 +491,10 @@ export class NameGeneratorService {
         case 'flexible':
           // Mix any word type for variety
           const allWords = [
-            ...sources.adjectives,
-            ...sources.nouns,
-            ...sources.verbs,
-            ...sources.musicalTerms
+            ...validSources.adjectives,
+            ...validSources.nouns,
+            ...validSources.verbs,
+            ...validSources.musicalTerms
           ];
           word = allWords[Math.floor(Math.random() * allWords.length)];
           break;
@@ -491,21 +507,30 @@ export class NameGeneratorService {
 
   private buildRepetitivePattern(wordCount: number, wordSources?: WordSource): string {
     const sources = wordSources || this.wordSources;
+    
+    // Ensure sources are valid - fallback to base if empty
+    const validSources = {
+      adjectives: (sources.adjectives && sources.adjectives.length > 0) ? sources.adjectives : this.wordSources.adjectives,
+      nouns: (sources.nouns && sources.nouns.length > 0) ? sources.nouns : this.wordSources.nouns,
+      verbs: (sources.verbs && sources.verbs.length > 0) ? sources.verbs : this.wordSources.verbs,
+      musicalTerms: (sources.musicalTerms && sources.musicalTerms.length > 0) ? sources.musicalTerms : this.wordSources.musicalTerms
+    };
+    
     // Create patterns with intentional repetition (common in song titles)
-    const baseWord = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
-    const adjective = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+    const baseWord = validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)];
+    const adjective = validSources.adjectives[Math.floor(Math.random() * validSources.adjectives.length)];
     
     const repetitivePatterns = [
-      `${adjective} ${baseWord}, ${adjective} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
-      `${baseWord} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${baseWord}`,
-      `The ${baseWord} and the ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`
+      `${adjective} ${baseWord}, ${adjective} ${validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)]}`,
+      `${baseWord} ${validSources.verbs[Math.floor(Math.random() * validSources.verbs.length)]} ${baseWord}`,
+      `The ${baseWord} and the ${validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)]}`
     ];
 
     let result = repetitivePatterns[Math.floor(Math.random() * repetitivePatterns.length)];
     
     // Add more words if needed
     while (result.split(' ').length < wordCount) {
-      const filler = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+      const filler = validSources.adjectives[Math.floor(Math.random() * validSources.adjectives.length)];
       result += ` ${filler}`;
     }
 
@@ -514,9 +539,18 @@ export class NameGeneratorService {
 
   private buildAtmosphericPattern(wordCount: number, wordSources?: WordSource): string {
     const sources = wordSources || this.wordSources;
+    
+    // Ensure sources are valid - fallback to base if empty
+    const validSources = {
+      adjectives: (sources.adjectives && sources.adjectives.length > 0) ? sources.adjectives : this.wordSources.adjectives,
+      nouns: (sources.nouns && sources.nouns.length > 0) ? sources.nouns : this.wordSources.nouns,
+      verbs: (sources.verbs && sources.verbs.length > 0) ? sources.verbs : this.wordSources.verbs,
+      musicalTerms: (sources.musicalTerms && sources.musicalTerms.length > 0) ? sources.musicalTerms : this.wordSources.musicalTerms
+    };
+    
     // Create atmospheric, abstract combinations
     const atmospheric = [
-      ...sources.adjectives.filter(word => 
+      ...validSources.adjectives.filter(word => 
         ['ethereal', 'cosmic', 'ancient', 'mystic', 'haunted', 'frozen', 'burning', 'distant', 'fading', 'rising'].some(atmo => 
           word.toLowerCase().includes(atmo) || atmo.includes(word.toLowerCase())
         )
@@ -529,7 +563,7 @@ export class NameGeneratorService {
       if (i % 2 === 0 && atmospheric.length > 0) {
         words.push(atmospheric[Math.floor(Math.random() * atmospheric.length)]);
       } else {
-        const wordSourcesArray = [sources.nouns, sources.musicalTerms];
+        const wordSourcesArray = [validSources.nouns, validSources.musicalTerms];
         const source = wordSourcesArray[Math.floor(Math.random() * wordSourcesArray.length)];
         words.push(source[Math.floor(Math.random() * source.length)]);
       }
@@ -540,6 +574,15 @@ export class NameGeneratorService {
 
   private buildNarrativePattern(wordCount: number, wordSources?: WordSource): string {
     const sources = wordSources || this.wordSources;
+    
+    // Ensure sources are valid - fallback to base if empty
+    const validSources = {
+      adjectives: (sources.adjectives && sources.adjectives.length > 0) ? sources.adjectives : this.wordSources.adjectives,
+      nouns: (sources.nouns && sources.nouns.length > 0) ? sources.nouns : this.wordSources.nouns,
+      verbs: (sources.verbs && sources.verbs.length > 0) ? sources.verbs : this.wordSources.verbs,
+      musicalTerms: (sources.musicalTerms && sources.musicalTerms.length > 0) ? sources.musicalTerms : this.wordSources.musicalTerms
+    };
+    
     // Create story-like combinations
     const narrativeStarters = ['When', 'Where', 'How', 'Why', 'Until', 'Before', 'After', 'During'];
     const words: string[] = [];
@@ -553,14 +596,14 @@ export class NameGeneratorService {
       const remaining = wordCount - words.length;
       if (remaining >= 2 && Math.random() > 0.6) {
         // Add verb + noun combination
-        words.push(sources.verbs[Math.floor(Math.random() * sources.verbs.length)]);
-        words.push(sources.nouns[Math.floor(Math.random() * sources.nouns.length)]);
+        words.push(validSources.verbs[Math.floor(Math.random() * validSources.verbs.length)]);
+        words.push(validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)]);
       } else {
         // Add single word
         const allWords = [
-          ...sources.adjectives,
-          ...sources.nouns,
-          ...sources.musicalTerms
+          ...validSources.adjectives,
+          ...validSources.nouns,
+          ...validSources.musicalTerms
         ];
         words.push(allWords[Math.floor(Math.random() * allWords.length)]);
       }
