@@ -14,18 +14,18 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
         className={`${isLarge ? 'w-14 h-14' : 'w-9 h-9'}`}
         fill="none"
       >
-        {/* Question mark curve - without the dot */}
+        {/* Question mark curve - floating above, centered */}
         <path 
-          d="M12 8c0-2.5 2-4.5 4.5-4.5S21 5.5 21 8c0 1.5-1 2.5-2 3.5L17 13.5c-.5.5-.5 1.5-.5 2.5" 
+          d="M13 6c0-2 1.5-3.5 3-3.5s3 1.5 3 3.5c0 1.2-0.8 2-1.5 2.8L16 10.5c-.3.3-.3 1-.3 1.5" 
           stroke="currentColor" 
-          strokeWidth="2.5" 
+          strokeWidth="2" 
           strokeLinecap="round"
           className="text-muted-foreground"
         />
         
-        {/* Fermata arc - positioned above */}
+        {/* Fermata arc - positioned lower */}
         <path 
-          d="M8 20 Q16 12 24 20" 
+          d="M8 22 Q16 14 24 22" 
           stroke="currentColor" 
           strokeWidth="2" 
           strokeLinecap="round"
@@ -35,7 +35,7 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
         {/* Single shared dot - works for both fermata and question mark */}
         <circle 
           cx="16" 
-          cy="24" 
+          cy="26" 
           r="2" 
           fill="currentColor"
           className="text-primary animate-pulse"
