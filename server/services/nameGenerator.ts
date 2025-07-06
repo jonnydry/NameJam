@@ -97,7 +97,7 @@ export class NameGeneratorService {
     };
   }
 
-  async generateNames(request: GenerateNameRequest): Promise<string[]> {
+  async generateNames(request: GenerateNameRequest): Promise<string[] | { names: string[], aiUnavailable: boolean }> {
     const { type, wordCount, count, mood, includeAiReimaginings } = request;
     const names: string[] = [];
 
@@ -122,14 +122,22 @@ export class NameGeneratorService {
             names.push(aiName);
           }
         }
-      } catch (error) {
-        console.error('AI reimaginings failed, generating traditional names instead:', error);
+      } catch (error: any) {
+        console.error('AI reimaginings failed:', error);
+        // Check if it's a quota error
+        const isQuotaError = error.message === 'AI_QUOTA_EXCEEDED';
+        
         // Fallback to traditional generation if AI fails
         while (names.length < count) {
           const name = await this.generateSingleName(type, wordCount, mood);
           if (!names.includes(name)) {
             names.push(name);
           }
+        }
+        
+        // Store quota error status
+        if (isQuotaError) {
+          return { names: names.slice(0, count), aiUnavailable: true };
         }
       }
     }

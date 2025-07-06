@@ -304,8 +304,12 @@ Return only the new ${wordCount}-word song titles, one per line, without explana
         .map(line => line.replace(/^[-•]\s*/, '')) // Remove bullet points
         .slice(0, count);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('OpenAI API error:', error);
+      // Check if it's a quota error and provide better messaging
+      if (error.code === 'insufficient_quota' || error.status === 429) {
+        throw new Error('AI_QUOTA_EXCEEDED');
+      }
       // Fallback to manual reimaginings if AI fails
       return this.generateFallbackReimaginings(type, count, wordCount, mood);
     }

@@ -16,7 +16,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const request = generateNameRequestSchema.parse(req.body);
       
       // Generate names
-      const names = await nameGenerator.generateNames(request);
+      const generateResult = await nameGenerator.generateNames(request);
+      
+      // Extract names and AI availability status
+      const names = Array.isArray(generateResult) ? generateResult : generateResult.names;
+      const aiUnavailable = Array.isArray(generateResult) ? false : generateResult.aiUnavailable;
       
       // Verify each name and store results
       const results = await Promise.all(
@@ -42,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
 
-      res.json({ results });
+      res.json({ results, aiUnavailable });
     } catch (error) {
       console.error("Error generating names:", error);
       if (error instanceof z.ZodError) {

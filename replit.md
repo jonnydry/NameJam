@@ -124,6 +124,7 @@ Changelog:
 - July 05, 2025. Implemented real API verification system: integrated Last.fm API, enhanced MusicBrainz searches, added 50+ famous names database, and implemented strict matching logic to eliminate false positives
 - July 05, 2025. Added AI-powered creative reimaginings feature: OpenAI integration to generate artistic reinterpretations of famous band/song names with flexible word counts, thematic mood support, and intelligent fallback system
 - July 05, 2025. Fixed persistent results issue: enhanced AI fallback system with dynamic generation to provide unique, varied results on each generation instead of repeating the same names
+- July 06, 2025. Improved error handling: added user-friendly messaging when AI features are unavailable due to quota limits, with visual indicators in the UI
 
 ## User Preferences
 
