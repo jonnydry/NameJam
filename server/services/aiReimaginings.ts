@@ -31,6 +31,26 @@ export class AiReimaginingsService {
     { name: "Genesis", genre: "progressive rock", era: "1970s" },
     { name: "King Crimson", genre: "progressive rock", era: "1970s" },
     { name: "Emerson Lake & Palmer", genre: "progressive rock", era: "1970s" },
+    { name: "Steppenwolf", genre: "rock", era: "1960s" },
+    { name: "Jefferson Airplane", genre: "rock", era: "1960s" },
+    { name: "The Byrds", genre: "rock", era: "1960s" },
+    { name: "Buffalo Springfield", genre: "rock", era: "1960s" },
+    { name: "The Zombies", genre: "rock", era: "1960s" },
+    { name: "The Hollies", genre: "rock", era: "1960s" },
+    { name: "Procol Harum", genre: "rock", era: "1960s" },
+    { name: "Moody Blues", genre: "progressive rock", era: "1970s" },
+    { name: "Jethro Tull", genre: "progressive rock", era: "1970s" },
+    { name: "Wishbone Ash", genre: "rock", era: "1970s" },
+    { name: "Uriah Heep", genre: "rock", era: "1970s" },
+    { name: "Blue Oyster Cult", genre: "rock", era: "1970s" },
+    { name: "Bad Company", genre: "rock", era: "1970s" },
+    { name: "Free", genre: "rock", era: "1970s" },
+    { name: "Humble Pie", genre: "rock", era: "1970s" },
+    { name: "Grand Funk Railroad", genre: "rock", era: "1970s" },
+    { name: "Mountain", genre: "rock", era: "1970s" },
+    { name: "Cactus", genre: "rock", era: "1970s" },
+    { name: "Vanilla Fudge", genre: "rock", era: "1960s" },
+    { name: "Iron Butterfly", genre: "rock", era: "1960s" },
 
     // Hard Rock & Heavy Metal
     { name: "Black Sabbath", genre: "metal", era: "1970s" },
@@ -228,6 +248,40 @@ export class AiReimaginingsService {
     "Total Eclipse of the Heart", "I Want to Know What Love Is", "Waiting for a Girl Like You",
     "Don't Stop Believin'", "Any Way You Want It", "Separate Ways", "Faithfully",
     "More Than a Feeling", "Peace of Mind", "Foreplay/Long Time", "Amanda",
+    
+    // Modern Hits & Indie Anthems
+    "Mr. Brightside", "Somebody Told Me", "When You Were Young", "Human",
+    "Seven Nation Army", "Fell in Love with a Girl", "Dead Leaves and the Dirty Ground",
+    "Last Nite", "Reptilia", "12:51", "Hard to Explain",
+    "I Bet You Look Good on the Dancefloor", "When the Sun Goes Down", "Fluorescent Adolescent",
+    "Time to Dance", "Electric Feel", "Kids", "Little Talks",
+    "Pumped Up Kicks", "Helena Beat", "Sit Next to Me", "Coming of Age",
+    "Shut Up and Dance", "Anna Sun", "Tongue Tied", "Ways to Go",
+    
+    // Electronic & EDM Classics
+    "Sandstorm", "Children", "Adagio for Strings", "Silence", "Traffic",
+    "Animals", "Clarity", "Stay the Night", "Titanium", "Without You",
+    "Levels", "Wake Me Up", "Hey Brother", "The Nights",
+    "Strobe", "Ghosts 'n' Stuff", "Raise Your Weapon", "Some Chords",
+    "One", "Countdown", "Don't You Worry Child", "Save the World",
+    
+    // Soul & R&B Classics  
+    "Respect", "Natural Woman", "Think", "Chain of Fools",
+    "What's Going On", "Let's Get It On", "Sexual Healing", "Mercy Mercy Me",
+    "Superstition", "Sir Duke", "Isn't She Lovely", "I Wish",
+    "I Want You Back", "ABC", "I'll Be There", "Ben",
+    "Let's Stay Together", "Tired of Being Alone", "How Can You Mend a Broken Heart",
+    
+    // Country Crossovers
+    "Friends in Low Places", "The Dance", "Thunder Rolls", "If Tomorrow Never Comes",
+    "Amarillo By Morning", "All My Ex's Live in Texas", "The Chair",
+    "Mamas Don't Let Your Babies Grow Up", "On the Road Again", "Blue Eyes Crying in the Rain",
+    "Jolene", "9 to 5", "Islands in the Stream", "Coat of Many Colors",
+    
+    // Jazz Standards Reimagined
+    "Take Five", "So What", "Kind of Blue", "All Blues",
+    "Round Midnight", "Autumn Leaves", "My Favorite Things", "A Love Supreme",
+    "Fly Me to the Moon", "The Girl from Ipanema", "Summertime", "What a Wonderful World",
     
     // Alternative & Indie
     "Losing My Religion", "Everybody Hurts", "It's the End of the World", "Shiny Happy People",

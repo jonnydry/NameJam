@@ -126,6 +126,7 @@ Changelog:
 - July 05, 2025. Fixed persistent results issue: enhanced AI fallback system with dynamic generation to provide unique, varied results on each generation instead of repeating the same names
 - July 06, 2025. Improved error handling: added user-friendly messaging when AI features are unavailable due to quota limits, with visual indicators in the UI
 - July 06, 2025. Implemented genre-specific name generation: added 14 musical genres (rock, metal, jazz, electronic, folk, classical, hip-hop, country, blues, reggae, punk, indie, pop, alternative) with specialized vocabulary filtering and thematic word selection
+- July 06, 2025. Massively expanded data sources for endless entertainment: added 15 new vocabulary categories (emotions, colors, animals, mythology, technology, nature, cosmic, abstract, textures, weather, time-related, movement, sounds, tastes, cultural) with 500+ unique words, integrated dynamic category selection into name generation with 30-40% variety chance, expanded AI reimaginings database to 180+ famous bands and 280+ iconic songs across all genres
 
 ## User Preferences
 
