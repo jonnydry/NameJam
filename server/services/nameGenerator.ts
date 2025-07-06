@@ -98,7 +98,7 @@ export class NameGeneratorService {
   }
 
   async generateNames(request: GenerateNameRequest): Promise<string[] | { names: string[], aiUnavailable: boolean }> {
-    const { type, wordCount, count, mood, includeAiReimaginings } = request;
+    const { type, wordCount, count, mood, genre, includeAiReimaginings } = request;
     const names: string[] = [];
 
     // Calculate split between traditional and AI names
@@ -107,7 +107,7 @@ export class NameGeneratorService {
 
     // Generate traditional names
     for (let i = 0; i < traditionalCount; i++) {
-      const name = await this.generateSingleName(type, wordCount, mood);
+      const name = await this.generateSingleName(type, wordCount, mood, genre);
       if (!names.includes(name)) {
         names.push(name);
       }
@@ -129,7 +129,7 @@ export class NameGeneratorService {
         
         // Fallback to traditional generation if AI fails
         while (names.length < count) {
-          const name = await this.generateSingleName(type, wordCount, mood);
+          const name = await this.generateSingleName(type, wordCount, mood, genre);
           if (!names.includes(name)) {
             names.push(name);
           }
@@ -144,7 +144,7 @@ export class NameGeneratorService {
 
     // If we don't have enough unique names, generate more traditional ones
     while (names.length < count) {
-      const name = await this.generateSingleName(type, wordCount, mood);
+      const name = await this.generateSingleName(type, wordCount, mood, genre);
       if (!names.includes(name)) {
         names.push(name);
       }
@@ -153,18 +153,24 @@ export class NameGeneratorService {
     return names.slice(0, count);
   }
 
-  private async generateSingleName(type: string, wordCount: number, mood?: string): Promise<string> {
+  private async generateSingleName(type: string, wordCount: number, mood?: string, genre?: string): Promise<string> {
     // Use simple synchronous generation to demonstrate web-enhanced vocabulary
     if (wordCount <= 3) {
-      return this.generateSimpleName(type, wordCount, mood);
+      return this.generateSimpleName(type, wordCount, mood, genre);
     } else {
-      return this.generateLongForm(type, wordCount, mood);
+      return this.generateLongForm(type, wordCount, mood, genre);
     }
   }
 
-  private generateSimpleName(type: string, wordCount: number, mood?: string): string {
-    // Use the web-enhanced vocabulary (already loaded during initialization)
-    const sources = mood ? this.getStaticMoodFilteredWords(mood) : this.wordSources;
+  private generateSimpleName(type: string, wordCount: number, mood?: string, genre?: string): string {
+    // Use the web-enhanced vocabulary with genre and mood filtering
+    let sources = this.wordSources;
+    if (mood) {
+      sources = this.getStaticMoodFilteredWords(mood);
+    }
+    if (genre) {
+      sources = this.getGenreFilteredWords(genre, sources);
+    }
     
     // Generate names using the enhanced vocabulary
     const words: string[] = [];
@@ -438,9 +444,15 @@ export class NameGeneratorService {
     };
   }
 
-  private generateLongForm(type: string, wordCount: number, mood?: string): string {
-    // Use synchronous mood filtering for long form generation
-    const filteredSources = mood ? this.getStaticMoodFilteredWords(mood) : this.wordSources;
+  private generateLongForm(type: string, wordCount: number, mood?: string, genre?: string): string {
+    // Use synchronous mood and genre filtering for long form generation
+    let filteredSources = this.wordSources;
+    if (mood) {
+      filteredSources = this.getStaticMoodFilteredWords(mood);
+    }
+    if (genre) {
+      filteredSources = this.getGenreFilteredWords(genre, filteredSources);
+    }
     
     // Define grammatical patterns for longer names (4+ words)
     const patterns = [
@@ -478,6 +490,108 @@ export class NameGeneratorService {
 
     const pattern = selectedPatterns[Math.floor(Math.random() * selectedPatterns.length)];
     return pattern();
+  }
+
+  private getGenreFilteredWords(genre: string, sources: WordSource): WordSource {
+    const genreFilters = {
+      'rock': {
+        adjectives: ['Electric', 'Wild', 'Raw', 'Loud', 'Rebel', 'Hard', 'Heavy', 'Steel', 'Thunder', 'Lightning', 'Storm', 'Fire', 'Burning', 'Blazing', 'Fierce', 'Savage', 'Brutal', 'Powerful', 'Crushing', 'Roaring'],
+        nouns: ['Thunder', 'Lightning', 'Storm', 'Fire', 'Steel', 'Stone', 'Mountain', 'Volcano', 'Eagle', 'Wolf', 'Tiger', 'Hammer', 'Blade', 'Warrior', 'Rebel', 'Machine', 'Engine', 'Power', 'Force', 'Energy'],
+        verbs: ['Rock', 'Roll', 'Smash', 'Crash', 'Burn', 'Blast', 'Strike', 'Thunder', 'Roar', 'Scream', 'Shout', 'Drive', 'Rush', 'Charge', 'Fight', 'Battle', 'Rage', 'Storm', 'Explode', 'Ignite'],
+        musicalTerms: ['Amp', 'Riff', 'Guitar', 'Bass', 'Drums', 'Distortion', 'Power Chord', 'Solo', 'Headbang', 'Mosh', 'Stage', 'Microphone', 'Volume', 'Feedback', 'Marshall', 'Fender', 'Gibson', 'Stratocaster', 'Les Paul', 'Pickup']
+      },
+      'metal': {
+        adjectives: ['Black', 'Death', 'Doom', 'Brutal', 'Savage', 'Dark', 'Evil', 'Infernal', 'Demonic', 'Hellish', 'Necro', 'Grim', 'Frost', 'Iron', 'Steel', 'Blood', 'Crimson', 'Void', 'Unholy', 'Wicked'],
+        nouns: ['Death', 'Doom', 'Hell', 'Demon', 'Beast', 'Dragon', 'Skull', 'Bone', 'Blood', 'Iron', 'Steel', 'Blade', 'Sword', 'Axe', 'Throne', 'Crown', 'Darkness', 'Shadow', 'Abyss', 'Void'],
+        verbs: ['Destroy', 'Annihilate', 'Devastate', 'Crush', 'Slaughter', 'Massacre', 'Burn', 'Melt', 'Forge', 'Strike', 'Pound', 'Hammer', 'Grind', 'Shred', 'Tear', 'Rip', 'Slay', 'Conquer', 'Dominate', 'Rule'],
+        musicalTerms: ['Blast Beat', 'Tremolo', 'Growl', 'Scream', 'Double Bass', 'Drop Tuning', 'Distortion', 'Overdrive', 'Feedback', 'Harmonics', 'Palm Mute', 'Sweep Pick', 'Shred', 'Breakdown', 'Mosh Pit', 'Wall of Death', 'Circle Pit', 'Headbang', 'Corpse Paint', 'Battle Vest']
+      },
+      'jazz': {
+        adjectives: ['Smooth', 'Cool', 'Blue', 'Velvet', 'Silky', 'Elegant', 'Sophisticated', 'Mellow', 'Warm', 'Rich', 'Deep', 'Sultry', 'Midnight', 'Golden', 'Amber', 'Honey', 'Sweet', 'Gentle', 'Soft', 'Dreamy'],
+        nouns: ['Blue', 'Note', 'Melody', 'Harmony', 'Rhythm', 'Soul', 'Spirit', 'Heart', 'Moon', 'Night', 'Dream', 'Whisper', 'Breeze', 'Rain', 'Cafe', 'Club', 'Lounge', 'Bar', 'Street', 'Avenue'],
+        verbs: ['Swing', 'Sway', 'Flow', 'Glide', 'Dance', 'Improvise', 'Syncopate', 'Harmonize', 'Groove', 'Vibe', 'Feel', 'Express', 'Interpret', 'Create', 'Innovate', 'Explore', 'Discover', 'Journey', 'Wander', 'Float'],
+        musicalTerms: ['Swing', 'Bebop', 'Cool Jazz', 'Fusion', 'Improvisation', 'Syncopation', 'Blue Note', 'Chord Changes', 'Walking Bass', 'Comping', 'Scat', 'Standard', 'Real Book', 'Jam Session', 'Cutting Contest', 'Sideman', 'Rhythm Section', 'Horn Section', 'Big Band', 'Small Combo']
+      },
+      'electronic': {
+        adjectives: ['Digital', 'Synthetic', 'Cyber', 'Electric', 'Neon', 'Techno', 'Virtual', 'Binary', 'Quantum', 'Laser', 'Plasma', 'Neural', 'Matrix', 'Circuit', 'Pulse', 'Wave', 'Frequency', 'Modular', 'Analog', 'Future'],
+        nouns: ['Synth', 'Circuit', 'Wire', 'Code', 'Data', 'Signal', 'Frequency', 'Wave', 'Pulse', 'Beat', 'Drop', 'Loop', 'Sample', 'Grid', 'Matrix', 'Network', 'System', 'Machine', 'Robot', 'Algorithm'],
+        verbs: ['Synthesize', 'Process', 'Compute', 'Generate', 'Modulate', 'Filter', 'Compress', 'Sequence', 'Program', 'Code', 'Upload', 'Download', 'Stream', 'Transmit', 'Broadcast', 'Connect', 'Interface', 'Boot', 'Initialize', 'Execute'],
+        musicalTerms: ['BPM', 'Bass Drop', 'Wobble', 'Filter Sweep', 'LFO', 'Oscillator', 'Envelope', 'Reverb', 'Delay', 'Chorus', 'Flanger', 'Phaser', 'Compressor', 'Sidechain', 'Vocoder', 'Auto-Tune', 'Sampler', 'Sequencer', 'DAW', 'MIDI']
+      },
+      'folk': {
+        adjectives: ['Old', 'Ancient', 'Traditional', 'Rural', 'Country', 'Rustic', 'Simple', 'Pure', 'Natural', 'Organic', 'Earthy', 'Wooden', 'Stone', 'Wild', 'Free', 'Wandering', 'Traveling', 'Nomadic', 'Pastoral', 'Humble'],
+        nouns: ['Road', 'Path', 'Trail', 'Mountain', 'Valley', 'River', 'Stream', 'Forest', 'Tree', 'Root', 'Branch', 'Leaf', 'Flower', 'Field', 'Farm', 'Village', 'Town', 'Home', 'Hearth', 'Story'],
+        verbs: ['Wander', 'Roam', 'Travel', 'Journey', 'Walk', 'Sing', 'Tell', 'Share', 'Remember', 'Recall', 'Preserve', 'Pass Down', 'Teach', 'Learn', 'Gather', 'Harvest', 'Plant', 'Grow', 'Nurture', 'Tend'],
+        musicalTerms: ['Ballad', 'Fiddle', 'Banjo', 'Mandolin', 'Harmonica', 'Acoustic', 'Fingerpicking', 'Strumming', 'Dulcimer', 'Penny Whistle', 'Concertina', 'Accordion', 'Dobro', 'Washboard', 'Jug', 'Spoons', 'Clogging', 'Square Dance', 'Hoedown', 'Campfire']
+      },
+      'classical': {
+        adjectives: ['Grand', 'Majestic', 'Noble', 'Elegant', 'Refined', 'Graceful', 'Sublime', 'Divine', 'Heavenly', 'Ethereal', 'Timeless', 'Eternal', 'Perfect', 'Harmonious', 'Melodious', 'Orchestral', 'Symphonic', 'Chamber', 'Baroque', 'Romantic'],
+        nouns: ['Symphony', 'Concerto', 'Sonata', 'Fugue', 'Prelude', 'Nocturne', 'Waltz', 'Minuet', 'Rondo', 'Variation', 'Movement', 'Theme', 'Motif', 'Phrase', 'Cadence', 'Harmony', 'Counterpoint', 'Canon', 'Aria', 'Overture'],
+        verbs: ['Compose', 'Conduct', 'Perform', 'Interpret', 'Express', 'Harmonize', 'Orchestrate', 'Arrange', 'Transcribe', 'Modulate', 'Resolve', 'Develop', 'Elaborate', 'Embellish', 'Ornament', 'Phrase', 'Articulate', 'Breathe', 'Flow', 'Soar'],
+        musicalTerms: ['Allegro', 'Andante', 'Adagio', 'Fortissimo', 'Pianissimo', 'Crescendo', 'Diminuendo', 'Staccato', 'Legato', 'Vibrato', 'Tremolo', 'Glissando', 'Arpeggio', 'Scale', 'Chromatic', 'Diatonic', 'Pentatonic', 'Major', 'Minor', 'Augmented']
+      },
+      'hip-hop': {
+        adjectives: ['Fresh', 'Dope', 'Sick', 'Raw', 'Real', 'Street', 'Urban', 'Underground', 'Independent', 'Original', 'Authentic', 'Hard', 'Smooth', 'Slick', 'Sharp', 'Quick', 'Fast', 'Rapid', 'Bold', 'Confident'],
+        nouns: ['Beat', 'Rhyme', 'Flow', 'Verse', 'Hook', 'Bridge', 'Break', 'Sample', 'Loop', 'Track', 'Mix', 'Scratch', 'Turntable', 'Microphone', 'Studio', 'Booth', 'Cipher', 'Freestyle', 'Battle', 'Crew'],
+        verbs: ['Rap', 'Spit', 'Flow', 'Drop', 'Kick', 'Serve', 'Deliver', 'Freestyle', 'Battle', 'Cipher', 'Scratch', 'Mix', 'Blend', 'Cut', 'Loop', 'Sample', 'Chop', 'Flip', 'Remix', 'Produce'],
+        musicalTerms: ['808', 'Kick', 'Snare', 'Hi-Hat', 'Sample', 'Loop', 'Break', 'Scratch', 'Turntable', 'DJ', 'MC', 'B-Boy', 'Graffiti', 'Beatbox', 'Freestyle', 'Cypher', 'Battle', 'Crew', 'Posse', 'Squad']
+      },
+      'country': {
+        adjectives: ['Country', 'Southern', 'Western', 'Rural', 'Small-Town', 'Backwood', 'Hillbilly', 'Cowboy', 'Outlaw', 'Rebel', 'Honest', 'Simple', 'True', 'Real', 'Authentic', 'Traditional', 'Old-School', 'Classic', 'Vintage', 'Rustic'],
+        nouns: ['Road', 'Highway', 'Truck', 'Farm', 'Ranch', 'Barn', 'Field', 'Creek', 'Mountain', 'Valley', 'Town', 'Church', 'Honky-Tonk', 'Saloon', 'Bar', 'Porch', 'Moonshine', 'Whiskey', 'Beer', 'Pickup'],
+        verbs: ['Drive', 'Ride', 'Roll', 'Cruise', 'Roam', 'Wander', 'Drift', 'Settle', 'Work', 'Farm', 'Ranch', 'Fish', 'Hunt', 'Drink', 'Party', 'Dance', 'Sing', 'Play', 'Strum', 'Pick'],
+        musicalTerms: ['Twang', 'Slide Guitar', 'Steel Guitar', 'Dobro', 'Banjo', 'Fiddle', 'Harmonica', 'Mandolin', 'Acoustic', 'Fingerpicking', 'Flatpicking', 'Nashville', 'Grand Ole Opry', 'Honky-Tonk', 'Bluegrass', 'Rockabilly', 'Outlaw', 'Alt-Country', 'Americana', 'Roots']
+      },
+      'blues': {
+        adjectives: ['Blue', 'Deep', 'Soulful', 'Raw', 'Gritty', 'Rough', 'Smooth', 'Slow', 'Heavy', 'Thick', 'Rich', 'Dark', 'Moody', 'Melancholy', 'Sad', 'Lonesome', 'Lonely', 'Empty', 'Hollow', 'Aching'],
+        nouns: ['Blues', 'Soul', 'Heart', 'Pain', 'Sorrow', 'Trouble', 'Worry', 'Cross', 'Road', 'Highway', 'Train', 'River', 'Delta', 'Chicago', 'Memphis', 'Mississippi', 'Cotton', 'Field', 'Plantation', 'Juke Joint'],
+        verbs: ['Cry', 'Weep', 'Moan', 'Wail', 'Suffer', 'Hurt', 'Ache', 'Grieve', 'Mourn', 'Lament', 'Struggle', 'Fight', 'Survive', 'Endure', 'Overcome', 'Rise', 'Escape', 'Travel', 'Journey', 'Migrate'],
+        musicalTerms: ['12-Bar', 'Pentatonic', 'Blue Note', 'Bend', 'Slide', 'Vibrato', 'Shuffle', 'Swing', 'Call and Response', 'Delta', 'Chicago', 'Electric', 'Acoustic', 'Harmonica', 'Slide Guitar', 'Bottleneck', 'Resonator', 'Dobro', 'Lap Steel', 'Washboard']
+      },
+      'reggae': {
+        adjectives: ['Rasta', 'Irie', 'Positive', 'Uplifting', 'Spiritual', 'Conscious', 'Righteous', 'Peaceful', 'Unity', 'One Love', 'Jah', 'Blessed', 'Sacred', 'Holy', 'Divine', 'Natural', 'Organic', 'Green', 'Gold', 'Red'],
+        nouns: ['Babylon', 'Zion', 'Jah', 'Rasta', 'Lion', 'Dread', 'Locks', 'Ganja', 'Herb', 'Nature', 'Earth', 'Creation', 'Universe', 'Love', 'Peace', 'Unity', 'Freedom', 'Liberation', 'Revolution', 'Uprising'],
+        verbs: ['Rise', 'Rise Up', 'Stand Up', 'Get Up', 'Wake Up', 'Arise', 'Rebel', 'Resist', 'Fight', 'Struggle', 'Overcome', 'Conquer', 'Unite', 'Love', 'Praise', 'Worship', 'Celebrate', 'Dance', 'Skank', 'Bubble'],
+        musicalTerms: ['Skank', 'One Drop', 'Steppers', 'Rockers', 'Bubble', 'Dub', 'Riddim', 'Bassline', 'Off-Beat', 'Nyabinghi', 'Rastafari', 'Sound System', 'Toasting', 'DJ', 'Selector', 'Dubplate', 'Version', 'Instrumental', 'Melodica', 'Clave']
+      },
+      'punk': {
+        adjectives: ['Punk', 'Rebel', 'Anti', 'Raw', 'Fast', 'Loud', 'Angry', 'Pissed', 'Mad', 'Furious', 'Radical', 'Revolutionary', 'Anarchist', 'Underground', 'DIY', 'Independent', 'Hardcore', 'Straight Edge', 'Political', 'Social'],
+        nouns: ['Anarchy', 'Chaos', 'Riot', 'Revolt', 'Revolution', 'Uprising', 'Protest', 'Resistance', 'Opposition', 'System', 'Authority', 'Government', 'Police', 'State', 'Society', 'Conformity', 'Mainstream', 'Establishment', 'Machine', 'Power'],
+        verbs: ['Rebel', 'Revolt', 'Riot', 'Protest', 'Resist', 'Oppose', 'Fight', 'Battle', 'Destroy', 'Smash', 'Break', 'Tear Down', 'Overthrow', 'Reject', 'Refuse', 'Defy', 'Challenge', 'Question', 'Criticize', 'Attack'],
+        musicalTerms: ['Power Chord', 'Distortion', 'Feedback', 'Fuzz', 'Overdrive', 'Fast', 'Aggressive', 'Raw', 'Lo-Fi', 'DIY', 'Three Chord', 'Simple', 'Direct', 'Honest', 'Authentic', 'Garage', 'Basement', 'Club', 'Venue', 'Scene']
+      },
+      'indie': {
+        adjectives: ['Independent', 'Alternative', 'Underground', 'Artsy', 'Creative', 'Original', 'Unique', 'Quirky', 'Eccentric', 'Experimental', 'Avant-Garde', 'Lo-Fi', 'DIY', 'Handmade', 'Crafted', 'Boutique', 'Small', 'Local', 'Community', 'Grass-Roots'],
+        nouns: ['Art', 'Craft', 'Creation', 'Expression', 'Voice', 'Vision', 'Dream', 'Imagination', 'Inspiration', 'Muse', 'Spirit', 'Soul', 'Heart', 'Mind', 'Thought', 'Idea', 'Concept', 'Project', 'Collective', 'Community'],
+        verbs: ['Create', 'Express', 'Explore', 'Experiment', 'Discover', 'Invent', 'Innovate', 'Craft', 'Build', 'Make', 'Design', 'Compose', 'Write', 'Record', 'Produce', 'Release', 'Share', 'Connect', 'Inspire', 'Influence'],
+        musicalTerms: ['Lo-Fi', 'Bedroom Pop', 'Dream Pop', 'Shoegaze', 'Post-Rock', 'Math Rock', 'Emo', 'Screamo', 'Indie Rock', 'Indie Pop', 'Alternative', 'Underground', 'DIY', 'Self-Released', 'Bandcamp', 'Soundcloud', 'Cassette', 'Vinyl', '7-Inch', 'EP']
+      },
+      'pop': {
+        adjectives: ['Popular', 'Catchy', 'Bright', 'Shiny', 'Glossy', 'Polished', 'Perfect', 'Sweet', 'Sugary', 'Bubbly', 'Upbeat', 'Happy', 'Joyful', 'Cheerful', 'Positive', 'Energetic', 'Dynamic', 'Vibrant', 'Colorful', 'Fun'],
+        nouns: ['Pop', 'Hit', 'Chart', 'Radio', 'Airplay', 'Single', 'Album', 'Track', 'Song', 'Melody', 'Hook', 'Chorus', 'Verse', 'Bridge', 'Beat', 'Rhythm', 'Dance', 'Party', 'Club', 'Stage'],
+        verbs: ['Pop', 'Bounce', 'Dance', 'Move', 'Groove', 'Shake', 'Shimmer', 'Sparkle', 'Shine', 'Glow', 'Radiate', 'Burst', 'Explode', 'Celebrate', 'Party', 'Have Fun', 'Enjoy', 'Love', 'Adore', 'Worship'],
+        musicalTerms: ['Hook', 'Chorus', 'Bridge', 'Pre-Chorus', 'Verse', 'Refrain', 'Melody', 'Harmony', 'Auto-Tune', 'Pitch Perfect', 'Catchy', 'Earworm', 'Radio Friendly', 'Commercial', 'Mainstream', 'Top 40', 'Billboard', 'Chart Topper', 'Hit Single', 'Pop Star']
+      },
+      'alternative': {
+        adjectives: ['Alternative', 'Different', 'Unique', 'Non-Conformist', 'Anti-Mainstream', 'Underground', 'Subversive', 'Edgy', 'Dark', 'Moody', 'Atmospheric', 'Ambient', 'Ethereal', 'Dreamy', 'Surreal', 'Abstract', 'Conceptual', 'Intellectual', 'Artistic', 'Creative'],
+        nouns: ['Alternative', 'Option', 'Choice', 'Path', 'Route', 'Way', 'Direction', 'Perspective', 'View', 'Angle', 'Approach', 'Method', 'Style', 'Form', 'Shape', 'Structure', 'Framework', 'Concept', 'Idea', 'Theory'],
+        verbs: ['Alternate', 'Change', 'Shift', 'Transform', 'Morph', 'Evolve', 'Develop', 'Progress', 'Advance', 'Move', 'Flow', 'Drift', 'Float', 'Hover', 'Suspend', 'Balance', 'Equilibrate', 'Stabilize', 'Center', 'Focus'],
+        musicalTerms: ['Grunge', 'Shoegaze', 'Post-Punk', 'New Wave', 'Gothic', 'Industrial', 'Noise', 'Experimental', 'Ambient', 'Drone', 'Post-Rock', 'Math Rock', 'Emo', 'Screamo', 'Hardcore', 'Metalcore', 'Prog', 'Psychedelic', 'Krautrock', 'No Wave']
+      }
+    };
+
+    const genreWords = genreFilters[genre as keyof typeof genreFilters];
+    if (!genreWords) {
+      return sources; // Return original if genre not found
+    }
+
+    // Combine genre-specific words with existing words, prioritizing genre words
+    return {
+      adjectives: [...genreWords.adjectives, ...sources.adjectives.slice(0, 20)].slice(0, 50),
+      nouns: [...genreWords.nouns, ...sources.nouns.slice(0, 20)].slice(0, 50),
+      verbs: [...genreWords.verbs, ...sources.verbs.slice(0, 20)].slice(0, 50),
+      musicalTerms: [...genreWords.musicalTerms, ...sources.musicalTerms.slice(0, 20)].slice(0, 50)
+    };
   }
 
   private buildPattern(structure: string[], wordSources?: WordSource): string {

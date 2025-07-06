@@ -28,6 +28,10 @@ export const generateNameRequestSchema = z.object({
     'dark', 'bright', 'mysterious', 'energetic', 'melancholy', 'ethereal',
     'aggressive', 'peaceful', 'nostalgic', 'futuristic', 'romantic', 'epic'
   ]).optional(),
+  genre: z.enum([
+    'rock', 'metal', 'jazz', 'electronic', 'folk', 'classical', 'hip-hop', 
+    'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative'
+  ]).optional(),
   includeAiReimaginings: z.boolean().default(false),
 });
 

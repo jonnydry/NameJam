@@ -32,6 +32,7 @@ export function NameGenerator() {
   const [nameType, setNameType] = useState<'band' | 'song'>('band');
   const [wordCount, setWordCount] = useState(2);
   const [mood, setMood] = useState<string>('none');
+  const [genre, setGenre] = useState<string>('none');
   const [includeAiReimaginings, setIncludeAiReimaginings] = useState(false);
   const [results, setResults] = useState<GenerationResult[]>([]);
   const [searchInput, setSearchInput] = useState('');
@@ -47,7 +48,8 @@ export function NameGenerator() {
         wordCount,
         count: 3,
         includeAiReimaginings,
-        ...(mood && mood !== 'none' && { mood })
+        ...(mood && mood !== 'none' && { mood }),
+        ...(genre && genre !== 'none' && { genre })
       });
       const data = await response.json();
       if (!data.results || !Array.isArray(data.results)) {
@@ -135,7 +137,8 @@ export function NameGenerator() {
         wordCount,
         count: 1,
         includeAiReimaginings,
-        ...(mood && mood !== 'none' && { mood })
+        ...(mood && mood !== 'none' && { mood }),
+        ...(genre && genre !== 'none' && { genre })
       });
       const data = await response.json();
       return data;
@@ -271,7 +274,7 @@ export function NameGenerator() {
         </div>
 
         {/* Mood Selector */}
-        <div className="flex items-center justify-center space-x-4 mb-6">
+        <div className="flex items-center justify-center space-x-4 mb-4">
           <label htmlFor="mood" className="text-sm font-medium text-muted-foreground flex items-center">
             <Palette className="w-4 h-4 mr-2" />
             Mood:
@@ -294,6 +297,36 @@ export function NameGenerator() {
               <SelectItem value="futuristic">🚀 Futuristic</SelectItem>
               <SelectItem value="romantic">💕 Romantic</SelectItem>
               <SelectItem value="epic">⚔️ Epic</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Genre Selector */}
+        <div className="flex items-center justify-center space-x-4 mb-6">
+          <label htmlFor="genre" className="text-sm font-medium text-muted-foreground flex items-center">
+            <Music className="w-4 h-4 mr-2" />
+            Genre:
+          </label>
+          <Select value={genre} onValueChange={setGenre}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Any genre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Any genre</SelectItem>
+              <SelectItem value="rock">🎸 Rock</SelectItem>
+              <SelectItem value="metal">🤘 Metal</SelectItem>
+              <SelectItem value="jazz">🎺 Jazz</SelectItem>
+              <SelectItem value="electronic">🎛️ Electronic</SelectItem>
+              <SelectItem value="folk">🪕 Folk</SelectItem>
+              <SelectItem value="classical">🎼 Classical</SelectItem>
+              <SelectItem value="hip-hop">🎤 Hip-Hop</SelectItem>
+              <SelectItem value="country">🤠 Country</SelectItem>
+              <SelectItem value="blues">🎵 Blues</SelectItem>
+              <SelectItem value="reggae">🌴 Reggae</SelectItem>
+              <SelectItem value="punk">⚡ Punk</SelectItem>
+              <SelectItem value="indie">🎨 Indie</SelectItem>
+              <SelectItem value="pop">💫 Pop</SelectItem>
+              <SelectItem value="alternative">🌀 Alternative</SelectItem>
             </SelectContent>
           </Select>
         </div>
