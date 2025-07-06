@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, HeartIcon } from "lucide-react";
+import { Copy, ExternalLink, Heart, HeartIcon, RefreshCw } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,9 +26,12 @@ interface ResultCardProps {
   result: GenerationResult;
   nameType: 'band' | 'song';
   onCopy: (name: string) => void;
+  onRefresh?: (index: number) => void;
+  index?: number;
+  isRefreshing?: boolean;
 }
 
-export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
+export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefreshing }: ResultCardProps) {
   const { name, verification } = result;
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
@@ -106,6 +109,18 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
           </span>
         </div>
         <div className="flex items-center space-x-1">
+          {onRefresh && index !== undefined && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onRefresh(index)}
+              disabled={isRefreshing}
+              className="text-muted-foreground hover:text-primary transition-colors p-2"
+              title="Generate new name"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
