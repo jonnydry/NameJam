@@ -343,52 +343,125 @@ Return only the new ${wordCount}-word song titles, one per line, without explana
   private generateFallbackReimaginings(type: 'band' | 'song', count: number, wordCount: number = 2, mood?: string): string[] {
     // Generate dynamic fallback reimaginings by combining famous name elements randomly
     const result: string[] = [];
-    const maxAttempts = count * 5; // Prevent infinite loops
+    const maxAttempts = count * 10; // Increase attempts for more variety
     let attempts = 0;
+    const usedCombinations = new Set<string>(); // Track used combinations
 
     while (result.length < count && attempts < maxAttempts) {
       attempts++;
       
-      // Get random source names to reimagine
+      // Get more random source names for variety
       const sourceNames = type === 'band' 
-        ? this.getRandomBands(3) 
-        : this.getRandomSongs(3);
+        ? this.getRandomBands(5) 
+        : this.getRandomSongs(5);
       
       // Create a dynamic reimagining based on the word count
       const reimagined = this.createDynamicReimaging(sourceNames, wordCount, type, mood);
       
-      // Add if unique
-      if (reimagined && !result.includes(reimagined)) {
+      // Check word count matches exactly
+      const actualWordCount = reimagined.split(' ').filter(w => w.length > 0).length;
+      
+      // Add if unique and correct word count
+      if (reimagined && !result.includes(reimagined) && !usedCombinations.has(reimagined) && actualWordCount === wordCount) {
         result.push(reimagined);
+        usedCombinations.add(reimagined);
       }
     }
 
-    // Fallback to static list if dynamic generation fails
+    // Enhanced fallback with more variety
     if (result.length < count) {
-      const staticFallbacks = type === 'band' ? {
-        1: ["Scarab", "Crimson", "Steel", "Neon", "Velvet", "Crystal", "Midnight", "Electric", "Shadow", "Golden", "Fractal", "Obsidian", "Quantum", "Prism", "Ember", "Flux", "Phoenix", "Vortex", "Nexus", "Eclipse"],
-        2: ["Scarab Symphony", "Crimson Waters", "Steel Airship", "Neon Prophets", "Velvet Thunder", "Crystal Rebellion", "Midnight Architects", "Electric Poets", "Shadow Mechanics", "Golden Sirens", "Fractal Dreams", "Obsidian Echoes", "Quantum Storm", "Prism Light", "Ember Forge", "Flux Theory"],
-        3: ["Scarab Symphony Orchestra", "Crimson Water Dreams", "Steel Airship Voyage", "Neon Prophet Society", "Velvet Thunder Storm", "Crystal Rebellion Army", "Midnight Archive Project", "Electric Poetry Guild", "Shadow Mechanic Union", "Golden Siren Circle"],
-        4: ["Ancient Scarab Symphony Orchestra", "Crimson Waters of Time", "Steel Airship Midnight Voyage", "Neon Prophet Society Guild", "Velvet Thunder Storm Brigade", "Crystal Rebellion Army Corps", "Midnight Archive Project Team", "Electric Poetry Guild House"],
-        5: ["Ancient Scarab Symphony Orchestra Guild", "Crimson Waters of Time Eternal", "Steel Airship Midnight Voyage Society", "Neon Prophet Society Guild Masters", "Velvet Thunder Storm Brigade Unit"],
-        6: ["Ancient Scarab Symphony Orchestra Guild Masters", "Crimson Waters of Time Eternal Dreams", "Steel Airship Midnight Voyage Society Corps", "Neon Prophet Society Guild House Rules"]
-      } : {
-        1: ["Ethereal", "Cosmic", "Silent", "Broken", "Digital", "Fading", "Whispered", "Neon", "Lost", "Beautiful", "Infinite", "Paper", "Quantum", "Prism", "Ember", "Flux", "Phoenix", "Vortex", "Nexus", "Eclipse"],
-        2: ["Ethereal Reverie", "Cosmic Wanderer", "Silent Thunder", "Broken Mirrors", "Digital Sunset", "Fading Starlight", "Whispered Secrets", "Neon Nights", "Lost Translation", "Beautiful Chaos", "Infinite Loop", "Paper Hearts", "Quantum Dreams", "Prism Light"],
-        3: ["Ethereal Dream Reverie", "Cosmic Wanderer Soul", "Silent Thunder Storm", "Broken Mirror Dreams", "Digital Sunset Sky", "Fading Starlight Memory", "Whispered Secret Garden", "Neon Night Vision", "Lost Translation Error", "Beautiful Chaos Theory"],
-        4: ["Ethereal Dream Reverie Song", "Cosmic Wanderer Soul Journey", "Silent Thunder Storm Calling", "Broken Mirror Dreams Tonight", "Digital Sunset Sky Falling", "Fading Starlight Memory Lane", "Whispered Secret Garden Party", "Neon Night Vision Quest"],
-        5: ["Ethereal Dream Reverie Song Tonight", "Cosmic Wanderer Soul Journey Home", "Silent Thunder Storm Calling You", "Broken Mirror Dreams Tonight Forever", "Digital Sunset Sky Falling Down"],
-        6: ["Ethereal Dream Reverie Song Tonight Forever", "Cosmic Wanderer Soul Journey Home Again", "Silent Thunder Storm Calling You Back", "Broken Mirror Dreams Tonight Forever Lost"]
+      // Generate completely random combinations from expanded word pools
+      const expandedWords = {
+        adjectives: [
+          'Ancient', 'Modern', 'Silent', 'Electric', 'Golden', 'Silver', 'Cosmic', 'Digital',
+          'Midnight', 'Crystal', 'Shadow', 'Neon', 'Velvet', 'Steel', 'Quantum', 'Prism',
+          'Ethereal', 'Mystic', 'Frozen', 'Burning', 'Twisted', 'Sacred', 'Hollow', 'Infinite',
+          'Broken', 'Shattered', 'Glowing', 'Fading', 'Rising', 'Falling', 'Hidden', 'Lost',
+          'Forbidden', 'Savage', 'Gentle', 'Wild', 'Tame', 'Rogue', 'Noble', 'Humble'
+        ],
+        nouns: [
+          'Symphony', 'Echo', 'Vision', 'Dream', 'Storm', 'Light', 'Fire', 'Water',
+          'Thunder', 'Lightning', 'Wind', 'Rain', 'Snow', 'Ice', 'Flame', 'Spark',
+          'Mirror', 'Glass', 'Crystal', 'Diamond', 'Ruby', 'Emerald', 'Sapphire', 'Pearl',
+          'Ocean', 'River', 'Mountain', 'Valley', 'Desert', 'Forest', 'Garden', 'Temple',
+          'Phoenix', 'Dragon', 'Eagle', 'Wolf', 'Lion', 'Tiger', 'Serpent', 'Raven'
+        ],
+        connectors: ['of', 'and', 'in', 'through', 'beyond', 'within', 'beneath', 'above'],
+        suffixes: ['Society', 'Guild', 'Circle', 'Union', 'Project', 'Theory', 'Archive', 'Forge', 'Brigade', 'Corps', 'Assembly', 'Collective']
       };
 
-      const staticOptions = staticFallbacks[wordCount as keyof typeof staticFallbacks] || staticFallbacks[2];
-      const shuffled = [...staticOptions].sort(() => 0.5 - Math.random());
-      
-      // Fill remaining slots with shuffled static options
-      for (const option of shuffled) {
-        if (result.length >= count) break;
-        if (!result.includes(option)) {
-          result.push(option);
+      // Generate remaining names with pure randomization
+      while (result.length < count) {
+        let generatedName = '';
+        
+        switch (wordCount) {
+          case 1:
+            // Single word - pick from nouns or create compound
+            if (Math.random() > 0.5) {
+              generatedName = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+            } else {
+              // Create compound word
+              const adj = expandedWords.adjectives[Math.floor(Math.random() * expandedWords.adjectives.length)];
+              const noun = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+              generatedName = adj.substring(0, 4) + noun.toLowerCase().substring(0, 4);
+              generatedName = generatedName.charAt(0).toUpperCase() + generatedName.slice(1);
+            }
+            break;
+            
+          case 2:
+            const adj2 = expandedWords.adjectives[Math.floor(Math.random() * expandedWords.adjectives.length)];
+            const noun2 = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+            generatedName = `${adj2} ${noun2}`;
+            break;
+            
+          case 3:
+            if (Math.random() > 0.5) {
+              const adj3 = expandedWords.adjectives[Math.floor(Math.random() * expandedWords.adjectives.length)];
+              const noun3a = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+              const noun3b = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+              generatedName = `${adj3} ${noun3a} ${noun3b}`;
+            } else {
+              const noun3 = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+              const conn3 = expandedWords.connectors[Math.floor(Math.random() * expandedWords.connectors.length)];
+              const noun3b = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+              generatedName = `${noun3} ${conn3} ${noun3b}`;
+            }
+            break;
+            
+          case 4:
+            const adj4 = expandedWords.adjectives[Math.floor(Math.random() * expandedWords.adjectives.length)];
+            const noun4a = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+            const conn4 = expandedWords.connectors[Math.floor(Math.random() * expandedWords.connectors.length)];
+            const noun4b = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+            generatedName = `${adj4} ${noun4a} ${conn4} ${noun4b}`;
+            break;
+            
+          case 5:
+            const adj5 = expandedWords.adjectives[Math.floor(Math.random() * expandedWords.adjectives.length)];
+            const noun5a = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+            const conn5 = expandedWords.connectors[Math.floor(Math.random() * expandedWords.connectors.length)];
+            const adj5b = expandedWords.adjectives[Math.floor(Math.random() * expandedWords.adjectives.length)];
+            const noun5b = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+            generatedName = `${adj5} ${noun5a} ${conn5} ${adj5b} ${noun5b}`;
+            break;
+            
+          case 6:
+            const adj6 = expandedWords.adjectives[Math.floor(Math.random() * expandedWords.adjectives.length)];
+            const noun6a = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+            const conn6 = expandedWords.connectors[Math.floor(Math.random() * expandedWords.connectors.length)];
+            const adj6b = expandedWords.adjectives[Math.floor(Math.random() * expandedWords.adjectives.length)];
+            const noun6b = expandedWords.nouns[Math.floor(Math.random() * expandedWords.nouns.length)];
+            const suffix6 = expandedWords.suffixes[Math.floor(Math.random() * expandedWords.suffixes.length)];
+            generatedName = `${adj6} ${noun6a} ${conn6} ${adj6b} ${noun6b} ${suffix6}`;
+            break;
+            
+          default:
+            generatedName = 'Creative Name';
+        }
+        
+        if (!result.includes(generatedName) && !usedCombinations.has(generatedName)) {
+          result.push(generatedName);
+          usedCombinations.add(generatedName);
         }
       }
     }
@@ -401,26 +474,88 @@ Return only the new ${wordCount}-word song titles, one per line, without explana
     const words = sourceNames.join(' ').split(' ')
       .filter(word => word.length > 2 && !['the', 'and', 'of', 'in', 'on', 'at', 'to', 'for', 'with'].includes(word.toLowerCase()));
     
-    // Additional creative words to mix in
-    const creativeWords = [
-      'Ancient', 'Modern', 'Silent', 'Electric', 'Golden', 'Silver', 'Cosmic', 'Digital',
-      'Midnight', 'Crystal', 'Shadow', 'Neon', 'Velvet', 'Steel', 'Quantum', 'Prism',
-      'Symphony', 'Echo', 'Vision', 'Dream', 'Storm', 'Light', 'Fire', 'Water',
-      'Society', 'Guild', 'Circle', 'Union', 'Project', 'Theory', 'Archive', 'Forge'
-    ];
+    // Expanded creative word pools for more variety
+    const creativeWords = {
+      adjectives: [
+        'Ancient', 'Modern', 'Silent', 'Electric', 'Golden', 'Silver', 'Cosmic', 'Digital',
+        'Midnight', 'Crystal', 'Shadow', 'Neon', 'Velvet', 'Steel', 'Quantum', 'Prism',
+        'Eternal', 'Frozen', 'Burning', 'Sacred', 'Hollow', 'Mystic', 'Savage', 'Noble'
+      ],
+      nouns: [
+        'Symphony', 'Echo', 'Vision', 'Dream', 'Storm', 'Light', 'Fire', 'Water',
+        'Thunder', 'Lightning', 'Phoenix', 'Dragon', 'Ocean', 'Mountain', 'Temple', 'Mirror'
+      ],
+      suffixes: ['Society', 'Guild', 'Circle', 'Union', 'Project', 'Theory', 'Archive', 'Forge'],
+      connectors: ['of', 'and', 'the', 'in', 'through', 'beyond']
+    };
 
-    const allWords = [...words, ...creativeWords];
-    const selectedWords: string[] = [];
-
-    // Build name according to word count
-    for (let i = 0; i < wordCount; i++) {
-      const availableWords = allWords.filter(word => !selectedWords.includes(word));
-      if (availableWords.length === 0) break;
-      
-      const randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
-      selectedWords.push(randomWord);
+    // Mix source words with creative words based on word count
+    switch (wordCount) {
+      case 1:
+        // For single words, either use a source word or create a compound
+        if (words.length > 0 && Math.random() > 0.3) {
+          return words[Math.floor(Math.random() * words.length)];
+        } else {
+          return creativeWords.nouns[Math.floor(Math.random() * creativeWords.nouns.length)];
+        }
+        
+      case 2:
+        // Adjective + Noun pattern
+        const adj = Math.random() > 0.5 && words.length > 0 
+          ? words[Math.floor(Math.random() * words.length)]
+          : creativeWords.adjectives[Math.floor(Math.random() * creativeWords.adjectives.length)];
+        const noun = Math.random() > 0.5 && words.length > 0
+          ? words[Math.floor(Math.random() * words.length)]
+          : creativeWords.nouns[Math.floor(Math.random() * creativeWords.nouns.length)];
+        return `${adj} ${noun}`;
+        
+      case 3:
+        // Various 3-word patterns
+        if (Math.random() > 0.5) {
+          // Adjective + Noun + Suffix
+          const adj3 = creativeWords.adjectives[Math.floor(Math.random() * creativeWords.adjectives.length)];
+          const noun3 = words.length > 0 ? words[Math.floor(Math.random() * words.length)] : creativeWords.nouns[Math.floor(Math.random() * creativeWords.nouns.length)];
+          const suffix3 = creativeWords.suffixes[Math.floor(Math.random() * creativeWords.suffixes.length)];
+          return `${adj3} ${noun3} ${suffix3}`;
+        } else {
+          // Noun + of + Noun
+          const noun3a = words.length > 0 ? words[Math.floor(Math.random() * words.length)] : creativeWords.nouns[Math.floor(Math.random() * creativeWords.nouns.length)];
+          const noun3b = creativeWords.nouns[Math.floor(Math.random() * creativeWords.nouns.length)];
+          return `${noun3a} of ${noun3b}`;
+        }
+        
+      case 4:
+      case 5:
+      case 6:
+        // For longer names, build more complex patterns
+        const selectedWords: string[] = [];
+        const allAvailableWords = [...words, ...creativeWords.adjectives, ...creativeWords.nouns];
+        
+        // Ensure we have enough unique words
+        for (let i = 0; i < wordCount; i++) {
+          if (i === 2 && Math.random() > 0.7) {
+            // Sometimes add a connector
+            selectedWords.push(creativeWords.connectors[Math.floor(Math.random() * creativeWords.connectors.length)]);
+          } else if (i === wordCount - 1 && Math.random() > 0.6) {
+            // Sometimes end with a suffix
+            selectedWords.push(creativeWords.suffixes[Math.floor(Math.random() * creativeWords.suffixes.length)]);
+          } else {
+            const availableWords = allAvailableWords.filter(w => !selectedWords.includes(w));
+            if (availableWords.length > 0) {
+              selectedWords.push(availableWords[Math.floor(Math.random() * availableWords.length)]);
+            }
+          }
+        }
+        
+        // Ensure we have exactly the right word count
+        while (selectedWords.length < wordCount) {
+          selectedWords.push(creativeWords.nouns[Math.floor(Math.random() * creativeWords.nouns.length)]);
+        }
+        
+        return selectedWords.slice(0, wordCount).join(' ');
+        
+      default:
+        return 'Creative Name';
     }
-
-    return selectedWords.join(' ');
   }
 }
