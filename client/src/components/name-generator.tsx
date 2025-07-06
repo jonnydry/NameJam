@@ -36,6 +36,7 @@ export function NameGenerator() {
   const [results, setResults] = useState<GenerationResult[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
+  const [aiUnavailable, setAiUnavailable] = useState(false);
   const { toast } = useToast();
 
   const generateMutation = useMutation({
@@ -56,10 +57,21 @@ export function NameGenerator() {
     onSuccess: (data) => {
       setResults(data.results);
       setSearchResult(null); // Clear search result when generating new names
-      toast({
-        title: "Names generated successfully!",
-        description: `Generated ${data.results.length} unique ${nameType} names.`,
-      });
+      
+      // Check if AI was unavailable
+      if (data.aiUnavailable && includeAiReimaginings) {
+        setAiUnavailable(true);
+        toast({
+          title: "Names generated!",
+          description: "AI reimaginings are temporarily unavailable. Showing creative traditional names instead.",
+        });
+      } else {
+        setAiUnavailable(false);
+        toast({
+          title: "Names generated successfully!",
+          description: `Generated ${data.results.length} unique ${nameType} names.`,
+        });
+      }
     },
     onError: (error) => {
       console.error('Error generating names:', error);
@@ -257,7 +269,13 @@ export function NameGenerator() {
             <Sparkles className="w-4 h-4 mr-1 text-blue-500" />
             Include AI Reimaginings
           </Label>
-          <div className="text-xs text-muted-foreground">(creative twists on famous names)</div>
+          <div className="text-xs text-muted-foreground">
+            {aiUnavailable ? (
+              <span className="text-orange-500">AI temporarily unavailable - using creative alternatives</span>
+            ) : (
+              "(creative twists on famous names)"
+            )}
+          </div>
         </div>
 
         {/* Generate Button */}
