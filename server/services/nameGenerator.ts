@@ -18,11 +18,32 @@ export class NameGeneratorService {
     musicalTerms: []
   };
 
+  // Expanded categories for endless variety
+  private expandedCategories = {
+    emotions: [],
+    colors: [],
+    animals: [],
+    mythology: [],
+    technology: [],
+    nature: [],
+    cosmic: [],
+    abstract: [],
+    textures: [],
+    weather: [],
+    timeRelated: [],
+    movement: [],
+    sounds: [],
+    tastes: [],
+    cultural: []
+  };
+
   constructor() {
     this.aiReimaginings = new AiReimaginingsService();
     this.initializeWordSources().then(() => {
       // Fetch fresh words from web sources after base initialization
       this.fetchWordsFromWeb();
+      // Fetch expanded categories for endless variety
+      this.fetchExpandedCategories();
     });
   }
 
@@ -623,16 +644,60 @@ export class NameGeneratorService {
           word = articles[Math.floor(Math.random() * articles.length)];
           break;
         case 'adjective':
-          word = validSources.adjectives[Math.floor(Math.random() * validSources.adjectives.length)];
+          // 30% chance to use expanded categories for more variety
+          if (Math.random() < 0.3 && this.expandedCategories) {
+            const categoryChoice = Math.random();
+            if (categoryChoice < 0.25 && this.expandedCategories.emotions.length > 0) {
+              word = this.expandedCategories.emotions[Math.floor(Math.random() * this.expandedCategories.emotions.length)];
+            } else if (categoryChoice < 0.5 && this.expandedCategories.colors.length > 0) {
+              word = this.expandedCategories.colors[Math.floor(Math.random() * this.expandedCategories.colors.length)];
+            } else if (categoryChoice < 0.75 && this.expandedCategories.textures.length > 0) {
+              word = this.expandedCategories.textures[Math.floor(Math.random() * this.expandedCategories.textures.length)];
+            } else if (this.expandedCategories.tastes.length > 0) {
+              word = this.expandedCategories.tastes[Math.floor(Math.random() * this.expandedCategories.tastes.length)];
+            }
+          }
+          if (!word) {
+            word = validSources.adjectives[Math.floor(Math.random() * validSources.adjectives.length)];
+          }
           break;
         case 'noun':
-          word = validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)];
+          // 40% chance to use expanded categories for maximum variety
+          if (Math.random() < 0.4 && this.expandedCategories) {
+            const categoryChoice = Math.random();
+            if (categoryChoice < 0.2 && this.expandedCategories.animals.length > 0) {
+              word = this.expandedCategories.animals[Math.floor(Math.random() * this.expandedCategories.animals.length)];
+            } else if (categoryChoice < 0.4 && this.expandedCategories.mythology.length > 0) {
+              word = this.expandedCategories.mythology[Math.floor(Math.random() * this.expandedCategories.mythology.length)];
+            } else if (categoryChoice < 0.6 && this.expandedCategories.cosmic.length > 0) {
+              word = this.expandedCategories.cosmic[Math.floor(Math.random() * this.expandedCategories.cosmic.length)];
+            } else if (categoryChoice < 0.8 && this.expandedCategories.nature.length > 0) {
+              word = this.expandedCategories.nature[Math.floor(Math.random() * this.expandedCategories.nature.length)];
+            } else if (this.expandedCategories.technology.length > 0) {
+              word = this.expandedCategories.technology[Math.floor(Math.random() * this.expandedCategories.technology.length)];
+            }
+          }
+          if (!word) {
+            word = validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)];
+          }
           break;
         case 'verb':
-          word = validSources.verbs[Math.floor(Math.random() * validSources.verbs.length)];
+          // 25% chance to use movement words for dynamic feel
+          if (Math.random() < 0.25 && this.expandedCategories && this.expandedCategories.movement.length > 0) {
+            word = this.expandedCategories.movement[Math.floor(Math.random() * this.expandedCategories.movement.length)];
+          }
+          if (!word) {
+            word = validSources.verbs[Math.floor(Math.random() * validSources.verbs.length)];
+          }
           break;
         case 'musical':
-          word = validSources.musicalTerms[Math.floor(Math.random() * validSources.musicalTerms.length)];
+          // 20% chance to use sound words for musical relevance
+          if (Math.random() < 0.2 && this.expandedCategories && this.expandedCategories.sounds.length > 0) {
+            word = this.expandedCategories.sounds[Math.floor(Math.random() * this.expandedCategories.sounds.length)];
+          }
+          if (!word) {
+            word = validSources.musicalTerms[Math.floor(Math.random() * validSources.musicalTerms.length)];
+          }
           break;
         case 'preposition':
           word = prepositions[Math.floor(Math.random() * prepositions.length)];
@@ -1082,11 +1147,294 @@ export class NameGeneratorService {
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
   }
 
+  // Fetch expanded categories for endless variety
+  private async fetchExpandedCategories() {
+    try {
+      const [emotions, colors, animals, mythology, technology, nature, cosmic, abstract, textures, weather, timeRelated, movement, sounds, tastes, cultural] = await Promise.all([
+        this.fetchEmotionalWords(),
+        this.fetchColorWords(),
+        this.fetchAnimalWords(),
+        this.fetchMythologyWords(),
+        this.fetchTechnologyWords(),
+        this.fetchNatureWords(),
+        this.fetchCosmicWords(),
+        this.fetchAbstractWords(),
+        this.fetchTextureWords(),
+        this.fetchWeatherWords(),
+        this.fetchTimeWords(),
+        this.fetchMovementWords(),
+        this.fetchSoundWords(),
+        this.fetchTasteWords(),
+        this.fetchCulturalWords()
+      ]);
+
+      this.expandedCategories = {
+        emotions: this.removeDuplicates(emotions),
+        colors: this.removeDuplicates(colors),
+        animals: this.removeDuplicates(animals),
+        mythology: this.removeDuplicates(mythology),
+        technology: this.removeDuplicates(technology),
+        nature: this.removeDuplicates(nature),
+        cosmic: this.removeDuplicates(cosmic),
+        abstract: this.removeDuplicates(abstract),
+        textures: this.removeDuplicates(textures),
+        weather: this.removeDuplicates(weather),
+        timeRelated: this.removeDuplicates(timeRelated),
+        movement: this.removeDuplicates(movement),
+        sounds: this.removeDuplicates(sounds),
+        tastes: this.removeDuplicates(tastes),
+        cultural: this.removeDuplicates(cultural)
+      };
+
+      // Integrate expanded categories into main word sources
+      this.integrateExpandedCategories();
+      
+      console.log('Expanded categories loaded:', {
+        emotions: this.expandedCategories.emotions.length,
+        colors: this.expandedCategories.colors.length,
+        animals: this.expandedCategories.animals.length,
+        mythology: this.expandedCategories.mythology.length,
+        technology: this.expandedCategories.technology.length,
+        nature: this.expandedCategories.nature.length,
+        cosmic: this.expandedCategories.cosmic.length,
+        abstract: this.expandedCategories.abstract.length,
+        textures: this.expandedCategories.textures.length,
+        weather: this.expandedCategories.weather.length,
+        timeRelated: this.expandedCategories.timeRelated.length,
+        movement: this.expandedCategories.movement.length,
+        sounds: this.expandedCategories.sounds.length,
+        tastes: this.expandedCategories.tastes.length,
+        cultural: this.expandedCategories.cultural.length
+      });
+    } catch (error) {
+      console.error('Error fetching expanded categories:', error);
+    }
+  }
+
+  private integrateExpandedCategories() {
+    // Add variety from expanded categories to main word sources
+    this.wordSources.adjectives = [
+      ...this.wordSources.adjectives,
+      ...this.expandedCategories.emotions.slice(0, 30),
+      ...this.expandedCategories.colors.slice(0, 30),
+      ...this.expandedCategories.textures.slice(0, 20),
+      ...this.expandedCategories.tastes.slice(0, 10)
+    ];
+
+    this.wordSources.nouns = [
+      ...this.wordSources.nouns,
+      ...this.expandedCategories.animals.slice(0, 30),
+      ...this.expandedCategories.mythology.slice(0, 25),
+      ...this.expandedCategories.technology.slice(0, 25),
+      ...this.expandedCategories.nature.slice(0, 30),
+      ...this.expandedCategories.cosmic.slice(0, 20),
+      ...this.expandedCategories.abstract.slice(0, 20),
+      ...this.expandedCategories.weather.slice(0, 15),
+      ...this.expandedCategories.cultural.slice(0, 20)
+    ];
+
+    this.wordSources.verbs = [
+      ...this.wordSources.verbs,
+      ...this.expandedCategories.movement.slice(0, 40),
+      ...this.expandedCategories.sounds.map(s => this.soundToVerb(s)).slice(0, 20)
+    ];
+
+    this.wordSources.musicalTerms = [
+      ...this.wordSources.musicalTerms,
+      ...this.expandedCategories.sounds.slice(0, 20),
+      ...this.expandedCategories.timeRelated.filter(t => this.isMusicalTime(t)).slice(0, 15)
+    ];
+
+    // Remove duplicates from final sources
+    this.wordSources.adjectives = this.removeDuplicates(this.wordSources.adjectives);
+    this.wordSources.nouns = this.removeDuplicates(this.wordSources.nouns);
+    this.wordSources.verbs = this.removeDuplicates(this.wordSources.verbs);
+    this.wordSources.musicalTerms = this.removeDuplicates(this.wordSources.musicalTerms);
+  }
+
+  private soundToVerb(sound: string): string {
+    // Convert sound words to verb forms
+    const verbMap: { [key: string]: string } = {
+      'whisper': 'whispering',
+      'thunder': 'thundering',
+      'echo': 'echoing',
+      'buzz': 'buzzing',
+      'hum': 'humming',
+      'roar': 'roaring',
+      'click': 'clicking',
+      'snap': 'snapping',
+      'crash': 'crashing',
+      'ring': 'ringing'
+    };
+    return verbMap[sound.toLowerCase()] || sound;
+  }
+
+  private isMusicalTime(timeWord: string): boolean {
+    // Check if time-related word is musically relevant
+    const musicalTimeWords = ['tempo', 'rhythm', 'beat', 'measure', 'bar', 'pause', 'rest', 'timing', 'sync', 'delay'];
+    return musicalTimeWords.some(word => timeWord.toLowerCase().includes(word));
+  }
+
   private isValidWord = (word: string): boolean => {
     if (!word || word.length < 2 || word.length > 15) return false;
     if (!/^[a-zA-Z-]+$/.test(word)) return false;
     if (/^(the|and|or|but|in|on|at|to|for|of|with|by)$/i.test(word)) return false;
     return true;
+  }
+
+  // Expanded category fetchers for endless variety
+  private async fetchEmotionalWords(): Promise<string[]> {
+    return [
+      'Blissful', 'Furious', 'Yearning', 'Ecstatic', 'Despondent', 'Exuberant', 'Anguished',
+      'Jubilant', 'Forlorn', 'Elated', 'Morose', 'Giddy', 'Sullen', 'Euphoric', 'Wistful',
+      'Rapturous', 'Crestfallen', 'Gleeful', 'Dejected', 'Radiant', 'Melancholic', 'Zealous',
+      'Pensive', 'Vivacious', 'Somber', 'Exhilarated', 'Doleful', 'Buoyant', 'Lugubrious',
+      'Enraptured', 'Disconsolate', 'Effervescent', 'Woeful', 'Beatific', 'Lachrymose'
+    ];
+  }
+
+  private async fetchColorWords(): Promise<string[]> {
+    return [
+      'Vermillion', 'Cerulean', 'Chartreuse', 'Magenta', 'Ochre', 'Sienna', 'Cobalt',
+      'Periwinkle', 'Saffron', 'Burgundy', 'Teal', 'Maroon', 'Aquamarine', 'Fuchsia',
+      'Lavender', 'Coral', 'Turquoise', 'Mauve', 'Tangerine', 'Sepia', 'Viridian',
+      'Carmine', 'Ultramarine', 'Cinnabar', 'Aureolin', 'Prussian', 'Cadmium', 'Phthalo',
+      'Quinacridone', 'Titanium', 'Chromatic', 'Prismatic', 'Iridescent', 'Opalescent'
+    ];
+  }
+
+  private async fetchAnimalWords(): Promise<string[]> {
+    return [
+      'Phoenix', 'Griffin', 'Chimera', 'Leviathan', 'Kraken', 'Basilisk', 'Wyvern',
+      'Hydra', 'Pegasus', 'Sphinx', 'Minotaur', 'Centaur', 'Manticore', 'Hippogryph',
+      'Salamander', 'Behemoth', 'Roc', 'Cerberus', 'Valkyrie', 'Banshee', 'Selkie',
+      'Kitsune', 'Tengu', 'Raiju', 'Qilin', 'Baku', 'Kappa', 'Oni', 'Yokai',
+      'Wendigo', 'Chupacabra', 'Mothman', 'Thunderbird', 'Skinwalker', 'Jackalope'
+    ];
+  }
+
+  private async fetchMythologyWords(): Promise<string[]> {
+    return [
+      'Valhalla', 'Elysium', 'Avalon', 'Asgard', 'Olympus', 'Atlantis', 'Camelot',
+      'Shangri-La', 'El-Dorado', 'Hyperborea', 'Lemuria', 'Mu', 'Thule', 'Arcadia',
+      'Pandora', 'Prometheus', 'Icarus', 'Achilles', 'Odysseus', 'Perseus', 'Orpheus',
+      'Medusa', 'Circe', 'Cassandra', 'Andromeda', 'Persephone', 'Dionysus', 'Apollo',
+      'Athena', 'Hermes', 'Poseidon', 'Hades', 'Chronos', 'Gaia', 'Nyx'
+    ];
+  }
+
+  private async fetchTechnologyWords(): Promise<string[]> {
+    return [
+      'Quantum', 'Cybernetic', 'Holographic', 'Neuromantic', 'Bionic', 'Synthetic',
+      'Digital', 'Virtual', 'Augmented', 'Nano', 'Plasma', 'Photonic', 'Sonic',
+      'Magnetic', 'Gravitational', 'Temporal', 'Dimensional', 'Fractal', 'Algorithmic',
+      'Binary', 'Hexadecimal', 'Encrypted', 'Decoded', 'Simulated', 'Emulated',
+      'Transcoded', 'Overclocked', 'Undervolted', 'Modulated', 'Amplified', 'Attenuated',
+      'Calibrated', 'Synchronized', 'Initialized', 'Terminated'
+    ];
+  }
+
+  private async fetchNatureWords(): Promise<string[]> {
+    return [
+      'Tundra', 'Savanna', 'Rainforest', 'Desert', 'Glacier', 'Volcano', 'Canyon',
+      'Fjord', 'Archipelago', 'Peninsula', 'Isthmus', 'Atoll', 'Mesa', 'Plateau',
+      'Estuary', 'Delta', 'Bayou', 'Marsh', 'Swamp', 'Fen', 'Bog', 'Moor',
+      'Heath', 'Prairie', 'Steppe', 'Pampas', 'Veldt', 'Taiga', 'Chaparral',
+      'Mangrove', 'Coral', 'Kelp', 'Lichen', 'Moss', 'Fungus'
+    ];
+  }
+
+  private async fetchCosmicWords(): Promise<string[]> {
+    return [
+      'Nebula', 'Quasar', 'Pulsar', 'Supernova', 'Blackhole', 'Wormhole', 'Galaxy',
+      'Constellation', 'Asteroid', 'Comet', 'Meteor', 'Eclipse', 'Solstice', 'Equinox',
+      'Aurora', 'Corona', 'Chromosphere', 'Magnetosphere', 'Heliosphere', 'Exosphere',
+      'Stratosphere', 'Mesosphere', 'Thermosphere', 'Ionosphere', 'Troposphere',
+      'Perihelion', 'Aphelion', 'Perigee', 'Apogee', 'Zenith', 'Nadir', 'Azimuth',
+      'Parallax', 'Redshift', 'Blueshift'
+    ];
+  }
+
+  private async fetchAbstractWords(): Promise<string[]> {
+    return [
+      'Paradox', 'Enigma', 'Conundrum', 'Anomaly', 'Phenomenon', 'Epiphany', 'Axiom',
+      'Theorem', 'Hypothesis', 'Paradigm', 'Zeitgeist', 'Gestalt', 'Archetype', 'Motif',
+      'Leitmotif', 'Allegory', 'Metaphor', 'Simile', 'Synecdoche', 'Metonymy', 'Irony',
+      'Satire', 'Parody', 'Pastiche', 'Collage', 'Montage', 'Bricolage', 'Palimpsest',
+      'Pentimento', 'Chiaroscuro', 'Sfumato', 'Tenebrism', 'Impasto', 'Glazing'
+    ];
+  }
+
+  private async fetchTextureWords(): Promise<string[]> {
+    return [
+      'Velveteen', 'Silken', 'Gossamer', 'Diaphanous', 'Gauzy', 'Feathery', 'Downy',
+      'Plush', 'Velvety', 'Satiny', 'Lustrous', 'Burnished', 'Polished', 'Matte',
+      'Granular', 'Gritty', 'Coarse', 'Rough', 'Jagged', 'Serrated', 'Corrugated',
+      'Ribbed', 'Grooved', 'Scored', 'Etched', 'Embossed', 'Debossed', 'Stippled',
+      'Dappled', 'Mottled', 'Marbled', 'Veined', 'Striated', 'Laminated'
+    ];
+  }
+
+  private async fetchWeatherWords(): Promise<string[]> {
+    return [
+      'Tempest', 'Maelstrom', 'Typhoon', 'Cyclone', 'Hurricane', 'Tornado', 'Whirlwind',
+      'Zephyr', 'Gale', 'Squall', 'Blizzard', 'Hailstorm', 'Thunderstorm', 'Downpour',
+      'Deluge', 'Drizzle', 'Mist', 'Fog', 'Haze', 'Smog', 'Frost', 'Rime',
+      'Hoarfrost', 'Glaze', 'Sleet', 'Graupel', 'Virga', 'Mammatus', 'Cumulonimbus',
+      'Stratocumulus', 'Altostratus', 'Cirrus', 'Nimbus', 'Cumulus'
+    ];
+  }
+
+  private async fetchTimeWords(): Promise<string[]> {
+    return [
+      'Epoch', 'Era', 'Eon', 'Millennium', 'Century', 'Decade', 'Fortnight', 'Sennight',
+      'Solstice', 'Equinox', 'Twilight', 'Dusk', 'Dawn', 'Daybreak', 'Eventide',
+      'Gloaming', 'Vespers', 'Matins', 'Compline', 'Lauds', 'Prime', 'Terce',
+      'Sext', 'None', 'Chronos', 'Kairos', 'Temporal', 'Perpetual', 'Eternal',
+      'Ephemeral', 'Transient', 'Fleeting', 'Momentary', 'Instantaneous'
+    ];
+  }
+
+  private async fetchMovementWords(): Promise<string[]> {
+    return [
+      'Gyrating', 'Oscillating', 'Undulating', 'Pulsating', 'Reverberating', 'Resonating',
+      'Cascading', 'Tumbling', 'Spiraling', 'Whirling', 'Spinning', 'Revolving',
+      'Orbiting', 'Circling', 'Meandering', 'Serpentine', 'Zigzagging', 'Ricocheting',
+      'Caroming', 'Glancing', 'Skimming', 'Grazing', 'Brushing', 'Sweeping',
+      'Gliding', 'Soaring', 'Swooping', 'Plummeting', 'Diving', 'Ascending',
+      'Descending', 'Levitating', 'Hovering', 'Floating', 'Drifting'
+    ];
+  }
+
+  private async fetchSoundWords(): Promise<string[]> {
+    return [
+      'Cacophony', 'Symphony', 'Harmony', 'Melody', 'Rhythm', 'Cadence', 'Resonance',
+      'Reverberation', 'Echo', 'Whisper', 'Murmur', 'Rustle', 'Sizzle', 'Crackle',
+      'Rumble', 'Thunder', 'Roar', 'Bellow', 'Shriek', 'Wail', 'Keen', 'Ululate',
+      'Trill', 'Warble', 'Chirp', 'Tweet', 'Hoot', 'Caw', 'Squawk', 'Screech',
+      'Buzz', 'Hum', 'Drone', 'Whir', 'Click'
+    ];
+  }
+
+  private async fetchTasteWords(): Promise<string[]> {
+    return [
+      'Umami', 'Savory', 'Piquant', 'Tangy', 'Zesty', 'Tart', 'Acidic', 'Bitter',
+      'Astringent', 'Acrid', 'Pungent', 'Spicy', 'Fiery', 'Mild', 'Mellow',
+      'Rich', 'Decadent', 'Luscious', 'Succulent', 'Delectable', 'Ambrosial',
+      'Nectarous', 'Honeyed', 'Saccharine', 'Cloying', 'Treacly', 'Syrupy',
+      'Buttery', 'Creamy', 'Velvety', 'Silky', 'Unctuous', 'Oleaginous'
+    ];
+  }
+
+  private async fetchCulturalWords(): Promise<string[]> {
+    return [
+      'Renaissance', 'Baroque', 'Rococo', 'Gothic', 'Byzantine', 'Romanesque',
+      'Art-Deco', 'Art-Nouveau', 'Bauhaus', 'Brutalist', 'Minimalist', 'Maximalist',
+      'Avant-Garde', 'Surrealist', 'Dadaist', 'Cubist', 'Impressionist', 'Expressionist',
+      'Futurist', 'Constructivist', 'Deconstructivist', 'Post-Modern', 'Contemporary',
+      'Traditional', 'Classical', 'Neoclassical', 'Romantic', 'Realist', 'Naturalist',
+      'Symbolist', 'Modernist', 'Abstract', 'Conceptual', 'Performance'
+    ];
   }
 
   // Method to fetch mood-specific words from web when a mood is selected
