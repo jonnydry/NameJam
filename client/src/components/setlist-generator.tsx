@@ -311,19 +311,19 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
             </CardContent>
           </Card>
 
-          {/* Finale */}
+          {/* Encore */}
           <Card className="bg-gradient-to-r from-yellow-500/10 to-red-500/10 border-yellow-500/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Music className="w-5 h-5" />
-                Finale
+                Encore
                 <Badge variant="secondary" className="bg-yellow-500 text-black">
-                  Grand Finale
+                  Grand Encore
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <SongCard song={setList.finale} setName="Finale" />
+              <SongCard song={setList.finale} setName="Encore" />
             </CardContent>
           </Card>
         </div>
