@@ -163,7 +163,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
             Set List Generator
           </CardTitle>
           <CardDescription>
-            Generate organized song lists for your performances - split into two sets plus a finale
+            Generate organized song lists for your performances - split into two sets plus an encore
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
