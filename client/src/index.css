@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -72,6 +74,12 @@
 @layer utilities {
   .font-roboto {
     font-family: 'Roboto', sans-serif;
+  }
+  
+  .font-creative-title {
+    font-family: 'Righteous', cursive;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 4px rgba(0, 184, 255, 0.1);
   }
   
   .bg-google-blue {
