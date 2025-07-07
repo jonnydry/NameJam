@@ -61,3 +61,30 @@ export const stashItem = z.object({
 });
 
 export type StashItem = z.infer<typeof stashItem>;
+
+// Set List schemas
+export const setListSong = z.object({
+  id: z.number(),
+  name: z.string(),
+  verification: verificationResult,
+});
+
+export type SetListSong = z.infer<typeof setListSong>;
+
+export const setListRequest = z.object({
+  songCount: z.enum(['8', '16']),
+  wordCount: z.number().min(1).max(6).default(2),
+  mood: z.string().optional(),
+  genre: z.string().optional(),
+});
+
+export type SetListRequest = z.infer<typeof setListRequest>;
+
+export const setListResponse = z.object({
+  setOne: z.array(setListSong),
+  setTwo: z.array(setListSong),
+  finale: setListSong,
+  totalSongs: z.number(),
+});
+
+export type SetListResponse = z.infer<typeof setListResponse>;

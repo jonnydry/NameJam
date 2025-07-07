@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
-import { generateNameRequestSchema } from "@shared/schema";
+import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -91,6 +91,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error verifying name:", error);
       res.status(500).json({ error: "Failed to verify name" });
+    }
+  });
+
+  // Generate set list
+  app.post("/api/generate-setlist", async (req, res) => {
+    try {
+      const validation = setListRequest.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: "Invalid request body", details: validation.error.errors });
+      }
+
+      const { songCount, wordCount, mood, genre } = validation.data;
+      const totalSongs = parseInt(songCount);
+      
+      // Calculate set distribution
+      const setOneSize = totalSongs === 8 ? 3 : 7;
+      const setTwoSize = totalSongs === 8 ? 4 : 8;
+      
+      // Generate all songs (sets + finale)
+      const allSongsNeeded = totalSongs + 1; // +1 for finale
+      const songRequest = {
+        type: 'song' as const,
+        count: allSongsNeeded,
+        wordCount,
+        mood: mood as any, // Cast to avoid enum typing issues
+        genre: genre as any, // Cast to avoid enum typing issues
+        includeAiReimaginings: true
+      };
+      
+      const generatedNames = await nameGenerator.generateNames(songRequest);
+      const namesArray = Array.isArray(generatedNames) ? generatedNames : generatedNames.names;
+      
+      // Create song objects with verification
+      const songs = await Promise.all(
+        namesArray.map(async (name: string, index: number) => {
+          const verification = await nameVerifier.verifyName(name, 'song');
+          return {
+            id: index + 1,
+            name,
+            verification
+          };
+        })
+      );
+      
+      // Split into sets
+      const setOne = songs.slice(0, setOneSize);
+      const setTwo = songs.slice(setOneSize, setOneSize + setTwoSize);
+      const finale = songs[songs.length - 1];
+      
+      const response = {
+        setOne,
+        setTwo,
+        finale,
+        totalSongs: songs.length - 1 // Don't count finale in total
+      };
+      
+      res.json(response);
+    } catch (error) {
+      console.error("Error generating set list:", error);
+      res.status(500).json({ error: "Failed to generate set list" });
     }
   });
 
