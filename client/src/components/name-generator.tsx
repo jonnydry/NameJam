@@ -401,6 +401,8 @@ export function NameGenerator() {
                 onRefresh={handleRefresh}
                 index={index}
                 isRefreshing={refreshingIndex === index}
+                mood={mood}
+                genre={genre}
               />
             </div>
           ))}
