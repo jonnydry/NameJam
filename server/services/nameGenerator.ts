@@ -431,38 +431,48 @@ export class NameGeneratorService {
       filteredSources = this.getGenreFilteredWords(genre, filteredSources);
     }
     
-    // Define grammatical patterns for longer names (4+ words)
+    // Define grammatical patterns for longer names (4+ words) with better flow
     const patterns = [
-      // Pattern 1: Article + Adjective + Noun + Preposition/Verb combination
-      () => this.buildPattern(['article', 'adjective', 'noun', 'preposition', ...Array(wordCount - 4).fill('flexible')], filteredSources),
+      // Pattern 1: Statement structure - "The [adjective] [noun] [connector] [noun]"
+      () => this.buildPattern(['article', 'adjective', 'noun', 'connector', 'noun', ...Array(Math.max(0, wordCount - 5)).fill('adjective')], filteredSources),
       
-      // Pattern 2: Noun + Verb + Adjective + Noun (descriptive action)
-      () => this.buildPattern(['noun', 'verb', 'adjective', 'noun', ...Array(wordCount - 4).fill('flexible')], filteredSources),
+      // Pattern 2: Narrative flow - "[noun] [temporal] [adjective] [noun]"
+      () => this.buildPattern(['noun', 'temporal', 'adjective', 'noun', ...Array(Math.max(0, wordCount - 4)).fill('noun')], filteredSources),
       
-      // Pattern 3: Adjective + Noun + Conjunction + Adjective + Noun (parallel structure)
-      () => this.buildPattern(['adjective', 'noun', 'conjunction', 'adjective', ...Array(wordCount - 4).fill('noun')], filteredSources),
+      // Pattern 3: Descriptive relationship - "[adjective] [noun] [relationship] [adjective] [noun]"
+      () => this.buildPattern(['adjective', 'noun', 'relationship', 'adjective', 'noun', ...Array(Math.max(0, wordCount - 5)).fill('musical')], filteredSources),
       
-      // Pattern 4: Musical + Adjective + Noun + Verb (musical context)
-      () => this.buildPattern(['musical', 'adjective', 'noun', 'verb', ...Array(wordCount - 4).fill('flexible')], filteredSources),
+      // Pattern 4: Action statement - "[verb] [connector] [adjective] [noun]"
+      () => this.buildPattern(['verb', 'connector', 'adjective', 'noun', ...Array(Math.max(0, wordCount - 4)).fill('musical')], filteredSources),
       
-      // Pattern 5: Poetic repetition (good for songs)
+      // Pattern 5: Musical narrative - "[musical] [temporal] [adjective] [noun]"
+      () => this.buildPattern(['musical', 'temporal', 'adjective', 'noun', ...Array(Math.max(0, wordCount - 4)).fill('noun')], filteredSources),
+      
+      // Pattern 6: Complex statement - "[adjective] [noun] [connector] [adjective] [noun] [relationship] [noun]"
+      () => this.buildPattern(['adjective', 'noun', 'connector', 'adjective', 'noun', 'relationship', ...Array(Math.max(0, wordCount - 6)).fill('noun')], filteredSources),
+      
+      // Pattern 7: Poetic repetition (good for songs)
       () => this.buildRepetitivePattern(wordCount, filteredSources),
       
-      // Pattern 6: Abstract/atmospheric (good for both)
+      // Pattern 8: Abstract/atmospheric (good for both)
       () => this.buildAtmosphericPattern(wordCount, filteredSources),
       
-      // Pattern 7: Action-based narrative
+      // Pattern 9: Action-based narrative
       () => this.buildNarrativePattern(wordCount, filteredSources)
     ];
 
-    // Choose pattern based on type preference
+    // Choose pattern based on type preference and word count
     let selectedPatterns = patterns;
     if (type === 'song') {
-      // Songs favor more descriptive and narrative patterns
-      selectedPatterns = [patterns[0], patterns[2], patterns[4], patterns[5], patterns[6]];
+      // Songs favor more descriptive and narrative patterns with good flow
+      selectedPatterns = wordCount >= 5 
+        ? [patterns[0], patterns[1], patterns[2], patterns[5], patterns[6], patterns[7]] // More complex for longer songs
+        : [patterns[0], patterns[1], patterns[4], patterns[7], patterns[8]]; // Simpler for shorter songs
     } else if (type === 'band') {
-      // Bands favor more memorable and action-based patterns
-      selectedPatterns = [patterns[1], patterns[3], patterns[4], patterns[6]];
+      // Bands favor more memorable and action-based patterns with statements
+      selectedPatterns = wordCount >= 5
+        ? [patterns[0], patterns[3], patterns[4], patterns[5], patterns[8]] // Complex statements for longer band names
+        : [patterns[0], patterns[2], patterns[3], patterns[4], patterns[8]]; // Punchy statements for shorter band names
     }
 
     const pattern = selectedPatterns[Math.floor(Math.random() * selectedPatterns.length)];
@@ -590,8 +600,11 @@ export class NameGeneratorService {
     
     const words: string[] = [];
     const articles = ['The', 'A', 'An', 'These', 'Those', 'Every', 'All'];
-    const prepositions = ['of', 'in', 'on', 'under', 'through', 'beyond', 'within', 'across'];
+    const prepositions = ['of', 'in', 'on', 'under', 'through', 'beyond', 'within', 'across', 'into', 'before', 'after', 'during', 'beside', 'behind', 'above', 'below', 'between', 'among', 'against', 'toward', 'beneath'];
     const conjunctions = ['and', 'or', 'but', 'yet', 'so', 'for'];
+    const connectingWords = ['into', 'before', 'after', 'during', 'through', 'beyond', 'within', 'among', 'beneath', 'toward', 'against', 'between'];
+    const temporalConnectors = ['before', 'after', 'during', 'until', 'when', 'while', 'since'];
+    const relationshipConnectors = ['of', 'from', 'with', 'without', 'despite', 'like', 'unlike'];
 
     for (const part of structure) {
       let word = '';
@@ -660,6 +673,15 @@ export class NameGeneratorService {
           break;
         case 'conjunction':
           word = conjunctions[Math.floor(Math.random() * conjunctions.length)];
+          break;
+        case 'connector':
+          word = connectingWords[Math.floor(Math.random() * connectingWords.length)];
+          break;
+        case 'temporal':
+          word = temporalConnectors[Math.floor(Math.random() * temporalConnectors.length)];
+          break;
+        case 'relationship':
+          word = relationshipConnectors[Math.floor(Math.random() * relationshipConnectors.length)];
           break;
         case 'flexible':
           // Mix any word type for variety
@@ -756,29 +778,43 @@ export class NameGeneratorService {
       musicalTerms: (sources.musicalTerms && sources.musicalTerms.length > 0) ? sources.musicalTerms : this.wordSources.musicalTerms
     };
     
-    // Create story-like combinations
+    // Create story-like combinations with better flow
     const narrativeStarters = ['When', 'Where', 'How', 'Why', 'Until', 'Before', 'After', 'During'];
+    const flowConnectors = ['into', 'through', 'beyond', 'beneath', 'before', 'after', 'during', 'within', 'among'];
     const words: string[] = [];
     
-    if (Math.random() > 0.5) {
+    // For longer names, start with narrative word
+    if (wordCount >= 5 && Math.random() > 0.4) {
       words.push(narrativeStarters[Math.floor(Math.random() * narrativeStarters.length)]);
     }
 
-    // Fill remaining slots with narrative flow
+    // Fill remaining slots with structured narrative flow
     while (words.length < wordCount) {
       const remaining = wordCount - words.length;
-      if (remaining >= 2 && Math.random() > 0.6) {
+      
+      if (remaining >= 3 && Math.random() > 0.5) {
+        // Add flowing connector phrase: [adjective] [noun] [connector]
+        words.push(validSources.adjectives[Math.floor(Math.random() * validSources.adjectives.length)]);
+        words.push(validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)]);
+        if (remaining > 3) {
+          words.push(flowConnectors[Math.floor(Math.random() * flowConnectors.length)]);
+        }
+      } else if (remaining >= 2 && Math.random() > 0.6) {
         // Add verb + noun combination
         words.push(validSources.verbs[Math.floor(Math.random() * validSources.verbs.length)]);
         words.push(validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)]);
       } else {
-        // Add single word
-        const allWords = [
-          ...validSources.adjectives,
-          ...validSources.nouns,
-          ...validSources.musicalTerms
-        ];
-        words.push(allWords[Math.floor(Math.random() * allWords.length)]);
+        // Add single word with preference for nouns for ending
+        if (remaining === 1) {
+          words.push(validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)]);
+        } else {
+          const allWords = [
+            ...validSources.adjectives,
+            ...validSources.nouns,
+            ...validSources.musicalTerms
+          ];
+          words.push(allWords[Math.floor(Math.random() * allWords.length)]);
+        }
       }
     }
 

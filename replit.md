@@ -38,6 +38,7 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Mood Themes**: 12 different mood options (dark, bright, mysterious, energetic, melancholy, ethereal, aggressive, peaceful, nostalgic, futuristic, romantic, epic) that filter word choices to match the desired emotional tone
 - **Enhanced Humor**: Specialized patterns for 3-5 word combinations featuring wordplay, contradictions, questions, temporal paradoxes, and absurd scenarios
 - **Expanded Vocabulary**: Includes humorous and unexpected words (bananas, ninjas, kazoos, etc.) to create more entertaining and surprising results
+- **Statement Flow**: 4-6 word names use connecting words ("of", "into", "before", "through", "beyond") to create flowing, statement-like names rather than abstract combinations
 
 
 ### Set List Generator Service
@@ -141,6 +142,7 @@ Changelog:
 - July 07, 2025. Streamlined export interface: removed individual share buttons per user preference, updated dropdown from "Export & Share" to just "Export" with three options (Text File, JSON, Print)
 - July 07, 2025. Added Set List Generator feature: creates organized song lists for performances with 8 or 16 song options, automatically splits into two sets plus finale (8-song: 3+4+1, 16-song: 7+8+1), uses existing generation methods with mood/genre/word count customization, includes full verification and stash integration, implemented tabbed interface for seamless navigation between Name Generator and Set List Generator
 - July 07, 2025. Removed AI reimaginings feature: streamlined app to focus on core traditional name generation functionality, removed OpenAI integration and related UI components for simpler, more reliable operation
+- July 07, 2025. Enhanced longer name flow: improved 4-6 word generation with connecting words like "of", "into", "before", "through", "beyond" to create more statement-like, flowing names rather than abstract word combinations
 
 ## User Preferences
 
