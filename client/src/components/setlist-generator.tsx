@@ -26,15 +26,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
 
-  const moods = [
-    'dark', 'bright', 'mysterious', 'energetic', 'melancholy', 'ethereal',
-    'aggressive', 'peaceful', 'nostalgic', 'futuristic', 'romantic', 'epic'
-  ];
 
-  const genres = [
-    'rock', 'metal', 'jazz', 'electronic', 'folk', 'classical', 'hip-hop',
-    'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative'
-  ];
 
   const handleGenerateSetList = async () => {
     setLoading(true);
@@ -187,11 +179,18 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Any mood</SelectItem>
-                  {moods.map(m => (
-                    <SelectItem key={m} value={m}>
-                      {m.charAt(0).toUpperCase() + m.slice(1)}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="dark">🌑 Dark</SelectItem>
+                  <SelectItem value="bright">☀️ Bright</SelectItem>
+                  <SelectItem value="mysterious">🔮 Mysterious</SelectItem>
+                  <SelectItem value="energetic">⚡ Energetic</SelectItem>
+                  <SelectItem value="melancholy">🌧️ Melancholy</SelectItem>
+                  <SelectItem value="ethereal">✨ Ethereal</SelectItem>
+                  <SelectItem value="aggressive">🔥 Aggressive</SelectItem>
+                  <SelectItem value="peaceful">🕊️ Peaceful</SelectItem>
+                  <SelectItem value="nostalgic">📚 Nostalgic</SelectItem>
+                  <SelectItem value="futuristic">🚀 Futuristic</SelectItem>
+                  <SelectItem value="romantic">💕 Romantic</SelectItem>
+                  <SelectItem value="epic">⚔️ Epic</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -204,11 +203,20 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Any genre</SelectItem>
-                  {genres.map(g => (
-                    <SelectItem key={g} value={g}>
-                      {g.charAt(0).toUpperCase() + g.slice(1)}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="rock">🎸 Rock</SelectItem>
+                  <SelectItem value="metal">🤘 Metal</SelectItem>
+                  <SelectItem value="jazz">🎺 Jazz</SelectItem>
+                  <SelectItem value="electronic">🎛️ Electronic</SelectItem>
+                  <SelectItem value="folk">🪕 Folk</SelectItem>
+                  <SelectItem value="classical">🎼 Classical</SelectItem>
+                  <SelectItem value="hip-hop">🎤 Hip-Hop</SelectItem>
+                  <SelectItem value="country">🤠 Country</SelectItem>
+                  <SelectItem value="blues">🎵 Blues</SelectItem>
+                  <SelectItem value="reggae">🌴 Reggae</SelectItem>
+                  <SelectItem value="punk">⚡ Punk</SelectItem>
+                  <SelectItem value="indie">🎨 Indie</SelectItem>
+                  <SelectItem value="pop">💫 Pop</SelectItem>
+                  <SelectItem value="alternative">🌀 Alternative</SelectItem>
                 </SelectContent>
               </Select>
             </div>
