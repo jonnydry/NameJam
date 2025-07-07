@@ -127,6 +127,7 @@ Changelog:
 - July 06, 2025. Improved error handling: added user-friendly messaging when AI features are unavailable due to quota limits, with visual indicators in the UI
 - July 06, 2025. Implemented genre-specific name generation: added 14 musical genres (rock, metal, jazz, electronic, folk, classical, hip-hop, country, blues, reggae, punk, indie, pop, alternative) with specialized vocabulary filtering and thematic word selection
 - July 06, 2025. Massively expanded data sources for endless entertainment: added 15 new vocabulary categories (emotions, colors, animals, mythology, technology, nature, cosmic, abstract, textures, weather, time-related, movement, sounds, tastes, cultural) with 500+ unique words, integrated dynamic category selection into name generation with 30-40% variety chance, expanded AI reimaginings database to 180+ famous bands and 280+ iconic songs across all genres
+- July 07, 2025. Implemented comprehensive Export & Share features: added stash export as text/JSON files, print-friendly stash formatting, native mobile sharing for entire stash or individual names, share buttons on all result cards and stash items, clipboard fallback for older browsers, professional export formatting with timestamps and statistics
 
 ## User Preferences
 
