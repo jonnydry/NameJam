@@ -26,8 +26,6 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
 
-
-
   const handleGenerateSetList = async () => {
     setLoading(true);
     setError(null);
