@@ -86,3 +86,22 @@ export const setListResponse = z.object({
 });
 
 export type SetListResponse = z.infer<typeof setListResponse>;
+
+export const bandBio = z.object({
+  origin: z.string(),
+  genre: z.string(),
+  story: z.string(),
+  members: z.array(z.string()),
+  keyAlbum: z.string().optional(),
+  funFact: z.string()
+});
+
+export type BandBio = z.infer<typeof bandBio>;
+
+export const generateBioRequest = z.object({
+  bandName: z.string(),
+  mood: z.string().optional(),
+  genre: z.string().optional()
+});
+
+export type GenerateBioRequest = z.infer<typeof generateBioRequest>;

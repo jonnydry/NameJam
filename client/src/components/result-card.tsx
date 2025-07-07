@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, HeartIcon, RefreshCw } from "lucide-react";
+import { Copy, ExternalLink, Heart, HeartIcon, RefreshCw, User } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import type { BandBio } from "@shared/schema";
 
 interface VerificationResult {
   status: 'available' | 'similar' | 'taken';
@@ -29,12 +32,17 @@ interface ResultCardProps {
   onRefresh?: (index: number) => void;
   index?: number;
   isRefreshing?: boolean;
+  mood?: string;
+  genre?: string;
 }
 
-export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefreshing }: ResultCardProps) {
+export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefreshing, mood, genre }: ResultCardProps) {
   const { name, verification } = result;
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
+  const [bio, setBio] = useState<BandBio | null>(null);
+  const [isLoadingBio, setIsLoadingBio] = useState(false);
+  const [showBio, setShowBio] = useState(false);
 
   const handleAddToStash = () => {
     if (isInStash(name, nameType)) {
@@ -57,6 +65,47 @@ export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefre
         title: "Added to stash!",
         description: `"${name}" has been saved to your stash.`,
       });
+    }
+  };
+
+  const handleGenerateBio = async () => {
+    if (nameType !== 'band') return;
+    
+    setIsLoadingBio(true);
+    try {
+      const response = await apiRequest({
+        method: "POST",
+        endpoint: "/api/generate-bio",
+        body: {
+          bandName: name,
+          mood,
+          genre
+        }
+      });
+      
+      setBio(response.bio);
+      setShowBio(true);
+      toast({
+        title: "Bio generated!",
+        description: `Created a backstory for "${name}".`,
+      });
+    } catch (error: any) {
+      console.error('Error generating bio:', error);
+      if (error.status === 429) {
+        toast({
+          title: "Bio generation unavailable",
+          description: "AI quota exceeded. Please try again later.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to generate bio. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsLoadingBio(false);
     }
   };
 
@@ -199,6 +248,118 @@ export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefre
               ))}
             </div>
             <p className="text-xs text-primary mt-2">Click links to search and verify this name's availability</p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="mt-6 flex justify-center space-x-3">
+          {/* Copy Button */}
+          <Button
+            onClick={() => onCopy(name)}
+            variant="default"
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            <Copy className="h-4 w-4" />
+            <span>Copy</span>
+          </Button>
+
+          {/* Heart Button */}
+          <Button
+            onClick={handleAddToStash}
+            variant="outline"
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            {isInStash(name, nameType) ? (
+              <HeartIcon className="h-4 w-4 fill-current text-red-500" />
+            ) : (
+              <Heart className="h-4 w-4" />
+            )}
+            <span>{isInStash(name, nameType) ? 'In Stash' : 'Add to Stash'}</span>
+          </Button>
+
+          {/* Bio Button (only for bands) */}
+          {nameType === 'band' && (
+            <Button
+              onClick={handleGenerateBio}
+              disabled={isLoadingBio}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2"
+            >
+              <User className={`h-4 w-4 ${isLoadingBio ? 'animate-pulse' : ''}`} />
+              <span>{isLoadingBio ? 'Generating...' : 'Generate Bio'}</span>
+            </Button>
+          )}
+
+          {/* Refresh Button */}
+          {onRefresh && index !== undefined && (
+            <Button
+              onClick={() => onRefresh(index)}
+              disabled={isRefreshing}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </Button>
+          )}
+        </div>
+
+        {/* Bio Display */}
+        {showBio && bio && nameType === 'band' && (
+          <div className="mt-6 bg-muted rounded-lg p-4 border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-lg font-semibold text-foreground">Band Biography</h4>
+              <Button
+                onClick={() => setShowBio(false)}
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="font-medium text-foreground">Origin:</span>
+                <p className="text-muted-foreground mt-1">{bio.origin}</p>
+              </div>
+              
+              <div>
+                <span className="font-medium text-foreground">Genre:</span>
+                <span className="text-muted-foreground ml-2">{bio.genre}</span>
+              </div>
+              
+              <div>
+                <span className="font-medium text-foreground">Story:</span>
+                <p className="text-muted-foreground mt-1">{bio.story}</p>
+              </div>
+              
+              <div>
+                <span className="font-medium text-foreground">Members:</span>
+                <ul className="text-muted-foreground mt-1 ml-4">
+                  {bio.members.map((member, index) => (
+                    <li key={index} className="list-disc">{member}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              {bio.keyAlbum && (
+                <div>
+                  <span className="font-medium text-foreground">Key Album:</span>
+                  <span className="text-muted-foreground ml-2">{bio.keyAlbum}</span>
+                </div>
+              )}
+              
+              <div>
+                <span className="font-medium text-foreground">Fun Fact:</span>
+                <p className="text-muted-foreground mt-1">{bio.funFact}</p>
+              </div>
+            </div>
           </div>
         )}
       </div>
