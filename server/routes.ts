@@ -102,38 +102,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid request body", details: validation.error.errors });
       }
 
-      const { songCount, wordCount, mood, genre } = validation.data;
+      const { songCount, mood, genre } = validation.data;
       const totalSongs = parseInt(songCount);
       
       // Calculate set distribution
       const setOneSize = totalSongs === 8 ? 3 : 7;
       const setTwoSize = totalSongs === 8 ? 4 : 8;
       
-      // Generate all songs (sets + finale)
+      // Generate songs with randomized word counts (1-6 words each)
       const allSongsNeeded = totalSongs + 1; // +1 for finale
-      const songRequest = {
-        type: 'song' as const,
-        count: allSongsNeeded,
-        wordCount,
-        mood: mood as any, // Cast to avoid enum typing issues
-        genre: genre as any, // Cast to avoid enum typing issues
-        includeAiReimaginings: true
-      };
+      const songs = [];
       
-      const generatedNames = await nameGenerator.generateNames(songRequest);
-      const namesArray = Array.isArray(generatedNames) ? generatedNames : generatedNames.names;
-      
-      // Create song objects with verification
-      const songs = await Promise.all(
-        namesArray.map(async (name: string, index: number) => {
-          const verification = await nameVerifier.verifyName(name, 'song');
-          return {
-            id: index + 1,
-            name,
-            verification
-          };
-        })
-      );
+      for (let i = 0; i < allSongsNeeded; i++) {
+        // Generate random word count between 1-6 for each song
+        const randomWordCount = Math.floor(Math.random() * 6) + 1;
+        
+        const songRequest = {
+          type: 'song' as const,
+          count: 1,
+          wordCount: randomWordCount,
+          mood: mood as any,
+          genre: genre as any,
+          includeAiReimaginings: true
+        };
+        
+        const generatedNames = await nameGenerator.generateNames(songRequest);
+        const namesArray = Array.isArray(generatedNames) ? generatedNames : generatedNames.names;
+        const songName = namesArray[0];
+        
+        const verification = await nameVerifier.verifyName(songName, 'song');
+        songs.push({
+          id: i + 1,
+          name: songName,
+          verification
+        });
+      }
       
       // Split into sets
       const setOne = songs.slice(0, setOneSize);
