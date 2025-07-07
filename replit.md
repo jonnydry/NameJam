@@ -144,6 +144,7 @@ Changelog:
 - July 07, 2025. Removed AI reimaginings feature: streamlined app to focus on core traditional name generation functionality, removed OpenAI integration and related UI components for simpler, more reliable operation
 - July 07, 2025. Enhanced longer name flow: improved 4-6 word generation with connecting words like "of", "into", "before", "through", "beyond" to create more statement-like, flowing names rather than abstract word combinations
 - July 07, 2025. Added AI-powered Band Bio Generator: OpenAI integration to create imaginative backstories for generated band names, including origin stories, member details, genre, career highlights, and fun facts, with fallback system for reliability
+- July 07, 2025. Fixed word count bug: resolved issue where names exceeded requested word limits (e.g., 6 words when 5 requested), implemented strict word count validation in all generation patterns
 
 ## User Preferences
 
