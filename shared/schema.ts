@@ -73,7 +73,6 @@ export type SetListSong = z.infer<typeof setListSong>;
 
 export const setListRequest = z.object({
   songCount: z.enum(['8', '16']),
-  wordCount: z.number().min(1).max(6).default(2),
   mood: z.string().optional(),
   genre: z.string().optional(),
 });
