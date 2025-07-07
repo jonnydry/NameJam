@@ -433,31 +433,38 @@ export class NameGeneratorService {
     
     // Define grammatical patterns for longer names (4+ words) with better flow
     const patterns = [
-      // Pattern 1: Statement structure - "The [adjective] [noun] [connector] [noun]"
-      () => this.buildPattern(['article', 'adjective', 'noun', 'connector', 'noun', ...Array(Math.max(0, wordCount - 5)).fill('adjective')], filteredSources),
+      // Pattern 1: Statement structure - "The [adjective] [noun] [connector] [noun]" (5 words max)
+      () => wordCount === 4 ? this.buildPattern(['article', 'adjective', 'noun', 'connector'], filteredSources) :
+            wordCount === 5 ? this.buildPattern(['article', 'adjective', 'noun', 'connector', 'noun'], filteredSources) :
+            this.buildPattern(['article', 'adjective', 'noun', 'connector', 'noun', 'adjective'], filteredSources),
       
-      // Pattern 2: Narrative flow - "[noun] [temporal] [adjective] [noun]"
-      () => this.buildPattern(['noun', 'temporal', 'adjective', 'noun', ...Array(Math.max(0, wordCount - 4)).fill('noun')], filteredSources),
+      // Pattern 2: Narrative flow - "[noun] [temporal] [adjective] [noun]" (4+ words)
+      () => wordCount === 4 ? this.buildPattern(['noun', 'temporal', 'adjective', 'noun'], filteredSources) :
+            wordCount === 5 ? this.buildPattern(['noun', 'temporal', 'adjective', 'noun', 'musical'], filteredSources) :
+            this.buildPattern(['noun', 'temporal', 'adjective', 'noun', 'musical', 'noun'], filteredSources),
       
-      // Pattern 3: Descriptive relationship - "[adjective] [noun] [relationship] [adjective] [noun]"
-      () => this.buildPattern(['adjective', 'noun', 'relationship', 'adjective', 'noun', ...Array(Math.max(0, wordCount - 5)).fill('musical')], filteredSources),
+      // Pattern 3: Descriptive relationship - "[adjective] [noun] [relationship] [adjective] [noun]" (5+ words)
+      () => wordCount === 4 ? this.buildPattern(['adjective', 'noun', 'relationship', 'noun'], filteredSources) :
+            wordCount === 5 ? this.buildPattern(['adjective', 'noun', 'relationship', 'adjective', 'noun'], filteredSources) :
+            this.buildPattern(['adjective', 'noun', 'relationship', 'adjective', 'noun', 'musical'], filteredSources),
       
-      // Pattern 4: Action statement - "[verb] [connector] [adjective] [noun]"
-      () => this.buildPattern(['verb', 'connector', 'adjective', 'noun', ...Array(Math.max(0, wordCount - 4)).fill('musical')], filteredSources),
+      // Pattern 4: Action statement - "[verb] [connector] [adjective] [noun]" (4+ words)
+      () => wordCount === 4 ? this.buildPattern(['verb', 'connector', 'adjective', 'noun'], filteredSources) :
+            wordCount === 5 ? this.buildPattern(['verb', 'connector', 'adjective', 'noun', 'musical'], filteredSources) :
+            this.buildPattern(['verb', 'connector', 'adjective', 'noun', 'musical', 'noun'], filteredSources),
       
-      // Pattern 5: Musical narrative - "[musical] [temporal] [adjective] [noun]"
-      () => this.buildPattern(['musical', 'temporal', 'adjective', 'noun', ...Array(Math.max(0, wordCount - 4)).fill('noun')], filteredSources),
+      // Pattern 5: Musical narrative - "[musical] [temporal] [adjective] [noun]" (4+ words)
+      () => wordCount === 4 ? this.buildPattern(['musical', 'temporal', 'adjective', 'noun'], filteredSources) :
+            wordCount === 5 ? this.buildPattern(['musical', 'temporal', 'adjective', 'noun', 'musical'], filteredSources) :
+            this.buildPattern(['musical', 'temporal', 'adjective', 'noun', 'musical', 'noun'], filteredSources),
       
-      // Pattern 6: Complex statement - "[adjective] [noun] [connector] [adjective] [noun] [relationship] [noun]"
-      () => this.buildPattern(['adjective', 'noun', 'connector', 'adjective', 'noun', 'relationship', ...Array(Math.max(0, wordCount - 6)).fill('noun')], filteredSources),
-      
-      // Pattern 7: Poetic repetition (good for songs)
+      // Pattern 6: Poetic repetition (good for songs)
       () => this.buildRepetitivePattern(wordCount, filteredSources),
       
-      // Pattern 8: Abstract/atmospheric (good for both)
+      // Pattern 7: Abstract/atmospheric (good for both)
       () => this.buildAtmosphericPattern(wordCount, filteredSources),
       
-      // Pattern 9: Action-based narrative
+      // Pattern 8: Action-based narrative
       () => this.buildNarrativePattern(wordCount, filteredSources)
     ];
 
@@ -467,12 +474,12 @@ export class NameGeneratorService {
       // Songs favor more descriptive and narrative patterns with good flow
       selectedPatterns = wordCount >= 5 
         ? [patterns[0], patterns[1], patterns[2], patterns[5], patterns[6], patterns[7]] // More complex for longer songs
-        : [patterns[0], patterns[1], patterns[4], patterns[7], patterns[8]]; // Simpler for shorter songs
+        : [patterns[0], patterns[1], patterns[4], patterns[6], patterns[7]]; // Simpler for shorter songs
     } else if (type === 'band') {
       // Bands favor more memorable and action-based patterns with statements
       selectedPatterns = wordCount >= 5
-        ? [patterns[0], patterns[3], patterns[4], patterns[5], patterns[8]] // Complex statements for longer band names
-        : [patterns[0], patterns[2], patterns[3], patterns[4], patterns[8]]; // Punchy statements for shorter band names
+        ? [patterns[0], patterns[3], patterns[4], patterns[5], patterns[7]] // Complex statements for longer band names
+        : [patterns[0], patterns[2], patterns[3], patterns[4], patterns[7]]; // Punchy statements for shorter band names
     }
 
     const pattern = selectedPatterns[Math.floor(Math.random() * selectedPatterns.length)];
@@ -697,7 +704,9 @@ export class NameGeneratorService {
       words.push(word);
     }
 
-    return words.join(' ');
+    // Ensure we don't exceed the requested word count
+    const finalWords = words.slice(0, words.length); // This is buildPattern, already correct length
+    return finalWords.join(' ');
   }
 
   private buildRepetitivePattern(wordCount: number, wordSources?: WordSource): string {
@@ -793,10 +802,10 @@ export class NameGeneratorService {
       const remaining = wordCount - words.length;
       
       if (remaining >= 3 && Math.random() > 0.5) {
-        // Add flowing connector phrase: [adjective] [noun] [connector]
+        // Add flowing connector phrase: [adjective] [noun] [connector] but respect word count limit
         words.push(validSources.adjectives[Math.floor(Math.random() * validSources.adjectives.length)]);
         words.push(validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)]);
-        if (remaining > 3) {
+        if (remaining > 3 && words.length < wordCount - 1) {
           words.push(flowConnectors[Math.floor(Math.random() * flowConnectors.length)]);
         }
       } else if (remaining >= 2 && Math.random() > 0.6) {
@@ -818,7 +827,9 @@ export class NameGeneratorService {
       }
     }
 
-    return words.join(' ');
+    // Ensure we don't exceed the requested word count
+    const finalWords = words.slice(0, wordCount);
+    return finalWords.join(' ');
   }
 
   private removeDuplicates(array: string[]): string[] {
