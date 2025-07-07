@@ -221,20 +221,22 @@ export function Stash() {
           title: "Shared successfully!",
           description: "Your stash has been shared.",
         });
-      } catch (error) {
-        // Fallback to clipboard if share fails
-        navigator.clipboard.writeText(shareText);
-        toast({
-          title: "Copied to clipboard!",
-          description: "Share text has been copied. Paste it anywhere to share your stash.",
-        });
+      } catch (error: any) {
+        // Only fallback to clipboard if user cancelled or sharing is unavailable
+        if (error.name !== 'AbortError') {
+          navigator.clipboard.writeText(shareText);
+          toast({
+            title: "Share unavailable",
+            description: "Copied share text to clipboard instead.",
+          });
+        }
       }
     } else {
-      // Fallback for browsers without native share
-      navigator.clipboard.writeText(shareText);
+      // Show appropriate message for browsers without native share
       toast({
-        title: "Copied to clipboard!",
-        description: "Share text has been copied. Paste it anywhere to share your stash.",
+        title: "Share not supported",
+        description: "Your browser doesn't support native sharing. Use Export options instead.",
+        variant: "destructive",
       });
     }
   };
@@ -258,20 +260,22 @@ export function Stash() {
           title: "Shared successfully!",
           description: `"${item.name}" has been shared.`,
         });
-      } catch (error) {
-        // Fallback to clipboard if share fails
-        navigator.clipboard.writeText(shareText);
-        toast({
-          title: "Copied to clipboard!",
-          description: "Share text has been copied. Paste it anywhere to share this name.",
-        });
+      } catch (error: any) {
+        // Only fallback to clipboard if user cancelled or sharing is unavailable
+        if (error.name !== 'AbortError') {
+          navigator.clipboard.writeText(shareText);
+          toast({
+            title: "Share unavailable",
+            description: "Copied share text to clipboard instead.",
+          });
+        }
       }
     } else {
-      // Fallback for browsers without native share
-      navigator.clipboard.writeText(shareText);
+      // Show appropriate message for browsers without native share
       toast({
-        title: "Copied to clipboard!",
-        description: "Share text has been copied. Paste it anywhere to share this name.",
+        title: "Share not supported",
+        description: "Your browser doesn't support native sharing. Use the copy button instead.",
+        variant: "destructive",
       });
     }
   };
