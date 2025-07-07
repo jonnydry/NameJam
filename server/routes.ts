@@ -210,13 +210,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error generating band bio:", error);
       
-      if (error.message === 'BIO_QUOTA_EXCEEDED') {
-        return res.status(429).json({ 
-          error: "AI quota exceeded. Bio generation temporarily unavailable.",
-          quotaExceeded: true
-        });
-      }
-      
       if (error instanceof z.ZodError) {
         res.status(400).json({ error: "Invalid request parameters", details: error.errors });
       } else {

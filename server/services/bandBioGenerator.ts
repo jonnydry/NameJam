@@ -79,12 +79,8 @@ Respond with JSON in this exact format:
     } catch (error: any) {
       console.error('Error generating band bio:', error);
       
-      // Check for quota/rate limit errors
-      if (error.code === 'insufficient_quota' || error.status === 429) {
-        throw new Error('BIO_QUOTA_EXCEEDED');
-      }
-      
-      // Return a creative fallback bio instead of failing
+      // For any error (including quota), return creative fallback bio
+      // This ensures the feature always works even when AI is unavailable
       return this.generateFallbackBio(bandName, mood, genre);
     }
   }
