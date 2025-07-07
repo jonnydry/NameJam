@@ -45,8 +45,8 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
       const response = await apiRequest('POST', '/api/generate-setlist', {
         songCount,
         wordCount,
-        mood: mood || undefined,
-        genre: genre || undefined,
+        mood: mood && mood !== 'none' ? mood : undefined,
+        genre: genre && genre !== 'none' ? genre : undefined,
       });
 
       if (!response.ok) {
@@ -205,7 +205,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
                   <SelectValue placeholder="Any mood" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any mood</SelectItem>
+                  <SelectItem value="none">Any mood</SelectItem>
                   {moods.map(m => (
                     <SelectItem key={m} value={m}>
                       {m.charAt(0).toUpperCase() + m.slice(1)}
@@ -222,7 +222,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
                   <SelectValue placeholder="Any genre" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any genre</SelectItem>
+                  <SelectItem value="none">Any genre</SelectItem>
                   {genres.map(g => (
                     <SelectItem key={g} value={g}>
                       {g.charAt(0).toUpperCase() + g.slice(1)}
