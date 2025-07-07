@@ -1,10 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, HeartIcon, RefreshCw, User } from "lucide-react";
+import { Copy, ExternalLink, Heart, HeartIcon } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { apiRequest } from "@/lib/queryClient";
-import type { BandBio } from "@shared/schema";
 
 interface VerificationResult {
   status: 'available' | 'similar' | 'taken';
@@ -29,20 +26,12 @@ interface ResultCardProps {
   result: GenerationResult;
   nameType: 'band' | 'song';
   onCopy: (name: string) => void;
-  onRefresh?: (index: number) => void;
-  index?: number;
-  isRefreshing?: boolean;
-  mood?: string;
-  genre?: string;
 }
 
-export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefreshing, mood, genre }: ResultCardProps) {
+export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
   const { name, verification } = result;
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
-  const [bio, setBio] = useState<BandBio | null>(null);
-  const [isLoadingBio, setIsLoadingBio] = useState(false);
-  const [showBio, setShowBio] = useState(false);
 
   const handleAddToStash = () => {
     if (isInStash(name, nameType)) {
@@ -50,67 +39,23 @@ export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefre
         title: "Already in stash",
         description: `"${name}" is already saved in your stash.`,
       });
-      return;
-    }
-
-    const success = addToStash({
-      name,
-      type: nameType,
-      wordCount: result.wordCount,
-      verification
-    });
-
-    if (success) {
-      toast({
-        title: "Added to stash!",
-        description: `"${name}" has been saved to your stash.`,
-      });
-    }
-  };
-
-  const handleGenerateBio = async () => {
-    if (nameType !== 'band') return;
-    
-    setIsLoadingBio(true);
-    try {
-      const response = await apiRequest({
-        method: "POST",
-        endpoint: "/api/generate-bio",
-        body: {
-          bandName: name,
-          mood,
-          genre
-        }
+    } else {
+      const success = addToStash({
+        name,
+        type: nameType,
+        verification: verification.status,
+        details: verification.details
       });
       
-      setBio(response.bio);
-      setShowBio(true);
-      toast({
-        title: "Bio generated!",
-        description: `Created a backstory for "${name}".`,
-      });
-    } catch (error: any) {
-      console.error('Error generating bio:', error);
-      if (error.status === 429) {
+      if (success) {
         toast({
-          title: "Bio generation unavailable",
-          description: "AI quota exceeded. Please try again later.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to generate bio. Please try again.",
-          variant: "destructive"
+          title: "Added to stash!",
+          description: `"${name}" has been saved to your stash.`,
         });
       }
-    } finally {
-      setIsLoadingBio(false);
     }
   };
 
-
-  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available':
@@ -137,41 +82,14 @@ export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefre
     }
   };
 
-  const getStatusTextColor = (status: string) => {
-    switch (status) {
-      case 'available':
-        return 'text-success-green';
-      case 'similar':
-        return 'text-warning-yellow';
-      case 'taken':
-        return 'text-error-red';
-      default:
-        return 'text-neutral-600';
-    }
-  };
-
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+    <div className="relative p-6 rounded-lg border border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className={`w-3 h-3 ${getStatusColor(verification.status)} rounded-full`}></div>
-          <span className={`text-sm font-medium ${getStatusTextColor(verification.status)}`}>
-            {getStatusText(verification.status)}
-          </span>
+        <div className={`flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(verification.status)}`}>
+          <div className="w-2 h-2 rounded-full bg-white/80"></div>
+          <span>{getStatusText(verification.status)}</span>
         </div>
-        <div className="flex items-center space-x-1">
-          {onRefresh && index !== undefined && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onRefresh(index)}
-              disabled={isRefreshing}
-              className="text-muted-foreground hover:text-primary transition-colors p-2"
-              title="Generate new name"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </Button>
-          )}
+        <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
             size="sm"
@@ -253,7 +171,6 @@ export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefre
 
         {/* Action Buttons */}
         <div className="mt-6 flex justify-center space-x-3">
-          {/* Copy Button */}
           <Button
             onClick={() => onCopy(name)}
             variant="default"
@@ -264,7 +181,6 @@ export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefre
             <span>Copy</span>
           </Button>
 
-          {/* Heart Button */}
           <Button
             onClick={handleAddToStash}
             variant="outline"
@@ -278,90 +194,7 @@ export function ResultCard({ result, nameType, onCopy, onRefresh, index, isRefre
             )}
             <span>{isInStash(name, nameType) ? 'In Stash' : 'Add to Stash'}</span>
           </Button>
-
-          {/* Bio Button (only for bands) */}
-          {nameType === 'band' && (
-            <Button
-              onClick={handleGenerateBio}
-              disabled={isLoadingBio}
-              variant="outline"
-              size="sm"
-              className="flex items-center space-x-2"
-            >
-              <User className={`h-4 w-4 ${isLoadingBio ? 'animate-pulse' : ''}`} />
-              <span>{isLoadingBio ? 'Generating...' : 'Generate Bio'}</span>
-            </Button>
-          )}
-
-          {/* Refresh Button */}
-          {onRefresh && index !== undefined && (
-            <Button
-              onClick={() => onRefresh(index)}
-              disabled={isRefreshing}
-              variant="outline"
-              size="sm"
-              className="flex items-center space-x-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </Button>
-          )}
         </div>
-
-        {/* Bio Display */}
-        {showBio && bio && nameType === 'band' && (
-          <div className="mt-6 bg-muted rounded-lg p-4 border border-border">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-lg font-semibold text-foreground">Band Biography</h4>
-              <Button
-                onClick={() => setShowBio(false)}
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                ✕
-              </Button>
-            </div>
-            
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="font-medium text-foreground">Origin:</span>
-                <p className="text-muted-foreground mt-1">{bio.origin}</p>
-              </div>
-              
-              <div>
-                <span className="font-medium text-foreground">Genre:</span>
-                <span className="text-muted-foreground ml-2">{bio.genre}</span>
-              </div>
-              
-              <div>
-                <span className="font-medium text-foreground">Story:</span>
-                <p className="text-muted-foreground mt-1">{bio.story}</p>
-              </div>
-              
-              <div>
-                <span className="font-medium text-foreground">Members:</span>
-                <ul className="text-muted-foreground mt-1 ml-4">
-                  {bio.members.map((member, index) => (
-                    <li key={index} className="list-disc">{member}</li>
-                  ))}
-                </ul>
-              </div>
-              
-              {bio.keyAlbum && (
-                <div>
-                  <span className="font-medium text-foreground">Key Album:</span>
-                  <span className="text-muted-foreground ml-2">{bio.keyAlbum}</span>
-                </div>
-              )}
-              
-              <div>
-                <span className="font-medium text-foreground">Fun Fact:</span>
-                <p className="text-muted-foreground mt-1">{bio.funFact}</p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
