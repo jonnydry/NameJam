@@ -28,7 +28,7 @@ export default function Home() {
             <div className="mb-6">
               <FermataLogo size="lg" />
             </div>
-            <h1 className="text-5xl font-creative-title text-foreground mb-2 bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent">NameJam</h1>
+            <h1 className="text-6xl font-creative-title text-foreground mb-2 bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent uppercase tracking-wider">NameJam</h1>
             <p className="text-lg text-muted-foreground font-roboto">Generate unique band names, song titles, and set lists</p>
           </div>
 
