@@ -3,14 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
-import { BandBioGeneratorService } from "./services/bandBioGenerator";
-import { generateNameRequestSchema, setListRequest, generateBioRequest } from "@shared/schema";
+import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const nameGenerator = new NameGeneratorService();
   const nameVerifier = new NameVerifierService();
-  const bioGenerator = new BandBioGeneratorService();
 
   // Generate names endpoint
   app.post("/api/generate-names", async (req, res) => {
@@ -195,28 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate band bio endpoint
-  app.post("/api/generate-bio", async (req, res) => {
-    try {
-      const request = generateBioRequest.parse(req.body);
-      
-      const bio = await bioGenerator.generateBandBio(
-        request.bandName,
-        request.mood,
-        request.genre
-      );
-      
-      res.json({ bio });
-    } catch (error: any) {
-      console.error("Error generating band bio:", error);
-      
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ error: "Invalid request parameters", details: error.errors });
-      } else {
-        res.status(500).json({ error: "Failed to generate band bio" });
-      }
-    }
-  });
+
 
   const httpServer = createServer(app);
   return httpServer;

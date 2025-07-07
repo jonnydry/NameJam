@@ -7,7 +7,7 @@ import { LoadingAnimation } from "./loading-animation";
 import { ResultCard } from "./result-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Music, Users, Wand2, RefreshCw, Search, Palette } from "lucide-react";
+import { Music, Users, Wand2, Search, Palette } from "lucide-react";
 
 interface GenerationResult {
   id: number;
@@ -34,7 +34,7 @@ export function NameGenerator() {
   const [results, setResults] = useState<GenerationResult[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
-  const [refreshingIndex, setRefreshingIndex] = useState<number | null>(null);
+
   const { toast } = useToast();
 
   const generateMutation = useMutation({
@@ -115,49 +115,7 @@ export function NameGenerator() {
     },
   });
 
-  const refreshSingleMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/generate-names', {
-        type: nameType,
-        wordCount,
-        count: 1,
-        includeAiReimaginings,
-        ...(mood && mood !== 'none' && { mood }),
-        ...(genre && genre !== 'none' && { genre })
-      });
-      const data = await response.json();
-      return data;
-    },
-    onSuccess: (data, variables, context) => {
-      if (data.results && data.results.length > 0 && refreshingIndex !== null) {
-        const newResult = data.results[0];
-        setResults(prev => {
-          const updated = [...prev];
-          updated[refreshingIndex] = newResult;
-          return updated;
-        });
-        toast({
-          title: "Name refreshed!",
-          description: `Generated new ${nameType} name: "${newResult.name}".`,
-        });
-      }
-      setRefreshingIndex(null);
-    },
-    onError: (error) => {
-      console.error('Error refreshing name:', error);
-      toast({
-        title: "Refresh failed",
-        description: "Failed to generate new name. Please try again.",
-        variant: "destructive",
-      });
-      setRefreshingIndex(null);
-    },
-  });
 
-  const handleRefresh = (index: number) => {
-    setRefreshingIndex(index);
-    refreshSingleMutation.mutate();
-  };
 
   const handleGenerate = () => {
     generateMutation.mutate();
@@ -398,11 +356,6 @@ export function NameGenerator() {
                 result={result}
                 nameType={nameType}
                 onCopy={copyToClipboard}
-                onRefresh={handleRefresh}
-                index={index}
-                isRefreshing={refreshingIndex === index}
-                mood={mood}
-                genre={genre}
               />
             </div>
           ))}
