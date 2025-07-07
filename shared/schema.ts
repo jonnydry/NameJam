@@ -32,7 +32,6 @@ export const generateNameRequestSchema = z.object({
     'rock', 'metal', 'jazz', 'electronic', 'folk', 'classical', 'hip-hop', 
     'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative'
   ]).optional(),
-  includeAiReimaginings: z.boolean().default(false),
 });
 
 export type GenerateNameRequest = z.infer<typeof generateNameRequestSchema>;

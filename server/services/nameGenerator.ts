@@ -1,5 +1,4 @@
 import type { GenerateNameRequest } from "@shared/schema";
-import { AiReimaginingsService } from './aiReimaginings';
 
 interface WordSource {
   adjectives: string[];
@@ -9,7 +8,6 @@ interface WordSource {
 }
 
 export class NameGeneratorService {
-  private aiReimaginings: AiReimaginingsService;
   
   private wordSources: WordSource = {
     adjectives: [],
@@ -38,7 +36,6 @@ export class NameGeneratorService {
   };
 
   constructor() {
-    this.aiReimaginings = new AiReimaginingsService();
     this.initializeWordSources().then(() => {
       // Fetch fresh words from web sources after base initialization
       this.fetchWordsFromWeb();
@@ -118,52 +115,11 @@ export class NameGeneratorService {
     };
   }
 
-  async generateNames(request: GenerateNameRequest): Promise<string[] | { names: string[], aiUnavailable: boolean }> {
-    const { type, wordCount, count, mood, genre, includeAiReimaginings } = request;
+  async generateNames(request: GenerateNameRequest): Promise<string[]> {
+    const { type, wordCount, count, mood, genre } = request;
     const names: string[] = [];
 
-    // Calculate split between traditional and AI names
-    const aiCount = includeAiReimaginings ? Math.ceil(count * 0.4) : 0; // 40% AI reimaginings
-    const traditionalCount = count - aiCount;
-
-    // Generate traditional names
-    for (let i = 0; i < traditionalCount; i++) {
-      const name = await this.generateSingleName(type, wordCount, mood, genre);
-      if (!names.includes(name)) {
-        names.push(name);
-      }
-    }
-
-    // Generate AI reimaginings if requested
-    if (includeAiReimaginings && aiCount > 0) {
-      try {
-        const aiNames = await this.aiReimaginings.generateAiReimaginings(type, aiCount, wordCount, mood);
-        for (const aiName of aiNames) {
-          if (!names.includes(aiName) && aiName.trim().length > 0) {
-            names.push(aiName);
-          }
-        }
-      } catch (error: any) {
-        console.error('AI reimaginings failed:', error);
-        // Check if it's a quota error
-        const isQuotaError = error.message === 'AI_QUOTA_EXCEEDED';
-        
-        // Fallback to traditional generation if AI fails
-        while (names.length < count) {
-          const name = await this.generateSingleName(type, wordCount, mood, genre);
-          if (!names.includes(name)) {
-            names.push(name);
-          }
-        }
-        
-        // Store quota error status
-        if (isQuotaError) {
-          return { names: names.slice(0, count), aiUnavailable: true };
-        }
-      }
-    }
-
-    // If we don't have enough unique names, generate more traditional ones
+    // Generate all names using traditional approach
     while (names.length < count) {
       const name = await this.generateSingleName(type, wordCount, mood, genre);
       if (!names.includes(name)) {

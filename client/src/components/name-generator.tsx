@@ -7,9 +7,7 @@ import { LoadingAnimation } from "./loading-animation";
 import { ResultCard } from "./result-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Music, Users, Wand2, RefreshCw, Search, Palette, Sparkles } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Music, Users, Wand2, RefreshCw, Search, Palette } from "lucide-react";
 
 interface GenerationResult {
   id: number;
@@ -33,11 +31,9 @@ export function NameGenerator() {
   const [wordCount, setWordCount] = useState(2);
   const [mood, setMood] = useState<string>('none');
   const [genre, setGenre] = useState<string>('none');
-  const [includeAiReimaginings, setIncludeAiReimaginings] = useState(false);
   const [results, setResults] = useState<GenerationResult[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
-  const [aiUnavailable, setAiUnavailable] = useState(false);
   const [refreshingIndex, setRefreshingIndex] = useState<number | null>(null);
   const { toast } = useToast();
 
@@ -47,7 +43,6 @@ export function NameGenerator() {
         type: nameType,
         wordCount,
         count: 3,
-        includeAiReimaginings,
         ...(mood && mood !== 'none' && { mood }),
         ...(genre && genre !== 'none' && { genre })
       });
@@ -61,20 +56,10 @@ export function NameGenerator() {
       setResults(data.results);
       setSearchResult(null); // Clear search result when generating new names
       
-      // Check if AI was unavailable
-      if (data.aiUnavailable && includeAiReimaginings) {
-        setAiUnavailable(true);
-        toast({
-          title: "Names generated!",
-          description: "AI reimaginings are temporarily unavailable. Showing creative traditional names instead.",
-        });
-      } else {
-        setAiUnavailable(false);
-        toast({
-          title: "Names generated successfully!",
-          description: `Generated ${data.results.length} unique ${nameType} names.`,
-        });
-      }
+      toast({
+        title: "Names generated successfully!",
+        description: `Generated ${data.results.length} unique ${nameType} names.`,
+      });
     },
     onError: (error) => {
       console.error('Error generating names:', error);
@@ -329,30 +314,6 @@ export function NameGenerator() {
               <SelectItem value="alternative">🌀 Alternative</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        {/* AI Reimaginings Toggle */}
-        <div className="flex items-center justify-center space-x-3 py-4 border-t border-border">
-          <Checkbox
-            id="ai-reimaginings"
-            checked={includeAiReimaginings}
-            onCheckedChange={(checked) => setIncludeAiReimaginings(!!checked)}
-            className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-          />
-          <Label 
-            htmlFor="ai-reimaginings" 
-            className="text-sm font-medium text-foreground cursor-pointer flex items-center"
-          >
-            <Sparkles className="w-4 h-4 mr-1 text-blue-500" />
-            Include AI Reimaginings
-          </Label>
-          <div className="text-xs text-muted-foreground">
-            {aiUnavailable ? (
-              <span className="text-orange-500">AI temporarily unavailable - using creative alternatives</span>
-            ) : (
-              "(creative twists on famous names)"
-            )}
-          </div>
         </div>
 
         {/* Generate Button */}

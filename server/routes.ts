@@ -18,9 +18,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate names
       const generateResult = await nameGenerator.generateNames(request);
       
-      // Extract names and AI availability status
-      const names = Array.isArray(generateResult) ? generateResult : generateResult.names;
-      const aiUnavailable = Array.isArray(generateResult) ? false : generateResult.aiUnavailable;
+      // Names are now always an array
+      const names = generateResult;
       
       // Verify each name and store results
       const results = await Promise.all(
@@ -46,7 +45,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
 
-      res.json({ results, aiUnavailable });
+      res.json({ results });
     } catch (error) {
       console.error("Error generating names:", error);
       if (error instanceof z.ZodError) {
@@ -124,13 +123,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             count: 1,
             wordCount,
             mood: mood as any,
-            genre: genre as any,
-            includeAiReimaginings: false
+            genre: genre as any
           };
           
           const generatedNames = await nameGenerator.generateNames(songRequest);
-          const namesArray = Array.isArray(generatedNames) ? generatedNames : generatedNames.names;
-          const songName = namesArray[0];
+          const songName = generatedNames[0];
           
           songs.push({
             id: i + 1,
