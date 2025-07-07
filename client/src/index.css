@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -77,9 +77,10 @@
   }
   
   .font-creative-title {
-    font-family: 'Righteous', cursive;
-    letter-spacing: -0.02em;
-    text-shadow: 0 2px 4px rgba(0, 184, 255, 0.1);
+    font-family: 'Bebas Neue', cursive;
+    letter-spacing: 0.05em;
+    text-shadow: 0 3px 6px rgba(0, 184, 255, 0.2);
+    font-weight: 400;
   }
   
   .bg-google-blue {
