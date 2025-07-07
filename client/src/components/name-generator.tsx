@@ -368,7 +368,7 @@ export function NameGenerator() {
               disabled={generateMutation.isPending}
               className="inline-flex items-center px-6 py-2 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <Wand2 className="w-4 h-4 mr-2" />
               Generate More Names
             </Button>
           </div>
