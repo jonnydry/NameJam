@@ -40,6 +40,14 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Expanded Vocabulary**: Includes humorous and unexpected words (bananas, ninjas, kazoos, etc.) to create more entertaining and surprising results
 - **AI Reimaginings**: OpenAI-powered creative reinterpretations drawing from 150+ famous bands and 120+ iconic songs across all genres and eras, generating artistic variations with flexible word counts that maintain thematic essence while being completely original
 
+### Set List Generator Service
+- **Location**: `/api/generate-setlist` endpoint using existing name generation service
+- **Purpose**: Creates organized song lists for musical performances with professional set structure
+- **Options**: 8-song or 16-song set lists with customizable word count, mood, and genre settings
+- **Structure**: Automatically splits songs into two sets plus a finale (8-song: 3+4+1, 16-song: 7+8+1)
+- **Integration**: Uses existing name generation algorithms for song creation with full verification system
+- **Features**: Each song includes real-time availability verification and stash integration
+
 ### Name Verification Service
 - **Location**: `server/services/nameVerifier.ts`
 - **Purpose**: Provides real name availability checking against music databases
@@ -57,10 +65,12 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ### UI Components
 - **Generator Interface**: `client/src/components/name-generator.tsx`
+- **Set List Generator**: `client/src/components/setlist-generator.tsx` creates organized performance set lists
 - **Result Display**: `client/src/components/result-card.tsx` with heart button for stash functionality
 - **Loading States**: `client/src/components/loading-animation.tsx`
 - **Branding**: Custom fermata logo component for musical theming
 - **Stash Management**: `client/src/components/stash.tsx` displays saved names with timestamps and actions
+- **Tabbed Interface**: Uses shadcn/ui Tabs component for seamless navigation between generators
 
 ### State Management
 - **Stash Context**: `client/src/context/stash-context.tsx` provides React Context for sharing stash state
@@ -128,6 +138,8 @@ Changelog:
 - July 06, 2025. Implemented genre-specific name generation: added 14 musical genres (rock, metal, jazz, electronic, folk, classical, hip-hop, country, blues, reggae, punk, indie, pop, alternative) with specialized vocabulary filtering and thematic word selection
 - July 06, 2025. Massively expanded data sources for endless entertainment: added 15 new vocabulary categories (emotions, colors, animals, mythology, technology, nature, cosmic, abstract, textures, weather, time-related, movement, sounds, tastes, cultural) with 500+ unique words, integrated dynamic category selection into name generation with 30-40% variety chance, expanded AI reimaginings database to 180+ famous bands and 280+ iconic songs across all genres
 - July 07, 2025. Implemented comprehensive Export & Share features: added stash export as text/JSON files, print-friendly stash formatting, native mobile sharing for entire stash or individual names, share buttons on all result cards and stash items, clipboard fallback for older browsers, professional export formatting with timestamps and statistics
+- July 07, 2025. Streamlined export interface: removed individual share buttons per user preference, updated dropdown from "Export & Share" to just "Export" with three options (Text File, JSON, Print)
+- July 07, 2025. Added Set List Generator feature: creates organized song lists for performances with 8 or 16 song options, automatically splits into two sets plus finale (8-song: 3+4+1, 16-song: 7+8+1), uses existing generation methods with mood/genre/word count customization, includes full verification and stash integration, implemented tabbed interface for seamless navigation between Name Generator and Set List Generator
 
 ## User Preferences
 
