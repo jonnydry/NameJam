@@ -86,7 +86,25 @@ export class NameGeneratorService {
     movement: [],
     sounds: [],
     tastes: [],
-    cultural: []
+    cultural: [],
+    // New specialized domains
+    scienceFiction: [],
+    fantasy: [],
+    food: [],
+    fashion: [],
+    architecture: [],
+    literature: [],
+    psychology: [],
+    microEmotions: [],
+    worldCities: [],
+    landscapes: [],
+    physics: [],
+    chemistry: [],
+    biology: [],
+    absurd: [],
+    historical: [],
+    sensory: [],
+    compound: []
   };
 
   constructor() {
@@ -102,6 +120,7 @@ export class NameGeneratorService {
     // Initialize with base vocabulary, then enhance with web-sourced words
     this.wordSources = {
       adjectives: [
+        // Core emotional adjectives (expanded)
         'Mystic', 'Crimson', 'Electric', 'Midnight', 'Golden', 'Silver', 'Dark', 'Bright',
         'Wild', 'Silent', 'Burning', 'Frozen', 'Ancient', 'Modern', 'Cosmic', 'Urban',
         'Neon', 'Velvet', 'Steel', 'Crystal', 'Shadow', 'Thunder', 'Lightning', 'Storm',
@@ -111,14 +130,38 @@ export class NameGeneratorService {
         'Azure', 'Emerald', 'Obsidian', 'Pearl', 'Amber', 'Scarlet', 'Violet', 'Indigo',
         'Melancholy', 'Euphoric', 'Serene', 'Chaotic', 'Peaceful', 'Turbulent', 'Tender',
         'Savage', 'Delicate', 'Brutal', 'Graceful', 'Elegant', 'Raw', 'Refined', 'Primal',
-        // Humorous and unexpected additions
+        // Scientific & Technical
+        'Quantum', 'Kinetic', 'Thermal', 'Electromagnetic', 'Gravitational', 'Molecular', 'Atomic',
+        'Synthetic', 'Organic', 'Digital', 'Analog', 'Virtual', 'Augmented', 'Cybernetic',
+        'Photonic', 'Sonic', 'Ultrasonic', 'Infrared', 'Ultraviolet', 'Radioactive', 'Magnetic',
+        // Psychological & Emotional (expanded)
+        'Nostalgic', 'Wistful', 'Exuberant', 'Contemplative', 'Introspective', 'Analytical',
+        'Empathetic', 'Intuitive', 'Subconscious', 'Cognitive', 'Bittersweet', 'Conflicted',
+        'Overwhelming', 'Underwhelming', 'Ambivalent', 'Cathartic', 'Euphoric', 'Melancholic',
+        // Architectural & Design
+        'Baroque', 'Modernist', 'Brutalist', 'Gothic', 'Minimalist', 'Industrial', 'Avant-garde',
+        'Vintage', 'Retro', 'Futuristic', 'Bauhaus', 'Victorian', 'Contemporary', 'Classical',
+        // Cultural & Geographic
+        'Nordic', 'Mediterranean', 'Tropical', 'Arctic', 'Saharan', 'Alpine', 'Oceanic',
+        'Metropolitan', 'Rural', 'Suburban', 'Pastoral', 'Nomadic', 'Bohemian', 'Cosmopolitan',
+        // Sensory & Textural (expanded)
+        'Silky', 'Rough', 'Smooth', 'Coarse', 'Fine', 'Grainy', 'Polished', 'Matte',
+        'Glossy', 'Translucent', 'Opaque', 'Iridescent', 'Luminous', 'Phosphorescent', 'Fluorescent',
+        'Tactile', 'Viscous', 'Fluid', 'Rigid', 'Flexible', 'Malleable', 'Brittle', 'Elastic',
+        // Temporal & Historical
+        'Medieval', 'Renaissance', 'Industrial', 'Atomic', 'Digital', 'Cyberpunk', 'Steampunk',
+        'Prehistoric', 'Futuristic', 'Timeless', 'Ephemeral', 'Perpetual', 'Cyclical', 'Linear',
+        // Humorous and unexpected (expanded)
         'Confused', 'Caffeinated', 'Backwards', 'Upside-Down', 'Sideways', 'Dizzy', 'Clumsy',
         'Sneaky', 'Dramatic', 'Overdramatic', 'Undercooked', 'Overcooked', 'Misunderstood', 'Questionable',
         'Suspicious', 'Innocent', 'Guilty', 'Awkward', 'Smooth', 'Rough', 'Polite', 'Rude',
-        'Caffeinated', 'Sleepy', 'Hungry', 'Thirsty', 'Restless', 'Impatient', 'Overwhelmed',
-        'Peculiar', 'Bizarre', 'Ridiculous', 'Absurd', 'Nonsensical', 'Whimsical', 'Zany'
+        'Sleepy', 'Hungry', 'Thirsty', 'Restless', 'Impatient', 'Overwhelmed', 'Procrastinating',
+        'Peculiar', 'Bizarre', 'Ridiculous', 'Absurd', 'Nonsensical', 'Whimsical', 'Zany',
+        'Fluffy', 'Squishy', 'Bouncy', 'Wobbly', 'Jiggly', 'Sparkly', 'Glittery', 'Shiny',
+        'Fuzzy', 'Scratchy', 'Ticklish', 'Giggly', 'Wiggly', 'Squirmy', 'Fidgety', 'Jittery'
       ],
       nouns: [
+        // Core concepts (expanded)
         'Echo', 'Wave', 'Fire', 'Storm', 'Star', 'Moon', 'Sun', 'River', 'Mountain',
         'Ocean', 'Desert', 'Forest', 'City', 'Road', 'Bridge', 'Tower', 'Castle',
         'Garden', 'Mirror', 'Dream', 'Vision', 'Memory', 'Journey', 'Destiny', 'Glory',
@@ -129,42 +172,135 @@ export class NameGeneratorService {
         'Joy', 'Sorrow', 'Pain', 'Healing', 'Wound', 'Butterfly', 'Wolf', 'Eagle',
         'Deer', 'Raven', 'Dove', 'Serpent', 'Dragon', 'Phoenix', 'Angel', 'Warrior',
         'Poet', 'Prophet', 'Wanderer', 'Guardian', 'Keeper', 'Seeker', 'Dreamer',
-        // Humorous and unexpected additions
+        // Science Fiction & Fantasy
+        'Starship', 'Nebula', 'Cyborg', 'Android', 'Wormhole', 'Hyperdrive', 'Terraforming', 'Portal',
+        'Enchantment', 'Spell', 'Potion', 'Grimoire', 'Wizard', 'Sorcery', 'Rune', 'Incantation',
+        'Amulet', 'Talisman', 'Crystal', 'Orb', 'Artifact', 'Prophecy', 'Covenant', 'Sanctuary',
+        'Quest', 'Pilgrimage', 'Crusade', 'Odyssey', 'Expedition', 'Voyage', 'Adventure', 'Escapade',
+        // World Cities & Places
+        'Tokyo', 'Mumbai', 'Istanbul', 'Marrakech', 'Reykjavik', 'Montevideo', 'Nairobi', 'Casablanca',
+        'Fjord', 'Savanna', 'Tundra', 'Archipelago', 'Plateau', 'Canyon', 'Peninsula', 'Delta',
+        'Metropolis', 'Village', 'Hamlet', 'Township', 'Borough', 'Settlement', 'Outpost', 'Colony',
+        // Scientific Terms
+        'Molecule', 'Atom', 'Quantum', 'Photon', 'Electron', 'Neutron', 'Proton', 'Particle',
+        'Catalyst', 'Polymer', 'Synthesis', 'Crystalline', 'Volatile', 'Inert', 'Compound', 'Element',
+        'Organism', 'Symbiosis', 'Parasite', 'Photosynthesis', 'Mitochondria', 'Evolution', 'Genetics', 'DNA',
+        // Food & Cuisine
+        'Umami', 'Saffron', 'Truffle', 'Marinade', 'Caramelization', 'Fermentation', 'Artisan', 'Delicacy',
+        'Espresso', 'Cappuccino', 'Macchiato', 'Sourdough', 'Ciabatta', 'Baguette', 'Croissant', 'Brioche',
+        'Chutney', 'Salsa', 'Vinaigrette', 'Reduction', 'Emulsion', 'Infusion', 'Garnish', 'Zest',
+        // Emotions & Psychology
+        'Nostalgia', 'Euphoria', 'Melancholia', 'Catharsis', 'Epiphany', 'Revelation', 'Introspection', 'Contemplation',
+        'Serenity', 'Tranquility', 'Harmony', 'Discord', 'Tension', 'Release', 'Closure', 'Awakening',
+        'Consciousness', 'Subconsciousness', 'Intuition', 'Cognition', 'Perception', 'Awareness', 'Mindfulness', 'Zen',
+        // Architecture & Design
+        'Cathedral', 'Basilica', 'Monastery', 'Pavilion', 'Conservatory', 'Observatory', 'Atrium', 'Rotunda',
+        'Facade', 'Cornice', 'Frieze', 'Colonnade', 'Balustrade', 'Pergola', 'Gazebo', 'Arbor',
+        'Modernism', 'Brutalism', 'Minimalism', 'Bauhaus', 'Gothic', 'Renaissance', 'Baroque', 'Victorian',
+        // Literature & Arts
+        'Metaphor', 'Allegory', 'Sonnet', 'Prose', 'Verse', 'Narrative', 'Anthology', 'Manuscript',
+        'Symphony', 'Concerto', 'Sonata', 'Rhapsody', 'Prelude', 'Interlude', 'Cadence', 'Harmony',
+        'Canvas', 'Palette', 'Sculpture', 'Installation', 'Mural', 'Fresco', 'Mosaic', 'Tapestry',
+        // Natural Phenomena
+        'Aurora', 'Eclipse', 'Solstice', 'Equinox', 'Monsoon', 'Typhoon', 'Tsunami', 'Avalanche',
+        'Geyser', 'Volcano', 'Crater', 'Glacier', 'Iceberg', 'Waterfall', 'Rapids', 'Whirlpool',
+        'Phenomenon', 'Occurrence', 'Manifestation', 'Apparition', 'Mirage', 'Illusion', 'Phantom', 'Specter',
+        // Humorous and unexpected (expanded)
         'Bananas', 'Socks', 'Toasters', 'Umbrellas', 'Pickles', 'Waffles', 'Pandas', 'Llamas',
         'Ninjas', 'Pirates', 'Robots', 'Zombies', 'Unicorns', 'Tacos', 'Pizza', 'Donuts',
         'Monkeys', 'Elephants', 'Penguins', 'Flamingos', 'Hippos', 'Turtles', 'Koalas', 'Sloths',
         'Thoughts', 'Mistakes', 'Accidents', 'Shenanigans', 'Chaos', 'Mayhem', 'Disaster', 'Catastrophe',
         'Pajamas', 'Mustaches', 'Eyebrows', 'Elbows', 'Knees', 'Toes', 'Buttons', 'Zippers',
-        'Sandwiches', 'Burritos', 'Cupcakes', 'Muffins', 'Bagels', 'Pretzels', 'Crackers', 'Cookies'
+        'Sandwiches', 'Burritos', 'Cupcakes', 'Muffins', 'Bagels', 'Pretzels', 'Crackers', 'Cookies',
+        'Bubbles', 'Sprinkles', 'Confetti', 'Glitter', 'Sparkles', 'Giggles', 'Wiggles', 'Squiggles',
+        'Doodles', 'Noodles', 'Poodles', 'Oodles', 'Caboodles', 'Fidgets', 'Gadgets', 'Widgets'
       ],
       verbs: [
-        'Rising', 'Falling', 'Dancing', 'Singing', 'Flying', 'Running', 'Walking',
-        'Climbing', 'Diving', 'Soaring', 'Burning', 'Shining', 'Glowing', 'Flowing',
-        'Breaking', 'Building', 'Creating', 'Destroying', 'Healing', 'Dreaming',
-        'Whispering', 'Screaming', 'Calling', 'Answering', 'Seeking', 'Finding', 'Losing',
-        'Remembering', 'Forgetting', 'Waking', 'Sleeping', 'Breathing', 'Bleeding',
-        'Growing', 'Withering', 'Blooming', 'Fading', 'Dimming', 'Emerging', 'Disappearing',
-        'Transforming', 'Evolving', 'Revolving', 'Spinning', 'Plummeting', 'Rushing',
-        'Trickling', 'Pouring', 'Drifting', 'Floating', 'Melting', 'Freezing',
-        // Humorous and unexpected actions
-        'Stumbling', 'Bumbling', 'Fumbling', 'Grumbling', 'Mumbling', 'Rambling', 'Scrambling',
-        'Giggling', 'Wiggling', 'Jiggling', 'Tickling', 'Sneezing', 'Hiccupping', 'Yawning',
-        'Procrastinating', 'Overthinking', 'Underestimating', 'Overreacting', 'Panicking', 'Celebrating',
-        'Complaining', 'Bragging', 'Gossiping', 'Eavesdropping', 'Lurking', 'Sneaking',
-        'Dodging', 'Avoiding', 'Pretending', 'Faking', 'Bluffing', 'Juggling', 'Balancing'
+        // Core action verbs (expanded)
+        'Dance', 'Sing', 'Rise', 'Fall', 'Burn', 'Shine', 'Glow', 'Flow', 'Move', 'Stand',
+        'Run', 'Walk', 'Fly', 'Soar', 'Dive', 'Climb', 'Jump', 'Leap', 'Crawl', 'Slide',
+        'Whisper', 'Shout', 'Echo', 'Resonate', 'Vibrate', 'Pulse', 'Beat', 'Thrum', 'Hum',
+        'Create', 'Destroy', 'Build', 'Break', 'Make', 'Unmake', 'Form', 'Shape', 'Mold',
+        'Transform', 'Change', 'Evolve', 'Adapt', 'Grow', 'Shrink', 'Expand', 'Contract',
+        'Embrace', 'Release', 'Hold', 'Let Go', 'Grasp', 'Reach', 'Touch', 'Feel', 'Sense',
+        'See', 'Watch', 'Observe', 'Look', 'Gaze', 'Stare', 'Glance', 'Peek', 'Glimpse',
+        'Hear', 'Listen', 'Sound', 'Ring', 'Chime', 'Bell', 'Call', 'Summon', 'Invoke',
+        'Dream', 'Imagine', 'Envision', 'Picture', 'Visualize', 'Conceive', 'Think', 'Ponder',
+        'Remember', 'Forget', 'Recall', 'Recollect', 'Reminisce', 'Reflect', 'Consider', 'Contemplate',
+        // Scientific & Technical Verbs
+        'Synthesize', 'Analyze', 'Catalyze', 'Oxidize', 'Crystallize', 'Ionize', 'Magnetize', 'Polarize',
+        'Accelerate', 'Decelerate', 'Oscillate', 'Fluctuate', 'Radiate', 'Emit', 'Absorb', 'Reflect',
+        'Transmit', 'Receive', 'Process', 'Compute', 'Calculate', 'Calibrate', 'Optimize', 'Configure',
+        'Navigate', 'Traverse', 'Migrate', 'Infiltrate', 'Penetrate', 'Permeate', 'Diffuse', 'Disperse',
+        // Emotional & Psychological Verbs
+        'Contemplate', 'Meditate', 'Introspect', 'Empathize', 'Sympathize', 'Psychoanalyze', 'Rationalize', 'Internalize',
+        'Externalize', 'Compartmentalize', 'Prioritize', 'Conceptualize', 'Materialize', 'Spiritualize', 'Harmonize', 'Synchronize',
+        'Reminisce', 'Nostalgize', 'Fantasize', 'Romanticize', 'Idealize', 'Actualize', 'Realize', 'Recognize',
+        // Artistic & Creative Verbs
+        'Compose', 'Improvise', 'Orchestrate', 'Choreograph', 'Sculpt', 'Paint', 'Sketch', 'Design',
+        'Craft', 'Weave', 'Embroider', 'Carve', 'Engrave', 'Etch', 'Emboss', 'Imprint',
+        'Perform', 'Express', 'Interpret', 'Convey', 'Communicate', 'Articulate', 'Narrate', 'Recite',
+        // Natural Phenomena Verbs
+        'Cascade', 'Surge', 'Ripple', 'Undulate', 'Meander', 'Spiral', 'Swirl', 'Eddy',
+        'Erupt', 'Explode', 'Implode', 'Burst', 'Crack', 'Split', 'Fragment', 'Shatter',
+        'Bloom', 'Blossom', 'Flourish', 'Wither', 'Decay', 'Regenerate', 'Rejuvenate', 'Revitalize',
+        // Movement & Motion Verbs
+        'Glide', 'Drift', 'Float', 'Hover', 'Levitate', 'Descend', 'Ascend', 'Plunge',
+        'Rotate', 'Revolve', 'Spin', 'Twirl', 'Whirl', 'Pivot', 'Sway', 'Rock',
+        'Slither', 'Creep', 'Sneak', 'Prowl', 'Stalk', 'Hunt', 'Chase', 'Pursue',
+        // Culinary Verbs
+        'Sauté', 'Braise', 'Simmer', 'Marinate', 'Caramelize', 'Flambé', 'Julienne', 'Dice',
+        'Whisk', 'Fold', 'Knead', 'Ferment', 'Infuse', 'Reduce', 'Emulsify', 'Garnish',
+        // Humorous and unexpected actions (expanded)
+        'Giggle', 'Tickle', 'Bounce', 'Wiggle', 'Jiggle', 'Squirm', 'Fidget', 'Wobble',
+        'Stumble', 'Fumble', 'Bumble', 'Tumble', 'Rumble', 'Grumble', 'Mumble', 'Jumble',
+        'Snooze', 'Doze', 'Nap', 'Yawn', 'Stretch', 'Scratch', 'Itch', 'Twitch',
+        'Hiccup', 'Sneeze', 'Cough', 'Burp', 'Gulp', 'Slurp', 'Chomp', 'Munch',
+        'Procrastinate', 'Overthink', 'Overanalyze', 'Underestimate', 'Overestimate', 'Misunderstand', 'Confuse', 'Perplex',
+        'Bamboozle', 'Flabbergast', 'Discombobulate', 'Befuddle', 'Mystify', 'Puzzle', 'Baffle', 'Stupefy',
+        'Gallivant', 'Traipse', 'Meander', 'Wander', 'Roam', 'Ramble', 'Saunter', 'Amble'
       ],
       musicalTerms: [
+        // Classical Music Theory
         'Harmony', 'Melody', 'Rhythm', 'Beat', 'Tempo', 'Chord', 'Note', 'Scale',
         'Symphony', 'Sonata', 'Ballad', 'Anthem', 'Crescendo', 'Diminuendo', 'Forte',
         'Piano', 'Allegro', 'Andante', 'Maestro', 'Virtuoso', 'Ensemble', 'Overture',
         'Resonance', 'Vibration', 'Frequency', 'Amplitude', 'Pause', 'Rest', 'Solo',
         'Orchestra', 'Conductor', 'Composer', 'Acoustics', 'Studio', 'Recording',
-        'Microphone', 'Amplifier', 'Speaker', 'Instrument', 'Guitar', 'Violin',
-        'Drums', 'Trumpet', 'Saxophone', 'Flute', 'Harp', 'Cello', 'Viola', 'Bass',
-        // Humorous and unexpected musical terms
+        // Advanced Music Theory
+        'Cadence', 'Modulation', 'Transpose', 'Counterpoint', 'Polyphony', 'Monophony', 'Dissonance', 'Consonance',
+        'Arpeggio', 'Glissando', 'Staccato', 'Legato', 'Rubato', 'Tenuto', 'Fermata', 'Sforzando',
+        'Interval', 'Octave', 'Timbre', 'Dynamics', 'Articulation', 'Phrasing', 'Expression', 'Interpretation',
+        'Motif', 'Theme', 'Variation', 'Development', 'Recapitulation', 'Exposition', 'Coda', 'Bridge',
+        // Genres & Styles  
+        'Jazz', 'Blues', 'Rock', 'Pop', 'Folk', 'Country', 'Reggae', 'Ska', 'Punk', 'Metal',
+        'Electronic', 'Ambient', 'Techno', 'House', 'Dubstep', 'Trance', 'Hip-hop', 'Rap',
+        'Classical', 'Baroque', 'Romantic', 'Contemporary', 'Minimalist', 'Avant-garde', 'Experimental',
+        'World', 'Ethnic', 'Traditional', 'Fusion', 'Crossover', 'Alternative', 'Indie', 'Underground',
+        // Instruments (expanded)
+        'Guitar', 'Violin', 'Drums', 'Trumpet', 'Saxophone', 'Flute', 'Harp', 'Cello', 'Viola', 'Bass',
+        'Keyboard', 'Synthesizer', 'Organ', 'Accordion', 'Clarinet', 'Oboe', 'Bassoon', 'Tuba',
+        'Trombone', 'French Horn', 'Cornet', 'Piccolo', 'Recorder', 'Harmonica', 'Mouth Harp',
+        'Sitar', 'Koto', 'Shamisen', 'Erhu', 'Dulcimer', 'Zither', 'Lyre', 'Psaltery',
+        // Percussion (expanded)
+        'Timpani', 'Snare', 'Cymbals', 'Gong', 'Chimes', 'Vibraphone', 'Marimba', 'Xylophone',
+        'Bongos', 'Congas', 'Djembe', 'Tabla', 'Cajon', 'Cowbell', 'Woodblock', 'Claves',
+        'Tambourine', 'Maracas', 'Shaker', 'Triangle', 'Castanets', 'Finger Cymbals', 'Rain Stick',
+        // Electronic & Modern
+        'Microphone', 'Amplifier', 'Speaker', 'Equalizer', 'Reverb', 'Delay', 'Chorus', 'Flanger',
+        'Distortion', 'Overdrive', 'Compressor', 'Limiter', 'Filter', 'Oscillator', 'Envelope', 'LFO',
+        'Sampler', 'Sequencer', 'Loop', 'Track', 'Mix', 'Master', 'Fade', 'Pan', 'EQ', 'Effects',
+        'Digital', 'Analog', 'MIDI', 'DAW', 'Plugin', 'VST', 'Audio Interface', 'Monitor',
+        // Production Terms
+        'Arrangement', 'Composition', 'Score', 'Chart', 'Lead Sheet', 'Fake Book', 'Real Book',
+        'Session', 'Take', 'Overdub', 'Punch-in', 'Bounce', 'Mixdown', 'Mastering', 'Vinyl',
+        'Album', 'EP', 'Single', 'B-side', 'Demo', 'Bootleg', 'Live', 'Acoustic', 'Unplugged',
+        // Humorous and unexpected musical terms (expanded)
         'Kazoo', 'Bongo', 'Cowbell', 'Triangle', 'Xylophone', 'Accordion', 'Bagpipes', 'Ukulele',
         'Recorder', 'Tambourine', 'Maracas', 'Harmonica', 'Ocarina', 'Didgeridoo', 'Spoons', 'Washboard',
-        'Castanet', 'Kalimba', 'Melodica', 'Theremin', 'Autoharp', 'Banjo', 'Mandolin', 'Concertina'
+        'Castanet', 'Kalimba', 'Melodica', 'Theremin', 'Autoharp', 'Banjo', 'Mandolin', 'Concertina',
+        'Jaw Harp', 'Musical Saw', 'Glass Harmonica', 'Hang Drum', 'Steel Drum', 'Rain Stick',
+        'Singing Bowl', 'Wind Chimes', 'Thumb Piano', 'Nose Flute', 'Slide Whistle', 'Wobble Board'
       ]
     };
   }
@@ -2207,7 +2343,9 @@ export class NameGeneratorService {
   // Fetch expanded categories for endless variety
   private async fetchExpandedCategories() {
     try {
-      const [emotions, colors, animals, mythology, technology, nature, cosmic, abstract, textures, weather, timeRelated, movement, sounds, tastes, cultural] = await Promise.all([
+      const [emotions, colors, animals, mythology, technology, nature, cosmic, abstract, textures, weather, timeRelated, movement, sounds, tastes, cultural,
+             scienceFiction, fantasy, food, fashion, architecture, literature, psychology, microEmotions, worldCities, landscapes, 
+             physics, chemistry, biology, absurd, historical, sensory, compound] = await Promise.all([
         this.fetchEmotionalWords(),
         this.fetchColorWords(),
         this.fetchAnimalWords(),
@@ -2222,7 +2360,25 @@ export class NameGeneratorService {
         this.fetchMovementWords(),
         this.fetchSoundWords(),
         this.fetchTasteWords(),
-        this.fetchCulturalWords()
+        this.fetchCulturalWords(),
+        // New specialized domains
+        this.fetchScienceFictionWords(),
+        this.fetchFantasyWords(),
+        this.fetchCulinaryWords(),
+        this.fetchFashionWords(),
+        this.fetchArchitectureWords(),
+        this.fetchLiteratureWords(),
+        this.fetchPsychologyWords(),
+        this.fetchMicroEmotionWords(),
+        this.fetchWorldCityWords(),
+        this.fetchLandscapeWords(),
+        this.fetchPhysicsWords(),
+        this.fetchChemistryWords(),
+        this.fetchBiologyWords(),
+        this.fetchAbsurdWords(),
+        this.fetchHistoricalWords(),
+        this.fetchSensoryWords(),
+        this.generateCompoundWords()
       ]);
 
       this.expandedCategories = {
@@ -2240,73 +2396,120 @@ export class NameGeneratorService {
         movement: this.removeDuplicates(movement),
         sounds: this.removeDuplicates(sounds),
         tastes: this.removeDuplicates(tastes),
-        cultural: this.removeDuplicates(cultural)
+        cultural: this.removeDuplicates(cultural),
+        // New specialized domains
+        scienceFiction: this.removeDuplicates(scienceFiction),
+        fantasy: this.removeDuplicates(fantasy),
+        food: this.removeDuplicates(food),
+        fashion: this.removeDuplicates(fashion),
+        architecture: this.removeDuplicates(architecture),
+        literature: this.removeDuplicates(literature),
+        psychology: this.removeDuplicates(psychology),
+        microEmotions: this.removeDuplicates(microEmotions),
+        worldCities: this.removeDuplicates(worldCities),
+        landscapes: this.removeDuplicates(landscapes),
+        physics: this.removeDuplicates(physics),
+        chemistry: this.removeDuplicates(chemistry),
+        biology: this.removeDuplicates(biology),
+        absurd: this.removeDuplicates(absurd),
+        historical: this.removeDuplicates(historical),
+        sensory: this.removeDuplicates(sensory),
+        compound: this.removeDuplicates(compound)
       };
 
       // Integrate expanded categories into main word sources
       this.integrateExpandedCategories();
       
-      console.log('Expanded categories loaded:', {
-        emotions: this.expandedCategories.emotions.length,
-        colors: this.expandedCategories.colors.length,
-        animals: this.expandedCategories.animals.length,
-        mythology: this.expandedCategories.mythology.length,
-        technology: this.expandedCategories.technology.length,
-        nature: this.expandedCategories.nature.length,
-        cosmic: this.expandedCategories.cosmic.length,
-        abstract: this.expandedCategories.abstract.length,
-        textures: this.expandedCategories.textures.length,
-        weather: this.expandedCategories.weather.length,
-        timeRelated: this.expandedCategories.timeRelated.length,
-        movement: this.expandedCategories.movement.length,
-        sounds: this.expandedCategories.sounds.length,
-        tastes: this.expandedCategories.tastes.length,
-        cultural: this.expandedCategories.cultural.length
-      });
+      console.log('Expanded categories loaded:', Object.fromEntries(
+        Object.entries(this.expandedCategories).map(([key, value]) => [key, value.length])
+      ));
     } catch (error) {
       console.error('Error fetching expanded categories:', error);
     }
   }
 
   private integrateExpandedCategories() {
-    // Add variety from expanded categories to main word sources
+    // Massively expand adjectives with specialized domains
     this.wordSources.adjectives = [
       ...this.wordSources.adjectives,
-      ...this.expandedCategories.emotions.slice(0, 30),
-      ...this.expandedCategories.colors.slice(0, 30),
-      ...this.expandedCategories.textures.slice(0, 20),
-      ...this.expandedCategories.tastes.slice(0, 10)
+      // Core emotional and sensory
+      ...this.expandedCategories.emotions.slice(0, 35),
+      ...this.expandedCategories.microEmotions.slice(0, 50),
+      ...this.expandedCategories.colors.slice(0, 34),
+      ...this.expandedCategories.textures.slice(0, 25),
+      ...this.expandedCategories.tastes.slice(0, 15),
+      ...this.expandedCategories.sensory.slice(0, 40),
+      // Specialized domains
+      ...this.expandedCategories.scienceFiction.slice(0, 40),
+      ...this.expandedCategories.fantasy.slice(0, 45),
+      ...this.expandedCategories.fashion.slice(0, 35),
+      ...this.expandedCategories.architecture.slice(0, 30),
+      ...this.expandedCategories.literature.slice(0, 25),
+      ...this.expandedCategories.psychology.slice(0, 40),
+      ...this.expandedCategories.physics.slice(0, 30),
+      ...this.expandedCategories.chemistry.slice(0, 25),
+      ...this.expandedCategories.biology.slice(0, 25),
+      ...this.expandedCategories.historical.slice(0, 30),
+      ...this.expandedCategories.absurd.slice(0, 40)
     ];
 
+    // Massively expand nouns with specialized domains  
     this.wordSources.nouns = [
       ...this.wordSources.nouns,
-      ...this.expandedCategories.animals.slice(0, 30),
-      ...this.expandedCategories.mythology.slice(0, 25),
-      ...this.expandedCategories.technology.slice(0, 25),
-      ...this.expandedCategories.nature.slice(0, 30),
-      ...this.expandedCategories.cosmic.slice(0, 20),
-      ...this.expandedCategories.abstract.slice(0, 20),
-      ...this.expandedCategories.weather.slice(0, 15),
-      ...this.expandedCategories.cultural.slice(0, 20)
+      // Core categories
+      ...this.expandedCategories.animals.slice(0, 40),
+      ...this.expandedCategories.mythology.slice(0, 35),
+      ...this.expandedCategories.technology.slice(0, 40),
+      ...this.expandedCategories.nature.slice(0, 40),
+      ...this.expandedCategories.cosmic.slice(0, 30),
+      ...this.expandedCategories.abstract.slice(0, 30),
+      ...this.expandedCategories.weather.slice(0, 20),
+      ...this.expandedCategories.cultural.slice(0, 25),
+      // New specialized domains
+      ...this.expandedCategories.scienceFiction.slice(40, 85), // Different slice for nouns
+      ...this.expandedCategories.fantasy.slice(30, 70),
+      ...this.expandedCategories.food.slice(0, 50),
+      ...this.expandedCategories.fashion.slice(20, 50),
+      ...this.expandedCategories.architecture.slice(15, 50),
+      ...this.expandedCategories.literature.slice(15, 40),
+      ...this.expandedCategories.worldCities.slice(0, 47),
+      ...this.expandedCategories.landscapes.slice(0, 72),
+      ...this.expandedCategories.physics.slice(15, 40),
+      ...this.expandedCategories.chemistry.slice(15, 40),
+      ...this.expandedCategories.biology.slice(15, 40),
+      ...this.expandedCategories.historical.slice(20, 50),
+      ...this.expandedCategories.compound.slice(0, 60)
     ];
 
+    // Expand verbs with movement and action words
     this.wordSources.verbs = [
       ...this.wordSources.verbs,
-      ...this.expandedCategories.movement.slice(0, 40),
-      ...this.expandedCategories.sounds.map(s => this.soundToVerb(s)).slice(0, 20)
+      ...this.expandedCategories.movement.slice(0, 50),
+      ...this.expandedCategories.sounds.map(s => this.soundToVerb(s)).slice(0, 25),
+      // Psychology actions
+      ...this.expandedCategories.psychology.filter(p => p.endsWith('ing') || ['Focus', 'Think', 'Learn', 'Feel', 'React', 'Respond'].includes(p)).slice(0, 20)
     ];
 
+    // Expand musical terms with specialized categories
     this.wordSources.musicalTerms = [
       ...this.wordSources.musicalTerms,
-      ...this.expandedCategories.sounds.slice(0, 20),
-      ...this.expandedCategories.timeRelated.filter(t => this.isMusicalTime(t)).slice(0, 15)
+      ...this.expandedCategories.sounds.slice(0, 25),
+      ...this.expandedCategories.timeRelated.filter(t => this.isMusicalTime(t)).slice(0, 20),
+      ...this.expandedCategories.literature.filter(l => ['Rhythm', 'Cadence', 'Verse', 'Ballad', 'Epic', 'Saga'].includes(l)).slice(0, 15)
     ];
 
-    // Remove duplicates from final sources
-    this.wordSources.adjectives = this.removeDuplicates(this.wordSources.adjectives);
-    this.wordSources.nouns = this.removeDuplicates(this.wordSources.nouns);
-    this.wordSources.verbs = this.removeDuplicates(this.wordSources.verbs);
-    this.wordSources.musicalTerms = this.removeDuplicates(this.wordSources.musicalTerms);
+    // Remove duplicates and set limits for performance
+    this.wordSources.adjectives = this.removeDuplicates(this.wordSources.adjectives).slice(0, 1200);
+    this.wordSources.nouns = this.removeDuplicates(this.wordSources.nouns).slice(0, 1400);
+    this.wordSources.verbs = this.removeDuplicates(this.wordSources.verbs).slice(0, 500);
+    this.wordSources.musicalTerms = this.removeDuplicates(this.wordSources.musicalTerms).slice(0, 600);
+    
+    console.log('Final vocabulary sizes:', {
+      adjectives: this.wordSources.adjectives.length,
+      nouns: this.wordSources.nouns.length, 
+      verbs: this.wordSources.verbs.length,
+      musicalTerms: this.wordSources.musicalTerms.length
+    });
   }
 
   private soundToVerb(sound: string): string {
@@ -2731,5 +2934,289 @@ export class NameGeneratorService {
       console.error(`Error searching poetry for keyword ${keyword}:`, error);
       return [];
     }
+  }
+
+  // New specialized domain fetchers for massive vocabulary expansion
+  private async fetchScienceFictionWords(): Promise<string[]> {
+    return [
+      'Cybernetic', 'Quantum', 'Neural', 'Bionic', 'Synthetic', 'Holographic', 'Dimensional',
+      'Temporal', 'Galactic', 'Interstellar', 'Hypersonic', 'Cryogenic', 'Nanotechnology',
+      'Antimatter', 'Plasma', 'Warp', 'Teleportation', 'Terraforming', 'Genetic', 'Clone',
+      'Android', 'Cyborg', 'Robot', 'AI', 'Matrix', 'Virtual', 'Augmented', 'Enhanced',
+      'Starship', 'Mothership', 'Spaceship', 'Station', 'Colony', 'Outpost', 'Gateway',
+      'Nexus', 'Portal', 'Wormhole', 'Blackhole', 'Nebula', 'Supernova', 'Pulsar',
+      'Asteroid', 'Comet', 'Meteorite', 'Satellite', 'Observatory', 'Laboratory', 'Reactor',
+      'Engine', 'Drive', 'Thruster', 'Shield', 'Armor', 'Weapon', 'Laser', 'Phaser',
+      'Blaster', 'Cannon', 'Torpedo', 'Missile', 'Bomb', 'Explosive', 'Energy', 'Power',
+      'Fuel', 'Core', 'Generator', 'Battery', 'Cell', 'Unit', 'Module', 'Component',
+      'System', 'Network', 'Grid', 'Interface', 'Terminal', 'Console', 'Display', 'Screen',
+      'Sensor', 'Scanner', 'Detector', 'Monitor', 'Tracker', 'Analyzer', 'Computer',
+      'Processor', 'Memory', 'Database', 'Archive', 'Library', 'Repository', 'Storage'
+    ];
+  }
+
+  private async fetchFantasyWords(): Promise<string[]> {
+    return [
+      'Mystical', 'Enchanted', 'Magical', 'Arcane', 'Ethereal', 'Celestial', 'Divine',
+      'Sacred', 'Holy', 'Blessed', 'Cursed', 'Damned', 'Forbidden', 'Ancient', 'Elder',
+      'Primordial', 'Legendary', 'Mythical', 'Fabled', 'Heroic', 'Epic', 'Noble',
+      'Royal', 'Imperial', 'Sovereign', 'Majestic', 'Regal', 'Glorious', 'Magnificent',
+      'Spell', 'Charm', 'Hex', 'Curse', 'Blessing', 'Incantation', 'Ritual', 'Ceremony',
+      'Potion', 'Elixir', 'Brew', 'Draught', 'Tonic', 'Philter', 'Remedy', 'Antidote',
+      'Crystal', 'Gem', 'Stone', 'Jewel', 'Orb', 'Sphere', 'Globe', 'Pendant',
+      'Amulet', 'Talisman', 'Charm', 'Ring', 'Crown', 'Scepter', 'Staff', 'Wand',
+      'Dragon', 'Phoenix', 'Griffin', 'Unicorn', 'Pegasus', 'Chimera', 'Basilisk', 'Wyrm',
+      'Fairy', 'Sprite', 'Pixie', 'Nymph', 'Dryad', 'Naiad', 'Sylph', 'Undine',
+      'Elf', 'Dwarf', 'Gnome', 'Halfling', 'Giant', 'Titan', 'Ogre', 'Troll',
+      'Goblin', 'Orc', 'Kobold', 'Demon', 'Devil', 'Fiend', 'Specter', 'Wraith',
+      'Castle', 'Tower', 'Fortress', 'Citadel', 'Keep', 'Dungeon', 'Cavern', 'Grotto',
+      'Forest', 'Grove', 'Glade', 'Meadow', 'Vale', 'Dell', 'Hollow', 'Thicket'
+    ];
+  }
+
+  private async fetchCulinaryWords(): Promise<string[]> {
+    return [
+      'Artisanal', 'Gourmet', 'Organic', 'Fresh', 'Seasonal', 'Local', 'Farm-to-table',
+      'Handcrafted', 'Small-batch', 'Authentic', 'Traditional', 'Heritage', 'Heirloom',
+      'Saffron', 'Truffle', 'Caviar', 'Foie', 'Wagyu', 'Kobe', 'Angus', 'Prime',
+      'Aged', 'Cured', 'Smoked', 'Grilled', 'Roasted', 'Braised', 'Seared', 'Poached',
+      'Sous-vide', 'Molecular', 'Fusion', 'Bistro', 'Brasserie', 'Trattoria', 'Osteria',
+      'Tapas', 'Mezze', 'Antipasti', 'Charcuterie', 'Cheese', 'Wine', 'Vintage', 'Reserve',
+      'Estate', 'Single-malt', 'Barrel-aged', 'Small-batch', 'Craft', 'Microbrewery',
+      'Espresso', 'Cappuccino', 'Latte', 'Macchiato', 'Americano', 'Cortado', 'Gibraltar',
+      'Sourdough', 'Ciabatta', 'Focaccia', 'Baguette', 'Croissant', 'Brioche', 'Pain',
+      'Pasta', 'Risotto', 'Polenta', 'Gnocchi', 'Ravioli', 'Tortellini', 'Pappardelle',
+      'Umami', 'Savory', 'Sweet', 'Bitter', 'Sour', 'Salty', 'Spicy', 'Mild',
+      'Bold', 'Complex', 'Layered', 'Balanced', 'Harmonious', 'Robust', 'Delicate', 'Subtle'
+    ];
+  }
+
+  private async fetchFashionWords(): Promise<string[]> {
+    return [
+      'Couture', 'Haute', 'Prêt-à-porter', 'Ready-to-wear', 'Bespoke', 'Tailored', 'Custom',
+      'Avant-garde', 'Minimalist', 'Bohemian', 'Vintage', 'Retro', 'Classic', 'Timeless',
+      'Trendy', 'Contemporary', 'Modern', 'Chic', 'Elegant', 'Sophisticated', 'Refined',
+      'Luxurious', 'Premium', 'Designer', 'Signature', 'Iconic', 'Statement', 'Bold',
+      'Silk', 'Cashmere', 'Velvet', 'Satin', 'Chiffon', 'Lace', 'Tweed', 'Denim',
+      'Leather', 'Suede', 'Wool', 'Cotton', 'Linen', 'Jersey', 'Crepe', 'Georgette',
+      'Draping', 'Tailoring', 'Silhouette', 'Cut', 'Fit', 'Structure', 'Flow', 'Movement',
+      'Texture', 'Pattern', 'Print', 'Embroidery', 'Beading', 'Sequin', 'Appliqué',
+      'Runway', 'Catwalk', 'Fashion', 'Style', 'Trend', 'Season', 'Collection', 'Line',
+      'Capsule', 'Wardrobe', 'Ensemble', 'Outfit', 'Look', 'Aesthetic', 'Vibe', 'Mood'
+    ];
+  }
+
+  private async fetchArchitectureWords(): Promise<string[]> {
+    return [
+      'Modernist', 'Brutalist', 'Bauhaus', 'Art-deco', 'Victorian', 'Gothic', 'Renaissance',
+      'Baroque', 'Neoclassical', 'Contemporary', 'Postmodern', 'Deconstructivist', 'Minimalist',
+      'Organic', 'Sustainable', 'Green', 'Eco-friendly', 'Passive', 'Net-zero', 'LEED',
+      'Structure', 'Framework', 'Foundation', 'Beam', 'Column', 'Arch', 'Dome', 'Vault',
+      'Facade', 'Elevation', 'Profile', 'Silhouette', 'Skyline', 'Horizon', 'Vista', 'View',
+      'Space', 'Volume', 'Form', 'Mass', 'Scale', 'Proportion', 'Rhythm', 'Balance',
+      'Symmetry', 'Asymmetry', 'Harmony', 'Contrast', 'Tension', 'Flow', 'Movement', 'Transition',
+      'Material', 'Concrete', 'Steel', 'Glass', 'Stone', 'Brick', 'Timber', 'Wood',
+      'Metal', 'Aluminum', 'Copper', 'Bronze', 'Iron', 'Composite', 'Membrane', 'Fabric',
+      'Light', 'Shadow', 'Illumination', 'Natural', 'Artificial', 'Daylight', 'Sunlight', 'Moonlight',
+      'Atrium', 'Courtyard', 'Plaza', 'Terrace', 'Balcony', 'Deck', 'Patio', 'Garden',
+      'Landscape', 'Urban', 'Suburban', 'Rural', 'Metropolitan', 'Civic', 'Public', 'Private'
+    ];
+  }
+
+  private async fetchLiteratureWords(): Promise<string[]> {
+    return [
+      'Prose', 'Poetry', 'Verse', 'Stanza', 'Rhyme', 'Meter', 'Rhythm', 'Cadence',
+      'Metaphor', 'Simile', 'Allegory', 'Symbolism', 'Imagery', 'Irony', 'Satire', 'Paradox',
+      'Narrative', 'Plot', 'Character', 'Theme', 'Motif', 'Setting', 'Atmosphere', 'Mood',
+      'Tone', 'Voice', 'Style', 'Genre', 'Fiction', 'Non-fiction', 'Biography', 'Memoir',
+      'Essay', 'Article', 'Review', 'Critique', 'Analysis', 'Commentary', 'Editorial', 'Opinion',
+      'Novel', 'Novella', 'Short-story', 'Flash-fiction', 'Microfiction', 'Vignette', 'Sketch',
+      'Sonnet', 'Ballad', 'Ode', 'Elegy', 'Haiku', 'Tanka', 'Limerick', 'Free-verse',
+      'Epic', 'Saga', 'Chronicle', 'Legend', 'Myth', 'Folklore', 'Fable', 'Parable',
+      'Drama', 'Tragedy', 'Comedy', 'Romance', 'Mystery', 'Thriller', 'Horror', 'Science-fiction',
+      'Fantasy', 'Adventure', 'Western', 'Historical', 'Contemporary', 'Literary', 'Commercial',
+      'Experimental', 'Avant-garde', 'Modernist', 'Postmodern', 'Classical', 'Romantic', 'Victorian',
+      'Chapter', 'Section', 'Part', 'Book', 'Volume', 'Series', 'Trilogy', 'Anthology'
+    ];
+  }
+
+  private async fetchPsychologyWords(): Promise<string[]> {
+    return [
+      'Cognitive', 'Behavioral', 'Emotional', 'Mental', 'Psychological', 'Neurological', 'Psychiatric',
+      'Conscious', 'Unconscious', 'Subconscious', 'Preconscious', 'Superego', 'Ego', 'Id',
+      'Persona', 'Anima', 'Animus', 'Shadow', 'Archetype', 'Collective', 'Individual', 'Personal',
+      'Memory', 'Perception', 'Attention', 'Concentration', 'Focus', 'Awareness', 'Mindfulness',
+      'Thought', 'Thinking', 'Reasoning', 'Logic', 'Intuition', 'Insight', 'Understanding', 'Comprehension',
+      'Learning', 'Conditioning', 'Reinforcement', 'Punishment', 'Reward', 'Motivation', 'Drive', 'Impulse',
+      'Emotion', 'Feeling', 'Mood', 'Affect', 'Sentiment', 'Passion', 'Desire', 'Fear',
+      'Anxiety', 'Stress', 'Depression', 'Mania', 'Euphoria', 'Melancholia', 'Nostalgia', 'Grief',
+      'Joy', 'Happiness', 'Sadness', 'Anger', 'Rage', 'Love', 'Hate', 'Jealousy',
+      'Envy', 'Pride', 'Shame', 'Guilt', 'Regret', 'Hope', 'Despair', 'Trust',
+      'Personality', 'Character', 'Temperament', 'Trait', 'Disposition', 'Tendency', 'Pattern', 'Habit',
+      'Behavior', 'Action', 'Reaction', 'Response', 'Stimulus', 'Trigger', 'Cause', 'Effect'
+    ];
+  }
+
+  private async fetchMicroEmotionWords(): Promise<string[]> {
+    return [
+      'Wistful', 'Pensive', 'Contemplative', 'Reflective', 'Introspective', 'Meditative', 'Thoughtful',
+      'Yearning', 'Longing', 'Craving', 'Aching', 'Pining', 'Hankering', 'Thirsting', 'Hungering',
+      'Bittersweet', 'Poignant', 'Touching', 'Moving', 'Stirring', 'Evocative', 'Haunting', 'Lingering',
+      'Fleeting', 'Ephemeral', 'Transient', 'Momentary', 'Brief', 'Quick', 'Swift', 'Rapid',
+      'Gentle', 'Tender', 'Soft', 'Delicate', 'Subtle', 'Nuanced', 'Complex', 'Layered',
+      'Ambivalent', 'Conflicted', 'Torn', 'Divided', 'Split', 'Uncertain', 'Doubtful', 'Hesitant',
+      'Vulnerable', 'Fragile', 'Sensitive', 'Raw', 'Exposed', 'Open', 'Honest', 'Authentic',
+      'Intimate', 'Personal', 'Private', 'Sacred', 'Secret', 'Hidden', 'Concealed', 'Veiled',
+      'Mysterious', 'Enigmatic', 'Puzzling', 'Intriguing', 'Fascinating', 'Captivating', 'Mesmerizing',
+      'Overwhelming', 'Intense', 'Profound', 'Deep', 'Powerful', 'Strong', 'Forceful', 'Compelling'
+    ];
+  }
+
+  private async fetchWorldCityWords(): Promise<string[]> {
+    return [
+      'Tokyo', 'Mumbai', 'Delhi', 'Shanghai', 'São Paulo', 'Mexico City', 'Cairo', 'Beijing',
+      'Dhaka', 'Osaka', 'New York', 'Karachi', 'Buenos Aires', 'Chongqing', 'Istanbul', 'Kolkata',
+      'Manila', 'Lagos', 'Rio de Janeiro', 'Tianjin', 'Kinshasa', 'Guangzhou', 'Los Angeles',
+      'Moscow', 'Shenzhen', 'Lahore', 'Bangalore', 'Paris', 'Bogotá', 'Jakarta', 'Chennai',
+      'Lima', 'Bangkok', 'Seoul', 'Nagoya', 'Hyderabad', 'London', 'Tehran', 'Chicago',
+      'Chengdu', 'Nanjing', 'Wuhan', 'Ho Chi Minh City', 'Luanda', 'Ahmedabad', 'Kuala Lumpur',
+      'Xi\'an', 'Hong Kong', 'Dongguan', 'Hangzhou', 'Foshan', 'Shenyang', 'Riyadh', 'Baghdad',
+      'Santiago', 'Surat', 'Madrid', 'Suzhou', 'Pune', 'Harbin', 'Houston', 'Dallas',
+      'Toronto', 'Dar es Salaam', 'Miami', 'Belo Horizonte', 'Singapore', 'Philadelphia',
+      'Atlanta', 'Fukuoka', 'Khartoum', 'Barcelona', 'Johannesburg', 'Saint Petersburg',
+      'Qingdao', 'Dalian', 'Washington', 'Yangon', 'Alexandria', 'Jinan', 'Guadalajara'
+    ];
+  }
+
+  private async fetchLandscapeWords(): Promise<string[]> {
+    return [
+      'Fjord', 'Canyon', 'Valley', 'Plateau', 'Mesa', 'Butte', 'Ridge', 'Peak',
+      'Summit', 'Crest', 'Slope', 'Hillside', 'Foothill', 'Lowland', 'Highland', 'Upland',
+      'Prairie', 'Steppe', 'Savanna', 'Grassland', 'Meadow', 'Pasture', 'Field', 'Plain',
+      'Desert', 'Oasis', 'Dune', 'Badland', 'Scrubland', 'Brushland', 'Chaparral', 'Maquis',
+      'Forest', 'Woodland', 'Grove', 'Copse', 'Thicket', 'Glade', 'Clearing', 'Dell',
+      'Marsh', 'Swamp', 'Bog', 'Fen', 'Wetland', 'Estuary', 'Delta', 'Lagoon',
+      'Archipelago', 'Peninsula', 'Isthmus', 'Cape', 'Bay', 'Cove', 'Inlet', 'Sound',
+      'Strait', 'Channel', 'Passage', 'Reef', 'Shoal', 'Atoll', 'Island', 'Islet',
+      'Cliff', 'Bluff', 'Escarpment', 'Gorge', 'Ravine', 'Gulch', 'Gully', 'Arroyo',
+      'Waterfall', 'Cascade', 'Rapids', 'Pool', 'Spring', 'Geyser', 'Hot spring', 'Thermal',
+      'Glacier', 'Icefield', 'Iceberg', 'Tundra', 'Taiga', 'Boreal', 'Deciduous', 'Coniferous',
+      'Rainforest', 'Cloud forest', 'Montane', 'Alpine', 'Subalpine', 'Treeline', 'Snowline'
+    ];
+  }
+
+  private async fetchPhysicsWords(): Promise<string[]> {
+    return [
+      'Quantum', 'Relativity', 'Gravity', 'Electromagnetic', 'Nuclear', 'Particle', 'Wave', 'Field',
+      'Energy', 'Matter', 'Mass', 'Momentum', 'Velocity', 'Acceleration', 'Force', 'Pressure',
+      'Temperature', 'Heat', 'Thermodynamics', 'Entropy', 'Enthalpy', 'Kinetic', 'Potential', 'Mechanical',
+      'Electrical', 'Magnetic', 'Optical', 'Acoustic', 'Sonic', 'Ultrasonic', 'Infrared', 'Ultraviolet',
+      'Radiation', 'Radioactive', 'Isotope', 'Atom', 'Molecule', 'Electron', 'Proton', 'Neutron',
+      'Photon', 'Boson', 'Fermion', 'Quark', 'Lepton', 'Neutrino', 'Muon', 'Tau',
+      'Plasma', 'Solid', 'Liquid', 'Gas', 'Phase', 'Transition', 'Crystalline', 'Amorphous',
+      'Conductor', 'Insulator', 'Semiconductor', 'Superconductor', 'Magnetic', 'Diamagnetic', 'Paramagnetic', 'Ferromagnetic',
+      'Resonance', 'Frequency', 'Amplitude', 'Wavelength', 'Spectrum', 'Interference', 'Diffraction', 'Refraction',
+      'Reflection', 'Absorption', 'Emission', 'Scattering', 'Polarization', 'Coherence', 'Laser', 'Maser'
+    ];
+  }
+
+  private async fetchChemistryWords(): Promise<string[]> {
+    return [
+      'Molecular', 'Atomic', 'Ionic', 'Covalent', 'Metallic', 'Hydrogen', 'Polar', 'Nonpolar',
+      'Organic', 'Inorganic', 'Biochemical', 'Pharmaceutical', 'Polymer', 'Monomer', 'Catalyst', 'Enzyme',
+      'Reaction', 'Synthesis', 'Analysis', 'Oxidation', 'Reduction', 'Combustion', 'Precipitation', 'Dissolution',
+      'Acid', 'Base', 'Salt', 'Buffer', 'pH', 'Alkaline', 'Neutral', 'Titration',
+      'Element', 'Compound', 'Mixture', 'Solution', 'Solvent', 'Solute', 'Concentration', 'Molarity',
+      'Crystal', 'Crystalline', 'Amorphous', 'Volatile', 'Stable', 'Reactive', 'Inert', 'Noble',
+      'Halogen', 'Alkali', 'Alkaline earth', 'Transition metal', 'Lanthanide', 'Actinide', 'Metalloid', 'Nonmetal',
+      'Hydrocarbon', 'Alcohol', 'Ether', 'Ester', 'Ketone', 'Aldehyde', 'Carboxylic', 'Amino',
+      'Protein', 'Carbohydrate', 'Lipid', 'Nucleic', 'Glucose', 'Fructose', 'Sucrose', 'Cellulose',
+      'Aromatic', 'Aliphatic', 'Saturated', 'Unsaturated', 'Isomer', 'Stereoisomer', 'Enantiomer', 'Racemic'
+    ];
+  }
+
+  private async fetchBiologyWords(): Promise<string[]> {
+    return [
+      'Cellular', 'Molecular', 'Genetic', 'Evolutionary', 'Ecological', 'Physiological', 'Anatomical', 'Morphological',
+      'Organism', 'Species', 'Population', 'Community', 'Ecosystem', 'Biosphere', 'Habitat', 'Niche',
+      'Cell', 'Nucleus', 'Cytoplasm', 'Membrane', 'Organelle', 'Mitochondria', 'Chloroplast', 'Ribosome',
+      'DNA', 'RNA', 'Protein', 'Gene', 'Chromosome', 'Genome', 'Allele', 'Mutation',
+      'Evolution', 'Selection', 'Adaptation', 'Fitness', 'Survival', 'Reproduction', 'Inheritance', 'Heredity',
+      'Photosynthesis', 'Respiration', 'Metabolism', 'Digestion', 'Circulation', 'Excretion', 'Homeostasis', 'Growth',
+      'Development', 'Differentiation', 'Regeneration', 'Aging', 'Death', 'Lifecycle', 'Metamorphosis', 'Migration',
+      'Symbiosis', 'Mutualism', 'Commensalism', 'Parasitism', 'Predation', 'Competition', 'Cooperation', 'Communication',
+      'Behavior', 'Instinct', 'Learning', 'Memory', 'Sensation', 'Perception', 'Response', 'Stimulus',
+      'Taxonomy', 'Classification', 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus'
+    ];
+  }
+
+  private async fetchAbsurdWords(): Promise<string[]> {
+    return [
+      'Preposterous', 'Ludicrous', 'Ridiculous', 'Absurd', 'Nonsensical', 'Illogical', 'Irrational', 'Unreasonable',
+      'Bizarre', 'Weird', 'Strange', 'Odd', 'Peculiar', 'Quirky', 'Eccentric', 'Unconventional',
+      'Whimsical', 'Fanciful', 'Fantastical', 'Imaginary', 'Surreal', 'Dreamlike', 'Otherworldly', 'Unearthly',
+      'Paradoxical', 'Contradictory', 'Oxymoronic', 'Ironic', 'Satirical', 'Comedic', 'Humorous', 'Amusing',
+      'Silly', 'Foolish', 'Goofy', 'Wacky', 'Zany', 'Madcap', 'Outrageous', 'Outlandish',
+      'Extraordinary', 'Incredible', 'Unbelievable', 'Impossible', 'Improbable', 'Unlikely', 'Far-fetched', 'Implausible',
+      'Exaggerated', 'Hyperbolic', 'Inflated', 'Overstated', 'Dramatic', 'Theatrical', 'Melodramatic', 'Sensational',
+      'Shocking', 'Stunning', 'Astounding', 'Amazing', 'Astonishing', 'Surprising', 'Unexpected', 'Unpredictable',
+      'Random', 'Arbitrary', 'Chaotic', 'Disorderly', 'Confused', 'Muddled', 'Jumbled', 'Mixed-up',
+      'Topsy-turvy', 'Upside-down', 'Backwards', 'Inside-out', 'Wrong-way', 'Opposite', 'Reverse', 'Inverse'
+    ];
+  }
+
+  private async fetchHistoricalWords(): Promise<string[]> {
+    return [
+      'Ancient', 'Medieval', 'Renaissance', 'Baroque', 'Enlightenment', 'Industrial', 'Modern', 'Contemporary',
+      'Prehistoric', 'Paleolithic', 'Neolithic', 'Bronze', 'Iron', 'Classical', 'Hellenistic', 'Roman',
+      'Byzantine', 'Gothic', 'Romanesque', 'Victorian', 'Edwardian', 'Art Nouveau', 'Art Deco', 'Modernist',
+      'Empire', 'Kingdom', 'Republic', 'Dynasty', 'Monarchy', 'Aristocracy', 'Feudal', 'Colonial',
+      'Revolutionary', 'Civil', 'World', 'Cold', 'Nuclear', 'Space', 'Information', 'Digital',
+      'Pharaoh', 'Emperor', 'King', 'Queen', 'Prince', 'Princess', 'Duke', 'Duchess',
+      'Knight', 'Crusader', 'Viking', 'Samurai', 'Shogun', 'Warrior', 'Soldier', 'General',
+      'Battle', 'War', 'Siege', 'Conquest', 'Victory', 'Defeat', 'Treaty', 'Alliance',
+      'Exploration', 'Discovery', 'Expedition', 'Voyage', 'Journey', 'Adventure', 'Quest', 'Pilgrimage',
+      'Invention', 'Innovation', 'Technology', 'Science', 'Medicine', 'Philosophy', 'Religion', 'Culture'
+    ];
+  }
+
+  private async fetchSensoryWords(): Promise<string[]> {
+    return [
+      'Visual', 'Auditory', 'Tactile', 'Olfactory', 'Gustatory', 'Kinesthetic', 'Proprioceptive', 'Vestibular',
+      'Bright', 'Dim', 'Vivid', 'Dull', 'Sharp', 'Blurry', 'Clear', 'Hazy',
+      'Loud', 'Quiet', 'Melodic', 'Harsh', 'Smooth', 'Rough', 'Resonant', 'Muffled',
+      'Soft', 'Hard', 'Warm', 'Cool', 'Wet', 'Dry', 'Sticky', 'Slippery',
+      'Sweet', 'Sour', 'Bitter', 'Salty', 'Umami', 'Spicy', 'Bland', 'Rich',
+      'Fragrant', 'Pungent', 'Musty', 'Fresh', 'Stale', 'Aromatic', 'Acrid', 'Floral',
+      'Tingling', 'Burning', 'Freezing', 'Numb', 'Prickly', 'Itchy', 'Tender', 'Sore',
+      'Dizzy', 'Balanced', 'Steady', 'Wobbly', 'Spinning', 'Tilting', 'Swaying', 'Rocking',
+      'Heavy', 'Light', 'Dense', 'Airy', 'Thick', 'Thin', 'Solid', 'Hollow',
+      'Metallic', 'Wooden', 'Plastic', 'Fabric', 'Paper', 'Glass', 'Stone', 'Ceramic'
+    ];
+  }
+
+  private async generateCompoundWords(): Promise<string[]> {
+    // Generate dynamic compound words by combining elements
+    const prefixes = ['Ultra', 'Super', 'Mega', 'Hyper', 'Neo', 'Proto', 'Meta', 'Crypto', 'Pseudo', 'Quasi'];
+    const suffixes = ['scape', 'sphere', 'core', 'wave', 'flux', 'sync', 'tech', 'lab', 'zone', 'hub'];
+    const bases = ['sonic', 'cosmic', 'digital', 'neural', 'quantum', 'plasma', 'crystal', 'cyber', 'bio', 'nano'];
+    
+    const compounds: string[] = [];
+    
+    // Generate prefix + base combinations
+    for (const prefix of prefixes) {
+      for (const base of bases.slice(0, 3)) { // Limit combinations
+        compounds.push(prefix + base);
+      }
+    }
+    
+    // Generate base + suffix combinations
+    for (const base of bases) {
+      for (const suffix of suffixes.slice(0, 3)) { // Limit combinations
+        compounds.push(base + suffix);
+      }
+    }
+    
+    return compounds;
   }
 }
