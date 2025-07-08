@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, HeartIcon } from "lucide-react";
+import { Copy, ExternalLink, Heart, HeartIcon, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
 
@@ -58,16 +58,16 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
 
 
 
-  const getStatusColor = (status: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'available':
-        return 'bg-success-green';
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'similar':
-        return 'bg-warning-yellow';
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       case 'taken':
-        return 'bg-error-red';
+        return <XCircle className="h-4 w-4 text-red-500" />;
       default:
-        return 'bg-neutral-600';
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -87,9 +87,9 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
   return (
     <div className="relative p-6 rounded-lg border border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200">
       <div className="flex items-center justify-between mb-4">
-        <div className={`flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(verification.status)}`}>
-          <div className="w-2 h-2 rounded-full bg-white/80"></div>
-          <span>{getStatusText(verification.status)}</span>
+        <div className="flex items-center space-x-2 text-sm">
+          {getStatusIcon(verification.status)}
+          <span className="text-muted-foreground">{getStatusText(verification.status)}</span>
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -147,12 +147,13 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
           </div>
         )}
 
-        {/* Verification Links */}
+        {/* Compact Verification Links */}
         {verification.verificationLinks && verification.verificationLinks.length > 0 && (
-          <div className="mt-4 bg-muted rounded-lg p-3 border border-border">
-            <h4 className="text-sm font-medium text-foreground mb-2">
-              Verify Availability:
-            </h4>
+          <div className="mt-3 bg-muted/30 rounded-lg p-3">
+            <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-2">
+              <ExternalLink className="h-3 w-3" />
+              <span>Verify Availability:</span>
+            </div>
             <div className="flex flex-wrap gap-2">
               {verification.verificationLinks.map((link, index) => (
                 <a
@@ -160,46 +161,18 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-background border border-border text-primary hover:border-primary hover:bg-muted transition-colors"
+                  className="inline-flex items-center px-2 py-1 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded transition-colors"
                 >
+                  <ExternalLink className="h-3 w-3 mr-1" />
                   {link.name}
-                  <ExternalLink className="w-3 h-3 ml-1" />
                 </a>
               ))}
             </div>
-            <p className="text-xs text-primary mt-2">Click links to search and verify this name's availability</p>
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="mt-6 flex justify-center space-x-3">
-          <Button
-            onClick={() => onCopy(name)}
-            variant="default"
-            size="sm"
-            className="flex items-center space-x-2"
-          >
-            <Copy className="h-4 w-4" />
-            <span>Copy</span>
-          </Button>
 
-          <Button
-            onClick={handleAddToStash}
-            variant="outline"
-            size="sm"
-            className="flex items-center space-x-2"
-          >
-            {isInStash(name, nameType) ? (
-              <HeartIcon className="h-4 w-4 fill-current text-red-500" />
-            ) : (
-              <Heart className="h-4 w-4" />
-            )}
-            <span>{isInStash(name, nameType) ? 'In Stash' : 'Add to Stash'}</span>
-          </Button>
-        </div>
       </div>
-
-
     </div>
   );
 }
