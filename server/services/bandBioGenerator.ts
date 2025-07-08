@@ -47,9 +47,22 @@ Keep it playful, creative, and around 150-200 words. Make it feel like a real ba
       }
 
       return bio;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Band bio generation error:', error);
-      throw new Error("Failed to generate band biography");
+      
+      // Check if it's an API key issue (OpenAI library specific error)
+      if (error?.status === 400 || 
+          (error?.error && typeof error.error === 'string' && error.error.includes('Incorrect API key'))) {
+        throw new Error("The xAI API key appears to be invalid. Please check your API key at https://console.x.ai and make sure it's correctly configured.");
+      }
+      
+      // Check if it's a rate limit or quota issue  
+      if (error?.status === 429 || 
+          (error instanceof Error && (error.message.includes('rate limit') || error.message.includes('quota')))) {
+        throw new Error("API rate limit exceeded. Please try again in a moment.");
+      }
+      
+      throw new Error("Failed to generate band biography. Please try again later.");
     }
   }
 }
