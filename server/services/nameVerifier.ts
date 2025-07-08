@@ -25,31 +25,23 @@ export class NameVerifierService {
         
         // Add Last.fm search if API key is available
         if (process.env.LASTFM_API_KEY) {
-          promises.push(this.searchLastFm(name, type).catch((err: any) => {
-            console.log('Last.fm search failed:', err.message);
-            return [];
-          }));
+          promises.push(this.searchLastFm(name, type).catch(() => []));
         }
         
-        // Add MusicBrainz search (no key needed)
-        promises.push(this.searchRealMusicBrainz(name, type).catch((err: any) => {
-          console.log('MusicBrainz search failed:', err.message);
-          return [];
-        }));
+        // Add MusicBrainz search (no key needed) 
+        promises.push(this.searchRealMusicBrainz(name, type).catch(() => []));
 
         if (promises.length > 0) {
           searchResults = await Promise.all(promises).then(results => results.flat());
         }
       } catch (error) {
-        console.log('API verification failed, using heuristics');
+        // Silent fallback to heuristics
       }
 
-      // Debug logging
-      console.log(`Verification for "${name}" (${type}):`, {
-        searchResultsCount: searchResults.length,
-        hasLastFmKey: !!process.env.LASTFM_API_KEY,
-        results: searchResults.slice(0, 3) // Show first 3 results
-      });
+      // Minimal logging for debugging when needed
+      if (searchResults.length > 5) {
+        console.log(`Found ${searchResults.length} results for "${name}"`);
+      }
 
       // Check for exact matches first
       const exactMatches = searchResults.filter(result => 
@@ -61,7 +53,7 @@ export class NameVerifierService {
         const match = exactMatches[0];
         const artistInfo = match.artist ? ` by ${match.artist}` : '';
         const similarNames = this.generateSimilarNames(name);
-        console.log(`Exact match found for "${name}":`, match);
+        // Exact match found
         return {
           status: 'taken',
           details: `Found existing ${type}${artistInfo}. Try these alternatives:`,
@@ -114,7 +106,7 @@ export class NameVerifierService {
       // Only mark as available if we have fewer than 5 very weak results
       // This handles cases where APIs return tons of unrelated results
       if (searchResults.length <= 5) {
-        console.log(`Few or no relevant matches for "${name}" - marking as available`);
+        // Few or no relevant matches - marking as available
         return {
           status: 'available',
           details: `No existing ${type} found with this name in our databases.`,
@@ -122,7 +114,7 @@ export class NameVerifierService {
         };
       } else {
         // Many results but none are close matches - still available but note the search volume
-        console.log(`Many unrelated results for "${name}" but no close matches - marking as available`);
+        // No close matches found - marking as available
         return {
           status: 'available',
           details: `No existing ${type} found with this exact name in our databases.`,
@@ -399,7 +391,7 @@ export class NameVerifierService {
         }));
       }
     } catch (error: any) {
-      console.error('MusicBrainz API error:', error);
+      // Silent degradation - API failures are expected
       return [];
     }
   }

@@ -1128,27 +1128,34 @@ export class NameGeneratorService {
     };
   }
 
-  // Method to fetch words from external APIs and web sources
+  // Method to fetch words from external APIs and web sources (OPTIMIZED)
   private async fetchWordsFromWeb(): Promise<void> {
     try {
-      // Fetch from multiple web sources in parallel
-      const [adjectives, nouns, verbs, musicalTerms] = await Promise.all([
+      // Use Promise.allSettled to handle API failures gracefully
+      const results = await Promise.allSettled([
         this.fetchAdjectivesFromWeb(),
         this.fetchNounsFromWeb(),
         this.fetchVerbsFromWeb(),
         this.fetchMusicalTermsFromWeb()
       ]);
 
-      // Merge web-sourced words with existing vocabulary, removing duplicates
-      this.wordSources.adjectives = this.removeDuplicates([...this.wordSources.adjectives, ...adjectives]);
-      this.wordSources.nouns = this.removeDuplicates([...this.wordSources.nouns, ...nouns]);
-      this.wordSources.verbs = this.removeDuplicates([...this.wordSources.verbs, ...verbs]);
-      this.wordSources.musicalTerms = this.removeDuplicates([...this.wordSources.musicalTerms, ...musicalTerms]);
+      // Extract successful results, ignore failures
+      const [adjectives, nouns, verbs, musicalTerms] = results.map(result => 
+        result.status === 'fulfilled' ? result.value : []
+      );
 
-      console.log(`Enhanced vocabulary: ${this.wordSources.adjectives.length} adjectives, ${this.wordSources.nouns.length} nouns, ${this.wordSources.verbs.length} verbs, ${this.wordSources.musicalTerms.length} musical terms`);
+      // Only merge if we got substantial new words to avoid unnecessary processing
+      const totalNewWords = adjectives.length + nouns.length + verbs.length + musicalTerms.length;
+      if (totalNewWords > 50) {
+        this.wordSources.adjectives = this.removeDuplicates([...this.wordSources.adjectives, ...adjectives]);
+        this.wordSources.nouns = this.removeDuplicates([...this.wordSources.nouns, ...nouns]);
+        this.wordSources.verbs = this.removeDuplicates([...this.wordSources.verbs, ...verbs]);
+        this.wordSources.musicalTerms = this.removeDuplicates([...this.wordSources.musicalTerms, ...musicalTerms]);
+
+        console.log(`Enhanced vocabulary: ${this.wordSources.adjectives.length} adjectives, ${this.wordSources.nouns.length} nouns, ${this.wordSources.verbs.length} verbs, ${this.wordSources.musicalTerms.length} musical terms`);
+      }
     } catch (error) {
-      console.error('Failed to fetch words from web:', error);
-      console.log('Using static vocabulary as fallback');
+      // Graceful degradation - system works fine with static vocabulary
     }
   }
 
@@ -1262,7 +1269,7 @@ export class NameGeneratorService {
       const data = await response.json();
       return data.map((item: any) => this.capitalizeFirst(item.word)).filter(this.isValidWord);
     } catch (error) {
-      console.error('Wordnik API error:', error);
+      // Silent degradation - API failures are expected  
       return [];
     }
   }
@@ -1347,7 +1354,7 @@ export class NameGeneratorService {
         ?.map((instrument: any) => this.capitalizeFirst(instrument.name))
         .filter(this.isValidWord) || [];
     } catch (error) {
-      console.error('MusicBrainz API error:', error);
+      // Silent degradation - API failures are expected
       return [];
     }
   }
@@ -1364,7 +1371,7 @@ export class NameGeneratorService {
         ?.map((tag: any) => this.capitalizeFirst(tag.name))
         .filter(this.isValidWord) || [];
     } catch (error) {
-      console.error('Last.fm API error:', error);
+      // Silent degradation - API failures are expected
       return [];
     }
   }
