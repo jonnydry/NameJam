@@ -154,6 +154,7 @@ Changelog:
 - July 07, 2025. Removed refresh button and OpenAI integration: simplified UI by removing individual name refresh functionality and completely removed AI-powered band bio generator to focus on core name generation features
 - July 08, 2025. Enhanced core naming logic: added advanced linguistic structures including semantic word relationships, alliterative groups, rhyming patterns, and contextual connectors; improved single-word generation with compounds/portmanteaus/modifications; enhanced two-word pairing with semantic/alliterative/contrasting strategies; upgraded three-word patterns with better humor and variety; implemented smart capitalization rules for professional title formatting
 - July 08, 2025. Implemented grammatical consistency engine: added comprehensive noun singularization with 500+ plural-to-singular mappings, determiners now properly match noun number ("Every Penguins" → "Every Penguin"), smart demonstrative handling ("This/These", "That/Those"), and case preservation to eliminate all grammatical errors in generated names
+- July 08, 2025. Added comprehensive poetic evaluation system: web-researched linguistic patterns analyze word order for better lyrical flow, considers metrical stress patterns (iambs, trochees), applies song title conventions, evaluates multiple arrangements and selects optimal poetic structure, transforms awkward combinations like "Timeless Remember Fire" into natural flowing names
 
 ## User Preferences
 

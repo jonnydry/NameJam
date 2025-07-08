@@ -791,7 +791,10 @@ export class NameGeneratorService {
     // Apply grammatical consistency fixes
     const grammarCorrectedWords = this.ensureGrammaticalConsistency(finalWords);
     
-    return this.applySmartCapitalization(grammarCorrectedWords);
+    // Apply poetic evaluation for better lyrical flow
+    const poeticallyOrderedWords = this.evaluateAndReorderPoetically(grammarCorrectedWords);
+    
+    return this.applySmartCapitalization(poeticallyOrderedWords);
   }
 
   private buildRepetitivePattern(wordCount: number, wordSources?: WordSource): string {
@@ -1848,6 +1851,249 @@ export class NameGeneratorService {
       // Capitalize everything else
       return this.capitalizeFirst(word);
     }).join(' ');
+  }
+
+  private evaluateAndReorderPoetically(words: string[]): string[] {
+    if (words.length <= 2) return words; // Short names rarely need reordering
+    
+    const wordTypes = words.map(word => this.classifyWordType(word.toLowerCase()));
+    const stressPatterns = words.map(word => this.analyzeWordStress(word.toLowerCase()));
+    
+    // Create scoring matrix for different arrangements
+    const arrangements = this.generateArrangements(words, wordTypes);
+    let bestScore = -1;
+    let bestArrangement = words;
+    
+    for (const arrangement of arrangements) {
+      // Recalculate word types and stress patterns for this specific arrangement
+      const arrangementWordTypes = arrangement.map(word => this.classifyWordType(word.toLowerCase()));
+      const arrangementStressPatterns = arrangement.map(word => this.analyzeWordStress(word.toLowerCase()));
+      const score = this.scorePoeticallyArrangement(arrangement, arrangementWordTypes, arrangementStressPatterns);
+      if (score > bestScore) {
+        bestScore = score;
+        bestArrangement = arrangement;
+      }
+    }
+    
+    return bestArrangement;
+  }
+
+  private classifyWordType(word: string): string {
+    // Action words (verbs)
+    const actionWords = [
+      'remember', 'forget', 'dance', 'sing', 'fly', 'run', 'walk', 'jump', 'move', 'shake',
+      'break', 'build', 'create', 'destroy', 'love', 'hate', 'dream', 'wake', 'sleep',
+      'fight', 'play', 'work', 'live', 'die', 'breathe', 'feel', 'think', 'know',
+      'see', 'hear', 'touch', 'taste', 'smell', 'believe', 'hope', 'fear', 'want',
+      'need', 'give', 'take', 'hold', 'let', 'keep', 'lose', 'find', 'search',
+      'roam', 'travel', 'journey', 'explore', 'discover', 'hide', 'show', 'reveal'
+    ];
+    
+    // Time/temporal words
+    const temporalWords = [
+      'timeless', 'eternal', 'forever', 'never', 'always', 'sometimes', 'yesterday',
+      'today', 'tomorrow', 'morning', 'evening', 'midnight', 'dawn', 'dusk',
+      'ancient', 'modern', 'future', 'past', 'present', 'moment', 'instant',
+      'season', 'winter', 'spring', 'summer', 'autumn', 'before', 'after', 'during'
+    ];
+    
+    // Emotional/descriptive words
+    const emotionalWords = [
+      'wild', 'gentle', 'fierce', 'calm', 'bright', 'dark', 'mysterious', 'clear',
+      'hidden', 'open', 'secret', 'public', 'private', 'sacred', 'holy', 'pure',
+      'dirty', 'clean', 'fresh', 'old', 'new', 'young', 'ancient', 'modern',
+      'beautiful', 'ugly', 'pretty', 'handsome', 'gorgeous', 'stunning', 'amazing'
+    ];
+    
+    // Natural elements
+    const elementWords = [
+      'fire', 'water', 'earth', 'air', 'wind', 'storm', 'rain', 'snow', 'ice',
+      'sun', 'moon', 'star', 'planet', 'galaxy', 'ocean', 'sea', 'river', 'lake',
+      'mountain', 'valley', 'forest', 'desert', 'field', 'meadow', 'garden',
+      'tree', 'flower', 'grass', 'stone', 'rock', 'crystal', 'diamond', 'gold'
+    ];
+    
+    // Articles and connectors
+    const connectiveWords = [
+      'the', 'a', 'an', 'of', 'in', 'on', 'at', 'to', 'for', 'with', 'by',
+      'from', 'up', 'down', 'out', 'off', 'over', 'under', 'again', 'further',
+      'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all',
+      'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such',
+      'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very',
+      'into', 'through', 'beyond', 'across', 'around', 'between', 'among'
+    ];
+    
+    if (actionWords.includes(word)) return 'action';
+    if (temporalWords.includes(word)) return 'temporal';
+    if (emotionalWords.includes(word)) return 'emotional';
+    if (elementWords.includes(word)) return 'element';
+    if (connectiveWords.includes(word)) return 'connective';
+    
+    // Default classification based on ending patterns
+    if (word.endsWith('ing')) return 'action';
+    if (word.endsWith('ed')) return 'action';
+    if (word.endsWith('ly')) return 'emotional';
+    if (word.endsWith('ful') || word.endsWith('less')) return 'emotional';
+    
+    return 'noun'; // Default
+  }
+
+  private analyzeWordStress(word: string): string {
+    // Simple stress pattern analysis based on syllable count and common patterns
+    const syllableCount = this.countSyllables(word);
+    
+    if (syllableCount === 1) return 'stressed'; // Most monosyllabic words are stressed
+    if (syllableCount === 2) {
+      // Common two-syllable patterns
+      const trocheeWords = ['fire', 'water', 'mountain', 'forest', 'sunset', 'morning', 'evening'];
+      if (trocheeWords.some(t => word.includes(t))) return 'trochee'; // STRESSed-unstressed
+      return 'iamb'; // unstressed-STRESSed
+    }
+    if (syllableCount === 3) {
+      // Common three-syllable patterns
+      if (word.endsWith('ing') || word.endsWith('tion')) return 'dactyl'; // STRESSed-unstressed-unstressed
+      return 'anapest'; // unstressed-unstressed-STRESSed
+    }
+    
+    return 'complex'; // Longer words have complex patterns
+  }
+
+  private countSyllables(word: string): number {
+    // Simple syllable counting approximation
+    const vowelGroups = word.toLowerCase().match(/[aeiouy]+/g);
+    let count = vowelGroups ? vowelGroups.length : 1;
+    
+    // Adjust for silent e
+    if (word.toLowerCase().endsWith('e') && count > 1) count--;
+    
+    // Ensure minimum of 1
+    return Math.max(1, count);
+  }
+
+  private generateArrangements(words: string[], wordTypes: string[]): string[][] {
+    if (words.length <= 2) return [words];
+    if (words.length > 5) return [words]; // Too complex for exhaustive rearrangement
+    
+    const arrangements: string[][] = [];
+    
+    // Original order
+    arrangements.push([...words]);
+    
+    // Try moving action words to front (verbs typically come early)
+    const actionIndex = wordTypes.findIndex(type => type === 'action');
+    if (actionIndex > 0) {
+      const actionFirst = [...words];
+      const actionWord = actionFirst.splice(actionIndex, 1)[0];
+      actionFirst.unshift(actionWord);
+      arrangements.push(actionFirst);
+    }
+    
+    // Try moving temporal words to strategic positions
+    const temporalIndex = wordTypes.findIndex(type => type === 'temporal');
+    if (temporalIndex > 0 && words.length >= 3) {
+      // Move temporal word to second position
+      const temporalSecond = [...words];
+      const temporalWord = temporalSecond.splice(temporalIndex, 1)[0];
+      temporalSecond.splice(1, 0, temporalWord);
+      arrangements.push(temporalSecond);
+    }
+    
+    // Try moving elements to end (concrete nouns often work well at end)
+    const elementIndex = wordTypes.findIndex(type => type === 'element');
+    if (elementIndex < words.length - 1 && elementIndex >= 0) {
+      const elementLast = [...words];
+      const elementWord = elementLast.splice(elementIndex, 1)[0];
+      elementLast.push(elementWord);
+      arrangements.push(elementLast);
+    }
+    
+    // For 3-word combinations, try emotional-element-action pattern
+    if (words.length === 3) {
+      const emotionalIndex = wordTypes.findIndex(type => type === 'emotional');
+      const actionIdx = wordTypes.findIndex(type => type === 'action');
+      const elementIdx = wordTypes.findIndex(type => type === 'element');
+      
+      if (emotionalIndex >= 0 && elementIdx >= 0 && actionIdx >= 0) {
+        const emotionalElementAction = [
+          words[emotionalIndex],
+          words[elementIdx],
+          words[actionIdx]
+        ];
+        arrangements.push(emotionalElementAction);
+      }
+    }
+    
+    return arrangements;
+  }
+
+  private scorePoeticallyArrangement(arrangement: string[], wordTypes: string[], stressPatterns: string[]): number {
+    let score = 0;
+    
+    // Prefer action words early (natural narrative flow)
+    const actionIndex = wordTypes.findIndex(type => type === 'action');
+    if (actionIndex === 0) score += 15; // Action word first is very natural
+    else if (actionIndex === 1) score += 10; // Second position also good
+    else if (actionIndex > arrangement.length / 2) score -= 5; // Late actions feel awkward
+    
+    // Temporal words work well in various positions but not usually last
+    const temporalIndex = wordTypes.findIndex(type => type === 'temporal');
+    if (temporalIndex === arrangement.length - 1) score -= 8; // Temporal words rarely end titles
+    else if (temporalIndex >= 0) score += 5; // Generally good positioning
+    
+    // Element words (concrete nouns) work well at the end
+    const elementIndex = wordTypes.findIndex(type => type === 'element');
+    if (elementIndex === arrangement.length - 1) score += 12; // Strong ending
+    else if (elementIndex === 0) score += 8; // Also strong as opener
+    
+    // Emotional descriptors work well early or before nouns
+    const emotionalIndex = wordTypes.findIndex(type => type === 'emotional');
+    if (emotionalIndex >= 0 && emotionalIndex < arrangement.length - 1) {
+      const nextWordType = wordTypes[emotionalIndex + 1];
+      if (nextWordType === 'element' || nextWordType === 'noun') score += 10; // Adjective before noun
+    }
+    
+    // Connective words should not be first or last
+    const connectiveIndex = wordTypes.findIndex(type => type === 'connective');
+    if (connectiveIndex === 0 || connectiveIndex === arrangement.length - 1) score -= 10;
+    else if (connectiveIndex >= 0) score += 3; // Good internal positioning
+    
+    // Prefer alternating stress patterns (iambic feel)
+    for (let i = 0; i < stressPatterns.length - 1; i++) {
+      if (stressPatterns[i] === 'stressed' && stressPatterns[i + 1] === 'iamb') score += 5;
+      if (stressPatterns[i] === 'iamb' && stressPatterns[i + 1] === 'trochee') score += 3;
+    }
+    
+    // Bonus for natural English word order patterns
+    if (arrangement.length >= 2) {
+      const firstType = wordTypes[0];
+      const secondType = wordTypes[1];
+      
+      // Verb-noun patterns
+      if (firstType === 'action' && (secondType === 'element' || secondType === 'noun')) score += 8;
+      
+      // Adjective-noun patterns  
+      if (firstType === 'emotional' && (secondType === 'element' || secondType === 'noun')) score += 8;
+      
+      // Temporal-adjective-noun patterns
+      if (arrangement.length >= 3 && firstType === 'temporal' && 
+          secondType === 'emotional' && wordTypes[2] === 'element') score += 12;
+    }
+    
+    // Penalize awkward patterns
+    if (arrangement.length >= 2) {
+      const firstType = wordTypes[0];
+      const lastType = wordTypes[wordTypes.length - 1];
+      const secondLastType = wordTypes[wordTypes.length - 2];
+      
+      // Avoid ending with connectives or weak words
+      if (lastType === 'connective') score -= 15;
+      
+      // Avoid double actions or double temporals
+      if (firstType === 'action' && secondLastType === 'action') score -= 8;
+      if (firstType === 'temporal' && secondLastType === 'temporal') score -= 8;
+    }
+    
+    return score;
   }
 
   private generateSingleWordName(sources: WordSource): string {
