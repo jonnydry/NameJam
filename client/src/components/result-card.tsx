@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, HeartIcon, BookOpen } from "lucide-react";
+import { Copy, ExternalLink, Heart, HeartIcon } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface VerificationResult {
   status: 'available' | 'similar' | 'taken';
@@ -34,9 +32,6 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
   const { name, verification } = result;
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
-  const [showBioDialog, setShowBioDialog] = useState(false);
-  const [bandBio, setBandBio] = useState("");
-  const [isLoadingBio, setIsLoadingBio] = useState(false);
 
   const handleAddToStash = () => {
     if (isInStash(name, nameType)) {
@@ -61,33 +56,7 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
     }
   };
 
-  const handleGenerateBio = async () => {
-    if (nameType !== 'band') return;
-    
-    setIsLoadingBio(true);
-    setShowBioDialog(true);
-    setBandBio("");
-    
-    try {
-      const response = await fetch("/api/generate-band-bio", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bandName: name })
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to generate bio");
-      }
-      
-      const data = await response.json();
-      setBandBio(data.bio);
-    } catch (error) {
-      console.error("Error generating bio:", error);
-      setBandBio("Sorry, I couldn't generate a bio for this band. Please try again later.");
-    } finally {
-      setIsLoadingBio(false);
-    }
-  };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -123,17 +92,6 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
           <span>{getStatusText(verification.status)}</span>
         </div>
         <div className="flex items-center space-x-2">
-          {nameType === 'band' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleGenerateBio}
-              className="text-muted-foreground hover:text-foreground"
-              title="Generate Band Bio"
-            >
-              <BookOpen className="h-4 w-4" />
-            </Button>
-          )}
           <Button
             variant="ghost"
             size="sm"
@@ -241,27 +199,7 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
         </div>
       </div>
 
-      {/* Band Bio Dialog */}
-      <Dialog open={showBioDialog} onOpenChange={setShowBioDialog}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">{name}</DialogTitle>
-            <DialogDescription>Band Biography</DialogDescription>
-          </DialogHeader>
-          <div className="mt-4">
-            {isLoadingBio ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p className="mt-4 text-muted-foreground">Generating band bio...</p>
-              </div>
-            ) : (
-              <div className="prose prose-neutral dark:prose-invert max-w-none">
-                <p className="whitespace-pre-wrap text-foreground">{bandBio}</p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }
