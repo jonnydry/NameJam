@@ -25,7 +25,7 @@ Include:
 Keep it playful, creative, and around 150-200 words. Make it feel like a real band with personality and history, but with a touch of humor and whimsy.`;
 
       const response = await this.openai.chat.completions.create({
-        model: "grok-2-1212",
+        model: "grok-3-latest",
         messages: [
           {
             role: "system",
