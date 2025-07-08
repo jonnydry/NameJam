@@ -208,9 +208,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ bio });
     } catch (error) {
       console.error("Error generating band bio:", error);
-      res.status(500).json({ 
-        error: "Failed to generate band bio. Please try again." 
-      });
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate band bio. Please try again.";
+      res.status(500).json({ error: errorMessage });
     }
   });
 
