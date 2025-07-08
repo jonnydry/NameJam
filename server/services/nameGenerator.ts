@@ -16,6 +16,60 @@ export class NameGeneratorService {
     musicalTerms: []
   };
 
+  // Advanced linguistic structures for better combinations
+  private linguisticStructures = {
+    // Semantic word relationships for natural pairings
+    semanticPairs: {
+      'fire': ['smoke', 'ash', 'ember', 'flame', 'spark', 'blaze'],
+      'water': ['wave', 'tide', 'flow', 'stream', 'ocean', 'rain'],
+      'light': ['shadow', 'dawn', 'dusk', 'glow', 'beam', 'ray'],
+      'sound': ['echo', 'silence', 'noise', 'whisper', 'roar', 'hum'],
+      'time': ['moment', 'eternity', 'instant', 'forever', 'past', 'future'],
+      'space': ['void', 'cosmos', 'universe', 'galaxy', 'star', 'nebula']
+    },
+    
+    // Alliterative word groups for memorable combinations
+    alliterativeGroups: {
+      's': ['silver', 'shadow', 'silent', 'secret', 'storm', 'soul', 'song', 'serpent'],
+      'b': ['black', 'blue', 'burning', 'broken', 'bright', 'bitter', 'blood', 'blade'],
+      'm': ['midnight', 'moon', 'mystic', 'mirror', 'mist', 'mountain', 'memory', 'melody'],
+      'f': ['fire', 'frost', 'flame', 'frozen', 'fury', 'fate', 'fear', 'forever'],
+      'd': ['dark', 'dream', 'dawn', 'dust', 'deep', 'divine', 'dragon', 'doom'],
+      'c': ['crystal', 'crimson', 'cosmic', 'cold', 'chaos', 'crown', 'cloud', 'cascade']
+    },
+    
+    // Rhyming patterns for poetic effect
+    rhymeGroups: {
+      'ight': ['light', 'night', 'flight', 'bright', 'sight', 'fight', 'height', 'knight'],
+      'ound': ['sound', 'ground', 'round', 'bound', 'found', 'wound', 'profound'],
+      'ake': ['wake', 'lake', 'make', 'break', 'take', 'snake', 'quake', 'sake'],
+      'all': ['fall', 'call', 'wall', 'small', 'tall', 'all', 'hall', 'sprawl']
+    },
+    
+    // Enhanced connectors with contextual meaning
+    contextualConnectors: {
+      spatial: ['above', 'below', 'beneath', 'beyond', 'between', 'within', 'outside', 'inside'],
+      temporal: ['before', 'after', 'during', 'until', 'since', 'while', 'forever', 'never'],
+      causal: ['because', 'despite', 'without', 'through', 'against', 'towards', 'for', 'with'],
+      comparative: ['like', 'unlike', 'versus', 'than', 'as', 'such'],
+      possessive: ['of', 'from', 'by', 'for', 'with', 'within']
+    }
+  };
+
+  // Pattern templates for different name types
+  private patternTemplates = {
+    band: {
+      powerful: ['The [adjective] [noun]', '[adjective] [noun] [musicalTerm]', '[noun] of [noun]'],
+      mysterious: ['[adjective] [noun] [connector] [noun]', '[temporal] [adjective] [noun]'],
+      edgy: ['[verb] the [noun]', '[adjective] [noun] [verb]', '[noun] [verb] [noun]']
+    },
+    song: {
+      poetic: ['[adjective] [noun] [verb]', '[verb] [connector] [noun]', '[noun], [noun], [noun]'],
+      narrative: ['When [noun] [verb]', 'The [noun] that [verb]', '[verb] until [noun]'],
+      emotional: ['[adjective] [noun] of [noun]', '[verb] my [adjective] [noun]', '[noun] in [adjective] [noun]']
+    }
+  };
+
   // Expanded categories for endless variety
   private expandedCategories = {
     emotions: [],
@@ -180,19 +234,11 @@ export class NameGeneratorService {
     }
     
     if (wordCount === 1) {
-      // Single word - prefer nouns or musical terms
-      const sourceArray = Math.random() > 0.5 ? filteredSources.nouns : filteredSources.musicalTerms;
-      return sourceArray[Math.floor(Math.random() * sourceArray.length)];
+      // Single word names - make them impactful with creative modifications
+      return this.generateSingleWordName(filteredSources);
     } else if (wordCount === 2) {
-      // Two words - classic combinations
-      const patterns = [
-        () => `${filteredSources.adjectives[Math.floor(Math.random() * filteredSources.adjectives.length)]} ${filteredSources.nouns[Math.floor(Math.random() * filteredSources.nouns.length)]}`,
-        () => `${filteredSources.nouns[Math.floor(Math.random() * filteredSources.nouns.length)]} ${filteredSources.musicalTerms[Math.floor(Math.random() * filteredSources.musicalTerms.length)]}`,
-        () => `${filteredSources.verbs[Math.floor(Math.random() * filteredSources.verbs.length)]} ${filteredSources.nouns[Math.floor(Math.random() * filteredSources.nouns.length)]}`
-      ];
-      
-      const pattern = patterns[Math.floor(Math.random() * patterns.length)];
-      return pattern();
+      // Two word names - use advanced pairing logic
+      return this.generateTwoWordName(filteredSources, type);
     } else if (wordCount === 3) {
       // Three words - enhanced with humor and creativity
       return this.buildHumorousThreeWordPattern(filteredSources, type);
@@ -231,10 +277,45 @@ export class NameGeneratorService {
       () => {
         const opposites = [
           ['Big', 'Small'], ['Hot', 'Cold'], ['Fast', 'Slow'], ['Happy', 'Sad'],
-          ['Loud', 'Silent'], ['Bright', 'Dark'], ['Hard', 'Soft'], ['Wild', 'Gentle']
+          ['Loud', 'Silent'], ['Bright', 'Dark'], ['Hard', 'Soft'], ['Wild', 'Gentle'],
+          ['Ancient', 'Modern'], ['Sweet', 'Bitter'], ['Smooth', 'Rough'], ['Empty', 'Full']
         ];
         const oppositePair = opposites[Math.floor(Math.random() * opposites.length)];
         return `${oppositePair[0]} ${oppositePair[1]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`;
+      },
+      
+      // Alliterative combinations
+      () => {
+        const letter = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)].charAt(0).toLowerCase();
+        const matchingNouns = sources.nouns.filter(n => n.toLowerCase().startsWith(letter));
+        const matchingMusical = sources.musicalTerms.filter(m => m.toLowerCase().startsWith(letter));
+        
+        if (matchingNouns.length > 0 && Math.random() > 0.5) {
+          return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${matchingNouns[Math.floor(Math.random() * matchingNouns.length)]} ${sources.musicalTerms[Math.floor(Math.random() * sources.musicalTerms.length)]}`;
+        } else if (matchingMusical.length > 0) {
+          return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${matchingMusical[Math.floor(Math.random() * matchingMusical.length)]}`;
+        }
+        
+        // Fallback to regular pattern
+        return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.musicalTerms[Math.floor(Math.random() * sources.musicalTerms.length)]}`;
+      },
+      
+      // Emotional journey pattern
+      () => {
+        const emotions = sources.adjectives.filter(adj => 
+          ['happy', 'sad', 'angry', 'lonely', 'euphoric', 'melancholy', 'serene', 'chaotic'].some(e => 
+            adj.toLowerCase().includes(e)
+          )
+        );
+        const emotion = emotions.length > 0 ? emotions[Math.floor(Math.random() * emotions.length)] : sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+        return `${emotion} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]}`;
+      },
+      
+      // Number-based pattern for quirkiness
+      () => {
+        const numbers = ['Two', 'Three', 'Seven', 'Thirteen', 'Hundred', 'Thousand', 'Million'];
+        const number = numbers[Math.floor(Math.random() * numbers.length)];
+        return `${number} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`;
       }
     ];
     
@@ -436,7 +517,7 @@ export class NameGeneratorService {
       // Pattern 1: Statement structure - "The [adjective] [noun] [connector] [noun]" (5 words max)
       () => wordCount === 4 ? this.buildPattern(['article', 'adjective', 'noun', 'connector'], filteredSources) :
             wordCount === 5 ? this.buildPattern(['article', 'adjective', 'noun', 'connector', 'noun'], filteredSources) :
-            this.buildPattern(['article', 'adjective', 'noun', 'connector', 'noun', 'adjective'], filteredSources),
+            this.buildPattern(['article', 'adjective', 'noun', 'connector', 'adjective', 'noun'], filteredSources),
       
       // Pattern 2: Narrative flow - "[noun] [temporal] [adjective] [noun]" (4+ words)
       () => wordCount === 4 ? this.buildPattern(['noun', 'temporal', 'adjective', 'noun'], filteredSources) :
@@ -1148,6 +1229,114 @@ export class NameGeneratorService {
   private capitalizeFirst(word: string): string {
     if (!word) return word;
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }
+
+  private generateSingleWordName(sources: WordSource): string {
+    const strategies = [
+      // Compound word creation
+      () => {
+        const prefixes = ['ultra', 'mega', 'super', 'hyper', 'neo', 'pseudo', 'quasi', 'anti', 'meta', 'proto', 'cyber', 'astro'];
+        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        const base = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        return this.capitalizeFirst(prefix + base.toLowerCase());
+      },
+      
+      // Portmanteau (blend two words)
+      () => {
+        const word1 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        const word2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        const mid1 = Math.floor(word1.length / 2);
+        const mid2 = Math.floor(word2.length / 2);
+        return this.capitalizeFirst(word1.substring(0, mid1) + word2.substring(mid2).toLowerCase());
+      },
+      
+      // Modified existing word
+      () => {
+        const word = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        const modifications = ['er', 'ism', 'ist', 'ify', 'ous', 'ion', 'ity', 'age', 'ment'];
+        const mod = modifications[Math.floor(Math.random() * modifications.length)];
+        return this.capitalizeFirst(word + mod);
+      },
+      
+      // Just a powerful single word
+      () => {
+        const powerWords = [...sources.adjectives, ...sources.nouns, ...sources.verbs]
+          .filter(word => word.length > 5); // Longer words tend to be more impactful
+        return this.capitalizeFirst(powerWords[Math.floor(Math.random() * powerWords.length)]);
+      }
+    ];
+    
+    const strategy = strategies[Math.floor(Math.random() * strategies.length)];
+    return strategy();
+  }
+
+  private generateTwoWordName(sources: WordSource, type: string): string {
+    const strategies = [
+      // Semantic pairing (words that naturally go together)
+      () => {
+        const baseWord = sources.nouns[Math.floor(Math.random() * sources.nouns.length)].toLowerCase();
+        const semanticMatches = Object.entries(this.linguisticStructures.semanticPairs)
+          .find(([key, _]) => baseWord.includes(key));
+        
+        if (semanticMatches) {
+          const relatedWord = semanticMatches[1][Math.floor(Math.random() * semanticMatches[1].length)];
+          return `${this.capitalizeFirst(baseWord)} ${this.capitalizeFirst(relatedWord)}`;
+        }
+        
+        // Fallback to regular pairing
+        return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${this.capitalizeFirst(baseWord)}`;
+      },
+      
+      // Alliterative pairing (same starting letter)
+      () => {
+        const letters = Object.keys(this.linguisticStructures.alliterativeGroups);
+        const letter = letters[Math.floor(Math.random() * letters.length)];
+        const words = this.linguisticStructures.alliterativeGroups[letter as keyof typeof this.linguisticStructures.alliterativeGroups];
+        
+        if (words && words.length >= 2) {
+          const shuffled = [...words].sort(() => Math.random() - 0.5);
+          return `${this.capitalizeFirst(shuffled[0])} ${this.capitalizeFirst(shuffled[1])}`;
+        }
+        
+        // Fallback
+        return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`;
+      },
+      
+      // Contrasting pairs (opposites or unexpected combinations)
+      () => {
+        const contrasts = [
+          ['ancient', 'modern'], ['liquid', 'solid'], ['soft', 'steel'],
+          ['silent', 'scream'], ['frozen', 'fire'], ['digital', 'analog'],
+          ['organic', 'synthetic'], ['gentle', 'chaos'], ['minimal', 'maximum'],
+          ['heaven', 'hell'], ['sugar', 'venom'], ['velvet', 'razor']
+        ];
+        const pair = contrasts[Math.floor(Math.random() * contrasts.length)];
+        return `${this.capitalizeFirst(pair[0])} ${this.capitalizeFirst(pair[1])}`;
+      },
+      
+      // Action + Object pattern
+      () => {
+        const verb = sources.verbs[Math.floor(Math.random() * sources.verbs.length)];
+        const noun = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        return `${verb} ${noun}`;
+      },
+      
+      // Musical term combinations
+      () => {
+        const adj = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+        const musical = sources.musicalTerms[Math.floor(Math.random() * sources.musicalTerms.length)];
+        return `${adj} ${musical}`;
+      }
+    ];
+    
+    // Band names tend to favor certain patterns
+    if (type === 'band') {
+      const bandStrategies = [strategies[0], strategies[1], strategies[4]]; // Semantic, alliterative, musical
+      return bandStrategies[Math.floor(Math.random() * bandStrategies.length)]();
+    } else {
+      // Songs can use all strategies
+      return strategies[Math.floor(Math.random() * strategies.length)]();
+    }
   }
 
   // Fetch expanded categories for endless variety

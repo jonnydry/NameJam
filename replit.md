@@ -39,6 +39,12 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Enhanced Humor**: Specialized patterns for 3-5 word combinations featuring wordplay, contradictions, questions, temporal paradoxes, and absurd scenarios
 - **Expanded Vocabulary**: Includes humorous and unexpected words (bananas, ninjas, kazoos, etc.) to create more entertaining and surprising results
 - **Statement Flow**: 4-6 word names use connecting words ("of", "into", "before", "through", "beyond") to create flowing, statement-like names rather than abstract combinations
+- **Advanced Linguistic Features**:
+  - **Single Word Names**: Creates compounds (ultrafire), portmanteaus (blending words), and modified words with suffixes
+  - **Two Word Names**: Uses semantic pairing (fire/smoke), alliteration (silver shadow), contrasting pairs (frozen fire), and musical term combinations
+  - **Three Word Names**: Enhanced with alliterative patterns, emotional journeys, number-based quirks, and expanded contradiction pairs
+  - **Contextual Connectors**: Smart connector selection based on spatial, temporal, causal, comparative, or possessive relationships
+  - **Smart Capitalization**: Applies proper title case rules, keeping small words lowercase unless they start the name
 
 
 ### Set List Generator Service
@@ -146,6 +152,7 @@ Changelog:
 - July 07, 2025. Added AI-powered Band Bio Generator: OpenAI integration to create imaginative backstories for generated band names, including origin stories, member details, genre, career highlights, and fun facts, with fallback system for reliability
 - July 07, 2025. Fixed word count bug: resolved issue where names exceeded requested word limits (e.g., 6 words when 5 requested), implemented strict word count validation in all generation patterns
 - July 07, 2025. Removed refresh button and OpenAI integration: simplified UI by removing individual name refresh functionality and completely removed AI-powered band bio generator to focus on core name generation features
+- July 08, 2025. Enhanced core naming logic: added advanced linguistic structures including semantic word relationships, alliterative groups, rhyming patterns, and contextual connectors; improved single-word generation with compounds/portmanteaus/modifications; enhanced two-word pairing with semantic/alliterative/contrasting strategies; upgraded three-word patterns with better humor and variety; implemented smart capitalization rules for professional title formatting
 
 ## User Preferences
 
