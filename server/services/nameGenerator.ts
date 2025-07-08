@@ -56,12 +56,27 @@ export class NameGeneratorService {
     }
   };
 
-  // Pattern templates for different name types
+  // Pattern templates for different name types - Enhanced with classic patterns
   private patternTemplates = {
     band: {
-      powerful: ['The [adjective] [noun]', '[adjective] [noun] [musicalTerm]', '[noun] of [noun]'],
-      mysterious: ['[adjective] [noun] [connector] [noun]', '[temporal] [adjective] [noun]'],
-      edgy: ['[verb] the [noun]', '[adjective] [noun] [verb]', '[noun] [verb] [noun]']
+      powerful: [
+        'The [adjective] [noun]',        // Classic band pattern - most popular
+        'The [noun] [noun]',             // Classic like "Rolling Stones"
+        'The [verb]ing [noun]',          // Classic like "Smashing Pumpkins"
+        '[adjective] [noun] [musicalTerm]', 
+        '[noun] of [noun]'
+      ],
+      mysterious: [
+        'The [adjective] [noun]',        // Classic pattern reinforced
+        '[adjective] [noun] [connector] [noun]', 
+        '[temporal] [adjective] [noun]'
+      ],
+      edgy: [
+        'The [adjective] [noun]',        // Classic pattern reinforced
+        '[verb] the [noun]', 
+        '[adjective] [noun] [verb]', 
+        '[noun] [verb] [noun]'
+      ]
     },
     song: {
       poetic: ['[adjective] [noun] [verb]', '[verb] [connector] [noun]', '[noun], [noun], [noun]'],
@@ -397,14 +412,49 @@ export class NameGeneratorService {
     };
     
     const humorousPatterns = [
+      // CLASSIC PATTERNS - Boosted for traditional band names
+      // Classic "The [adjective] [noun]" - most iconic band name style (increased frequency)
+      () => `The ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
+      () => `The ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
+      () => `The ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
+      () => `The ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
+      
+      // Classic "The [noun] [noun]" - like "The Rolling Stones"
+      () => {
+        const noun1 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        let noun2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        while (noun2 === noun1 && sources.nouns.length > 1) {
+          noun2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        }
+        return `The ${noun1} ${noun2}`;
+      },
+      () => {
+        const noun1 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        let noun2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        while (noun2 === noun1 && sources.nouns.length > 1) {
+          noun2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        }
+        return `The ${noun1} ${noun2}`;
+      },
+      
+      // Classic "The [verb]ing [noun]" - like "The Smashing Pumpkins"
+      () => {
+        const verbs = sources.verbs.filter(v => !v.endsWith('ing')); // Get base verbs
+        if (verbs.length > 0) {
+          const verb = verbs[Math.floor(Math.random() * verbs.length)];
+          const noun = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+          const verbIng = verb.endsWith('e') ? verb.slice(0, -1) + 'ing' : verb + 'ing';
+          return `The ${verbIng} ${noun}`;
+        }
+        // Fallback to classic pattern
+        return `The ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`;
+      },
+      
       // Unexpected combinations that create humor
       () => `${safeSource.adjectives[Math.floor(Math.random() * safeSource.adjectives.length)]} ${safeSource.nouns[Math.floor(Math.random() * safeSource.nouns.length)]} ${safeSource.musicalTerms[Math.floor(Math.random() * safeSource.musicalTerms.length)]}`,
       
       // Grammatically playful structures
       () => `${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
-      
-      // Article-based for memorability
-      () => `The ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
       
       // Possessive structures for narrative feel
       () => `${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}'s ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
