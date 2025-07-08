@@ -3,14 +3,14 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
-import { BandBioGeneratorService } from "./services/bandBioGenerator";
+
 import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const nameGenerator = new NameGeneratorService();
   const nameVerifier = new NameVerifierService();
-  const bandBioGenerator = new BandBioGeneratorService();
+
 
   // Generate names endpoint
   app.post("/api/generate-names", async (req, res) => {
@@ -195,23 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate band bio endpoint
-  app.post("/api/generate-band-bio", async (req, res) => {
-    try {
-      const { bandName } = req.body;
-      
-      if (!bandName || typeof bandName !== 'string') {
-        return res.status(400).json({ error: "Band name is required" });
-      }
 
-      const bio = await bandBioGenerator.generateBandBio(bandName);
-      res.json({ bio });
-    } catch (error) {
-      console.error("Error generating band bio:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to generate band bio. Please try again.";
-      res.status(500).json({ error: errorMessage });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;
