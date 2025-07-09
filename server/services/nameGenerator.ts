@@ -345,26 +345,45 @@ export class NameGeneratorService {
   }
 
   private generateSimpleName(type: string, wordCount: number, mood?: string, genre?: string): string {
-    // Use the web-enhanced vocabulary with genre and mood filtering
+    // Apply both mood AND genre filtering sequentially
     let sources = this.wordSources;
-    if (mood) {
+    
+    // First apply mood filtering if specified
+    if (mood && mood !== 'none') {
       sources = this.getStaticMoodFilteredWords(mood);
     }
-    if (genre) {
+    
+    // Then apply genre filtering on top of mood-filtered sources
+    if (genre && genre !== 'none') {
       sources = this.getGenreFilteredWords(genre, sources);
     }
     
-    // Generate names using the enhanced vocabulary
+    // Ensure we have valid word sources after filtering
+    sources = this.ensureValidWordSource(sources);
+    
+    // Generate names with enhanced randomization to prevent repetition
     const words: string[] = [];
+    const usedWords = new Set<string>();
+    
     for (let i = 0; i < wordCount; i++) {
-      if (i === 0) {
-        words.push(sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]);
-      } else if (i === wordCount - 1) {
-        words.push(sources.nouns[Math.floor(Math.random() * sources.nouns.length)]);
-      } else {
-        const allWords = [...sources.verbs, ...sources.musicalTerms];
-        words.push(allWords[Math.floor(Math.random() * allWords.length)]);
-      }
+      let selectedWord: string;
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      do {
+        if (i === 0) {
+          selectedWord = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+        } else if (i === wordCount - 1) {
+          selectedWord = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        } else {
+          const allWords = [...sources.verbs, ...sources.musicalTerms];
+          selectedWord = allWords[Math.floor(Math.random() * allWords.length)];
+        }
+        attempts++;
+      } while (usedWords.has(selectedWord.toLowerCase()) && attempts < maxAttempts);
+      
+      words.push(selectedWord);
+      usedWords.add(selectedWord.toLowerCase());
     }
     
     return words.join(' ');
@@ -689,14 +708,21 @@ export class NameGeneratorService {
   }
 
   private generateLongForm(type: string, wordCount: number, mood?: string, genre?: string): string {
-    // Use synchronous mood and genre filtering for long form generation
+    // Apply both mood AND genre filtering sequentially
     let filteredSources = this.wordSources;
-    if (mood) {
+    
+    // First apply mood filtering if specified
+    if (mood && mood !== 'none') {
       filteredSources = this.getStaticMoodFilteredWords(mood);
     }
-    if (genre) {
+    
+    // Then apply genre filtering on top of mood-filtered sources
+    if (genre && genre !== 'none') {
       filteredSources = this.getGenreFilteredWords(genre, filteredSources);
     }
+    
+    // Ensure we have valid word sources after filtering
+    filteredSources = this.ensureValidWordSource(filteredSources);
     
     // Define grammatical patterns for longer names (4+ words) with better flow
     const patterns = [
