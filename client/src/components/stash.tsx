@@ -17,12 +17,37 @@ export function Stash() {
   const { stash, removeFromStash, clearStash } = useStash();
   const { toast } = useToast();
 
-  const handleCopy = (name: string) => {
-    navigator.clipboard.writeText(name);
-    toast({
-      title: "Copied to clipboard!",
-      description: `"${name}" has been copied.`,
-    });
+  const handleCopy = async (name: string) => {
+    try {
+      await navigator.clipboard.writeText(name);
+      toast({
+        title: "Copied to clipboard!",
+        description: `"${name}" has been copied.`,
+      });
+    } catch (error) {
+      // Fallback for older browsers or HTTP contexts
+      const textArea = document.createElement('textarea');
+      textArea.value = name;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast({
+          title: "Copied to clipboard!",
+          description: `"${name}" has been copied.`,
+        });
+      } catch (err) {
+        toast({
+          title: "Copy failed",
+          description: "Please copy the text manually.",
+          variant: "destructive",
+        });
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
   };
 
   const handleRemove = (id: string, name: string) => {
@@ -149,7 +174,7 @@ export function Stash() {
         <h2>Band Names (${bandNames.length})</h2>
         <div class="name-list">
           ${bandNames.map((item, index) => 
-            `<div class="name-item">${index + 1}. <strong>${item.name}</strong></div>`
+            `<div class="name-item">${index + 1}. <strong>${item.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong></div>`
           ).join('')}
         </div>
       `;
@@ -160,7 +185,7 @@ export function Stash() {
         <h2>Song Names (${songNames.length})</h2>
         <div class="name-list">
           ${songNames.map((item, index) => 
-            `<div class="name-item">${index + 1}. <strong>${item.name}</strong></div>`
+            `<div class="name-item">${index + 1}. <strong>${item.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong></div>`
           ).join('')}
         </div>
       `;
@@ -209,13 +234,13 @@ export function Stash() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center space-x-2">
           <Heart className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Your Stash</h2>
           <Badge variant="secondary">{stash.length}</Badge>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 flex-wrap gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">

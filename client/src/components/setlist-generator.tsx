@@ -124,8 +124,9 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
                   : 'text-muted-foreground hover:text-red-500'
               }`}
               title={isInStash(song.name, 'song') ? 'Already in stash' : 'Add to stash'}
+              aria-label={isInStash(song.name, 'song') ? `${song.name} is already in stash` : `Add ${song.name} to stash`}
             >
-              <Heart className={`w-4 h-4 ${isInStash(song.name, 'song') ? 'fill-current' : ''}`} />
+              <Heart className={`w-4 h-4 ${isInStash(song.name, 'song') ? 'fill-current' : ''}`} aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"
@@ -133,8 +134,9 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
               onClick={() => onCopy(song.name)}
               className="text-muted-foreground hover:text-primary transition-colors p-2"
               title="Copy to clipboard"
+              aria-label={`Copy ${song.name} to clipboard`}
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="w-4 h-4" aria-hidden="true" />
             </Button>
           </div>
         </div>

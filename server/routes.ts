@@ -53,7 +53,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         res.status(400).json({ error: "Invalid request parameters", details: error.errors });
       } else {
-        res.status(500).json({ error: "Failed to generate names" });
+        const errorMessage = error instanceof Error ? error.message : "Failed to generate names";
+        res.status(500).json({ 
+          error: errorMessage,
+          suggestion: "Please try again with different settings or a smaller word count." 
+        });
       }
     }
   });
@@ -74,7 +78,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ names });
     } catch (error) {
       console.error("Error fetching recent names:", error);
-      res.status(500).json({ error: "Failed to fetch recent names" });
+      res.status(500).json({ 
+        error: "Failed to fetch recent names",
+        suggestion: "The database service may be temporarily unavailable. Please refresh the page." 
+      });
     }
   });
 
@@ -91,7 +98,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ verification });
     } catch (error) {
       console.error("Error verifying name:", error);
-      res.status(500).json({ error: "Failed to verify name" });
+      res.status(500).json({ 
+        error: "Failed to verify name",
+        suggestion: "The verification service may be temporarily unavailable. Please try again later." 
+      });
     }
   });
 
@@ -145,13 +155,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
         } catch (err) {
-          // Fallback name if generation fails
+          // Generate a simple fallback name using basic word combination
+          const fallbackWords = ['Electric', 'Midnight', 'Echo', 'Dream', 'Fire', 'Storm', 'Crystal', 'Shadow'];
+          const fallbackNouns = ['Heart', 'Soul', 'Light', 'Sky', 'Rain', 'Moon', 'Star', 'Wave'];
+          const randomWord = fallbackWords[Math.floor(Math.random() * fallbackWords.length)];
+          const randomNoun = fallbackNouns[Math.floor(Math.random() * fallbackNouns.length)];
+          
           songs.push({
             id: i + 1,
-            name: `Song ${i + 1}`,
+            name: `${randomWord} ${randomNoun}`,
             verification: {
               status: 'available' as const,
-              details: `Fallback name generated`,
+              details: `Generated as fallback`,
               verificationLinks: []
             }
           });
