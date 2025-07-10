@@ -1,0 +1,119 @@
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+
+interface BandBioModalProps {
+  bandName: string;
+  genre?: string;
+  mood?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function BandBioModal({ 
+  bandName, 
+  genre, 
+  mood, 
+  open, 
+  onOpenChange 
+}: BandBioModalProps) {
+  const [bio, setBio] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const generateBio = async () => {
+    setLoading(true);
+    setBio("");
+    
+    try {
+      const response = await fetch("/api/generate-band-bio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bandName, genre, mood }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to generate bio");
+      }
+
+      const data = await response.json();
+      setBio(data.bio);
+    } catch (error) {
+      console.error("Error generating bio:", error);
+      toast({
+        title: "Failed to generate bio",
+        description: error instanceof Error ? error.message : "Please try again later",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Generate bio when modal opens
+  if (open && !bio && !loading) {
+    generateBio();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">{bandName}</DialogTitle>
+          <DialogDescription>
+            AI-generated band biography
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="mt-4">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Creating band history...</p>
+            </div>
+          ) : bio ? (
+            <div className="prose prose-gray dark:prose-invert max-w-none">
+              <p className="whitespace-pre-wrap text-foreground leading-relaxed">
+                {bio}
+              </p>
+            </div>
+          ) : null}
+        </div>
+        
+        <div className="mt-6 flex justify-end space-x-3">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Close
+          </Button>
+          {bio && (
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(bio);
+                toast({
+                  title: "Copied to clipboard!",
+                  description: "Band bio has been copied.",
+                });
+              }}
+            >
+              Copy Bio
+            </Button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -348,6 +348,8 @@ export function NameGenerator() {
               result={searchResult}
               nameType={nameType}
               onCopy={copyToClipboard}
+              genre={genre !== 'none' ? genre : undefined}
+              mood={mood !== 'none' ? mood : undefined}
             />
           </div>
         </div>
@@ -366,6 +368,8 @@ export function NameGenerator() {
                 result={result}
                 nameType={nameType}
                 onCopy={copyToClipboard}
+                genre={genre !== 'none' ? genre : undefined}
+                mood={mood !== 'none' ? mood : undefined}
               />
             </div>
           ))}
