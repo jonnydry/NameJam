@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, HeartIcon, CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { Copy, ExternalLink, Heart, HeartIcon, CheckCircle, AlertCircle, XCircle, BookOpen } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { BandBioModal } from "./band-bio-modal";
 
 interface VerificationResult {
   status: 'available' | 'similar' | 'taken';
@@ -26,12 +28,15 @@ interface ResultCardProps {
   result: GenerationResult;
   nameType: 'band' | 'song';
   onCopy: (name: string) => void;
+  genre?: string;
+  mood?: string;
 }
 
-export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
+export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCardProps) {
   const { name, verification } = result;
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
+  const [showBioModal, setShowBioModal] = useState(false);
 
   const handleAddToStash = () => {
     if (isInStash(name, nameType)) {
@@ -114,6 +119,17 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
           >
             <Copy className="w-4 h-4" aria-hidden="true" />
           </Button>
+          {nameType === 'band' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowBioModal(true)}
+              className="text-muted-foreground hover:text-primary transition-colors p-2"
+              title="Generate band bio"
+            >
+              <BookOpen className="w-4 h-4" aria-hidden="true" />
+            </Button>
+          )}
         </div>
       </div>
       
@@ -173,6 +189,16 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
 
 
       </div>
+      
+      {nameType === 'band' && (
+        <BandBioModal
+          bandName={name}
+          genre={genre}
+          mood={mood}
+          open={showBioModal}
+          onOpenChange={setShowBioModal}
+        />
+      )}
     </div>
   );
 }
