@@ -764,7 +764,7 @@ export class NameGeneratorService {
         } else if (wordCount === 5) {
           words.push('The', getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.nouns));
         } else { // 6 words
-          words.push('The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'the', getUniqueWord(sources.nouns));
+          words.push('The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'my', 'dreams');
         }
         break;
         
@@ -774,7 +774,7 @@ export class NameGeneratorService {
         } else if (wordCount === 5) {
           words.push(getUniqueWord(sources.verbs), 'through', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns));
         } else { // 6 words
-          words.push(getUniqueWord(sources.verbs), 'beyond', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns));
+          words.push(getUniqueWord(sources.verbs), 'through', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'tonight');
         }
         break;
         
@@ -784,7 +784,7 @@ export class NameGeneratorService {
         } else if (wordCount === 5) {
           words.push(getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', getUniqueWord(sources.nouns));
         } else { // 6 words
-          words.push(getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns));
+          words.push(getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), 'night');
         }
         break;
         
@@ -794,7 +794,7 @@ export class NameGeneratorService {
         } else if (wordCount === 5) {
           words.push('When', 'the', getUniqueWord(sources.nouns), getUniqueWord(sources.verbs), getUniqueWord(sources.adjectives));
         } else { // 6 words
-          words.push('Before', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.verbs), getUniqueWord(sources.adjectives));
+          words.push('After', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'fades', 'away');
         }
         break;
     }
