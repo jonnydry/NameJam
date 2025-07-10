@@ -223,6 +223,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const bio = await bandBioGenerator.generateBandBio(bandName, genre, mood);
       
+      console.log("Bio generated for", bandName, ":", bio);
+      
       res.json({ 
         bandName,
         bio,

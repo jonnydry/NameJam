@@ -12,42 +12,82 @@ export class BandBioGeneratorService {
 
   async generateBandBio(bandName: string, genre?: string, mood?: string): Promise<string> {
     try {
-      const genreInfo = genre ? ` in the ${genre} genre` : '';
-      const moodInfo = mood ? ` with a ${mood} vibe` : '';
+      const genreInfo = genre ? ` ${genre}` : 'rock';
+      const moodInfo = mood ? ` ${mood}` : 'energetic';
       
-      const prompt = `Create a short, imaginative biography for a fictional band called "${bandName}"${genreInfo}${moodInfo}. 
-      
-      Include:
-      - How they formed (make it interesting or amusing)
-      - Band members (creative nicknames welcome)
-      - Their musical style
-      - A breakthrough moment or funny story
-      - A quirky fun fact
-      
-      Keep it under 200 words, entertaining, and slightly humorous. Don't mention that they're fictional.`;
+      // Simplified prompt to avoid triggering reasoning tokens
+      const prompt = `Band bio for "${bandName}": ${genreInfo} band with ${moodInfo} style. Include formation story, members, and fun fact. 150 words max.`;
 
       const response = await this.openai.chat.completions.create({
         model: "grok-3-mini",
         messages: [
           {
-            role: "system",
-            content: "You are a creative music journalist writing entertaining band biographies. Be witty, imaginative, and slightly irreverent."
-          },
-          {
             role: "user",
             content: prompt
           }
         ],
-        max_tokens: 300,
-        temperature: 0.8
+        max_tokens: 250,
+        temperature: 0.7
       });
 
-      const bio = response.choices[0].message.content || "Biography unavailable at this time.";
+      console.log("Grok API response usage:", response.usage);
+      const bio = response.choices[0]?.message?.content || "";
+      
+      if (!bio || bio.trim() === "") {
+        // Fallback to a simple template-based bio if Grok fails
+        return this.generateFallbackBio(bandName, genre, mood);
+      }
+      
       return bio.trim();
     } catch (error) {
       console.error("Error generating band bio:", error);
-      throw new Error("Failed to generate band biography");
+      // Return fallback bio instead of throwing
+      return this.generateFallbackBio(bandName, genre, mood);
     }
+  }
+  
+  private generateFallbackBio(bandName: string, genre?: string, mood?: string): string {
+    const genreText = genre || 'rock';
+    const moodText = mood || 'energetic';
+    const year = 2015 + Math.floor(Math.random() * 8);
+    
+    const formations = [
+      "met at a late-night jam session",
+      "bonded over their shared love of vintage synthesizers",
+      "were brought together by a mysterious Craigslist ad",
+      "formed after a chance encounter at a music festival",
+      "started as street performers"
+    ];
+    
+    const members = [
+      ["Zephyr", "lead vocals"], ["Phoenix", "guitar"], ["Echo", "bass"], ["Storm", "drums"],
+      ["Blaze", "keyboards"], ["Nova", "guitar"], ["Vortex", "bass"], ["Thunder", "drums"],
+      ["Luna", "vocals"], ["Orion", "guitar"], ["Nebula", "bass"], ["Comet", "drums"]
+    ];
+    
+    const stories = [
+      "Their breakthrough came when they accidentally played their biggest hit backwards during a sound check.",
+      "They once performed an entire set using kitchen utensils as instruments.",
+      "Their debut single was recorded in a converted shipping container.",
+      "They gained fame after a video of them performing in a subway went viral.",
+      "Their unique sound comes from recording in an abandoned warehouse."
+    ];
+    
+    const formation = formations[Math.floor(Math.random() * formations.length)];
+    const selectedMembers = [];
+    const memberIndices = new Set();
+    while (memberIndices.size < 4) {
+      memberIndices.add(Math.floor(Math.random() * members.length));
+    }
+    memberIndices.forEach(i => selectedMembers.push(members[i]));
+    
+    const story = stories[Math.floor(Math.random() * stories.length)];
+    
+    return `${bandName} formed in ${year} when four musicians ${formation}. The ${genreText} quartet consists of ${selectedMembers[0][0]} on ${selectedMembers[0][1]}, ${selectedMembers[1][0]} on ${selectedMembers[1][1]}, ${selectedMembers[2][0]} on ${selectedMembers[2][1]}, and ${selectedMembers[3][0]} on ${selectedMembers[3][1]}. 
+
+Known for their ${moodText} sound that blends classic ${genreText} with unexpected elements, ${bandName} has carved out a unique niche in the music scene. ${story}
+
+Fun fact: The band insists on having a rubber duck present at every recording session for "creative inspiration."`;
   }
 
   async generateBandBioWithDetails(
