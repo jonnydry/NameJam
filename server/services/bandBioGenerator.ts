@@ -19,7 +19,17 @@ export class BandBioGeneratorService {
         const genreInfo = genre ? ` ${genre}` : 'rock';
         const moodInfo = mood ? ` ${mood}` : 'energetic';
         
-        const prompt = `Write a fun, creative biography for the fictional band "${bandName}". They're a ${genreInfo} band with ${moodInfo} style. Include how they formed, band members with nicknames, and a funny story. Maximum 150 words. Be imaginative and entertaining!`;
+        // Add randomization elements to the prompt
+        const randomSeed = Math.random();
+        const promptVariations = [
+          `Create a wildly imaginative biography for "${bandName}", a ${genreInfo} band. Random seed: ${randomSeed}. Include an unusual formation story, eccentric band members, and a bizarre incident. Be unpredictable!`,
+          `Tell the outrageous story of "${bandName}" (${genreInfo}, ${moodInfo} vibe). Seed: ${randomSeed}. Focus on their weirdest moment, strangest member, and most unexpected influence.`,
+          `Write about "${bandName}"'s journey - ${genreInfo} legends with ${moodInfo} energy. Random: ${randomSeed}. Include a scandal, a miracle, and a ridiculous tradition.`,
+          `Document the chaos of "${bandName}" - ${moodInfo} ${genreInfo} rebels. Variation: ${randomSeed}. Start with their craziest gig, add colorful personalities, end with their motto.`,
+          `Chronicle "${bandName}"'s rise in ${genreInfo}. Randomizer: ${randomSeed}. Feature an unlikely beginning, notorious performances, and their signature quirk.`
+        ];
+        
+        const prompt = promptVariations[Math.floor(Math.random() * promptVariations.length)] + " Max 150 words, be creative and different each time!";
 
         const response = await this.openai.chat.completions.create({
           model: model,
@@ -57,45 +67,245 @@ export class BandBioGeneratorService {
   private generateFallbackBio(bandName: string, genre?: string, mood?: string): string {
     const genreText = genre || 'rock';
     const moodText = mood || 'energetic';
-    const year = 2015 + Math.floor(Math.random() * 8);
+    const year = 1995 + Math.floor(Math.random() * 28);
+    
+    // Add timestamp-based randomness to ensure variety
+    const seed = Date.now() + Math.random();
     
     const formations = [
-      "met at a late-night jam session",
-      "bonded over their shared love of vintage synthesizers",
-      "were brought together by a mysterious Craigslist ad",
-      "formed after a chance encounter at a music festival",
-      "started as street performers"
+      "met at a late-night jam session in a abandoned subway tunnel",
+      "bonded over their shared love of vintage synthesizers at a pawn shop",
+      "were brought together by a mysterious Craigslist ad written in haiku",
+      "formed after a chance encounter at a music festival porta-potty line",
+      "started as street performers who kept getting noise complaints",
+      "connected through a wrong number that turned into a three-hour conversation",
+      "met in the comments section of an obscure music blog",
+      "were all fired from the same wedding band on the same night",
+      "bonded while stuck in an elevator for six hours",
+      "met at a silent disco where they were the only ones not dancing",
+      "came together after simultaneously walking out of the same terrible gig",
+      "found each other through a misprinted concert flyer",
+      "united after a food fight at a music theory class",
+      "met while bidding on the same broken amp on eBay"
     ];
     
     const members = [
-      ["Zephyr", "lead vocals"], ["Phoenix", "guitar"], ["Echo", "bass"], ["Storm", "drums"],
-      ["Blaze", "keyboards"], ["Nova", "guitar"], ["Vortex", "bass"], ["Thunder", "drums"],
-      ["Luna", "vocals"], ["Orion", "guitar"], ["Nebula", "bass"], ["Comet", "drums"]
+      ["Zephyr 'The Tornado'", "lead vocals"], ["Phoenix 'Ashes'", "guitar"], ["Echo 'The Void'", "bass"], 
+      ["Storm 'Lightning Fingers'", "drums"], ["Blaze 'Inferno'", "keyboards"], ["Nova 'Supernova'", "guitar"], 
+      ["Vortex 'The Spin'", "bass"], ["Thunder 'Boom Boom'", "drums"], ["Luna 'Moonbeam'", "vocals"], 
+      ["Orion 'Star Hunter'", "guitar"], ["Nebula 'Space Dust'", "bass"], ["Comet 'Tail Spin'", "drums"],
+      ["Raven 'Midnight'", "synth"], ["Atlas 'World Carrier'", "percussion"], ["Quantum 'Q'", "electronics"],
+      ["Neon 'Glow'", "vocals/beatbox"], ["Pixel '8-Bit'", "digital drums"], ["Chaos 'Dr. Disorder'", "noise guitar"],
+      ["Zen 'The Calm'", "meditation bells"], ["Rex 'T-Rex'", "bass/roar"], ["Disco 'Fever'", "keytar"],
+      ["Mango 'Tropical Storm'", "steel drums"], ["Wolf 'Howler'", "harmonica"], ["Crystal 'Shatter'", "glass harmonica"]
     ];
     
     const stories = [
-      "Their breakthrough came when they accidentally played their biggest hit backwards during a sound check.",
-      "They once performed an entire set using kitchen utensils as instruments.",
-      "Their debut single was recorded in a converted shipping container.",
-      "They gained fame after a video of them performing in a subway went viral.",
-      "Their unique sound comes from recording in an abandoned warehouse."
+      "Their breakthrough came when they accidentally played their biggest hit backwards during a sound check, creating an even better song",
+      "They once performed an entire set using kitchen utensils as instruments after their gear was stolen",
+      "Their debut single was recorded in a converted shipping container during a thunderstorm",
+      "They gained fame after a video of them performing in a subway went viral when a rat started dancing",
+      "Their unique sound comes from recording in an abandoned warehouse where they claim a ghost plays tambourine",
+      "They became notorious for a show where the power went out and they continued playing acoustically on the roof",
+      "Their first album was funded entirely by selling homemade hot sauce at their merch table",
+      "They got their big break when a famous producer heard them through the wall of a dentist's office",
+      "Their signature move involves crowd-surfing in an inflatable dinosaur costume",
+      "They once played a 48-hour marathon concert to break a world record and raise money for music education",
+      "Their tour bus broke down in the desert, inspiring their platinum album written around a campfire",
+      "They became legends after turning a wedding reception into an impromptu festival",
+      "Their experimental phase included an album recorded entirely in international airport terminals",
+      "They gained a cult following for their annual 'Play in Strange Places' tour featuring laundromats and libraries"
     ];
     
-    const formation = formations[Math.floor(Math.random() * formations.length)];
-    const selectedMembers = [];
-    const memberIndices = new Set();
-    while (memberIndices.size < 4) {
-      memberIndices.add(Math.floor(Math.random() * members.length));
+    const funFacts = [
+      "The band insists on having a rubber duck present at every recording session for 'creative inspiration'",
+      "They refuse to perform unless there's a bowl of green M&Ms with exactly 47 pieces backstage",
+      "All their album covers feature hidden pictures of their pet hamster, Gerald",
+      "They communicate exclusively in music puns during rehearsals",
+      "The band has a pre-show ritual of doing the Macarena in reverse",
+      "They've never played the same setlist twice, using a Magic 8-Ball to decide the order",
+      "Each member has a tattoo of a different kitchen appliance",
+      "They once recorded an entire EP using only sounds from a grocery store",
+      "The band's tour rider includes '3 pounds of glitter' for unspecified purposes",
+      "They hold the record for most kazoos played simultaneously in a single song",
+      "Every album features exactly one song about sandwiches",
+      "They've trademarked their signature move: the 'Reverse Stage Dive'",
+      "The band once played an entire concert in complete darkness as an 'auditory experience'",
+      "They require all venue staff to address them by their zodiac signs",
+      "Their drummer plays barefoot and claims it's for 'earth connection'",
+      "They've released a cookbook featuring recipes inspired by their song titles"
+    ];
+    
+    const influences = [
+      "polka music and death metal",
+      "elevator music and hardcore punk",
+      "whale songs and dubstep",
+      "Renaissance madrigals and trap music",
+      "dial-up internet sounds and jazz fusion",
+      "construction noise and chamber music",
+      "weather reports and prog rock",
+      "infomercials and opera"
+    ];
+    
+    const traditions = [
+      "covering one Taylor Swift song in the style of Black Sabbath",
+      "letting the audience vote on their encore via paper airplanes",
+      "starting every show with a group meditation",
+      "ending concerts with a massive pillow fight",
+      "having a 'bring your pet' show once per tour",
+      "playing at least one song on toy instruments",
+      "inviting a random audience member to play tambourine"
+    ];
+    
+    // Use better randomization
+    const randomIndex = (arr: any[]) => Math.floor(Math.random() * arr.length);
+    
+    // Randomly select structure for variety
+    const structures = [
+      // Structure 1: Traditional
+      () => {
+        const formationIdx = randomIndex(formations);
+        const formation = formations[formationIdx];
+        const selectedMembers = this.selectRandomMembers(members, 3 + Math.floor(Math.random() * 3));
+        const storyIdx = randomIndex(stories);
+        const story = stories[storyIdx];
+        const funFactIdx = randomIndex(funFacts);
+        const funFact = funFacts[funFactIdx];
+        
+        // Ensure we're not using the first items repeatedly
+        console.log(`Using indices: formation=${formationIdx}, story=${storyIdx}, funFact=${funFactIdx}`);
+        
+        // Mix up the second paragraph for variety
+        const secondParagraphs = [
+          `Known for their ${moodText} sound that blends ${genreText} with unexpected elements, ${bandName} has carved out a unique niche in the music scene.`,
+          `With their signature ${moodText} approach to ${genreText}, ${bandName} quickly gained a reputation for their unpredictable live performances.`,
+          `Combining ${moodText} energy with raw ${genreText} power, ${bandName} refuses to be categorized by industry standards.`,
+          `Their ${moodText} take on ${genreText} has earned ${bandName} a devoted following among those who crave something different.`,
+          `Blending ${moodText} vibes with classic ${genreText} roots, ${bandName} creates music that defies expectations.`
+        ];
+        
+        const secondPara = secondParagraphs[randomIndex(secondParagraphs)];
+        
+        return `${bandName} formed in ${year} when ${selectedMembers.length} musicians ${formation}. The ${genreText} ${this.getBandType(selectedMembers.length)} consists of ${this.formatMembers(selectedMembers)}. 
+
+${secondPara} ${story}
+
+Fun fact: ${funFact}`;
+      },
+      
+      // Structure 2: Story-first
+      () => {
+        const story = stories[Math.floor(Math.random() * stories.length)];
+        const selectedMembers = this.selectRandomMembers(members, 3 + Math.floor(Math.random() * 3));
+        const influence = influences[Math.floor(Math.random() * influences.length)];
+        const tradition = traditions[Math.floor(Math.random() * traditions.length)];
+        
+        return `The legend of ${bandName} began with an incident that shook the ${genreText} world: ${story} This ${moodText} ${this.getBandType(selectedMembers.length)} features ${this.formatMembers(selectedMembers)}.
+
+Drawing inspiration from ${influence}, ${bandName} creates a sound that defies categorization. Since forming in ${year}, they've maintained a tradition of ${tradition}.
+
+Industry insiders say their success comes from their unique rehearsal space: a converted ${this.getRandomLocation()}.`;
+      },
+      
+      // Structure 3: Character-focused
+      () => {
+        const selectedMembers = this.selectRandomMembers(members, 4);
+        const formation = formations[Math.floor(Math.random() * formations.length)];
+        const funFact = funFacts[Math.floor(Math.random() * funFacts.length)];
+        
+        return `Meet ${bandName}: ${selectedMembers[0][0]} (${selectedMembers[0][1]}) is the ${this.getRandomTrait()} one. ${selectedMembers[1][0]} (${selectedMembers[1][1]}) once ${this.getRandomAchievement()}. ${selectedMembers[2][0]} (${selectedMembers[2][1]}) refuses to play without their lucky ${this.getRandomItem()}. And ${selectedMembers[3][0]} (${selectedMembers[3][1]}) speaks only in ${this.getRandomLanguageStyle()}.
+
+This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked back since. ${funFact}`;
+      }
+    ];
+    
+    // Ensure we pick a random structure each time
+    const structureIndex = Math.floor(Math.random() * structures.length);
+    console.log(`Using bio structure ${structureIndex + 1} of ${structures.length}`);
+    return structures[structureIndex]();
+  }
+  
+  private selectRandomMembers(members: string[][], count: number): string[][] {
+    const selected = [];
+    const indices = new Set();
+    while (indices.size < count && indices.size < members.length) {
+      indices.add(Math.floor(Math.random() * members.length));
     }
-    memberIndices.forEach(i => selectedMembers.push(members[i]));
+    indices.forEach(i => selected.push(members[i]));
+    return selected;
+  }
+  
+  private formatMembers(members: string[][]): string {
+    if (members.length === 1) return `${members[0][0]} on ${members[0][1]}`;
+    if (members.length === 2) return `${members[0][0]} on ${members[0][1]} and ${members[1][0]} on ${members[1][1]}`;
     
-    const story = stories[Math.floor(Math.random() * stories.length)];
-    
-    return `${bandName} formed in ${year} when four musicians ${formation}. The ${genreText} quartet consists of ${selectedMembers[0][0]} on ${selectedMembers[0][1]}, ${selectedMembers[1][0]} on ${selectedMembers[1][1]}, ${selectedMembers[2][0]} on ${selectedMembers[2][1]}, and ${selectedMembers[3][0]} on ${selectedMembers[3][1]}. 
-
-Known for their ${moodText} sound that blends classic ${genreText} with unexpected elements, ${bandName} has carved out a unique niche in the music scene. ${story}
-
-Fun fact: The band insists on having a rubber duck present at every recording session for "creative inspiration."`;
+    const allButLast = members.slice(0, -1).map(m => `${m[0]} on ${m[1]}`).join(', ');
+    const last = members[members.length - 1];
+    return `${allButLast}, and ${last[0]} on ${last[1]}`;
+  }
+  
+  private getBandType(memberCount: number): string {
+    const types = {
+      1: 'solo project',
+      2: 'duo',
+      3: 'trio',
+      4: 'quartet',
+      5: 'quintet',
+      6: 'sextet'
+    };
+    return types[memberCount] || 'ensemble';
+  }
+  
+  private getRandomLocation(): string {
+    const locations = [
+      'bowling alley', 'submarine', 'treehouse', 'food truck', 'lighthouse',
+      'abandoned mall', 'cave system', 'hot air balloon', 'train car', 'greenhouse'
+    ];
+    return locations[Math.floor(Math.random() * locations.length)];
+  }
+  
+  private getRandomTrait(): string {
+    const traits = [
+      'mysterious', 'chaotic', 'methodical', 'spontaneous', 'philosophical',
+      'caffeinated', 'nocturnal', 'theatrical', 'minimalist', 'maximalist'
+    ];
+    return traits[Math.floor(Math.random() * traits.length)];
+  }
+  
+  private getRandomAchievement(): string {
+    const achievements = [
+      'won a hot dog eating contest', 
+      'climbed Mount Everest backwards',
+      'invented a new chord', 
+      'taught a parrot to beatbox',
+      'played 100 shows in 100 hours', 
+      'busked on all seven continents',
+      'holds the world record for longest guitar solo',
+      'once jammed with a symphony orchestra uninvited',
+      'got kicked out of music school for being too creative',
+      'wrote their first hit song in a dream',
+      'can play three instruments simultaneously',
+      'started a musical revolution in their hometown',
+      'turned a car alarm into a Billboard hit',
+      'has perfect pitch but refuses to admit it'
+    ];
+    return achievements[Math.floor(Math.random() * achievements.length)];
+  }
+  
+  private getRandomItem(): string {
+    const items = [
+      'rubber chicken', 'lava lamp', 'disco ball', 'garden gnome',
+      'inflatable flamingo', 'vintage calculator', 'traffic cone', 'mood ring'
+    ];
+    return items[Math.floor(Math.random() * items.length)];
+  }
+  
+  private getRandomLanguageStyle(): string {
+    const styles = [
+      'movie quotes', 'haikus', 'pirate slang', 'weather forecasts',
+      'cooking instructions', 'sports commentary', 'fortune cookies', 'palindromes'
+    ];
+    return styles[Math.floor(Math.random() * styles.length)];
   }
 
   async generateBandBioWithDetails(
