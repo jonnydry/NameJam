@@ -724,60 +724,86 @@ export class NameGeneratorService {
     // Ensure we have valid word sources after filtering
     filteredSources = this.ensureValidWordSource(filteredSources);
     
-    // Define grammatical patterns for longer names (4+ words) with better flow
-    const patterns = [
-      // Pattern 1: Statement structure - "The [adjective] [noun] [connector] [noun]" (5 words max)
-      () => wordCount === 4 ? this.buildPattern(['article', 'adjective', 'noun', 'connector'], filteredSources) :
-            wordCount === 5 ? this.buildPattern(['article', 'adjective', 'noun', 'connector', 'noun'], filteredSources) :
-            this.buildPattern(['article', 'adjective', 'noun', 'connector', 'adjective', 'noun'], filteredSources),
-      
-      // Pattern 2: Narrative flow - "[noun] [temporal] [adjective] [noun]" (4+ words)
-      () => wordCount === 4 ? this.buildPattern(['noun', 'temporal', 'adjective', 'noun'], filteredSources) :
-            wordCount === 5 ? this.buildPattern(['noun', 'temporal', 'adjective', 'noun', 'musical'], filteredSources) :
-            this.buildPattern(['noun', 'temporal', 'adjective', 'noun', 'musical', 'noun'], filteredSources),
-      
-      // Pattern 3: Descriptive relationship - "[adjective] [noun] [relationship] [adjective] [noun]" (5+ words)
-      () => wordCount === 4 ? this.buildPattern(['adjective', 'noun', 'relationship', 'noun'], filteredSources) :
-            wordCount === 5 ? this.buildPattern(['adjective', 'noun', 'relationship', 'adjective', 'noun'], filteredSources) :
-            this.buildPattern(['adjective', 'noun', 'relationship', 'adjective', 'noun', 'musical'], filteredSources),
-      
-      // Pattern 4: Action statement - "[verb] [connector] [adjective] [noun]" (4+ words)
-      () => wordCount === 4 ? this.buildPattern(['verb', 'connector', 'adjective', 'noun'], filteredSources) :
-            wordCount === 5 ? this.buildPattern(['verb', 'connector', 'adjective', 'noun', 'musical'], filteredSources) :
-            this.buildPattern(['verb', 'connector', 'adjective', 'noun', 'musical', 'noun'], filteredSources),
-      
-      // Pattern 5: Musical narrative - "[musical] [temporal] [adjective] [noun]" (4+ words)
-      () => wordCount === 4 ? this.buildPattern(['musical', 'temporal', 'adjective', 'noun'], filteredSources) :
-            wordCount === 5 ? this.buildPattern(['musical', 'temporal', 'adjective', 'noun', 'musical'], filteredSources) :
-            this.buildPattern(['musical', 'temporal', 'adjective', 'noun', 'musical', 'noun'], filteredSources),
-      
-      // Pattern 6: Poetic repetition (good for songs)
-      () => this.buildRepetitivePattern(wordCount, filteredSources),
-      
-      // Pattern 7: Abstract/atmospheric (good for both)
-      () => this.buildAtmosphericPattern(wordCount, filteredSources),
-      
-      // Pattern 8: Action-based narrative
-      () => this.buildNarrativePattern(wordCount, filteredSources)
+    // Use simple, natural patterns for coherent results
+    const simplePatterns = [
+      // "The [adjective] [noun]" + extras
+      () => this.generateSimpleNaturalPattern(wordCount, filteredSources, 'the_pattern'),
+      // "[verb] [preposition] [adjective] [noun]"  
+      () => this.generateSimpleNaturalPattern(wordCount, filteredSources, 'action_pattern'),
+      // "[adjective] [noun] [preposition] [noun]"
+      () => this.generateSimpleNaturalPattern(wordCount, filteredSources, 'descriptive_pattern'),
+      // "When [noun] [verb]" + extras
+      () => this.generateSimpleNaturalPattern(wordCount, filteredSources, 'narrative_pattern')
     ];
 
-    // Choose pattern based on type preference and word count
-    let selectedPatterns = patterns;
-    if (type === 'song') {
-      // Songs favor more descriptive and narrative patterns with good flow
-      selectedPatterns = wordCount >= 5 
-        ? [patterns[0], patterns[1], patterns[2], patterns[5], patterns[6], patterns[7]] // More complex for longer songs
-        : [patterns[0], patterns[1], patterns[4], patterns[6], patterns[7]]; // Simpler for shorter songs
-    } else if (type === 'band') {
-      // Bands favor more memorable and action-based patterns with statements
-      selectedPatterns = wordCount >= 5
-        ? [patterns[0], patterns[3], patterns[4], patterns[5], patterns[7]] // Complex statements for longer band names
-        : [patterns[0], patterns[2], patterns[3], patterns[4], patterns[7]]; // Punchy statements for shorter band names
-    }
-
-    const pattern = selectedPatterns[Math.floor(Math.random() * selectedPatterns.length)];
+    const pattern = simplePatterns[Math.floor(Math.random() * simplePatterns.length)];
     return pattern();
   }
+  
+  private generateSimpleNaturalPattern(wordCount: number, sources: WordSource, patternType: string): string {
+    const words: string[] = [];
+    const usedWords = new Set<string>();
+    
+    // Helper to get unique word
+    const getUniqueWord = (wordArray: string[]): string => {
+      let attempts = 0;
+      let word: string;
+      do {
+        word = wordArray[Math.floor(Math.random() * wordArray.length)];
+        attempts++;
+      } while (usedWords.has(word.toLowerCase()) && attempts < 20);
+      
+      usedWords.add(word.toLowerCase());
+      return word;
+    };
+    
+    switch (patternType) {
+      case 'the_pattern':
+        if (wordCount === 4) {
+          words.push('The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.nouns));
+        } else if (wordCount === 5) {
+          words.push('The', getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.nouns));
+        } else { // 6 words
+          words.push('The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'the', getUniqueWord(sources.nouns));
+        }
+        break;
+        
+      case 'action_pattern':
+        if (wordCount === 4) {
+          words.push(getUniqueWord(sources.verbs), 'with', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns));
+        } else if (wordCount === 5) {
+          words.push(getUniqueWord(sources.verbs), 'through', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns));
+        } else { // 6 words
+          words.push(getUniqueWord(sources.verbs), 'beyond', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns));
+        }
+        break;
+        
+      case 'descriptive_pattern':
+        if (wordCount === 4) {
+          words.push(getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', getUniqueWord(sources.nouns));
+        } else if (wordCount === 5) {
+          words.push(getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', getUniqueWord(sources.nouns));
+        } else { // 6 words
+          words.push(getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns));
+        }
+        break;
+        
+      case 'narrative_pattern':
+        if (wordCount === 4) {
+          words.push('When', getUniqueWord(sources.nouns), getUniqueWord(sources.verbs), getUniqueWord(sources.adjectives));
+        } else if (wordCount === 5) {
+          words.push('When', 'the', getUniqueWord(sources.nouns), getUniqueWord(sources.verbs), getUniqueWord(sources.adjectives));
+        } else { // 6 words
+          words.push('Before', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.verbs), getUniqueWord(sources.adjectives));
+        }
+        break;
+    }
+    
+    // Apply smart capitalization and return
+    return this.applySmartCapitalization(words);
+  }
+
+
 
   private getGenreFilteredWords(genre: string, sources: WordSource): WordSource {
     const genreFilters = {
