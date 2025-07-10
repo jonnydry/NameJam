@@ -7,7 +7,7 @@ import { LoadingAnimation } from "./loading-animation";
 import { ResultCard } from "./result-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Music, Users, Wand2, Search, Palette } from "lucide-react";
+import { Music, Users, Wand2, Search, Palette, RefreshCw, Copy } from "lucide-react";
 
 interface GenerationResult {
   id: number;
@@ -314,9 +314,19 @@ export function NameGenerator() {
             onClick={handleSearch}
             disabled={searchMutation.isPending || !searchInput.trim()}
             className="inline-flex items-center btn-gradient text-primary-foreground font-medium"
+            aria-label="Check name availability"
           >
-            <Search className="w-4 h-4 mr-2" />
-            Check
+            {searchMutation.isPending ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Checking...
+              </>
+            ) : (
+              <>
+                <Search className="w-4 h-4 mr-2" />
+                Check
+              </>
+            )}
           </Button>
         </div>
       </div>

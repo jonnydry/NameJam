@@ -43,8 +43,8 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
       const success = addToStash({
         name,
         type: nameType,
-        verification: verification.status,
-        details: verification.details
+        wordCount: result.wordCount,
+        verification: result.verification
       });
       
       if (success) {
@@ -103,7 +103,7 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
             }`}
             title={isInStash(name, nameType) ? 'Already in stash' : 'Add to stash'}
           >
-            <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} />
+            <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -112,13 +112,13 @@ export function ResultCard({ result, nameType, onCopy }: ResultCardProps) {
             className="text-muted-foreground hover:text-primary transition-colors p-2"
             title="Copy to clipboard"
           >
-            <Copy className="w-4 h-4" />
+            <Copy className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
       
       <div className="text-center">
-        <h3 className={`text-2xl font-semibold text-foreground mb-2 ${
+        <h3 className={`text-2xl font-semibold text-foreground mb-2 break-words hyphens-auto ${
           verification.status === 'taken' ? 'line-through' : ''
         }`}>
           {name}
