@@ -11,39 +11,47 @@ export class BandBioGeneratorService {
   }
 
   async generateBandBio(bandName: string, genre?: string, mood?: string): Promise<string> {
-    try {
-      const genreInfo = genre ? ` ${genre}` : 'rock';
-      const moodInfo = mood ? ` ${mood}` : 'energetic';
-      
-      // Simplified prompt to avoid triggering reasoning tokens
-      const prompt = `Band bio for "${bandName}": ${genreInfo} band with ${moodInfo} style. Include formation story, members, and fun fact. 150 words max.`;
+    // Try different models in order of preference
+    const models = ["grok-2-1212", "grok-2-vision-1212", "grok-3-mini"];
+    
+    for (const model of models) {
+      try {
+        const genreInfo = genre ? ` ${genre}` : 'rock';
+        const moodInfo = mood ? ` ${mood}` : 'energetic';
+        
+        const prompt = `Write a fun, creative biography for the fictional band "${bandName}". They're a ${genreInfo} band with ${moodInfo} style. Include how they formed, band members with nicknames, and a funny story. Maximum 150 words. Be imaginative and entertaining!`;
 
-      const response = await this.openai.chat.completions.create({
-        model: "grok-3-mini",
-        messages: [
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        max_tokens: 250,
-        temperature: 0.7
-      });
+        const response = await this.openai.chat.completions.create({
+          model: model,
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          max_tokens: 250,
+          temperature: 0.8
+        });
 
-      console.log("Grok API response usage:", response.usage);
-      const bio = response.choices[0]?.message?.content || "";
-      
-      if (!bio || bio.trim() === "") {
-        // Fallback to a simple template-based bio if Grok fails
-        return this.generateFallbackBio(bandName, genre, mood);
+        const bio = response.choices[0]?.message?.content || "";
+        
+        if (bio && bio.trim() !== "") {
+          console.log(`Successfully generated bio using model: ${model}`);
+          return bio.trim();
+        }
+        
+        // If we get here, the model returned empty content
+        console.log(`Model ${model} returned empty content, trying next model...`);
+        
+      } catch (error: any) {
+        console.log(`Model ${model} failed:`, error.message);
+        // Continue to next model
       }
-      
-      return bio.trim();
-    } catch (error) {
-      console.error("Error generating band bio:", error);
-      // Return fallback bio instead of throwing
-      return this.generateFallbackBio(bandName, genre, mood);
     }
+    
+    // If all models fail, use fallback
+    console.log("All Grok models failed, using fallback bio generator");
+    return this.generateFallbackBio(bandName, genre, mood);
   }
   
   private generateFallbackBio(bandName: string, genre?: string, mood?: string): string {

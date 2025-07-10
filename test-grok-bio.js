@@ -6,42 +6,42 @@ const openai = new OpenAI({
 });
 
 async function testBioGeneration() {
-  try {
-    console.log("Testing Grok bio generation...");
+  const models = ["grok-2-1212", "grok-2-vision-1212", "grok-beta", "grok-vision-beta", "grok-3-mini"];
+  
+  for (const model of models) {
+    console.log(`\n${"=".repeat(60)}`);
+    console.log(`Testing model: ${model}`);
+    console.log("=".repeat(60));
     
-    const messages = [
-      {
-        role: "user",
-        content: "Write a short, fun biography for a fictional rock band called 'Thunder Monkeys'. Include how they formed, band members, and a funny story. Keep it under 150 words."
+    try {
+      const messages = [
+        {
+          role: "user",
+          content: "Write a short, fun biography for a fictional rock band called 'Thunder Monkeys'. Include how they formed, band members, and a funny story. Keep it under 150 words."
+        }
+      ];
+      
+      const response = await openai.chat.completions.create({
+        model: model,
+        messages: messages,
+        max_tokens: 300,
+        temperature: 0.7
+      });
+      
+      console.log("\n✅ Success!");
+      console.log("Content:", response.choices[0]?.message?.content || "No content");
+      console.log("\nUsage:");
+      console.log("- Prompt tokens:", response.usage?.prompt_tokens);
+      console.log("- Completion tokens:", response.usage?.completion_tokens);
+      console.log("- Total tokens:", response.usage?.total_tokens);
+      
+      if (response.usage?.completion_tokens === 0) {
+        console.log("\n⚠️  WARNING: The model returned 0 completion tokens!");
       }
-    ];
-    
-    console.log("Sending request to Grok API...");
-    const response = await openai.chat.completions.create({
-      model: "grok-3-mini",
-      messages: messages,
-      max_tokens: 300,
-      temperature: 0.7
-    });
-    
-    console.log("\nFull API Response:");
-    console.log(JSON.stringify(response, null, 2));
-    
-    console.log("\nMessage content:");
-    console.log(response.choices[0]?.message?.content || "No content");
-    
-    console.log("\nUsage details:");
-    console.log("Prompt tokens:", response.usage?.prompt_tokens);
-    console.log("Completion tokens:", response.usage?.completion_tokens);
-    console.log("Total tokens:", response.usage?.total_tokens);
-    
-    if (response.usage?.completion_tokens === 0) {
-      console.log("\n⚠️  WARNING: The model returned 0 completion tokens!");
-      console.log("This means no text was generated.");
+      
+    } catch (error) {
+      console.log("\n❌ Error:", error.message);
     }
-    
-  } catch (error) {
-    console.error("Error:", error);
   }
 }
 
