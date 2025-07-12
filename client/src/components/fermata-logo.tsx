@@ -64,30 +64,30 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
         <line x1="33" y1="101" x2="47" y2="101" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
         <line x1="35" y1="105" x2="45" y2="105" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
         
-        {/* Original fermata logo content, moved down to float properly */}
+        {/* Original fermata logo content, with clear separation between elements */}
         <g transform="translate(40, 46)">
-          {/* Question mark curve - floating above, centered */}
+          {/* Question mark curve - floating high above */}
           <path 
-            d="M-4 -9c0-4 3-7 6-7s6 3 6 7c0 2.5-1.6 4-3 5.6L0 -1c-0.6 0.6-0.6 2-0.6 3" 
+            d="M-3 -16c0-3 2.25-5.25 4.5-5.25s4.5 2.25 4.5 5.25c0 1.875-1.2 3-2.25 4.2L0 -9c-0.45 0.45-0.45 1.5-0.45 2.25" 
             stroke="currentColor" 
             strokeWidth="2.5" 
             strokeLinecap="round"
             className="text-muted-foreground"
           />
           
-          {/* Fermata arc - positioned lower */}
+          {/* Fermata arc - positioned much lower */}
           <path 
-            d="M-8 7 Q0 0 8 7" 
+            d="M-8 12 Q0 5 8 12" 
             stroke="currentColor" 
             strokeWidth="2.5" 
             strokeLinecap="round"
             className="text-primary"
           />
           
-          {/* Single shared dot - works for both fermata and question mark */}
+          {/* Single shared dot - centered below everything */}
           <circle 
             cx="0" 
-            cy="10" 
+            cy="16" 
             r="1.8" 
             fill="currentColor"
             className="text-primary animate-pulse"
