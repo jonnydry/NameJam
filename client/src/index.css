@@ -98,6 +98,55 @@
     white-space: nowrap;
     opacity: 0;
     animation: fade-in 0.3s 0.4s forwards;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  /* Hover effect for the title */
+  .typing-container:hover .typing-animation {
+    filter: brightness(1.2) saturate(1.5);
+    transform: scale(1.05);
+  }
+  
+  /* Animated gradient on hover */
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  .gradient-hover {
+    background-size: 200% 200%;
+    transition: all 0.3s ease;
+  }
+  
+  .typing-container:hover .gradient-hover {
+    animation: gradient-shift 2s ease infinite;
+    background-image: linear-gradient(
+      90deg,
+      #ff00ff,
+      #00ffff,
+      #ffff00,
+      #00ff00,
+      #ff00ff,
+      #00ffff,
+      #ffff00
+    );
+    background-size: 300% 300%;
+  }
+  
+  /* Add glow effect on hover */
+  .typing-container:hover .gradient-hover {
+    text-shadow: 
+      0 0 20px rgba(0, 184, 255, 0.5),
+      0 0 40px rgba(255, 0, 255, 0.3),
+      0 0 60px rgba(255, 255, 0, 0.2);
   }
   
   /* Wrapper for the typing effect */
