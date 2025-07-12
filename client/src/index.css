@@ -220,6 +220,21 @@
     }
   }
 
+  /* Title alignment to center underscore with logo */
+  .title-align {
+    /* The underscore is at position 4 (0-indexed) out of 8 characters */
+    /* With monospace font, each character is exactly 1ch wide */
+    /* To center the underscore (5th character), we need to shift left by: */
+    /* (Total width / 2) - (Position of underscore + 0.5) = 4ch - 4.5ch = -0.5ch */
+    display: inline-block;
+    transform: translateX(-0.5ch);
+  }
+  
+  /* Also maintain alignment during hover effect */
+  .title-text.title-align:hover {
+    transform: translateX(-0.5ch) scale(1.05);
+  }
+
   /* Add a subtle glow effect during typing */
   .typing-animation.bg-gradient-to-r {
     filter: drop-shadow(0 0 20px rgba(0, 184, 255, 0.3));

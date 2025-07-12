@@ -25,15 +25,21 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           {/* Logo and Title Section */}
           <div className="text-center mb-8">
-            <div className="mb-4">
-              <FermataLogo size="xl" />
+            <div className="flex flex-col items-center">
+              {/* Logo */}
+              <div className="mb-4">
+                <FermataLogo size="xl" />
+              </div>
+              {/* Title with special alignment */}
+              <div className="relative">
+                <h1 className="text-4xl font-bold mb-2 uppercase tracking-wide font-mono">
+                  <span className="inline-block">
+                    <span className="typing-prompt">&gt;</span>
+                    <span className="title-text title-align">Name_Jam</span>
+                  </span>
+                </h1>
+              </div>
             </div>
-            <h1 className="text-4xl font-bold mb-2 uppercase tracking-wide font-mono">
-              <span className="inline-block">
-                <span className="typing-prompt">&gt;</span>
-                <span className="title-text">Name_Jam</span>
-              </span>
-            </h1>
             <p className="text-lg text-muted-foreground font-medium subtitle-fade">Generate unique band names, song titles, and set lists</p>
           </div>
 
