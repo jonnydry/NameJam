@@ -4,8 +4,8 @@ interface FermataLogoProps {
 }
 
 export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
-  const containerSize = size === "xl" ? "w-20 h-20" : size === "lg" ? "w-16 h-16" : "w-10 h-10";
-  const svgSize = size === "xl" ? "w-16 h-16" : size === "lg" ? "w-14 h-14" : "w-9 h-9";
+  const containerSize = size === "xl" ? "w-24 h-24" : size === "lg" ? "w-16 h-16" : "w-10 h-10";
+  const svgSize = size === "xl" ? "w-20 h-20" : size === "lg" ? "w-14 h-14" : "w-9 h-9";
 
   return (
     <div className={`${containerSize} ${className} relative flex items-center justify-center animate-fade-in mx-auto`}>
