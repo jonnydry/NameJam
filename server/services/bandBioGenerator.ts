@@ -12,24 +12,35 @@ export class BandBioGeneratorService {
 
   async generateBandBio(bandName: string, genre?: string, mood?: string): Promise<string> {
     // Try different models in order of preference
-    const models = ["grok-3-mini", "grok-2-1212", "grok-2-vision-1212"];
+    const models = ["grok-3-mini-fast", "grok-2-1212", "grok-2-vision-1212"];
     
     for (const model of models) {
       try {
         const genreInfo = genre ? ` ${genre}` : 'rock';
         const moodInfo = mood ? ` ${mood}` : 'energetic';
         
-        // Add randomization elements to the prompt
-        const randomSeed = Math.random();
-        const promptVariations = [
-          `Create a wildly imaginative biography for "${bandName}", a ${genreInfo} band. Random seed: ${randomSeed}. Include an unusual formation story, eccentric band members, and a bizarre incident. Be unpredictable!`,
-          `Tell the outrageous story of "${bandName}" (${genreInfo}, ${moodInfo} vibe). Seed: ${randomSeed}. Focus on their weirdest moment, strangest member, and most unexpected influence.`,
-          `Write about "${bandName}"'s journey - ${genreInfo} legends with ${moodInfo} energy. Random: ${randomSeed}. Include a scandal, a miracle, and a ridiculous tradition.`,
-          `Document the chaos of "${bandName}" - ${moodInfo} ${genreInfo} rebels. Variation: ${randomSeed}. Start with their craziest gig, add colorful personalities, end with their motto.`,
-          `Chronicle "${bandName}"'s rise in ${genreInfo}. Randomizer: ${randomSeed}. Feature an unlikely beginning, notorious performances, and their signature quirk.`
-        ];
-        
-        const prompt = promptVariations[Math.floor(Math.random() * promptVariations.length)] + " Max 150 words, be creative and different each time!";
+        // Use simpler prompts for Grok 3 mini, more complex for others
+        let prompt;
+        if (model === 'grok-3-mini' || model === 'grok-3-mini-fast') {
+          // Simpler prompts for Grok 3 mini to avoid reasoning token overuse
+          const simplePrompts = [
+            `Write a creative biography for "${bandName}", a ${genreInfo} band with ${moodInfo} energy. Include their formation story, band members, and what makes them unique. Keep it under 150 words.`,
+            `Create a band bio for "${bandName}" (${genreInfo}). Tell their story: how they formed, their breakthrough moment, and their signature style. Make it entertaining and under 150 words.`,
+            `Describe the rock band "${bandName}" - their ${genreInfo} sound, ${moodInfo} vibe, key members, and their journey to fame. Be creative and keep it concise.`
+          ];
+          prompt = simplePrompts[Math.floor(Math.random() * simplePrompts.length)];
+        } else {
+          // More complex prompts for other models
+          const randomSeed = Math.random();
+          const complexPrompts = [
+            `Create a wildly imaginative biography for "${bandName}", a ${genreInfo} band. Random seed: ${randomSeed}. Include an unusual formation story, eccentric band members, and a bizarre incident. Be unpredictable!`,
+            `Tell the outrageous story of "${bandName}" (${genreInfo}, ${moodInfo} vibe). Seed: ${randomSeed}. Focus on their weirdest moment, strangest member, and most unexpected influence.`,
+            `Write about "${bandName}"'s journey - ${genreInfo} legends with ${moodInfo} energy. Random: ${randomSeed}. Include a scandal, a miracle, and a ridiculous tradition.`,
+            `Document the chaos of "${bandName}" - ${moodInfo} ${genreInfo} rebels. Variation: ${randomSeed}. Start with their craziest gig, add colorful personalities, end with their motto.`,
+            `Chronicle "${bandName}"'s rise in ${genreInfo}. Randomizer: ${randomSeed}. Feature an unlikely beginning, notorious performances, and their signature quirk.`
+          ];
+          prompt = complexPrompts[Math.floor(Math.random() * complexPrompts.length)] + " Max 150 words, be creative and different each time!";
+        }
 
         const response = await this.openai.chat.completions.create({
           model: model,
@@ -39,7 +50,7 @@ export class BandBioGeneratorService {
               content: prompt
             }
           ],
-          max_tokens: 250,
+          max_tokens: model === 'grok-3-mini' ? 500 : 250, // Grok 3 mini needs more tokens for reasoning
           temperature: 0.8
         });
 
