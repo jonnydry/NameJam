@@ -96,32 +96,134 @@
     position: relative;
     display: inline-block;
     overflow: hidden;
-    animation: typing 1.5s steps(8, end) forwards;
+    width: 0;
+    opacity: 0;
+    animation: 
+      fade-in 0.3s 0.4s forwards,
+      typing 3s steps(8, end) 0.7s forwards ease-out;
+  }
+
+  @keyframes fade-in {
+    to {
+      opacity: 1;
+    }
   }
 
   .typing-animation::after {
-    content: '';
+    content: '_';
     position: absolute;
-    right: -3px;
+    right: -0.1em;
     top: 0;
-    bottom: 0;
-    width: 3px;
-    background-color: var(--primary);
-    animation: blink-caret 0.75s step-end infinite, hide-caret 0s 1.5s forwards;
+    font-weight: 700;
+    color: var(--primary);
+    animation: 
+      blink-caret 0.6s step-end infinite,
+      fade-caret 0.5s 3.7s forwards;
   }
 
   @keyframes typing {
-    from { width: 0 }
-    to { width: 100% }
+    from { 
+      width: 0;
+    }
+    to { 
+      width: 100%;
+    }
   }
 
   @keyframes blink-caret {
-    0%, 100% { opacity: 1 }
-    50% { opacity: 0 }
+    0%, 100% { 
+      opacity: 1;
+      transform: scaleY(1);
+    }
+    50% { 
+      opacity: 0.3;
+      transform: scaleY(0.8);
+    }
   }
 
-  @keyframes hide-caret {
-    to { opacity: 0 }
+  @keyframes fade-caret {
+    to { 
+      opacity: 0;
+      transform: translateX(5px);
+    }
+  }
+
+  /* Add a subtle glow effect during typing */
+  .typing-animation.bg-gradient-to-r {
+    filter: drop-shadow(0 0 20px rgba(0, 184, 255, 0.3));
+  }
+
+  /* Parent container for animation coordination */
+  .typing-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  /* Add visual "typing sound" indicators */
+  .typing-container::before {
+    content: '>';
+    position: absolute;
+    left: -2em;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary);
+    opacity: 0;
+    font-weight: 700;
+    animation: prompt-appear 0.3s 0.3s forwards;
+  }
+
+  @keyframes prompt-appear {
+    to {
+      opacity: 0.6;
+    }
+  }
+
+  /* Make each character appear with a subtle bounce */
+  @keyframes typing {
+    0% { 
+      width: 0;
+    }
+    12.5% { /* N */
+      width: 12.5%;
+    }
+    25% { /* Na */
+      width: 25%;
+    }
+    37.5% { /* Nam */
+      width: 37.5%;
+    }
+    50% { /* Name */
+      width: 50%;
+    }
+    62.5% { /* Name_ */
+      width: 62.5%;
+    }
+    75% { /* Name_J */
+      width: 75%;
+    }
+    87.5% { /* Name_Ja */
+      width: 87.5%;
+    }
+    100% { /* Name_Jam */
+      width: 100%;
+    }
+  }
+
+  /* Subtitle fade in after typing completes */
+  .subtitle-fade {
+    opacity: 0;
+    animation: fade-in-up 0.8s 3.5s forwards ease-out;
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .font-roboto {
