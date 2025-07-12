@@ -2343,41 +2343,60 @@ export class NameGeneratorService {
 
   private generateSingleWordName(sources: WordSource): string {
     const strategies = [
-      // Compound word creation
+      // Compound word creation (weighted higher - more unique)
       () => {
-        const prefixes = ['ultra', 'mega', 'super', 'hyper', 'neo', 'pseudo', 'quasi', 'anti', 'meta', 'proto', 'cyber', 'astro'];
+        const prefixes = ['ultra', 'mega', 'super', 'hyper', 'neo', 'pseudo', 'quasi', 'anti', 'meta', 'proto', 'cyber', 'astro', 'techno', 'electro', 'micro', 'macro', 'trans', 'inter', 'mono', 'poly', 'multi', 'omni'];
         const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
         const base = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
         return this.capitalizeFirst(prefix + base.toLowerCase());
       },
       
-      // Portmanteau (blend two words)
+      // Portmanteau (blend two words) - weighted higher
       () => {
         const word1 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
-        const word2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
-        const mid1 = Math.floor(word1.length / 2);
-        const mid2 = Math.floor(word2.length / 2);
+        const word2 = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+        const mid1 = Math.floor(word1.length * 0.6); // Take more of first word
+        const mid2 = Math.floor(word2.length * 0.4); // Take less of second word
         return this.capitalizeFirst(word1.substring(0, mid1) + word2.substring(mid2).toLowerCase());
       },
       
-      // Modified existing word
+      // Modified existing word - weighted higher
       () => {
-        const word = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
-        const modifications = ['er', 'ism', 'ist', 'ify', 'ous', 'ion', 'ity', 'age', 'ment'];
+        const word = [...sources.nouns, ...sources.adjectives][Math.floor(Math.random() * (sources.nouns.length + sources.adjectives.length))];
+        const modifications = ['ers', 'ism', 'ist', 'ify', 'ous', 'ion', 'ity', 'age', 'ment', 'ness', 'ward', 'wise', 'ful', 'less'];
         const mod = modifications[Math.floor(Math.random() * modifications.length)];
         return this.capitalizeFirst(word + mod);
       },
       
-      // Just a powerful single word
+      // Blend adjective + noun ending
       () => {
-        const powerWords = [...sources.adjectives, ...sources.nouns, ...sources.verbs]
-          .filter(word => word.length > 5); // Longer words tend to be more impactful
-        return this.capitalizeFirst(powerWords[Math.floor(Math.random() * powerWords.length)]);
+        const adj = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+        const endings = ['core', 'wave', 'tone', 'vibe', 'flux', 'form', 'sync', 'pulse', 'grid', 'zone'];
+        const ending = endings[Math.floor(Math.random() * endings.length)];
+        return this.capitalizeFirst(adj.toLowerCase() + ending);
+      },
+      
+      // Unique longer words (reduced weight - only for very unique words)
+      () => {
+        const uniqueWords = [...sources.adjectives, ...sources.nouns, ...sources.verbs]
+          .filter(word => word.length > 8 && !['Alternative', 'Community', 'Electronic', 'Mysterious', 'Beautiful', 'Wonderful', 'Powerful', 'Ancient', 'Crystal', 'Mystic'].includes(word));
+        if (uniqueWords.length > 0) {
+          return this.capitalizeFirst(uniqueWords[Math.floor(Math.random() * uniqueWords.length)]);
+        }
+        // Fallback to compound if no unique words found
+        const prefixes = ['neo', 'ultra', 'meta'];
+        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        const base = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        return this.capitalizeFirst(prefix + base.toLowerCase());
       }
     ];
     
-    const strategy = strategies[Math.floor(Math.random() * strategies.length)];
-    return strategy();
+    // Only use compound/modified strategies for more unique names (remove basic single words)
+    const uniqueStrategies = [0, 1, 2, 3]; // Exclude strategy 4 (basic single words)
+    const strategyIndex = uniqueStrategies[Math.floor(Math.random() * uniqueStrategies.length)];
+    const result = strategies[strategyIndex]();
+    console.log(`Single word generation: strategy ${strategyIndex}, result: ${result}`);
+    return result;
   }
 
   private generateTwoWordName(sources: WordSource, type: string): string {

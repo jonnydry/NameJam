@@ -53,7 +53,7 @@ export class NameVerifierService {
         const match = exactMatches[0];
         const artistInfo = match.artist ? ` by ${match.artist}` : '';
         const similarNames = this.generateSimilarNames(name);
-        // Exact match found
+        console.log(`Exact match found for "${name}": ${match.name} by ${match.artist || 'Unknown'}`);
         return {
           status: 'taken',
           details: `Found existing ${type}${artistInfo}. Try these alternatives:`,
