@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Copy, Music, RefreshCw, ListMusic, Heart, ExternalLink } from 'lucide-react';
+import { Copy, Music, RefreshCw, ListMusic, Heart, ExternalLink, Lightbulb } from 'lucide-react';
 import { LoadingAnimation } from './loading-animation';
 import { useStash } from '@/hooks/use-stash';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,8 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   const [setList, setSetList] = useState<SetListResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatedBandName, setGeneratedBandName] = useState<string | null>(null);
+  const [loadingBandName, setLoadingBandName] = useState(false);
   
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
@@ -29,6 +31,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   const handleGenerateSetList = async () => {
     setLoading(true);
     setError(null);
+    setGeneratedBandName(null); // Reset band name when generating new setlist
     
     try {
       const response = await apiRequest('POST', '/api/generate-setlist', {
@@ -47,6 +50,47 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
       setError(err instanceof Error ? err.message : 'Failed to generate set list');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateBandName = async () => {
+    if (!setList) return;
+    
+    setLoadingBandName(true);
+    
+    try {
+      // Get all song names from the setlist
+      const songNames = [
+        ...setList.setOne.map(song => song.name),
+        ...setList.setTwo.map(song => song.name),
+        setList.finale.name
+      ];
+      
+      const response = await apiRequest('POST', '/api/generate-band-from-setlist', {
+        songNames,
+        mood: mood && mood !== 'none' ? mood : undefined,
+        genre: genre && genre !== 'none' ? genre : undefined,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate band name');
+      }
+
+      const data = await response.json();
+      setGeneratedBandName(data.bandName);
+      
+      toast({
+        title: "Band name generated!",
+        description: `Imagined band: "${data.bandName}"`,
+      });
+    } catch (err) {
+      toast({
+        title: "Generation failed",
+        description: err instanceof Error ? err.message : 'Failed to generate band name',
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingBandName(false);
     }
   };
 
@@ -258,13 +302,35 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
         <div className="space-y-6">
           <Card className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-500/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ListMusic className="w-5 h-5" />
-                Your Set List
-              </CardTitle>
-              <CardDescription>
-                {setList.totalSongs} songs organized for your performance
-              </CardDescription>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <ListMusic className="w-5 h-5" />
+                    Your Set List
+                  </CardTitle>
+                  <CardDescription>
+                    {setList.totalSongs} songs organized for your performance
+                  </CardDescription>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateBandName}
+                    disabled={loadingBandName}
+                    className="flex items-center gap-2"
+                    title="Generate a band name that would write this setlist"
+                  >
+                    <Lightbulb className={`w-4 h-4 ${loadingBandName ? 'animate-pulse' : ''}`} />
+                    Name this Band
+                  </Button>
+                  {generatedBandName && (
+                    <div className="text-sm font-medium text-primary animate-in fade-in-50 duration-500">
+                      "{generatedBandName}"
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardHeader>
           </Card>
 

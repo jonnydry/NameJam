@@ -330,6 +330,102 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
 
   async generateBandBioWithDetails(
     bandName: string, 
+    genre?: string,
+    mood?: string,
+    details?: any
+  ): Promise<string> {
+    // Handle special case for generating band name from setlist
+    if (details?.promptType === 'bandNameFromSetlist') {
+      const { setlistContext, songNames } = details;
+      
+      // Try each Grok model in order
+      const models = ['grok-2-1212', 'grok-2-vision-1212', 'grok-beta'];
+      
+      for (const model of models) {
+        try {
+          console.log(`Attempting to generate band name with model: ${model}`);
+          
+          const prompt = `Based on this setlist of songs, imagine what band would have written and performed these songs. Generate a creative, unique band name that fits the style and themes of these songs.
+
+Setlist: ${songNames.join(', ')}
+${mood ? `Mood: ${mood}` : ''}
+${genre ? `Genre: ${genre}` : ''}
+
+Think about:
+- The themes and words in the song titles
+- The mood and genre specified
+- What kind of band would write songs with these titles
+- Make it creative and memorable
+
+Respond with ONLY a JSON object in this exact format:
+{
+  "bandName": "The Creative Band Name Here"
+}`;
+
+          const response = await this.openai.chat.completions.create({
+            model: model,
+            messages: [
+              {
+                role: "system",
+                content: "You are a creative music expert who generates unique band names based on setlists. Always respond with valid JSON."
+              },
+              {
+                role: "user",
+                content: prompt
+              }
+            ],
+            temperature: 0.9,
+            max_tokens: 150,
+            response_format: { type: "json_object" }
+          });
+
+          const content = response.choices[0]?.message?.content || "";
+          
+          if (content && content.trim() !== "") {
+            console.log(`Successfully generated band name using model: ${model}`);
+            
+            try {
+              const parsed = JSON.parse(content);
+              return JSON.stringify({
+                bandName: parsed.bandName || 'The Unnamed Collective',
+                model: model,
+                source: 'ai'
+              });
+            } catch (parseError) {
+              // If JSON parsing fails, extract band name from text
+              const match = content.match(/"bandName":\s*"([^"]+)"/);
+              if (match && match[1]) {
+                return JSON.stringify({
+                  bandName: match[1],
+                  model: model,
+                  source: 'ai'
+                });
+              }
+            }
+          }
+          
+          console.log(`Model ${model} returned empty content, trying next model...`);
+          
+        } catch (error: any) {
+          console.log(`Model ${model} failed:`, error.message);
+          // Continue to next model
+        }
+      }
+      
+      // Fallback will be handled in the route
+      return JSON.stringify({
+        bandName: '',
+        model: 'fallback',
+        source: 'fallback'
+      });
+    }
+    
+    // For regular bio generation, use existing method
+    return this.generateBandBio(bandName, genre, mood);
+  }
+
+  async generateBandBioWithDetailsOld(
+    bandName: string, 
     options: {
       genre?: string;
       mood?: string;

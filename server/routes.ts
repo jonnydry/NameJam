@@ -212,6 +212,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate band name from setlist endpoint
+  app.post("/api/generate-band-from-setlist", async (req, res) => {
+    try {
+      const { songNames, mood, genre } = req.body;
+      
+      if (!songNames || !Array.isArray(songNames) || songNames.length === 0) {
+        return res.status(400).json({ error: "Song names are required" });
+      }
+
+      // Create a description of the setlist for the AI
+      const setlistDescription = songNames.join(", ");
+      const context = `Based on this setlist: ${setlistDescription}${mood ? `, with a ${mood} mood` : ''}${genre ? ` in the ${genre} genre` : ''}`;
+      
+      const bandNameResponse = await bandBioGenerator.generateBandBioWithDetails(
+        '', // Empty band name since we're generating it
+        genre,
+        mood,
+        {
+          promptType: 'bandNameFromSetlist',
+          setlistContext: context,
+          songNames
+        }
+      );
+      
+      // Parse the response
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(bandNameResponse);
+      } catch (error) {
+        // If parsing fails, create a fallback band name
+        const moods = {
+          'dark': ['Shadow', 'Midnight', 'Raven', 'Void'],
+          'bright': ['Sunshine', 'Crystal', 'Aurora', 'Prism'],
+          'mysterious': ['Enigma', 'Mystic', 'Oracle', 'Phantom'],
+          'energetic': ['Thunder', 'Volt', 'Surge', 'Blaze'],
+          'melancholy': ['Echo', 'Rain', 'Mist', 'Sorrow'],
+          'ethereal': ['Dream', 'Celestial', 'Aether', 'Cosmos'],
+          'aggressive': ['Fury', 'Rage', 'Storm', 'Chaos'],
+          'peaceful': ['Harmony', 'Zen', 'Serenity', 'Calm'],
+          'nostalgic': ['Memory', 'Vintage', 'Echo', 'Yesterday'],
+          'futuristic': ['Neon', 'Cyber', 'Quantum', 'Digital'],
+          'romantic': ['Heart', 'Rose', 'Velvet', 'Whisper'],
+          'epic': ['Titan', 'Legend', 'Saga', 'Myth']
+        };
+        
+        const genres = {
+          'rock': ['Rebels', 'Riders', 'Brigade', 'Collective'],
+          'metal': ['Legion', 'Dominion', 'Forge', 'Battalion'],
+          'jazz': ['Ensemble', 'Quintet', 'Syndicate', 'Society'],
+          'electronic': ['Circuit', 'Matrix', 'Network', 'System'],
+          'folk': ['Wanderers', 'Troubadours', 'Circle', 'Company'],
+          'classical': ['Orchestra', 'Symphony', 'Chamber', 'Philharmonic'],
+          'hip-hop': ['Crew', 'Squad', 'Collective', 'Movement'],
+          'country': ['Band', 'Rangers', 'Riders', 'Outlaws'],
+          'blues': ['Brothers', 'Revival', 'Junction', 'Crossroads'],
+          'reggae': ['Sound', 'Roots', 'Movement', 'Collective'],
+          'punk': ['Riot', 'Rebellion', 'Anarchy', 'Disorder'],
+          'indie': ['Project', 'Experiment', 'Society', 'Collective'],
+          'pop': ['Stars', 'Dreams', 'Magic', 'Sensation'],
+          'alternative': ['Theory', 'Paradox', 'Syndrome', 'Effect']
+        };
+        
+        const moodWords = mood && moods[mood] ? moods[mood] : ['Echo', 'Dream', 'Shadow', 'Fire'];
+        const genreWords = genre && genres[genre] ? genres[genre] : ['Collective', 'Project', 'Band', 'Society'];
+        
+        const prefix = moodWords[Math.floor(Math.random() * moodWords.length)];
+        const suffix = genreWords[Math.floor(Math.random() * genreWords.length)];
+        
+        parsedResponse = {
+          bandName: `The ${prefix} ${suffix}`,
+          model: 'fallback',
+          source: 'fallback'
+        };
+      }
+      
+      res.json({ 
+        bandName: parsedResponse.bandName || parsedResponse.bio || 'The Setlist Creators',
+        model: parsedResponse.model,
+        source: parsedResponse.source
+      });
+    } catch (error) {
+      console.error("Error generating band name from setlist:", error);
+      res.status(500).json({ 
+        error: "Failed to generate band name",
+        suggestion: "The AI service may be temporarily unavailable. Please try again later."
+      });
+    }
+  });
+
   // Generate band bio endpoint
   app.post("/api/generate-band-bio", async (req, res) => {
     try {
