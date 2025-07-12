@@ -47,7 +47,11 @@ export class BandBioGeneratorService {
         
         if (bio && bio.trim() !== "") {
           console.log(`Successfully generated bio using model: ${model}`);
-          return bio.trim();
+          return JSON.stringify({
+            bio: bio.trim(),
+            model: model,
+            source: 'ai'
+          });
         }
         
         // If we get here, the model returned empty content
@@ -61,7 +65,12 @@ export class BandBioGeneratorService {
     
     // If all models fail, use fallback
     console.log("All Grok models failed, using fallback bio generator");
-    return this.generateFallbackBio(bandName, genre, mood);
+    const fallbackBio = this.generateFallbackBio(bandName, genre, mood);
+    return JSON.stringify({
+      bio: fallbackBio,
+      model: 'fallback-template',
+      source: 'local'
+    });
   }
   
   private generateFallbackBio(bandName: string, genre?: string, mood?: string): string {

@@ -221,13 +221,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Band name is required" });
       }
 
-      const bio = await bandBioGenerator.generateBandBio(bandName, genre, mood);
+      const bioResponse = await bandBioGenerator.generateBandBio(bandName, genre, mood);
       
-      console.log("Bio generated for", bandName, ":", bio);
+      // Parse the JSON response from the bio generator
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(bioResponse);
+      } catch (error) {
+        // Fallback for legacy string responses
+        parsedResponse = {
+          bio: bioResponse,
+          model: 'unknown',
+          source: 'legacy'
+        };
+      }
+      
+      console.log("Bio generated for", bandName, ":", parsedResponse.bio);
       
       res.json({ 
         bandName,
-        bio,
+        bio: parsedResponse.bio,
+        model: parsedResponse.model,
+        source: parsedResponse.source,
         generatedAt: new Date().toISOString()
       });
     } catch (error) {
