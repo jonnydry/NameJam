@@ -226,15 +226,15 @@
     /* Characters: N(0) A(1) M(2) E(3) _(4) J(5) A(6) M(7) */
     /* The underscore is at position 4, which means it's 4.5ch from the start */
     /* To center it, we need to shift left by (8ch/2 - 4.5ch) = -0.5ch */
-    /* Fine-tuning: adding a tiny bit more offset for perfect alignment */
+    /* Fine-tuning: precise adjustment for perfect underscore alignment */
     display: inline-block;
     position: relative;
-    margin-left: -0.6ch;
+    margin-left: -0.7ch;
   }
   
   /* Also maintain alignment during hover effect */
   .title-text.title-align:hover {
-    margin-left: -0.6ch;
+    margin-left: -0.7ch;
     transform: scale(1.05);
   }
 
