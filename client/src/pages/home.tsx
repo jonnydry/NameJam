@@ -32,11 +32,9 @@ export default function Home() {
               </div>
               {/* Title with special alignment */}
               <div className="relative">
-                <h1 className="text-4xl font-bold mb-2 uppercase tracking-wide font-mono">
-                  <span className="inline-block">
-                    <span className="typing-prompt">&gt;</span>
-                    <span className="title-text title-align">Name_Jam</span>
-                  </span>
+                <h1 className="text-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center">
+                  <span className="typing-prompt absolute" style={{ left: 'calc(50% - 5ch)' }}>&gt;</span>
+                  <span className="title-text title-align">Name_Jam</span>
                 </h1>
               </div>
             </div>
