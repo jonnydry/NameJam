@@ -222,17 +222,19 @@
 
   /* Title alignment to center underscore with logo */
   .title-align {
-    /* The underscore is at position 4 (0-indexed) out of 8 characters */
-    /* With monospace font, each character is exactly 1ch wide */
-    /* To center the underscore (5th character), we need to shift left by: */
-    /* (Total width / 2) - (Position of underscore + 0.5) = 4ch - 4.5ch = -0.5ch */
+    /* NAME_JAM has 8 characters total */
+    /* Characters: N(0) A(1) M(2) E(3) _(4) J(5) A(6) M(7) */
+    /* The underscore is at position 4, which means it's 4.5ch from the start */
+    /* To center it, we need to shift left by (8ch/2 - 4.5ch) = -0.5ch */
     display: inline-block;
-    transform: translateX(-0.5ch);
+    position: relative;
+    margin-left: -0.5ch;
   }
   
   /* Also maintain alignment during hover effect */
   .title-text.title-align:hover {
-    transform: translateX(-0.5ch) scale(1.05);
+    margin-left: -0.5ch;
+    transform: scale(1.05);
   }
 
   /* Add a subtle glow effect during typing */
