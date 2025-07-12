@@ -29,9 +29,11 @@ export default function Home() {
               <FermataLogo size="xl" />
             </div>
             <h1 className="text-4xl font-bold text-foreground mb-2 uppercase tracking-wide">
-              <span className="typing-animation bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent">Name_Jam</span>
+              <span className="typing-container">
+                <span className="typing-animation bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent">Name_Jam</span>
+              </span>
             </h1>
-            <p className="text-lg text-muted-foreground font-medium">Generate unique band names, song titles, and set lists</p>
+            <p className="text-lg text-muted-foreground font-medium subtitle-fade">Generate unique band names, song titles, and set lists</p>
           </div>
 
           {/* Two Column Layout with Tabs */}
