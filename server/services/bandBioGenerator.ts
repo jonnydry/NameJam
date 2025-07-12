@@ -12,7 +12,7 @@ export class BandBioGeneratorService {
 
   async generateBandBio(bandName: string, genre?: string, mood?: string): Promise<string> {
     // Try different models in order of preference
-    const models = ["grok-3-mini-fast", "grok-2-1212", "grok-2-vision-1212"];
+    const models = ["grok-2-1212", "grok-2-vision-1212", "grok-3-mini"];
     
     for (const model of models) {
       try {
