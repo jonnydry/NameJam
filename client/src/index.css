@@ -95,12 +95,27 @@
   .typing-animation {
     position: relative;
     display: inline-block;
+    white-space: nowrap;
+    opacity: 0;
+    animation: fade-in 0.3s 0.4s forwards;
+  }
+  
+  /* Wrapper for the typing effect */
+  .typing-wrapper {
+    position: relative;
+    display: inline-block;
     overflow: hidden;
     width: 0;
-    opacity: 0;
-    animation: 
-      fade-in 0.3s 0.4s forwards,
-      typing 3s steps(8, end) 0.7s forwards ease-out;
+    animation: reveal-text 3s steps(8, end) 0.7s forwards;
+  }
+  
+  @keyframes reveal-text {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
   }
 
   @keyframes fade-in {
@@ -109,7 +124,7 @@
     }
   }
 
-  .typing-animation::after {
+  .typing-wrapper::after {
     content: '_';
     position: absolute;
     right: -0.1em;
@@ -121,14 +136,7 @@
       fade-caret 0.5s 3.7s forwards;
   }
 
-  @keyframes typing {
-    from { 
-      width: 0;
-    }
-    to { 
-      width: 100%;
-    }
-  }
+  /* Removed old typing keyframe - now using reveal-text */
 
   @keyframes blink-caret {
     0%, 100% { 
@@ -178,36 +186,7 @@
     }
   }
 
-  /* Make each character appear with a subtle bounce */
-  @keyframes typing {
-    0% { 
-      width: 0;
-    }
-    12.5% { /* N */
-      width: 12.5%;
-    }
-    25% { /* Na */
-      width: 25%;
-    }
-    37.5% { /* Nam */
-      width: 37.5%;
-    }
-    50% { /* Name */
-      width: 50%;
-    }
-    62.5% { /* Name_ */
-      width: 62.5%;
-    }
-    75% { /* Name_J */
-      width: 75%;
-    }
-    87.5% { /* Name_Ja */
-      width: 87.5%;
-    }
-    100% { /* Name_Jam */
-      width: 100%;
-    }
-  }
+  /* Removed old character-by-character animation - simplified approach */
 
   /* Subtitle fade in after typing completes */
   .subtitle-fade {
