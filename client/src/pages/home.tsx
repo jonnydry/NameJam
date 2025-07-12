@@ -28,11 +28,10 @@ export default function Home() {
             <div className="mb-6">
               <FermataLogo size="xl" />
             </div>
-            <h1 className="text-4xl font-bold text-foreground mb-2 uppercase tracking-wide font-mono">
-              <span className="typing-container group inline-block">
-                <span className="typing-wrapper inline-block">
-                  <span className="typing-animation gradient-hover bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent inline-block">Name_Jam</span>
-                </span>
+            <h1 className="text-4xl font-bold mb-2 uppercase tracking-wide font-mono">
+              <span className="inline-block">
+                <span className="typing-prompt">&gt;</span>
+                <span className="title-text">Name_Jam</span>
               </span>
             </h1>
             <p className="text-lg text-muted-foreground font-medium subtitle-fade">Generate unique band names, song titles, and set lists</p>

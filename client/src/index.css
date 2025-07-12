@@ -91,44 +91,70 @@
 }
 
 @layer utilities {
-  /* Typing animation for console-like effect */
-  .typing-animation {
+  /* Title text styling and animations */
+  .title-text {
     position: relative;
     display: inline-block;
-    white-space: nowrap;
+    background: linear-gradient(to right, #00b8ff, #0084ff, #00b8ff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 100%;
     transition: all 0.3s ease;
     cursor: pointer;
     opacity: 0;
-    animation: fade-in 0.3s 0.4s forwards;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 0;
+    animation: 
+      title-fade-in 0.5s 0.5s forwards, 
+      typing-reveal 3s steps(8) 0.5s forwards;
   }
   
-  /* Hover effect for the title */
-  .typing-container:hover .typing-animation {
-    filter: brightness(1.2) saturate(1.5);
-    transform: scale(1.05);
+  /* Typing cursor */
+  .title-text::after {
+    content: '_';
+    position: absolute;
+    right: -0.1em;
+    color: #00b8ff;
+    font-weight: 700;
+    animation: blink 0.7s step-end infinite, fade-out 0.5s 3.5s forwards;
   }
   
-  /* Animated gradient on hover */
-  @keyframes gradient-shift {
-    0% {
-      background-position: 0% 50%;
+  @keyframes typing-reveal {
+    to {
+      width: 8.5ch;
     }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
+  }
+  
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  
+  @keyframes fade-out {
+    to { opacity: 0; }
+  }
+  
+  @keyframes title-fade-in {
+    to {
+      opacity: 1;
     }
   }
   
-  .gradient-hover {
-    background-size: 200% 200%;
-    transition: all 0.3s ease;
+  @keyframes typing-effect {
+    from {
+      width: 0;
+      overflow: hidden;
+    }
+    to {
+      width: 100%;
+    }
   }
   
-  .typing-container:hover .gradient-hover {
-    animation: gradient-shift 2s ease infinite;
-    background-image: linear-gradient(
+  /* Hover effect with rainbow gradient */
+  .title-text:hover {
+    background: linear-gradient(
       90deg,
       #ff00ff,
       #00ffff,
@@ -138,32 +164,21 @@
       #00ffff,
       #ffff00
     );
-    background-size: 300% 300%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 300% 100%;
+    animation: gradient-shift 2s linear infinite;
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.5));
   }
   
-  /* Add glow effect on hover */
-  .typing-container:hover .gradient-hover {
-    text-shadow: 
-      0 0 20px rgba(0, 184, 255, 0.5),
-      0 0 40px rgba(255, 0, 255, 0.3),
-      0 0 60px rgba(255, 255, 0, 0.2);
-  }
-  
-  /* Wrapper for the typing effect */
-  .typing-wrapper {
-    position: relative;
-    display: inline-block;
-    overflow: hidden;
-    width: 0;
-    animation: reveal-text 3s steps(8, end) 0.7s forwards;
-  }
-  
-  @keyframes reveal-text {
-    from {
-      width: 0;
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
     }
-    to {
-      width: 8.5ch; /* Fixed width for "Name_Jam" - 8 characters + spacing */
+    100% {
+      background-position: 300% 50%;
     }
   }
 
@@ -236,6 +251,14 @@
   }
 
   /* Removed old character-by-character animation - simplified approach */
+
+  /* Typing prompt styling */
+  .typing-prompt {
+    color: #00b8ff;
+    opacity: 0;
+    margin-right: 0.5em;
+    animation: title-fade-in 0.3s 0.3s forwards;
+  }
 
   /* Subtitle fade in after typing completes */
   .subtitle-fade {
