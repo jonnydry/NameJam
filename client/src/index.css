@@ -91,6 +91,39 @@
 }
 
 @layer utilities {
+  /* Typing animation for console-like effect */
+  .typing-animation {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    animation: typing 1.5s steps(8, end) forwards;
+  }
+
+  .typing-animation::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--primary);
+    animation: blink-caret 0.75s step-end infinite, hide-caret 0s 1.5s forwards;
+  }
+
+  @keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+  }
+
+  @keyframes blink-caret {
+    0%, 100% { opacity: 1 }
+    50% { opacity: 0 }
+  }
+
+  @keyframes hide-caret {
+    to { opacity: 0 }
+  }
+
   .font-roboto {
     font-family: 'Roboto', sans-serif;
   }
