@@ -1,4 +1,5 @@
 import type { VerificationResult } from "@shared/schema";
+import { spotifyService } from "./spotifyService";
 
 export class NameVerifierService {
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
@@ -20,8 +21,19 @@ export class NameVerifierService {
 
       // Attempt real API verification
       let searchResults: any[] = [];
+      let spotifyResults: any = null;
+      
       try {
         const promises = [];
+        
+        // Add Spotify search (priority verification source)
+        if (await spotifyService.isAvailable()) {
+          if (type === 'band') {
+            spotifyResults = await spotifyService.verifyBandName(name);
+          } else {
+            spotifyResults = await spotifyService.verifySongName(name);
+          }
+        }
         
         // Add Last.fm search if API key is available
         if (process.env.LASTFM_API_KEY) {
@@ -43,7 +55,30 @@ export class NameVerifierService {
         console.log(`Found ${searchResults.length} results for "${name}"`);
       }
 
-      // Check for exact matches first
+      // Check Spotify results first (most authoritative)
+      if (spotifyResults && spotifyResults.exists) {
+        const match = spotifyResults.matches[0];
+        const similarNames = this.generateSimilarNames(name);
+        
+        if (type === 'band') {
+          const genreInfo = match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : '';
+          return {
+            status: 'taken',
+            details: `This band name exists on Spotify${genreInfo}. Popularity: ${match.popularity}/100. Try these alternatives:`,
+            similarNames,
+            verificationLinks
+          };
+        } else {
+          return {
+            status: 'taken',
+            details: `This song exists on Spotify by ${match.artist} (${match.album}). Try these alternatives:`,
+            similarNames,
+            verificationLinks
+          };
+        }
+      }
+
+      // Check for exact matches in other sources
       const exactMatches = searchResults.filter(result => 
         result.name?.toLowerCase().trim() === name.toLowerCase().trim()
       );
@@ -60,6 +95,32 @@ export class NameVerifierService {
           similarNames,
           verificationLinks
         };
+      }
+
+      // Check for close/similar matches from Spotify
+      let hasSpotifyCloseMatches = false;
+      if (spotifyResults && spotifyResults.matches && spotifyResults.matches.length > 0 && !spotifyResults.exists) {
+        // Spotify found similar but not exact matches
+        hasSpotifyCloseMatches = true;
+        const match = spotifyResults.matches[0];
+        const similarNames = this.generateSimilarNames(name);
+        
+        if (type === 'band') {
+          const genreInfo = match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : '';
+          return {
+            status: 'similar',
+            details: `Similar band names found on Spotify${genreInfo}. Consider these alternatives:`,
+            similarNames,
+            verificationLinks
+          };
+        } else {
+          return {
+            status: 'similar',
+            details: `Similar song titles found on Spotify by various artists. Consider these alternatives:`,
+            similarNames,
+            verificationLinks
+          };
+        }
       }
 
       // Check for close/similar matches with different criteria for bands vs songs
