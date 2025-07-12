@@ -7,7 +7,7 @@ import { LoadingAnimation } from "./loading-animation";
 import { ResultCard } from "./result-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Music, Users, Wand2, Search, Palette, RefreshCw, Copy } from "lucide-react";
+import { Music, Users, Wand2, Search, Palette, RefreshCw, Copy, Lightbulb } from "lucide-react";
 
 interface GenerationResult {
   id: number;
@@ -34,6 +34,7 @@ export function NameGenerator() {
   const [results, setResults] = useState<GenerationResult[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
+  const [aiResult, setAiResult] = useState<GenerationResult | null>(null);
 
   const { toast } = useToast();
 
@@ -115,7 +116,35 @@ export function NameGenerator() {
     },
   });
 
-
+  const aiGenerateMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/generate-ai-name', {
+        type: nameType,
+        ...(mood && mood !== 'none' && { mood }),
+        ...(genre && genre !== 'none' && { genre })
+      });
+      const data = await response.json();
+      return data;
+    },
+    onSuccess: (data) => {
+      setAiResult(data);
+      setResults([]); // Clear regular results when showing AI result
+      setSearchResult(null); // Clear search result
+      
+      toast({
+        title: "AI name generated!",
+        description: `Generated "${data.name}" using ${data.model} model.`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error generating AI name:', error);
+      toast({
+        title: "AI generation failed",
+        description: "Failed to generate AI name. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleGenerate = () => {
     generateMutation.mutate();
@@ -123,6 +152,10 @@ export function NameGenerator() {
 
   const handleGenerateMore = () => {
     generateMutation.mutate();
+  };
+
+  const handleGenerateAI = () => {
+    aiGenerateMutation.mutate();
   };
 
   const handleSearch = () => {
@@ -274,8 +307,8 @@ export function NameGenerator() {
           </Select>
         </div>
 
-        {/* Generate Button */}
-        <div className="text-center">
+        {/* Generate Buttons */}
+        <div className="text-center space-y-4">
           <Button
             onClick={handleGenerate}
             disabled={generateMutation.isPending}
@@ -284,6 +317,18 @@ export function NameGenerator() {
             <Wand2 className="w-4 h-4 mr-2" />
             Generate Names
           </Button>
+          
+          <div className="text-center">
+            <Button
+              onClick={handleGenerateAI}
+              disabled={aiGenerateMutation.isPending}
+              variant="outline"
+              className="inline-flex items-center px-6 py-2 rounded-lg border-primary/20 text-primary hover:bg-primary/10 transition-all duration-200"
+            >
+              <Lightbulb className="w-4 h-4 mr-2" />
+              AI Generate
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -332,10 +377,10 @@ export function NameGenerator() {
       </div>
 
       {/* Loading States */}
-      {(generateMutation.isPending || searchMutation.isPending) && (
+      {(generateMutation.isPending || searchMutation.isPending || aiGenerateMutation.isPending) && (
         <div className="bg-card rounded-xl shadow-sm border border-border p-8">
           <LoadingAnimation 
-            stage={generateMutation.isPending ? 'generating' : 'verifying'}
+            stage={generateMutation.isPending || aiGenerateMutation.isPending ? 'generating' : 'verifying'}
           />
         </div>
       )}
@@ -351,6 +396,33 @@ export function NameGenerator() {
               genre={genre !== 'none' ? genre : undefined}
               mood={mood !== 'none' ? mood : undefined}
             />
+          </div>
+        </div>
+      )}
+
+      {/* AI Generated Result */}
+      {aiResult && !aiGenerateMutation.isPending && (
+        <div className="space-y-4">
+          <div className="animate-slide-up">
+            <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <Lightbulb className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-medium text-foreground">AI Generated</h3>
+                  <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                    <span>•</span>
+                    <span>{aiResult.model || 'AI'}</span>
+                  </div>
+                </div>
+              </div>
+              <ResultCard
+                result={aiResult}
+                nameType={nameType}
+                onCopy={copyToClipboard}
+                genre={genre !== 'none' ? genre : undefined}
+                mood={mood !== 'none' ? mood : undefined}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -390,7 +462,7 @@ export function NameGenerator() {
       )}
 
       {/* Empty State */}
-      {results.length === 0 && !searchResult && !generateMutation.isPending && !searchMutation.isPending && (
+      {results.length === 0 && !searchResult && !aiResult && !generateMutation.isPending && !searchMutation.isPending && !aiGenerateMutation.isPending && (
         <div className="text-center py-12">
           <div className="text-neutral-600 mb-4">
             <Music className="w-16 h-16 text-neutral-200 mx-auto" />
