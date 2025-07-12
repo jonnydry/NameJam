@@ -1,17 +1,17 @@
 interface FermataLogoProps {
-  size?: "sm" | "lg";
+  size?: "sm" | "lg" | "xl";
   className?: string;
 }
 
 export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
-  const isLarge = size === "lg";
-  const containerSize = isLarge ? "w-16 h-16" : "w-10 h-10";
+  const containerSize = size === "xl" ? "w-20 h-20" : size === "lg" ? "w-16 h-16" : "w-10 h-10";
+  const svgSize = size === "xl" ? "w-16 h-16" : size === "lg" ? "w-14 h-14" : "w-9 h-9";
 
   return (
     <div className={`${containerSize} ${className} relative flex items-center justify-center animate-fade-in mx-auto`}>
       <svg 
         viewBox="0 0 32 32" 
-        className={`${isLarge ? 'w-14 h-14' : 'w-9 h-9'}`}
+        className={svgSize}
         fill="none"
       >
         {/* Question mark curve - floating above, centered */}
