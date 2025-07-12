@@ -96,10 +96,10 @@
     position: relative;
     display: inline-block;
     white-space: nowrap;
-    opacity: 0;
-    animation: fade-in 0.3s 0.4s forwards;
     transition: all 0.3s ease;
     cursor: pointer;
+    opacity: 0;
+    animation: fade-in 0.3s 0.4s forwards;
   }
   
   /* Hover effect for the title */
@@ -163,7 +163,7 @@
       width: 0;
     }
     to {
-      width: 100%;
+      width: 8.5ch; /* Fixed width for "Name_Jam" - 8 characters + spacing */
     }
   }
 
