@@ -55,6 +55,14 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Integration**: Uses existing name generation algorithms for song creation with full verification system
 - **Features**: Each song includes real-time availability verification and stash integration
 
+### AI Name Generation Service
+- **Location**: `server/services/aiNameGenerator.ts` with `/api/generate-ai-name` endpoint
+- **Purpose**: Provides AI-powered creative name generation using XAI's Grok models for enhanced creativity
+- **Models**: Uses grok-2-1212, grok-2-vision-1212, and grok-3-mini with intelligent fallback system
+- **Customization**: Supports mood and genre filtering for contextually appropriate names
+- **Integration**: Lightbulb button in name generator UI with dedicated AI result display showing model attribution
+- **Features**: Full verification and database storage, graceful fallback to algorithmic generation when AI unavailable
+
 ### Name Verification Service
 - **Location**: `server/services/nameVerifier.ts`
 - **Purpose**: Provides real name availability checking against music databases
@@ -171,6 +179,7 @@ Changelog:
 - July 12, 2025. Implemented slower, more graceful typing animation: increased typing duration to 3s with 0.5s startup delay, added terminal prompt ">" before title, coordinated subtitle fade-in after title completes, refined cursor animation with underscore character
 - July 12, 2025. Added interactive hover effects to title: implemented rainbow gradient animation on hover that flows across the text, added glow effect and scale transformation, simplified implementation for better reliability and visual impact
 - July 12, 2025. Code cleanup and optimization: removed excessive console.error statements to reduce log spam, maintained graceful error handling with silent fallbacks, ensured all API failures degrade gracefully without impacting user experience
+- July 12, 2025. Expanded XAI API usage with AI name generation: added lightbulb button to name generator for AI-powered creative responses, supports both band and song names with mood/genre customization, includes dedicated AI result display with model attribution, stores generated names in database with verification, provides fallback system for reliability
 
 ## User Preferences
 

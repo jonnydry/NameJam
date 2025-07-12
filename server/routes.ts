@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGeneratorService } from "./services/bandBioGenerator";
+import { AINameGeneratorService } from "./services/aiNameGenerator";
 
 import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
@@ -12,6 +13,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const nameGenerator = new NameGeneratorService();
   const nameVerifier = new NameVerifierService();
   const bandBioGenerator = new BandBioGeneratorService();
+  const aiNameGenerator = new AINameGeneratorService();
 
 
   // Generate names endpoint
@@ -296,6 +298,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error generating band name from setlist:", error);
       res.status(500).json({ 
         error: "Failed to generate band name",
+        suggestion: "The AI service may be temporarily unavailable. Please try again later."
+      });
+    }
+  });
+
+  // Generate AI name endpoint
+  app.post("/api/generate-ai-name", async (req, res) => {
+    try {
+      const { type, genre, mood } = req.body;
+      
+      if (!type || !['band', 'song'].includes(type)) {
+        return res.status(400).json({ error: "Valid type (band/song) is required" });
+      }
+
+      const aiNameResponse = await aiNameGenerator.generateAIName(type, genre, mood);
+      
+      // Parse the response
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(aiNameResponse);
+      } catch (error) {
+        // If parsing fails, create a simple fallback
+        const fallbackNames = type === 'band' 
+          ? ['The Electric Dreams', 'Midnight Echo', 'Digital Fire', 'Crystal Storm', 'Neon Shadows']
+          : ['Electric Heart', 'Midnight Rain', 'Digital Dreams', 'Crystal Light', 'Neon Nights'];
+        
+        parsedResponse = {
+          name: fallbackNames[Math.floor(Math.random() * fallbackNames.length)],
+          model: 'fallback',
+          source: 'fallback',
+          type: type
+        };
+      }
+      
+      // Verify the generated name
+      const verification = await nameVerifier.verifyName(parsedResponse.name, type);
+      
+      // Store in database
+      const storedName = await storage.createGeneratedName({
+        name: parsedResponse.name,
+        type: type,
+        wordCount: parsedResponse.name.split(' ').length,
+        verificationStatus: verification.status,
+        verificationDetails: verification.details || null,
+      });
+
+      res.json({ 
+        id: storedName.id,
+        name: parsedResponse.name,
+        type: type,
+        wordCount: parsedResponse.name.split(' ').length,
+        verification,
+        model: parsedResponse.model,
+        source: parsedResponse.source
+      });
+    } catch (error) {
+      console.error("Error generating AI name:", error);
+      res.status(500).json({ 
+        error: "Failed to generate AI name",
         suggestion: "The AI service may be temporarily unavailable. Please try again later."
       });
     }
