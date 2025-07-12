@@ -26,9 +26,9 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
         {/* Outer glow */}
         <ellipse cx="40" cy="42" rx="35" ry="40" fill="url(#bulbGlow)" />
         
-        {/* Lightbulb glass - traditional incandescent shape */}
+        {/* Lightbulb glass - traditional incandescent shape with more interior space */}
         <path 
-          d="M40 8 C20 8 5 23 5 42 C5 54 10 64 18 70 C18 70 18 72 18 75 L18 82 C18 85 20 87 23 87 L57 87 C60 87 62 85 62 82 L62 75 C62 72 62 70 62 70 C70 64 75 54 75 42 C75 23 60 8 40 8 Z" 
+          d="M40 10 C22 10 8 24 8 42 C8 53 13 62 20 68 C20 68 20 70 20 72 L20 80 C20 83 22 85 25 85 L55 85 C58 85 60 83 60 80 L60 72 C60 70 60 68 60 68 C67 62 72 53 72 42 C72 24 58 10 40 10 Z" 
           stroke="currentColor" 
           strokeWidth="2.5" 
           fill="currentColor"
@@ -49,7 +49,7 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
         
         {/* Metal base */}
         <path 
-          d="M23 87 L23 95 C23 97 25 99 27 99 L53 99 C55 99 57 97 57 95 L57 87"
+          d="M25 85 L25 93 C25 95 27 97 29 97 L51 97 C53 97 55 95 55 93 L55 85"
           stroke="currentColor" 
           strokeWidth="2.5" 
           fill="currentColor"
@@ -58,17 +58,17 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
         />
         
         {/* Screw threads */}
-        <line x1="27" y1="91" x2="53" y2="91" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
-        <line x1="27" y1="95" x2="53" y2="95" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
-        <line x1="29" y1="99" x2="51" y2="99" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
-        <line x1="31" y1="103" x2="49" y2="103" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
-        <line x1="33" y1="107" x2="47" y2="107" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
+        <line x1="29" y1="89" x2="51" y2="89" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
+        <line x1="29" y1="93" x2="51" y2="93" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
+        <line x1="31" y1="97" x2="49" y2="97" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
+        <line x1="33" y1="101" x2="47" y2="101" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
+        <line x1="35" y1="105" x2="45" y2="105" stroke="currentColor" strokeWidth="2" className="text-primary opacity-40" />
         
-        {/* Original fermata logo content, centered in bulb */}
-        <g transform="translate(40, 42)">
+        {/* Original fermata logo content, moved down to float properly */}
+        <g transform="translate(40, 46)">
           {/* Question mark curve - floating above, centered */}
           <path 
-            d="M-5 -12c0-5 3.75-8.75 7.5-8.75s7.5 3.75 7.5 8.75c0 3.125-2 5-3.75 7L0 -1.25c-0.75 0.75-0.75 2.5-0.75 3.75" 
+            d="M-4 -9c0-4 3-7 6-7s6 3 6 7c0 2.5-1.6 4-3 5.6L0 -1c-0.6 0.6-0.6 2-0.6 3" 
             stroke="currentColor" 
             strokeWidth="2.5" 
             strokeLinecap="round"
@@ -77,7 +77,7 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
           
           {/* Fermata arc - positioned lower */}
           <path 
-            d="M-10 9 Q0 0 10 9" 
+            d="M-8 7 Q0 0 8 7" 
             stroke="currentColor" 
             strokeWidth="2.5" 
             strokeLinecap="round"
@@ -87,8 +87,8 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
           {/* Single shared dot - works for both fermata and question mark */}
           <circle 
             cx="0" 
-            cy="13" 
-            r="2" 
+            cy="10" 
+            r="1.8" 
             fill="currentColor"
             className="text-primary animate-pulse"
           />
