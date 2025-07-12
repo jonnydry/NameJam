@@ -1231,7 +1231,7 @@ export class NameGeneratorService {
       
       return adjectives.slice(0, 50); // Limit to prevent overwhelming
     } catch (error) {
-      console.error('Error fetching adjectives:', error);
+      // Error fetching adjectives - silent fallback
       return [];
     }
   }
@@ -1256,7 +1256,7 @@ export class NameGeneratorService {
       
       return nouns.slice(0, 50);
     } catch (error) {
-      console.error('Error fetching nouns:', error);
+      // Error fetching nouns - silent fallback
       return [];
     }
   }
@@ -1280,7 +1280,7 @@ export class NameGeneratorService {
       
       return verbs.slice(0, 40);
     } catch (error) {
-      console.error('Error fetching verbs:', error);
+      // Error fetching verbs - silent fallback
       return [];
     }
   }
@@ -1305,7 +1305,7 @@ export class NameGeneratorService {
       
       return musicalTerms.slice(0, 40);
     } catch (error) {
-      console.error('Error fetching musical terms:', error);
+      // Error fetching musical terms - silent fallback
       return [];
     }
   }
@@ -1338,7 +1338,7 @@ export class NameGeneratorService {
       // Implementation would extract words based on category
       return [];
     } catch (error) {
-      console.error('Dictionary API error:', error);
+      // Dictionary API error - silent fallback
       return [];
     }
   }
@@ -1361,7 +1361,7 @@ export class NameGeneratorService {
       
       return words;
     } catch (error) {
-      console.error('Wikipedia API error:', error);
+      // Wikipedia API error - silent fallback
       return [];
     }
   }
@@ -1389,7 +1389,7 @@ export class NameGeneratorService {
       
       return words.filter(this.isValidWord).slice(0, 10);
     } catch (error) {
-      console.error('Poetry API error:', error);
+      // Poetry API error - silent fallback
       return [];
     }
   }
@@ -1440,7 +1440,7 @@ export class NameGeneratorService {
       
       return actionWords;
     } catch (error) {
-      console.error('Error fetching action words:', error);
+      // Error fetching action words - silent fallback
       return [];
     }
   }
@@ -1456,7 +1456,7 @@ export class NameGeneratorService {
       
       return instruments;
     } catch (error) {
-      console.error('Error fetching instruments:', error);
+      // Error fetching instruments - silent fallback
       return [];
     }
   }
@@ -1472,7 +1472,7 @@ export class NameGeneratorService {
       
       return genres;
     } catch (error) {
-      console.error('Error fetching genres:', error);
+      // Error fetching genres - silent fallback
       return [];
     }
   }
