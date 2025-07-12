@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Bebas+Neue&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -66,8 +66,27 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    @apply font-mono antialiased bg-background text-foreground;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-ligatures: contextual;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+  }
+  
+  /* Improve readability for monospace interface elements */
+  input, textarea, select {
+    letter-spacing: -0.01em;
+  }
+  
+  /* Make buttons more readable with slightly tighter spacing */
+  button {
+    letter-spacing: -0.01em;
+    font-weight: 500;
+  }
+  
+  /* Optimize heading readability */
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
   }
 }
 

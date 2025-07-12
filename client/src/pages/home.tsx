@@ -28,8 +28,8 @@ export default function Home() {
             <div className="mb-6">
               <FermataLogo size="xl" />
             </div>
-            <h1 className="text-5xl font-mono text-foreground mb-2 bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent uppercase tracking-wider">Name_Jam</h1>
-            <p className="text-lg text-muted-foreground font-roboto">Generate unique band names, song titles, and set lists</p>
+            <h1 className="text-5xl font-bold text-foreground mb-2 bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent uppercase tracking-wide">Name_Jam</h1>
+            <p className="text-lg text-muted-foreground font-medium">Generate unique band names, song titles, and set lists</p>
           </div>
 
           {/* Two Column Layout with Tabs */}
