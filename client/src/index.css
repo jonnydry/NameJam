@@ -251,6 +251,21 @@
   }
 
   /* Removed old character-by-character animation - simplified approach */
+  
+  /* Lightbulb glow animation */
+  .lightbulb-container svg {
+    filter: drop-shadow(0 0 20px rgba(0, 184, 255, 0.3));
+    animation: lightbulb-pulse 3s ease-in-out infinite;
+  }
+  
+  @keyframes lightbulb-pulse {
+    0%, 100% {
+      filter: drop-shadow(0 0 20px rgba(0, 184, 255, 0.3));
+    }
+    50% {
+      filter: drop-shadow(0 0 35px rgba(0, 184, 255, 0.5));
+    }
+  }
 
   /* Typing prompt styling */
   .typing-prompt {
