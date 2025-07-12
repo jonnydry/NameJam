@@ -24,8 +24,8 @@ export default function Home() {
       <main className="flex-1 px-4 py-12">
         <div className="max-w-7xl mx-auto">
           {/* Logo and Title Section */}
-          <div className="text-center mb-12">
-            <div className="mb-6">
+          <div className="text-center mb-8">
+            <div className="mb-4">
               <FermataLogo size="xl" />
             </div>
             <h1 className="text-4xl font-bold mb-2 uppercase tracking-wide font-mono">
