@@ -145,18 +145,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const generatedNames = await nameGenerator.generateNames(songRequest);
           const songName = generatedNames[0];
           
+          // Use full verification including Spotify
+          const verification = await nameVerifier.verifyName(songName, 'song');
+          
           songs.push({
             id: i + 1,
             name: songName,
-            verification: {
-              status: 'available' as const,
-              details: `Generated for setlist - appears unique`,
-              verificationLinks: [{
-                name: "Google Search",
-                url: `https://www.google.com/search?q="${encodeURIComponent(songName)}" song`,
-                source: "Google"
-              }]
-            }
+            verification
           });
         } catch (err) {
           // Generate a simple fallback name using basic word combination
@@ -165,14 +160,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const randomWord = fallbackWords[Math.floor(Math.random() * fallbackWords.length)];
           const randomNoun = fallbackNouns[Math.floor(Math.random() * fallbackNouns.length)];
           
+          const fallbackName = `${randomWord} ${randomNoun}`;
+          // Use full verification for fallback names too
+          const verification = await nameVerifier.verifyName(fallbackName, 'song');
+          
           songs.push({
             id: i + 1,
-            name: `${randomWord} ${randomNoun}`,
-            verification: {
-              status: 'available' as const,
-              details: `Generated as fallback`,
-              verificationLinks: []
-            }
+            name: fallbackName,
+            verification
           });
         }
       }
