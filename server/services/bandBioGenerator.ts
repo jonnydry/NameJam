@@ -64,15 +64,22 @@ export class BandBioGeneratorService {
               content: prompt
             }
           ],
-          max_tokens: model === 'grok-3-mini' ? 500 : 250, // Grok 3 mini needs more tokens for reasoning
-          temperature: 0.8,
-          top_p: 0.9
+          max_tokens: model === 'grok-3-mini' ? 500 : 250,
+          temperature: 0.8
         };
 
-        // Only add penalty parameters for models that support them (Grok-3, not Grok-4)
-        if (model.includes('grok-3')) {
-          requestParams.frequency_penalty = 0.3;  // Light penalty for bio generation
-          requestParams.presence_penalty = 0.2;   // Encourage variety
+        // Model-specific parameter configuration  
+        if (model === 'grok-4') {
+          // Grok 4 - minimal parameters for maximum compatibility
+          requestParams.top_p = 0.95;
+        } else if (model.includes('grok-3')) {
+          // Grok 3 variants - full parameter support
+          requestParams.top_p = 0.9;
+          requestParams.frequency_penalty = 0.3;
+          requestParams.presence_penalty = 0.2;
+        } else {
+          // Other models - basic parameters
+          requestParams.top_p = 0.9;
         }
 
         const response = await this.openai.chat.completions.create(requestParams);
@@ -369,6 +376,7 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
       
       for (const model of models) {
         try {
+          console.log(`Attempting model: ${model}`);
           console.log(`Attempting to generate band name with model: ${model}`);
           
           const prompt = `You are a music industry expert tasked with naming a band based on their complete setlist. Analyze the following song titles and create a unique, memorable band name that reflects their artistic identity.
@@ -409,15 +417,31 @@ Respond with ONLY a JSON object in this exact format:
               }
             ],
             temperature: 0.9,
-            max_tokens: 150,
-            response_format: { type: "json_object" },
-            top_p: 0.9
+            max_tokens: 150
           };
 
-          // Only add penalty parameters for models that support them (Grok-3, not Grok-4)
-          if (model.includes('grok-3')) {
-            requestParams.frequency_penalty = 0.4;  // Encourage variety in band names
-            requestParams.presence_penalty = 0.3;   // Promote creative naming
+          // Model-specific parameter configuration
+          if (model === 'grok-4') {
+            // Grok 4 - minimal parameters, plain text response
+            requestParams.top_p = 0.95;
+            // Update prompt for plain text response
+            requestParams.messages[1].content = `You are a creative music expert. Based on these setlist songs, generate ONE unique band name that captures their essence:
+
+SONGS: ${songNames.map(song => `"${song}"`).join(', ')}
+${mood ? `MOOD: ${mood}` : ''}
+${genre ? `GENRE: ${genre}` : ''}
+
+Respond with ONLY the band name, nothing else.`;
+          } else if (model.includes('grok-3')) {
+            // Grok 3 variants - full parameter support with JSON
+            requestParams.top_p = 0.9;
+            requestParams.frequency_penalty = 0.4;
+            requestParams.presence_penalty = 0.3;
+            requestParams.response_format = { type: "json_object" };
+          } else {
+            // Other models - basic parameters with JSON
+            requestParams.top_p = 0.9;
+            requestParams.response_format = { type: "json_object" };
           }
 
           const response = await this.openai.chat.completions.create(requestParams);
@@ -426,20 +450,40 @@ Respond with ONLY a JSON object in this exact format:
           
           if (content && content.trim() !== "") {
             console.log(`Successfully generated band name using model: ${model}`);
+            console.log(`Raw response content: "${content}"`);
             
-            try {
-              const parsed = JSON.parse(content);
+            // Handle different response formats based on model
+            if (model === 'grok-4') {
+              // For Grok 4, expect plain text response
+              const cleanName = content.trim().replace(/^["']|["']$/g, '');
               return JSON.stringify({
-                bandName: parsed.bandName || 'The Unnamed Collective',
+                bandName: cleanName || 'The Unnamed Collective',
                 model: model,
                 source: 'ai'
               });
-            } catch (parseError) {
-              // If JSON parsing fails, extract band name from text
-              const match = content.match(/"bandName":\s*"([^"]+)"/);
-              if (match && match[1]) {
+            } else {
+              // For other models, expect JSON
+              try {
+                const parsed = JSON.parse(content);
                 return JSON.stringify({
-                  bandName: match[1],
+                  bandName: parsed.bandName || 'The Unnamed Collective',
+                  model: model,
+                  source: 'ai'
+                });
+              } catch (parseError) {
+                // If JSON parsing fails, extract band name from text
+                const match = content.match(/"bandName":\s*"([^"]+)"/);
+                if (match && match[1]) {
+                  return JSON.stringify({
+                    bandName: match[1],
+                    model: model,
+                    source: 'ai'
+                  });
+                }
+                // Fallback to plain text for other models too
+                const cleanName = content.trim().replace(/^["']|["']$/g, '');
+                return JSON.stringify({
+                  bandName: cleanName || 'The Unnamed Collective',
                   model: model,
                   source: 'ai'
                 });
