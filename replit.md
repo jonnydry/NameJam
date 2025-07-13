@@ -67,12 +67,14 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ### Name Verification Service
 - **Location**: `server/services/nameVerifier.ts`
-- **Purpose**: Provides real name availability checking against music databases
-- **Famous Names Database**: 50+ well-known bands and songs for immediate detection
-- **Spotify Integration**: Primary verification source using Spotify Web API for authoritative music database searches
-- **API Integration**: Last.fm and MusicBrainz for comprehensive music database searches
-- **Differentiated Logic**: Stricter verification for bands (unique names required) vs more lenient for songs (shared titles allowed)
+- **Purpose**: Provides real name availability checking against music databases with Spotify as the top priority
+- **Verification Priority Order**:
+  1. **Spotify Web API** - Primary and first verification source for authoritative music database searches
+  2. **Spotify Similar Matches** - Secondary check for close matches on Spotify
+  3. **Famous Names Database** - 50+ well-known bands and songs for backup detection
+  4. **Other APIs** - Last.fm and MusicBrainz as fallback sources
 - **Enhanced Results**: Returns detailed availability status with popularity scores, genres, and album information from Spotify
+- **Differentiated Logic**: Stricter verification for bands (unique names required) vs more lenient for songs (shared titles allowed)
 - **Verification Links**: Includes direct Spotify search links for manual verification
 
 ### Data Storage
@@ -185,6 +187,7 @@ Changelog:
 - July 12, 2025. Code cleanup and optimization: removed excessive console.error statements to reduce log spam, maintained graceful error handling with silent fallbacks, ensured all API failures degrade gracefully without impacting user experience
 - July 12, 2025. Expanded XAI API usage with AI name generation: added lightbulb button to name generator for AI-powered creative responses, supports both band and song names with mood/genre customization, includes dedicated AI result display with model attribution, stores generated names in database with verification, provides fallback system for reliability
 - July 12, 2025. Integrated Spotify Web API for enhanced name verification: implemented comprehensive Spotify service for authoritative music database searches, added artist and track verification with popularity scores and genre information, prioritized Spotify results over other sources for accuracy, included direct Spotify search links in verification results
+- July 13, 2025. Restructured verification flow to prioritize Spotify API: moved Spotify verification to absolute top priority ahead of famous names database, implemented dual-stage Spotify checking (exact matches first, then similar matches), optimized verification order for maximum accuracy and real-time music database coverage
 - July 12, 2025. Enhanced setlist generator with comprehensive improvements: removed word count selector in favor of automatic variation (weighted 1-6 words favoring 2-4), ensured identical naming algorithms as main generator, integrated full Spotify verification for all setlist songs, improved XAI band name generation prompt to analyze specific song titles and themes for more relevant band names
 
 ## User Preferences

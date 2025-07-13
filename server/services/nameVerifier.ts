@@ -7,26 +7,11 @@ export class NameVerifierService {
       // Generate verification links that users can actually use
       const verificationLinks = this.generateVerificationLinks(name, type);
 
-      // Check against famous bands/songs database first
-      const famousMatch = this.checkFamousNames(name, type);
-      if (famousMatch) {
-        const similarNames = this.generateSimilarNames(name);
-        return {
-          status: 'taken',
-          details: `This is a famous ${type}${famousMatch.artist ? ` by ${famousMatch.artist}` : ''}. Try these alternatives:`,
-          similarNames,
-          verificationLinks
-        };
-      }
-
-      // Attempt real API verification
-      let searchResults: any[] = [];
+      // SPOTIFY API VERIFICATION - TOP PRIORITY
       let spotifyResults: any = null;
       
       try {
-        const promises = [];
-        
-        // Add Spotify search (priority verification source)
+        // Check Spotify first - most authoritative source
         if (await spotifyService.isAvailable()) {
           if (type === 'band') {
             spotifyResults = await spotifyService.verifyBandName(name);
@@ -34,28 +19,11 @@ export class NameVerifierService {
             spotifyResults = await spotifyService.verifySongName(name);
           }
         }
-        
-        // Add Last.fm search if API key is available
-        if (process.env.LASTFM_API_KEY) {
-          promises.push(this.searchLastFm(name, type).catch(() => []));
-        }
-        
-        // Add MusicBrainz search (no key needed) 
-        promises.push(this.searchRealMusicBrainz(name, type).catch(() => []));
-
-        if (promises.length > 0) {
-          searchResults = await Promise.all(promises).then(results => results.flat());
-        }
       } catch (error) {
-        // Silent fallback to heuristics
+        // Continue to other sources if Spotify fails
       }
 
-      // Minimal logging for debugging when needed
-      if (searchResults.length > 5) {
-        console.log(`Found ${searchResults.length} results for "${name}"`);
-      }
-
-      // Check Spotify results first (most authoritative)
+      // Check Spotify exact matches first (highest priority)
       if (spotifyResults && spotifyResults.exists) {
         const match = spotifyResults.matches[0];
         const similarNames = this.generateSimilarNames(name);
@@ -78,30 +46,8 @@ export class NameVerifierService {
         }
       }
 
-      // Check for exact matches in other sources
-      const exactMatches = searchResults.filter(result => 
-        result.name?.toLowerCase().trim() === name.toLowerCase().trim()
-      );
-
-      if (exactMatches.length > 0) {
-        // Exact match found = Name is taken
-        const match = exactMatches[0];
-        const artistInfo = match.artist ? ` by ${match.artist}` : '';
-        const similarNames = this.generateSimilarNames(name);
-        console.log(`Exact match found for "${name}": ${match.name} by ${match.artist || 'Unknown'}`);
-        return {
-          status: 'taken',
-          details: `Found existing ${type}${artistInfo}. Try these alternatives:`,
-          similarNames,
-          verificationLinks
-        };
-      }
-
-      // Check for close/similar matches from Spotify
-      let hasSpotifyCloseMatches = false;
+      // Check Spotify similar matches (second priority)
       if (spotifyResults && spotifyResults.matches && spotifyResults.matches.length > 0 && !spotifyResults.exists) {
-        // Spotify found similar but not exact matches
-        hasSpotifyCloseMatches = true;
         const match = spotifyResults.matches[0];
         const similarNames = this.generateSimilarNames(name);
         
@@ -122,6 +68,65 @@ export class NameVerifierService {
           };
         }
       }
+
+      // Famous names database check (third priority)
+      const famousMatch = this.checkFamousNames(name, type);
+      if (famousMatch) {
+        const similarNames = this.generateSimilarNames(name);
+        return {
+          status: 'taken',
+          details: `This is a famous ${type}${famousMatch.artist ? ` by ${famousMatch.artist}` : ''}. Try these alternatives:`,
+          similarNames,
+          verificationLinks
+        };
+      }
+
+      // Other API sources as fallback (Last.fm, MusicBrainz)
+      let searchResults: any[] = [];
+      
+      try {
+        const promises = [];
+        
+        // Add Last.fm search if API key is available
+        if (process.env.LASTFM_API_KEY) {
+          promises.push(this.searchLastFm(name, type).catch(() => []));
+        }
+        
+        // Add MusicBrainz search (no key needed) 
+        promises.push(this.searchRealMusicBrainz(name, type).catch(() => []));
+
+        if (promises.length > 0) {
+          searchResults = await Promise.all(promises).then(results => results.flat());
+        }
+      } catch (error) {
+        // Silent fallback to heuristics
+      }
+
+      // Minimal logging for debugging when needed
+      if (searchResults.length > 5) {
+        console.log(`Found ${searchResults.length} results for "${name}"`);
+      }
+
+      // Check for exact matches in other sources
+      const exactMatches = searchResults.filter(result => 
+        result.name?.toLowerCase().trim() === name.toLowerCase().trim()
+      );
+
+      if (exactMatches.length > 0) {
+        // Exact match found = Name is taken
+        const match = exactMatches[0];
+        const artistInfo = match.artist ? ` by ${match.artist}` : '';
+        const similarNames = this.generateSimilarNames(name);
+        console.log(`Exact match found for "${name}": ${match.name} by ${match.artist || 'Unknown'}`);
+        return {
+          status: 'taken',
+          details: `Found existing ${type}${artistInfo}. Try these alternatives:`,
+          similarNames,
+          verificationLinks
+        };
+      }
+
+
 
       // Check for close/similar matches with different criteria for bands vs songs
       const closeMatches = searchResults.filter(result => {
