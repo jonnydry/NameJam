@@ -2,6 +2,8 @@ import OpenAI from "openai";
 
 export class AINameGeneratorService {
   private openai: OpenAI | null = null;
+  private recentWords: string[] = [];
+  private maxRecentWords = 20;
 
   constructor() {
     // Initialize OpenAI only if API key is available
@@ -29,15 +31,31 @@ export class AINameGeneratorService {
     
     for (const model of models) {
       try {
-        // Build a very simple prompt
-        let prompt = `Create a ${type === 'band' ? 'band' : 'song'} name`;
+        // Add randomization to force variety
+        const randomSeed = Math.random().toString(36).substring(7);
+        const timestamp = Date.now() % 10000;
+        
+        // Build varied prompts with explicit variety instructions and recent word exclusions
+        const avoidWords = ['shadows', 'shadow', 'echoes', 'echo', 'whispers', 'whisper', 'midnight', 'darkness', 'twilight', 'sorrow', 'eclipse'].concat(this.recentWords);
+        const avoidString = avoidWords.slice(0, 15).join(', '); // Limit to prevent overly long prompts
+        
+        const promptVariations = [
+          `Invent a unique ${type === 'band' ? 'band' : 'song'} name. AVOID these overused words: ${avoidString}`,
+          `Come up with an original ${type === 'band' ? 'band' : 'song'} name using unexpected words. DON'T use: ${avoidString}`, 
+          `Generate a creative ${type === 'band' ? 'band' : 'song'} name (be unconventional). Never use: ${avoidString}`,
+          `Think of a fresh ${type === 'band' ? 'band' : 'song'} name with unusual combinations. Exclude: ${avoidString}`,
+          `Create an innovative ${type === 'band' ? 'band' : 'song'} name that nobody would expect. Skip: ${avoidString}`
+        ];
+        
+        let prompt = promptVariations[Math.floor(Math.random() * promptVariations.length)];
         
         // Add context if provided
         if (genre || mood) {
           const context = [];
           if (genre) context.push(genre);
           if (mood) context.push(mood);
-          prompt += ` with a ${context.join(' ')} vibe`;
+          const vibeWords = ['vibe', 'feel', 'style', 'mood', 'energy'];
+          prompt += ` with a ${context.join(' ')} ${vibeWords[Math.floor(Math.random() * vibeWords.length)]}`;
         }
         
         // Add word count if specified
@@ -47,8 +65,17 @@ export class AINameGeneratorService {
           prompt += '.';
         }
         
-        // Simple instruction
-        prompt += ' Reply with only the name, nothing else.';
+        // Add randomization elements to ensure uniqueness
+        const instructions = [
+          'Reply with only the name, nothing else.',
+          'Just give me the name.',
+          'Name only.',
+          'Only the name, please.',
+          'Just the name.'
+        ];
+        
+        prompt += ` ${instructions[Math.floor(Math.random() * instructions.length)]}`;
+        prompt += ` [Seed: ${randomSeed}${timestamp}]`;
 
         const response = await this.openai.chat.completions.create({
           model: model,
@@ -59,7 +86,10 @@ export class AINameGeneratorService {
             }
           ],
           max_tokens: 30,
-          temperature: 1.0  // Maximum randomness
+          temperature: 1.0,  // Maximum randomness
+          top_p: 0.9,        // Add nucleus sampling for more variety
+          frequency_penalty: 0.8,  // Penalize repetitive tokens
+          presence_penalty: 0.6    // Encourage new topics
         });
 
         const generatedName = response.choices[0]?.message?.content?.trim() || "";
@@ -72,10 +102,12 @@ export class AINameGeneratorService {
             .replace(/[.!?:,]$/g, '') // Remove ending punctuation
             .trim();
           
-          // Check word count
+          // Check word count and track words for future avoidance
           if (wordCount && cleanName.split(/\s+/).length === wordCount) {
+            this.trackRecentWords(cleanName);
             return cleanName;
           } else if (!wordCount && cleanName.length > 0 && cleanName.length < 100) {
+            this.trackRecentWords(cleanName);
             return cleanName;
           }
         }
@@ -151,6 +183,24 @@ export class AINameGeneratorService {
     }
     
     // Ensure we have exactly the right word count
-    return result.slice(0, count).join(' ');
+    const finalName = result.slice(0, count).join(' ');
+    this.trackRecentWords(finalName);
+    return finalName;
+  }
+
+  private trackRecentWords(name: string): void {
+    // Extract individual words and add to recent words list
+    const words = name.toLowerCase().split(/\s+/).map(word => 
+      word.replace(/[^a-z]/g, '') // Remove punctuation
+    ).filter(word => word.length > 2); // Only track meaningful words
+    
+    // Add new words to the front of the array
+    this.recentWords.unshift(...words);
+    
+    // Keep only the most recent words
+    this.recentWords = this.recentWords.slice(0, this.maxRecentWords);
+    
+    // Remove duplicates while preserving order
+    this.recentWords = [...new Set(this.recentWords)];
   }
 }
