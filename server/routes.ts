@@ -193,8 +193,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             genre: genre as any
           };
           
-          const generatedNames = await nameGenerator.generateNames(songRequest);
-          const songName = generatedNames[0];
+          const generatedNames = await nameGenerator.generateTraditionalNames(songRequest);
+          const songNameObj = generatedNames[0];
+          const songName = songNameObj.name;
           
           // Use full verification including Spotify
           const verification = await nameVerifier.verifyName(songName, 'song');

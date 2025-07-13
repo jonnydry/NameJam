@@ -323,6 +323,22 @@ export class NameGeneratorService {
     };
   }
 
+  // Traditional generation only (for setlists)
+  async generateTraditionalNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean}>> {
+    const { type, wordCount, count, mood, genre } = request;
+    const names: Array<{name: string, isAiGenerated: boolean}> = [];
+
+    // Generate only traditional names
+    while (names.length < count) {
+      const name = await this.generateSingleName(type, wordCount, mood, genre);
+      if (!names.find(n => n.name === name)) {
+        names.push({ name, isAiGenerated: false });
+      }
+    }
+
+    return names.slice(0, count);
+  }
+
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean}>> {
     const { type, wordCount, count, mood, genre } = request;
     const names: Array<{name: string, isAiGenerated: boolean}> = [];

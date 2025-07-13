@@ -200,6 +200,7 @@ Changelog:
 - July 13, 2025. Enhanced AI variety with explicit anti-cliché instructions: added prompt variations that explicitly tell AI to "avoid clichés like shadows, echoes, midnight" and "be unconventional and surprising", integrated randomized prompt selection with variety-focused instructions, added frequency/presence penalties to OpenAI parameters for maximum creativity, eliminated repetitive AI results that were occurring when users clicked generate multiple times
 - July 13, 2025. Updated AI/traditional generation ratio: changed from 2/3 AI results to 1/3 AI results per user request, now generates 1 AI name and 2 traditional names for each 3-name generation request, simplified interface by removing separate AI generate button and updating main button icon to lightbulb
 - July 13, 2025. Successfully updated to latest Grok models: implemented Grok 4, Grok 3, and Grok 3-mini models with dynamic parameter configuration (Grok 4 doesn't support frequency/presence penalties while Grok 3 does), fixed JSON response format for proper model attribution, achieved working AI generation with names like "Velvet Abyss" from Grok models
+- July 13, 2025. Fixed setlist generator to use traditional generation only: created generateTraditionalNames() method for setlist songs, resolved name verification errors by properly extracting strings from returned objects, maintained AI generation exclusively for "Name this Band" feature while ensuring setlists use only traditional algorithms
 
 ## User Preferences
 
