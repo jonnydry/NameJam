@@ -47,14 +47,53 @@ export default function About() {
                   <p className="text-sm text-muted-foreground">Add your project description here...</p>
                 </div>
                 
-                <div className="p-4 border border-dashed border-muted-foreground/30 rounded-lg">
-                  <h3 className="font-medium mb-2">Features</h3>
-                  <p className="text-sm text-muted-foreground">List your app's key features here...</p>
+                <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
+                  <h3 className="font-medium mb-3">Key Features</h3>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li>• <strong>Advanced Name Generation:</strong> Create unique band and song names using 2,300+ carefully curated words across 32 specialized categories</li>
+                    <li>• <strong>AI-Powered Creativity:</strong> Optional XAI Grok integration for enhanced creative name generation with intelligent fallback</li>
+                    <li>• <strong>Smart Customization:</strong> Choose from 1-6 word combinations, 12 mood themes, and 14 musical genres</li>
+                    <li>• <strong>Real-Time Verification:</strong> Instant availability checking using Spotify Web API, Last.fm, and MusicBrainz databases</li>
+                    <li>• <strong>Set List Generator:</strong> Create professional performance sets (8 or 16 songs) with automatic song verification</li>
+                    <li>• <strong>Stash System:</strong> Save favorite names with local storage persistence and export capabilities</li>
+                    <li>• <strong>Linguistic Intelligence:</strong> Advanced grammatical patterns, smart capitalization, and poetic flow optimization</li>
+                    <li>• <strong>Export Options:</strong> Export stash as text files, JSON, or print-friendly formats</li>
+                    <li>• <strong>Responsive Design:</strong> Fully responsive interface with dark theme and modern typography</li>
+                  </ul>
                 </div>
                 
-                <div className="p-4 border border-dashed border-muted-foreground/30 rounded-lg">
-                  <h3 className="font-medium mb-2">Technology Stack</h3>
-                  <p className="text-sm text-muted-foreground">Describe the technologies used...</p>
+                <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
+                  <h3 className="font-medium mb-3">Technology Stack</h3>
+                  <div className="text-sm text-muted-foreground space-y-3">
+                    <div>
+                      <h4 className="font-medium text-foreground mb-1">Frontend</h4>
+                      <ul className="space-y-1 ml-2">
+                        <li>• React 18 with TypeScript for type-safe development</li>
+                        <li>• Tailwind CSS with shadcn/ui components for modern design</li>
+                        <li>• Wouter for lightweight client-side routing</li>
+                        <li>• TanStack React Query for server state management</li>
+                        <li>• Vite for fast development and optimized builds</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-foreground mb-1">Backend</h4>
+                      <ul className="space-y-1 ml-2">
+                        <li>• Node.js with Express.js and TypeScript</li>
+                        <li>• PostgreSQL database with Drizzle ORM</li>
+                        <li>• Neon Database for serverless PostgreSQL hosting</li>
+                        <li>• Session management with connect-pg-simple</li>
+                        <li>• RESTful API architecture</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-foreground mb-1">External APIs</h4>
+                      <ul className="space-y-1 ml-2">
+                        <li>• Spotify Web API for music database verification</li>
+                        <li>• XAI Grok models for AI-powered name generation</li>
+                        <li>• Last.fm and MusicBrainz for comprehensive music data</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="p-4 border border-dashed border-muted-foreground/30 rounded-lg">
