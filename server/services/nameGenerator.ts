@@ -336,7 +336,7 @@ export class NameGeneratorService {
   }
 
   private async generateSingleName(type: string, wordCount: number, mood?: string, genre?: string): Promise<string> {
-    // Use simple synchronous generation to demonstrate web-enhanced vocabulary
+    // Use expanded vocabulary only when no specific genre/mood filtering is applied
     if (wordCount <= 3) {
       return this.generateSimpleName(type, wordCount, mood, genre);
     } else {
@@ -345,17 +345,24 @@ export class NameGeneratorService {
   }
 
   private generateSimpleName(type: string, wordCount: number, mood?: string, genre?: string): string {
-    // Apply both mood AND genre filtering sequentially
-    let sources = this.wordSources;
+    // Smart filtering: when both mood and genre are specified, genre takes priority
+    let sources: WordSource;
     
-    // First apply mood filtering if specified
-    if (mood && mood !== 'none') {
-      sources = this.getStaticMoodFilteredWords(mood);
-    }
-    
-    // Then apply genre filtering on top of mood-filtered sources
+    // Use clean base vocabulary for genre/mood filtering, expanded vocabulary otherwise
     if (genre && genre !== 'none') {
-      sources = this.getGenreFilteredWords(genre, sources);
+      // Apply genre filtering with clean base vocabulary for authenticity
+      sources = this.getGenreFilteredWords(genre, this.getBaseWordSources());
+      
+      // If mood is also specified, blend in mood-specific terms
+      if (mood && mood !== 'none') {
+        sources = this.blendMoodWithGenre(mood, genre, sources);
+      }
+    } else if (mood && mood !== 'none') {
+      // Only mood specified, use mood filtering with base vocabulary
+      sources = this.getStaticMoodFilteredWords(mood);
+    } else {
+      // No filtering specified, use expanded vocabulary for variety
+      sources = this.wordSources;
     }
     
     // Ensure we have valid word sources after filtering
@@ -661,10 +668,10 @@ export class NameGeneratorService {
         musicalTerms: ['Piano', 'Dolce', 'Andante', 'Lullaby', 'Pastoral']
       },
       nostalgic: {
-        adjectives: ['Nostalgic', 'Vintage', 'Retro', 'Old', 'Classic', 'Timeless', 'Forgotten'],
-        nouns: ['Memory', 'Past', 'History', 'Album', 'Photo', 'Record', 'Yesterday'],
-        verbs: ['Remembering', 'Recalling', 'Reminiscing', 'Longing'],
-        musicalTerms: ['Vinyl', 'Classic', 'Vintage', 'Oldies', 'Retro']
+        adjectives: ['Nostalgic', 'Vintage', 'Retro', 'Old', 'Classic', 'Timeless', 'Forgotten', 'Ancient', 'Traditional', 'Original', 'Roots', 'Foundation', 'Heritage', 'Legacy', 'Historic', 'Legendary', 'Ancestral', 'Tribal', 'Cultural', 'Sacred'],
+        nouns: ['Memory', 'Past', 'History', 'Album', 'Photo', 'Record', 'Yesterday', 'Roots', 'Heritage', 'Legacy', 'Tradition', 'Culture', 'Foundation', 'Origin', 'Source', 'Beginning', 'Dawn', 'Era', 'Generation', 'Ancestor', 'Elder', 'Wisdom', 'Story', 'Tale', 'Legend', 'Myth'],
+        verbs: ['Remembering', 'Recalling', 'Reminiscing', 'Longing', 'Reflecting', 'Honoring', 'Preserving', 'Cherishing', 'Treasuring', 'Keeping', 'Holding', 'Carrying', 'Passing', 'Sharing', 'Teaching', 'Learning'],
+        musicalTerms: ['Vinyl', 'Classic', 'Vintage', 'Oldies', 'Retro', 'Original', 'Foundation', 'Studio One', 'Trojan', 'Blue Note', 'Roots', 'Revival', 'Traditional', 'Heritage', 'Authentic', 'Pure']
       },
       futuristic: {
         adjectives: ['Futuristic', 'Cyber', 'Digital', 'Electronic', 'Synthetic', 'Virtual', 'Neon'],
@@ -711,17 +718,24 @@ export class NameGeneratorService {
   }
 
   private generateLongForm(type: string, wordCount: number, mood?: string, genre?: string): string {
-    // Apply both mood AND genre filtering sequentially
-    let filteredSources = this.wordSources;
+    // Smart filtering: when both mood and genre are specified, genre takes priority
+    let filteredSources: WordSource;
     
-    // First apply mood filtering if specified
-    if (mood && mood !== 'none') {
-      filteredSources = this.getStaticMoodFilteredWords(mood);
-    }
-    
-    // Then apply genre filtering on top of mood-filtered sources
+    // Use clean base vocabulary for genre/mood filtering, expanded vocabulary otherwise
     if (genre && genre !== 'none') {
-      filteredSources = this.getGenreFilteredWords(genre, filteredSources);
+      // Apply genre filtering with clean base vocabulary for authenticity
+      filteredSources = this.getGenreFilteredWords(genre, this.getBaseWordSources());
+      
+      // If mood is also specified, blend in mood-specific terms
+      if (mood && mood !== 'none') {
+        filteredSources = this.blendMoodWithGenre(mood, genre, filteredSources);
+      }
+    } else if (mood && mood !== 'none') {
+      // Only mood specified, use mood filtering with base vocabulary
+      filteredSources = this.getStaticMoodFilteredWords(mood);
+    } else {
+      // No filtering specified, use expanded vocabulary for variety
+      filteredSources = this.wordSources;
     }
     
     // Ensure we have valid word sources after filtering
@@ -886,10 +900,10 @@ export class NameGeneratorService {
         musicalTerms: ['12-Bar', 'Pentatonic', 'Blue Note', 'Bend', 'Slide', 'Vibrato', 'Shuffle', 'Swing', 'Call and Response', 'Delta', 'Chicago', 'Electric', 'Acoustic', 'Harmonica', 'Slide Guitar', 'Bottleneck', 'Resonator', 'Dobro', 'Lap Steel', 'Washboard']
       },
       'reggae': {
-        adjectives: ['Rasta', 'Irie', 'Positive', 'Uplifting', 'Spiritual', 'Conscious', 'Righteous', 'Peaceful', 'Unity', 'One Love', 'Jah', 'Blessed', 'Sacred', 'Holy', 'Divine', 'Natural', 'Organic', 'Green', 'Gold', 'Red'],
-        nouns: ['Babylon', 'Zion', 'Jah', 'Rasta', 'Lion', 'Dread', 'Locks', 'Ganja', 'Herb', 'Nature', 'Earth', 'Creation', 'Universe', 'Love', 'Peace', 'Unity', 'Freedom', 'Liberation', 'Revolution', 'Uprising'],
-        verbs: ['Rise', 'Rise Up', 'Stand Up', 'Get Up', 'Wake Up', 'Arise', 'Rebel', 'Resist', 'Fight', 'Struggle', 'Overcome', 'Conquer', 'Unite', 'Love', 'Praise', 'Worship', 'Celebrate', 'Dance', 'Skank', 'Bubble'],
-        musicalTerms: ['Skank', 'One Drop', 'Steppers', 'Rockers', 'Bubble', 'Dub', 'Riddim', 'Bassline', 'Off-Beat', 'Nyabinghi', 'Rastafari', 'Sound System', 'Toasting', 'DJ', 'Selector', 'Dubplate', 'Version', 'Instrumental', 'Melodica', 'Clave']
+        adjectives: ['Rasta', 'Irie', 'Positive', 'Uplifting', 'Spiritual', 'Conscious', 'Righteous', 'Peaceful', 'Unity', 'One Love', 'Jah', 'Blessed', 'Sacred', 'Holy', 'Divine', 'Natural', 'Organic', 'Green', 'Gold', 'Red', 'Roots', 'Cultural', 'Mystical', 'Eternal', 'Wise', 'Ancient', 'Tribal', 'Earth', 'Cosmic', 'Universal', 'Meditation', 'Higher', 'Pure', 'Clean', 'Fresh', 'Vibrant', 'Humble', 'Gentle', 'Healing', 'Soothing'],
+        nouns: ['Babylon', 'Zion', 'Jah', 'Rasta', 'Lion', 'Dread', 'Locks', 'Ganja', 'Herb', 'Nature', 'Earth', 'Creation', 'Universe', 'Love', 'Peace', 'Unity', 'Freedom', 'Liberation', 'Revolution', 'Uprising', 'Roots', 'Culture', 'Meditation', 'Vision', 'Wisdom', 'Prophecy', 'Chant', 'Prayer', 'Blessing', 'Fire', 'Water', 'Wind', 'Mountain', 'Valley', 'River', 'Ocean', 'Island', 'Sunshine', 'Rainbow', 'Healing', 'Medicine', 'Therapy', 'Journey', 'Path', 'Way', 'Light', 'Vibration', 'Energy', 'Soul', 'Spirit'],
+        verbs: ['Rise', 'Rise Up', 'Stand Up', 'Get Up', 'Wake Up', 'Arise', 'Rebel', 'Resist', 'Fight', 'Struggle', 'Overcome', 'Conquer', 'Unite', 'Love', 'Praise', 'Worship', 'Celebrate', 'Dance', 'Skank', 'Bubble', 'Meditate', 'Heal', 'Bless', 'Chant', 'Pray', 'Journey', 'Travel', 'Wander', 'Flow', 'Breathe', 'Feel', 'Vibrate', 'Shine', 'Glow', 'Spread', 'Share', 'Give', 'Receive', 'Embrace', 'Connect', 'Unify', 'Harmonize', 'Balance', 'Center', 'Ground', 'Elevate', 'Transcend', 'Transform', 'Inspire'],
+        musicalTerms: ['Skank', 'One Drop', 'Steppers', 'Rockers', 'Bubble', 'Dub', 'Riddim', 'Bassline', 'Off-Beat', 'Nyabinghi', 'Rastafari', 'Sound System', 'Toasting', 'DJ', 'Selector', 'Dubplate', 'Version', 'Instrumental', 'Melodica', 'Clave', 'Roots Rock', 'Lovers Rock', 'Dancehall', 'Conscious', 'Cultural', 'Digital', 'Rub-a-Dub', 'Early Digital', 'Studio One', 'Trojan', 'Blue Note', 'Upstroke', 'Chop', 'Bubble Rhythm', 'Militant', 'Foundation', 'Vintage', 'Revival', 'Contemporary']
       },
       'punk': {
         adjectives: ['Punk', 'Rebel', 'Anti', 'Raw', 'Fast', 'Loud', 'Angry', 'Pissed', 'Mad', 'Furious', 'Radical', 'Revolutionary', 'Anarchist', 'Underground', 'DIY', 'Independent', 'Hardcore', 'Straight Edge', 'Political', 'Social'],
@@ -923,14 +937,18 @@ export class NameGeneratorService {
     }
 
     // Create a focused genre-specific vocabulary with prioritized genre words
-    // Mix genre words (60%) with input source words (40%) for contextual variety
-    const mixRatio = 0.4; // 40% source words, 60% genre words
+    // Use aggressive genre filtering for authentic results: 85% genre, 15% source
+    const mixRatio = 0.15; // 15% source words, 85% genre words
     
     const selectMixedWords = (genreWordList: string[], sourceWordList: string[]): string[] => {
       const sourceCount = Math.floor(sourceWordList.length * mixRatio);
       const shuffledSource = [...sourceWordList].sort(() => Math.random() - 0.5).slice(0, sourceCount);
+      
+      // Triple the genre words to ensure heavy dominance
+      const expandedGenreWords = [...genreWordList, ...genreWordList, ...genreWordList];
+      
       // Put genre words first for higher selection probability
-      return [...genreWordList, ...shuffledSource];
+      return [...expandedGenreWords, ...shuffledSource];
     };
 
     return {
@@ -938,6 +956,28 @@ export class NameGeneratorService {
       nouns: selectMixedWords(genreWords.nouns, sources.nouns),
       verbs: selectMixedWords(genreWords.verbs, sources.verbs),
       musicalTerms: selectMixedWords(genreWords.musicalTerms, sources.musicalTerms)
+    };
+  }
+
+  // New method to intelligently blend mood with genre
+  private blendMoodWithGenre(mood: string, genre: string, genreSources: WordSource): WordSource {
+    const moodWords = this.getStaticMoodFilteredWords(mood);
+    
+    // Blend strategy: 80% genre words, 20% mood words for contextual flavor
+    const blendRatio = 0.2; // 20% mood words
+    
+    const blendWords = (genreWordList: string[], moodWordList: string[]): string[] => {
+      const moodCount = Math.floor(moodWordList.length * blendRatio);
+      const shuffledMood = [...moodWordList].sort(() => Math.random() - 0.5).slice(0, moodCount);
+      // Keep genre dominance but add mood flavor
+      return [...genreWordList, ...shuffledMood];
+    };
+
+    return {
+      adjectives: blendWords(genreSources.adjectives, moodWords.adjectives),
+      nouns: blendWords(genreSources.nouns, moodWords.nouns),
+      verbs: blendWords(genreSources.verbs, moodWords.verbs),
+      musicalTerms: blendWords(genreSources.musicalTerms, moodWords.musicalTerms)
     };
   }
 
@@ -1387,12 +1427,44 @@ export class NameGeneratorService {
   }
 
   private ensureValidWordSource(sources: WordSource): WordSource {
-    // Fallback to static words if any category is empty
+    // Fallback to base vocabulary (without expanded categories) if any category is empty
+    const baseVocab = this.getBaseWordSources();
     return {
-      adjectives: sources.adjectives && sources.adjectives.length > 0 ? sources.adjectives : this.wordSources.adjectives,
-      nouns: sources.nouns && sources.nouns.length > 0 ? sources.nouns : this.wordSources.nouns,
-      verbs: sources.verbs && sources.verbs.length > 0 ? sources.verbs : this.wordSources.verbs,
-      musicalTerms: sources.musicalTerms && sources.musicalTerms.length > 0 ? sources.musicalTerms : this.wordSources.musicalTerms
+      adjectives: sources.adjectives && sources.adjectives.length > 0 ? sources.adjectives : baseVocab.adjectives,
+      nouns: sources.nouns && sources.nouns.length > 0 ? sources.nouns : baseVocab.nouns,
+      verbs: sources.verbs && sources.verbs.length > 0 ? sources.verbs : baseVocab.verbs,
+      musicalTerms: sources.musicalTerms && sources.musicalTerms.length > 0 ? sources.musicalTerms : baseVocab.musicalTerms
+    };
+  }
+
+  // Get base vocabulary without expanded categories (for clean genre/mood filtering)
+  private getBaseWordSources(): WordSource {
+    return {
+      adjectives: [
+        'Beautiful', 'Dark', 'Silent', 'Eternal', 'Mystic', 'Wild', 'Ancient', 'Broken', 'Sacred', 'Lost',
+        'Hidden', 'Forgotten', 'Burning', 'Frozen', 'Golden', 'Silver', 'Crystal', 'Black', 'White', 'Red',
+        'Blue', 'Green', 'Purple', 'Orange', 'Yellow', 'Pink', 'Gray', 'Brown', 'Bright', 'Deep',
+        'High', 'Low', 'Fast', 'Slow', 'Loud', 'Quiet', 'Strong', 'Weak', 'Big', 'Small',
+        'Long', 'Short', 'Thick', 'Thin', 'Heavy', 'Light', 'Hard', 'Soft', 'Rough', 'Smooth'
+      ],
+      nouns: [
+        'Fire', 'Water', 'Earth', 'Air', 'Sun', 'Moon', 'Star', 'Sky', 'Ocean', 'Mountain',
+        'Forest', 'Desert', 'River', 'Lake', 'Storm', 'Wind', 'Rain', 'Snow', 'Thunder', 'Lightning',
+        'Dream', 'Vision', 'Spirit', 'Soul', 'Heart', 'Mind', 'Love', 'Hope', 'Fear', 'Pain',
+        'Joy', 'Peace', 'War', 'Battle', 'Victory', 'Defeat', 'Hero', 'Warrior', 'King', 'Queen',
+        'Angel', 'Demon', 'Dragon', 'Wolf', 'Eagle', 'Lion', 'Tiger', 'Bear', 'Snake', 'Phoenix'
+      ],
+      verbs: [
+        'Rise', 'Fall', 'Fly', 'Run', 'Walk', 'Dance', 'Sing', 'Cry', 'Laugh', 'Love',
+        'Hate', 'Fear', 'Hope', 'Dream', 'Sleep', 'Wake', 'Live', 'Die', 'Born', 'Fight',
+        'Win', 'Lose', 'Create', 'Destroy', 'Build', 'Break', 'Heal', 'Hurt', 'Save', 'Kill',
+        'Help', 'Change', 'Grow', 'Shine', 'Burn', 'Freeze', 'Melt', 'Flow', 'Stop', 'Start'
+      ],
+      musicalTerms: [
+        'Song', 'Music', 'Sound', 'Voice', 'Harmony', 'Melody', 'Rhythm', 'Beat', 'Note', 'Chord',
+        'Symphony', 'Opera', 'Jazz', 'Blues', 'Rock', 'Pop', 'Folk', 'Classical', 'Electronic', 'Acoustic',
+        'Guitar', 'Piano', 'Drums', 'Bass', 'Violin', 'Trumpet', 'Saxophone', 'Flute', 'Organ', 'Harp'
+      ]
     };
   }
 
