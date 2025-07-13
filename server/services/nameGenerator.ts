@@ -340,7 +340,8 @@ export class NameGeneratorService {
         const aiName = await this.aiNameGenerator.generateAIName(
           type as 'band' | 'song', 
           genre, 
-          mood
+          mood,
+          wordCount
         );
         
         if (aiName && !names.includes(aiName)) {
