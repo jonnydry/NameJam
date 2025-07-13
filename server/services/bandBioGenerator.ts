@@ -1,16 +1,29 @@
 import OpenAI from "openai";
 
 export class BandBioGeneratorService {
-  private openai: OpenAI;
+  private openai: OpenAI | null = null;
 
   constructor() {
-    this.openai = new OpenAI({
-      baseURL: "https://api.x.ai/v1",
-      apiKey: process.env.XAI_API_KEY
-    });
+    // Initialize OpenAI only if API key is available
+    if (process.env.XAI_API_KEY) {
+      try {
+        this.openai = new OpenAI({
+          baseURL: "https://api.x.ai/v1",
+          apiKey: process.env.XAI_API_KEY
+        });
+      } catch (error) {
+        console.log("Failed to initialize OpenAI client:", error);
+        this.openai = null;
+      }
+    }
   }
 
   async generateBandBio(bandName: string, genre?: string, mood?: string): Promise<string> {
+    // If OpenAI client is not available, use fallback
+    if (!this.openai) {
+      return this.generateFallbackBio(bandName, genre, mood);
+    }
+
     // Try different models in order of preference
     const models = ["grok-2-1212", "grok-2-vision-1212", "grok-3-mini"];
     
