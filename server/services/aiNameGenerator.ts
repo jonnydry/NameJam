@@ -31,6 +31,7 @@ export class AINameGeneratorService {
     
     for (const model of models) {
       try {
+        console.log(`Attempting model: ${model}`);
         // Add randomization to force variety
         const randomSeed = Math.random().toString(36).substring(7);
         const timestamp = Date.now() % 10000;
@@ -87,14 +88,21 @@ export class AINameGeneratorService {
             }
           ],
           max_tokens: 30,
-          temperature: 1.0,  // Maximum randomness
-          top_p: 0.9         // Add nucleus sampling for more variety
+          temperature: 1.0
         };
 
-        // Only add penalty parameters for models that support them (Grok-3, not Grok-4)
-        if (model.includes('grok-3')) {
-          requestParams.frequency_penalty = 0.8;  // Penalize repetitive tokens
-          requestParams.presence_penalty = 0.6;   // Encourage new topics
+        // Model-specific parameter configuration
+        if (model === 'grok-4') {
+          // Grok 4 - minimal parameters for maximum compatibility
+          requestParams.top_p = 0.95;
+        } else if (model.includes('grok-3')) {
+          // Grok 3 variants - full parameter support
+          requestParams.top_p = 0.9;
+          requestParams.frequency_penalty = 0.8;
+          requestParams.presence_penalty = 0.6;
+        } else {
+          // Other models - basic parameters
+          requestParams.top_p = 0.9;
         }
 
         const response = await this.openai.chat.completions.create(requestParams);
@@ -134,6 +142,7 @@ export class AINameGeneratorService {
       } catch (error: any) {
         console.log(`Model ${model} failed with error:`, error.message);
         console.log(`Error details:`, error.response?.data || error.code || 'No additional details');
+        console.log(`Request params used:`, JSON.stringify(requestParams, null, 2));
       }
     }
 
