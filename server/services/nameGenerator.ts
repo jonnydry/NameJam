@@ -466,7 +466,7 @@ export class NameGeneratorService {
       try {
         filteredSources = this.getStaticMoodFilteredWords(mood);
       } catch (error) {
-        console.error('Failed to get mood-filtered words, using base vocabulary:', error);
+        // Silent fallback to base vocabulary
         filteredSources = this.wordSources;
       }
     }
@@ -668,7 +668,7 @@ export class NameGeneratorService {
         musicalTerms: this.removeDuplicates([...webWords.musicalTerms, ...staticFiltered.musicalTerms])
       };
     } catch (error) {
-      console.error('Error fetching web words for mood, using static fallback:', error);
+      // Silent fallback to static mood words
       return this.getStaticMoodFilteredWords(mood);
     }
   }
@@ -2805,7 +2805,6 @@ export class NameGeneratorService {
     const uniqueStrategies = [0, 1, 2, 3]; // Exclude strategy 4 (basic single words)
     const strategyIndex = uniqueStrategies[Math.floor(Math.random() * uniqueStrategies.length)];
     const result = strategies[strategyIndex]();
-    console.log(`Single word generation: strategy ${strategyIndex}, result: ${result}`);
     return result;
   }
 
@@ -2962,7 +2961,7 @@ export class NameGeneratorService {
         Object.entries(this.expandedCategories).map(([key, value]) => [key, value.length])
       ));
     } catch (error) {
-      console.error('Error fetching expanded categories:', error);
+      // Silent fallback - expanded categories are optional enhancements
     }
   }
 
