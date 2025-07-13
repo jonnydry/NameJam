@@ -119,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error("Invalid request body");
       }
 
-      const { songCount, wordCount = 3, mood, genre } = validation.data;
+      const { songCount, mood, genre } = validation.data;
       const totalSongs = parseInt(songCount);
       
       // Calculate set distribution
@@ -127,16 +127,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const setTwoSize = totalSongs === 8 ? 4 : 8;
       const allSongsNeeded = totalSongs + 1; // +1 for finale
       
-      // Generate songs using full generation system with proper parameters
+      // Generate songs using full generation system with varied word counts
       const songs = [];
       
+      // Use varied word counts for more interesting setlists
+      const wordCountOptions = [1, 2, 3, 4, 5, 6];
+      const weights = [0.1, 0.2, 0.3, 0.25, 0.1, 0.05]; // Favor 2-4 words
+      
       for (let i = 0; i < allSongsNeeded; i++) {
+        // Select word count based on weighted distribution
+        const rand = Math.random();
+        let cumulative = 0;
+        let selectedWordCount = 3; // default fallback
+        
+        for (let j = 0; j < weights.length; j++) {
+          cumulative += weights[j];
+          if (rand <= cumulative) {
+            selectedWordCount = wordCountOptions[j];
+            break;
+          }
+        }
         
         try {
           const songRequest = {
             type: 'song' as const,
             count: 1,
-            wordCount: wordCount || 3,
+            wordCount: selectedWordCount,
             mood: mood as any,
             genre: genre as any
           };
