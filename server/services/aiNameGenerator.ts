@@ -21,54 +21,34 @@ export class AINameGeneratorService {
   async generateAIName(type: 'band' | 'song', genre?: string, mood?: string, wordCount?: number): Promise<string> {
     // If OpenAI client is not available, use fallback
     if (!this.openai) {
-      return this.generateFallbackName(type, genre, mood);
+      return this.generateFallbackName(type, genre, mood, wordCount);
     }
 
     // Try different models in order of preference
     const models = ["grok-2-1212", "grok-2-vision-1212", "grok-3-mini"];
     
     for (const model of models) {
-      let attempts = 0;
-      const maxAttempts = 3; // Try up to 3 times per model to get a non-repetitive result
-      
-      while (attempts < maxAttempts) {
-        try {
-          attempts++;
-          const genreInfo = genre ? ` ${genre}` : '';
-          const moodInfo = mood ? ` ${mood}` : '';
-          const typeText = type === 'band' ? 'band' : 'song title';
-          const wordCountInfo = wordCount ? ` with ${wordCount} word${wordCount > 1 ? 's' : ''}` : '';
-          
-          // Create varied prompts based on type
-          let prompt;
-          if (model === 'grok-3-mini') {
-          // Ultra-simple prompts - maximum creativity
-          const simplePrompts = type === 'band' ? [
-            `Imagine a random name for a${genreInfo} band${moodInfo}${wordCountInfo}.`,
-            `Random band name${genreInfo}${moodInfo}${wordCountInfo}.`,
-            `Band name${genreInfo}${moodInfo}${wordCountInfo}.`
-          ] : [
-            `Imagine a random name for a${genreInfo} song${moodInfo}${wordCountInfo}.`,
-            `Random song title${genreInfo}${moodInfo}${wordCountInfo}.`,
-            `Song title${genreInfo}${moodInfo}${wordCountInfo}.`
-          ];
-          prompt = simplePrompts[Math.floor(Math.random() * simplePrompts.length)];
-        } else {
-          // Ultra-simple prompts for maximum creativity
-          const randomSeed = Math.random();
-          const complexPrompts = type === 'band' ? [
-            `Imagine a random name for a${genreInfo} band${moodInfo}${wordCountInfo}.`,
-            `Random band name${genreInfo}${moodInfo}${wordCountInfo}. Seed ${randomSeed}.`,
-            `Band name${genreInfo}${moodInfo}${wordCountInfo}.`,
-            `Create a${genreInfo} band name${moodInfo}${wordCountInfo}.`
-          ] : [
-            `Imagine a random name for a${genreInfo} song${moodInfo}${wordCountInfo}.`,
-            `Random song title${genreInfo}${moodInfo}${wordCountInfo}. Seed ${randomSeed}.`,
-            `Song title${genreInfo}${moodInfo}${wordCountInfo}.`,
-            `Create a${genreInfo} song title${moodInfo}${wordCountInfo}.`
-          ];
-          prompt = complexPrompts[Math.floor(Math.random() * complexPrompts.length)];
+      try {
+        // Build a very simple prompt
+        let prompt = `Create a ${type === 'band' ? 'band' : 'song'} name`;
+        
+        // Add context if provided
+        if (genre || mood) {
+          const context = [];
+          if (genre) context.push(genre);
+          if (mood) context.push(mood);
+          prompt += ` with a ${context.join(' ')} vibe`;
         }
+        
+        // Add word count if specified
+        if (wordCount) {
+          prompt += `. Use exactly ${wordCount} word${wordCount > 1 ? 's' : ''}.`;
+        } else {
+          prompt += '.';
+        }
+        
+        // Simple instruction
+        prompt += ' Reply with only the name, nothing else.';
 
         const response = await this.openai.chat.completions.create({
           model: model,
@@ -78,163 +58,99 @@ export class AINameGeneratorService {
               content: prompt
             }
           ],
-          max_tokens: model === 'grok-3-mini' ? 100 : 50,
-          temperature: 0.9
+          max_tokens: 30,
+          temperature: 1.0  // Maximum randomness
         });
 
         const generatedName = response.choices[0]?.message?.content?.trim() || "";
         
-        if (generatedName && generatedName !== "") {
-          // Clean up the response - remove quotes, "Band name:", markdown, etc.
+        if (generatedName) {
+          // Very basic cleaning - just remove quotes and common prefixes
           let cleanName = generatedName
-            .replace(/^(Band name|Song title|Name|Title):\s*/i, '')
-            .replace(/^["']|["']$/g, '')
-            .replace(/^\d+\.\s*/, '')
-            .replace(/\*\*/g, '')  // Remove markdown bold
-            .replace(/\*/g, '')    // Remove markdown italics
-            .replace(/_{2,}/g, '') // Remove markdown underlines
+            .replace(/^["'""']|["'""']$/g, '') // Remove quotes
+            .replace(/^(Here's |Here is |How about |Try |I suggest |The name is |Band name: |Song title: |Title: |Name: )/i, '')
+            .replace(/[.!?:,]$/g, '') // Remove ending punctuation
             .trim();
           
-          // Check for repetitive patterns and reject them
-          if (cleanName && !this.isRepetitivePattern(cleanName)) {
+          // Check word count
+          if (wordCount && cleanName.split(/\s+/).length === wordCount) {
             return cleanName;
-          } else if (cleanName) {
-            console.log(`Model ${model} generated repetitive pattern: "${cleanName}", retrying... (attempt ${attempts}/${maxAttempts})`);
+          } else if (!wordCount && cleanName.length > 0 && cleanName.length < 100) {
+            return cleanName;
           }
         }
         
-        if (attempts >= maxAttempts) {
-          console.log(`Model ${model} reached max attempts, trying next model...`);
-          break;
-        }
-        
-        } catch (error: any) {
-          console.log(`Model ${model} failed on attempt ${attempts}:`, error.message);
-          break; // Exit retry loop and try next model
-        }
+      } catch (error: any) {
+        console.log(`Model ${model} failed:`, error.message);
       }
-      
-      // If we reach here, this model failed or reached max attempts
-      console.log(`Model ${model} failed after ${attempts} attempts, trying next model...`);
     }
 
     // If all models fail, return fallback
-    return this.generateFallbackName(type, genre, mood);
+    return this.generateFallbackName(type, genre, mood, wordCount);
   }
 
-  private isRepetitivePattern(name: string): boolean {
-    const lowerName = name.toLowerCase();
+  private generateFallbackName(type: 'band' | 'song', genre?: string, mood?: string, wordCount?: number): string {
+    // Simple fallback generation
+    const words = {
+      adjectives: [
+        'Crystal', 'Velvet', 'Golden', 'Silver', 'Crimson', 'Azure', 'Emerald',
+        'Electric', 'Cosmic', 'Solar', 'Lunar', 'Stellar', 'Quantum', 'Digital',
+        'Wild', 'Free', 'Bold', 'Brave', 'Fierce', 'Gentle', 'Silent', 'Loud',
+        'Ancient', 'Modern', 'Timeless', 'Eternal', 'Infinite', 'Final', 'First',
+        'Neon', 'Chrome', 'Violet', 'Scarlet', 'Cobalt', 'Amber', 'Jade'
+      ],
+      nouns: [
+        'Phoenix', 'Dragon', 'Tiger', 'Eagle', 'Wolf', 'Lion', 'Hawk',
+        'Ocean', 'Mountain', 'River', 'Desert', 'Forest', 'Storm', 'Lightning',
+        'Dream', 'Vision', 'Memory', 'Hope', 'Faith', 'Glory', 'Honor',
+        'Fire', 'Ice', 'Wind', 'Earth', 'Star', 'Moon', 'Sun',
+        'Machine', 'Engine', 'Circuit', 'Wave', 'Signal', 'Code', 'Matrix',
+        'Heart', 'Soul', 'Mind', 'Spirit', 'Force', 'Power', 'Light'
+      ],
+      verbs: [
+        'Rising', 'Falling', 'Dancing', 'Flying', 'Running', 'Breaking', 'Building',
+        'Burning', 'Freezing', 'Melting', 'Growing', 'Fading', 'Shining', 'Glowing'
+      ]
+    };
     
-    // Common "X of Y" patterns to avoid
-    const ofPatterns = [
-      /^echoes of /,
-      /^shadows of /,
-      /^whispers of /,
-      /^fragments of /,
-      /^dreams of /,
-      /^tales of /,
-      /^sounds of /,
-      /^visions of /,
-      /^memories of /,
-      /^spirits of /,
-      /^ghosts of /,
-      /^voices of /,
-      /^shades of /,
-      /^glimpses of /,
-      /^traces of /,
-      /^remnants of /
-    ];
+    const count = wordCount || (Math.random() < 0.5 ? 2 : 3);
+    const result = [];
     
-    // Overused words to avoid at any position
-    const overusedWords = [
-      'echoes', 'echo',
-      'shadows', 'shadow',
-      'whispers', 'whisper',
-      'darkness', 'dark',
-      'midnight',
-      'sorrow', 'sorrows',
-      'twilight',
-      'ethereal',
-      'enigma',
-      'abyss'
-    ];
-    
-    // Check for "X of Y" patterns
-    if (ofPatterns.some(pattern => pattern.test(lowerName))) {
-      return true;
-    }
-    
-    // Check if name contains overused words
-    const words = lowerName.split(/\s+/);
-    
-    // Check each word in the name
-    for (const word of words) {
-      if (overusedWords.includes(word)) {
-        return true; // Reject if ANY overused word is found
+    // Build name based on word count
+    if (count === 1) {
+      result.push(words.nouns[Math.floor(Math.random() * words.nouns.length)]);
+    } else if (count === 2) {
+      result.push(words.adjectives[Math.floor(Math.random() * words.adjectives.length)]);
+      result.push(words.nouns[Math.floor(Math.random() * words.nouns.length)]);
+    } else if (count === 3) {
+      if (type === 'band' && Math.random() < 0.3) {
+        result.push('The');
+        result.push(words.adjectives[Math.floor(Math.random() * words.adjectives.length)]);
+        result.push(words.nouns[Math.floor(Math.random() * words.nouns.length)]);
+      } else {
+        result.push(words.verbs[Math.floor(Math.random() * words.verbs.length)]);
+        result.push(words.adjectives[Math.floor(Math.random() * words.adjectives.length)]);
+        result.push(words.nouns[Math.floor(Math.random() * words.nouns.length)]);
+      }
+    } else {
+      // For 4+ words, create a phrase
+      const connectors = ['of', 'and', 'in', 'through', 'beyond'];
+      result.push(words.adjectives[Math.floor(Math.random() * words.adjectives.length)]);
+      result.push(words.nouns[Math.floor(Math.random() * words.nouns.length)]);
+      result.push(connectors[Math.floor(Math.random() * connectors.length)]);
+      result.push(words.nouns[Math.floor(Math.random() * words.nouns.length)]);
+      
+      // Add more words if needed
+      while (result.length < count && result.length < 6) {
+        if (result.length === count - 1) {
+          result.push(words.nouns[Math.floor(Math.random() * words.nouns.length)]);
+        } else {
+          result.push(words.adjectives[Math.floor(Math.random() * words.adjectives.length)]);
+        }
       }
     }
     
-    return false;
-  }
-
-  private generateFallbackName(type: 'band' | 'song', genre?: string, mood?: string): string {
-    const moodWords = {
-      'dark': ['Shadow', 'Midnight', 'Void', 'Eclipse', 'Raven'],
-      'bright': ['Sunshine', 'Crystal', 'Aurora', 'Radiant', 'Golden'],
-      'mysterious': ['Enigma', 'Mystic', 'Phantom', 'Oracle', 'Cipher'],
-      'energetic': ['Thunder', 'Lightning', 'Surge', 'Blaze', 'Spark'],
-      'melancholy': ['Rain', 'Echo', 'Mist', 'Sorrow', 'Fade'],
-      'ethereal': ['Dream', 'Celestial', 'Aether', 'Whisper', 'Float'],
-      'aggressive': ['Fury', 'Rage', 'Storm', 'Chaos', 'Riot'],
-      'peaceful': ['Harmony', 'Zen', 'Calm', 'Serene', 'Still'],
-      'nostalgic': ['Memory', 'Yesterday', 'Vintage', 'Past', 'Time'],
-      'futuristic': ['Neon', 'Cyber', 'Quantum', 'Digital', 'Tech'],
-      'romantic': ['Heart', 'Rose', 'Love', 'Velvet', 'Sweet'],
-      'epic': ['Titan', 'Legend', 'Saga', 'Hero', 'Empire']
-    };
-
-    const genreWords = {
-      'rock': ['Stone', 'Fire', 'Electric', 'Wild', 'Free'],
-      'metal': ['Steel', 'Iron', 'Forge', 'Blade', 'Crown'],
-      'jazz': ['Blue', 'Smooth', 'Cool', 'Sweet', 'Note'],
-      'electronic': ['Circuit', 'Wave', 'Digital', 'Pulse', 'Grid'],
-      'folk': ['River', 'Mountain', 'Wind', 'Earth', 'Tree'],
-      'classical': ['Symphony', 'Grace', 'Noble', 'Grand', 'Pure'],
-      'hip-hop': ['Street', 'Flow', 'Beat', 'Real', 'Fresh'],
-      'country': ['Road', 'Home', 'Field', 'Star', 'Heart'],
-      'blues': ['Soul', 'Deep', 'True', 'Raw', 'Feel'],
-      'reggae': ['Island', 'Sun', 'Rhythm', 'Peace', 'One'],
-      'punk': ['Raw', 'Rebel', 'Fast', 'Loud', 'Real'],
-      'indie': ['New', 'Strange', 'Art', 'Dream', 'Wild'],
-      'pop': ['Bright', 'Star', 'Magic', 'Dance', 'Life'],
-      'alternative': ['Different', 'Edge', 'Strange', 'New', 'Other']
-    };
-
-    const connectors = ['of', 'and', 'in', 'for', 'with', 'through', 'beyond'];
-    const articles = type === 'band' ? ['The', ''] : [''];
-
-    const moodList = mood && moodWords[mood] ? moodWords[mood] : ['Dream', 'Echo', 'Fire', 'Star', 'Light'];
-    const genreList = genre && genreWords[genre] ? genreWords[genre] : ['Music', 'Sound', 'Beat', 'Song', 'Note'];
-
-    const word1 = moodList[Math.floor(Math.random() * moodList.length)];
-    const word2 = genreList[Math.floor(Math.random() * genreList.length)];
-    const connector = connectors[Math.floor(Math.random() * connectors.length)];
-    const article = articles[Math.floor(Math.random() * articles.length)];
-
-    const patterns = [
-      `${article}${article ? ' ' : ''}${word1} ${word2}`,
-      `${word1} ${connector} ${word2}`,
-      `${article}${article ? ' ' : ''}${word2} ${word1}`,
-      `${word1}${word2}` // Compound word
-    ];
-
-    const fallbackName = patterns[Math.floor(Math.random() * patterns.length)].trim();
-
-    return JSON.stringify({
-      name: fallbackName,
-      model: 'fallback',
-      source: 'fallback',
-      type: type
-    });
+    // Ensure we have exactly the right word count
+    return result.slice(0, count).join(' ');
   }
 }
