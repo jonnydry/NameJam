@@ -101,9 +101,16 @@ export default function About() {
                   </div>
                 </div>
                 
-                <div className="p-4 border border-dashed border-muted-foreground/30 rounded-lg">
+                <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
                   <h3 className="font-medium mb-2">Credits & Acknowledgments</h3>
-                  <p className="text-sm text-muted-foreground">Add credits and acknowledgments here...</p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Replit</li>
+                    <li>• xAI</li>
+                    <li>• Anthropic</li>
+                    <li>• Spotify</li>
+                    <li>• Last.fm</li>
+                    <li>• and my incredibly intelligent cat, Marci ♥</li>
+                  </ul>
                 </div>
               </div>
             </CardContent>
