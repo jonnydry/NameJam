@@ -691,13 +691,22 @@ export class NameGeneratorService {
       return this.wordSources;
     }
 
-    // Use a much more inclusive approach - add mood-specific words but keep most of the base vocabulary
-    // This prevents filtering from being too restrictive and maintains name quality
+    // Create a focused mood-specific vocabulary with a smaller mix of base words
+    // Prioritize mood words (70%) with some base vocabulary (30%) for variety
+    const mixRatio = 0.3; // 30% base words, 70% mood words
+    
+    const selectMixedWords = (moodWords: string[], baseWords: string[]): string[] => {
+      const baseCount = Math.floor(baseWords.length * mixRatio);
+      const shuffledBase = [...baseWords].sort(() => Math.random() - 0.5).slice(0, baseCount);
+      // Put mood words first for higher selection probability
+      return [...moodWords, ...shuffledBase];
+    };
+
     return {
-      adjectives: [...theme.adjectives, ...this.wordSources.adjectives], // Include ALL base adjectives plus mood-specific ones
-      nouns: [...theme.nouns, ...this.wordSources.nouns], // Include ALL base nouns plus mood-specific ones
-      verbs: [...theme.verbs, ...this.wordSources.verbs], // Include ALL base verbs plus mood-specific ones
-      musicalTerms: [...theme.musicalTerms, ...this.wordSources.musicalTerms] // Include ALL base musical terms plus mood-specific ones
+      adjectives: selectMixedWords(theme.adjectives, this.wordSources.adjectives),
+      nouns: selectMixedWords(theme.nouns, this.wordSources.nouns),
+      verbs: selectMixedWords(theme.verbs, this.wordSources.verbs),
+      musicalTerms: selectMixedWords(theme.musicalTerms, this.wordSources.musicalTerms)
     };
   }
 
@@ -892,13 +901,22 @@ export class NameGeneratorService {
       return sources; // Return original if genre not found
     }
 
-    // Use inclusive approach - add genre-specific words but keep ALL of the base vocabulary
-    // This prevents genre filtering from being too restrictive and maintains name quality
+    // Create a focused genre-specific vocabulary with prioritized genre words
+    // Mix genre words (60%) with input source words (40%) for contextual variety
+    const mixRatio = 0.4; // 40% source words, 60% genre words
+    
+    const selectMixedWords = (genreWordList: string[], sourceWordList: string[]): string[] => {
+      const sourceCount = Math.floor(sourceWordList.length * mixRatio);
+      const shuffledSource = [...sourceWordList].sort(() => Math.random() - 0.5).slice(0, sourceCount);
+      // Put genre words first for higher selection probability
+      return [...genreWordList, ...shuffledSource];
+    };
+
     return {
-      adjectives: [...genreWords.adjectives, ...sources.adjectives], // Include ALL base adjectives plus genre-specific ones
-      nouns: [...genreWords.nouns, ...sources.nouns], // Include ALL base nouns plus genre-specific ones
-      verbs: [...genreWords.verbs, ...sources.verbs], // Include ALL base verbs plus genre-specific ones
-      musicalTerms: [...genreWords.musicalTerms, ...sources.musicalTerms] // Include ALL base musical terms plus genre-specific ones
+      adjectives: selectMixedWords(genreWords.adjectives, sources.adjectives),
+      nouns: selectMixedWords(genreWords.nouns, sources.nouns),
+      verbs: selectMixedWords(genreWords.verbs, sources.verbs),
+      musicalTerms: selectMixedWords(genreWords.musicalTerms, sources.musicalTerms)
     };
   }
 
