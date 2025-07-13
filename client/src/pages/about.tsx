@@ -43,9 +43,13 @@ export default function About() {
               
               {/* Placeholder sections */}
               <div className="grid gap-6 mt-8">
-                <div className="p-4 border border-dashed border-muted-foreground/30 rounded-lg">
+                <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
                   <h3 className="font-medium mb-2">Project Overview</h3>
-                  <p className="text-sm text-muted-foreground">Add your project description here...</p>
+                  <div className="text-sm text-muted-foreground">
+                    <p><strong>NAME_JAM</strong> : Name your next musical project.</p>
+                    <br />
+                    <p>Jam with words to kickstart your imagination.</p>
+                  </div>
                 </div>
                 
                 <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
