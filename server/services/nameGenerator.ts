@@ -323,9 +323,9 @@ export class NameGeneratorService {
     };
   }
 
-  async generateNames(request: GenerateNameRequest): Promise<string[]> {
+  async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean}>> {
     const { type, wordCount, count, mood, genre } = request;
-    const names: string[] = [];
+    const names: Array<{name: string, isAiGenerated: boolean}> = [];
 
     // Calculate split: 2/3 xAI, 1/3 traditional
     const aiCount = Math.ceil(count * 2 / 3);
@@ -344,16 +344,16 @@ export class NameGeneratorService {
           wordCount
         );
         
-        if (aiName && !names.includes(aiName)) {
-          names.push(aiName);
+        if (aiName && !names.find(n => n.name === aiName)) {
+          names.push({ name: aiName, isAiGenerated: true });
           aiNamesGenerated++;
         }
       } catch (error) {
         console.log('AI generation failed, using traditional fallback');
         // If AI fails, fall back to traditional generation
         const traditionalName = await this.generateSingleName(type, wordCount, mood, genre);
-        if (!names.includes(traditionalName)) {
-          names.push(traditionalName);
+        if (!names.find(n => n.name === traditionalName)) {
+          names.push({ name: traditionalName, isAiGenerated: false });
           aiNamesGenerated++;
         }
       }
@@ -362,8 +362,8 @@ export class NameGeneratorService {
     // Fill remaining slots with traditional approach (1/3 of total)
     while (names.length < count) {
       const name = await this.generateSingleName(type, wordCount, mood, genre);
-      if (!names.includes(name)) {
-        names.push(name);
+      if (!names.find(n => n.name === name)) {
+        names.push({ name, isAiGenerated: false });
       }
     }
 

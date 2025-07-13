@@ -63,16 +63,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verify each name and store results
       const results = await Promise.all(
-        names.map(async (name) => {
-          const verification = await nameVerifier.verifyName(name, request.type);
+        names.map(async (nameResult) => {
+          const verification = await nameVerifier.verifyName(nameResult.name, request.type);
           
           // Store in database
           const storedName = await storage.createGeneratedName({
-            name,
+            name: nameResult.name,
             type: request.type,
             wordCount: request.wordCount,
             verificationStatus: verification.status,
             verificationDetails: verification.details || null,
+            isAiGenerated: nameResult.isAiGenerated,
           });
 
           return {
@@ -80,6 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: storedName.name,
             type: storedName.type,
             wordCount: storedName.wordCount,
+            isAiGenerated: storedName.isAiGenerated,
             verification
           };
         })

@@ -9,6 +9,7 @@ export const generatedNames = pgTable("generated_names", {
   wordCount: integer("word_count").notNull(),
   verificationStatus: text("verification_status").notNull(), // 'available', 'similar', 'taken'
   verificationDetails: text("verification_details"),
+  isAiGenerated: boolean("is_ai_generated").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
