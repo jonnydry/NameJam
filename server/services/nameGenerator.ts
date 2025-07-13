@@ -327,13 +327,13 @@ export class NameGeneratorService {
     const { type, wordCount, count, mood, genre } = request;
     const names: Array<{name: string, isAiGenerated: boolean}> = [];
 
-    // Calculate split: 2/3 xAI, 1/3 traditional
-    const aiCount = Math.ceil(count * 2 / 3);
+    // Calculate split: 1/3 xAI, 2/3 traditional
+    const aiCount = Math.ceil(count * 1 / 3);
     const traditionalCount = count - aiCount;
     
     console.log(`Generating ${count} names: ${aiCount} from xAI, ${traditionalCount} traditional`);
 
-    // Generate AI names first (2/3 of total)
+    // Generate AI names first (1/3 of total)
     let aiNamesGenerated = 0;
     while (aiNamesGenerated < aiCount && names.length < count) {
       try {
