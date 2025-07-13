@@ -17,7 +17,6 @@ interface SetListGeneratorProps {
 
 export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   const [songCount, setSongCount] = useState<'8' | '16'>('8');
-  const [wordCount, setWordCount] = useState<number>(3);
   const [mood, setMood] = useState<string>('');
   const [genre, setGenre] = useState<string>('');
   const [setList, setSetList] = useState<SetListResponse | null>(null);
@@ -37,7 +36,6 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
     try {
       const response = await apiRequest('POST', '/api/generate-setlist', {
         songCount,
-        wordCount,
         mood: mood && mood !== 'none' ? mood : undefined,
         genre: genre && genre !== 'none' ? genre : undefined,
       });
@@ -199,11 +197,11 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
             Set List Generator
           </CardTitle>
           <CardDescription>
-            Generate organized song lists for your performances - split into two sets plus an encore
+            Generate organized song lists for your performances - split into two sets plus an encore with varied song lengths
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Song Count</label>
               <Select value={songCount} onValueChange={(value: '8' | '16') => setSongCount(value)}>
@@ -213,23 +211,6 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
                 <SelectContent>
                   <SelectItem value="8">8 Songs</SelectItem>
                   <SelectItem value="16">16 Songs</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Words per Song</label>
-              <Select value={wordCount.toString()} onValueChange={(value) => setWordCount(parseInt(value))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 Word</SelectItem>
-                  <SelectItem value="2">2 Words</SelectItem>
-                  <SelectItem value="3">3 Words</SelectItem>
-                  <SelectItem value="4">4 Words</SelectItem>
-                  <SelectItem value="5">5 Words</SelectItem>
-                  <SelectItem value="6">6 Words</SelectItem>
                 </SelectContent>
               </Select>
             </div>

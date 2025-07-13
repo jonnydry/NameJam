@@ -50,9 +50,10 @@ NameJam is a modern web application that generates unique band names and song ti
 ### Set List Generator Service
 - **Location**: `/api/generate-setlist` endpoint using existing name generation service
 - **Purpose**: Creates organized song lists for musical performances with professional set structure
-- **Options**: 8-song or 16-song set lists with customizable word count, mood, and genre settings
+- **Options**: 8-song or 16-song set lists with mood and genre settings
 - **Structure**: Automatically splits songs into two sets plus a finale (8-song: 3+4+1, 16-song: 7+8+1)
-- **Integration**: Uses existing name generation algorithms for song creation with full verification system
+- **Word Variation**: Automatically uses varied word counts (1-6 words) with weighted distribution favoring 2-4 word songs
+- **Integration**: Uses identical name generation algorithms as main generator with full quality parameters
 - **Verification**: Each song includes comprehensive Spotify API verification with detailed availability status
 - **Features**: Real-time Spotify database checking, stash integration, and XAI-powered band name generation
 
