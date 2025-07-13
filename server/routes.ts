@@ -18,7 +18,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let aiNameGenerator: AINameGeneratorService;
 
   try {
-    nameGenerator = new NameGeneratorService();
+    aiNameGenerator = new AINameGeneratorService();
+    console.log("✓ AINameGeneratorService initialized");
+  } catch (error) {
+    console.error("✗ Failed to initialize AINameGeneratorService:", error);
+    throw error;
+  }
+
+  try {
+    nameGenerator = new NameGeneratorService(aiNameGenerator);
     console.log("✓ NameGeneratorService initialized");
   } catch (error) {
     console.error("✗ Failed to initialize NameGeneratorService:", error);
@@ -38,14 +46,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("✓ BandBioGeneratorService initialized");
   } catch (error) {
     console.error("✗ Failed to initialize BandBioGeneratorService:", error);
-    throw error;
-  }
-
-  try {
-    aiNameGenerator = new AINameGeneratorService();
-    console.log("✓ AINameGeneratorService initialized");
-  } catch (error) {
-    console.error("✗ Failed to initialize AINameGeneratorService:", error);
     throw error;
   }
 

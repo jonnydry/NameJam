@@ -1,4 +1,5 @@
 import type { GenerateNameRequest } from "@shared/schema";
+import type { AINameGeneratorService } from "./aiNameGenerator";
 
 interface WordSource {
   adjectives: string[];
@@ -8,6 +9,7 @@ interface WordSource {
 }
 
 export class NameGeneratorService {
+  private aiNameGenerator: AINameGeneratorService;
   
   private wordSources: WordSource = {
     adjectives: [],
@@ -122,7 +124,8 @@ export class NameGeneratorService {
     compound: []
   };
 
-  constructor() {
+  constructor(aiNameGenerator: AINameGeneratorService) {
+    this.aiNameGenerator = aiNameGenerator;
     this.initializeWordSources().then(() => {
       // Fetch fresh words from web sources after base initialization
       this.fetchWordsFromWeb();
@@ -324,7 +327,38 @@ export class NameGeneratorService {
     const { type, wordCount, count, mood, genre } = request;
     const names: string[] = [];
 
-    // Generate all names using traditional approach
+    // Calculate split: 2/3 xAI, 1/3 traditional
+    const aiCount = Math.ceil(count * 2 / 3);
+    const traditionalCount = count - aiCount;
+    
+    console.log(`Generating ${count} names: ${aiCount} from xAI, ${traditionalCount} traditional`);
+
+    // Generate AI names first (2/3 of total)
+    let aiNamesGenerated = 0;
+    while (aiNamesGenerated < aiCount && names.length < count) {
+      try {
+        const aiName = await this.aiNameGenerator.generateAIName(
+          type as 'band' | 'song', 
+          genre, 
+          mood
+        );
+        
+        if (aiName && !names.includes(aiName)) {
+          names.push(aiName);
+          aiNamesGenerated++;
+        }
+      } catch (error) {
+        console.log('AI generation failed, using traditional fallback');
+        // If AI fails, fall back to traditional generation
+        const traditionalName = await this.generateSingleName(type, wordCount, mood, genre);
+        if (!names.includes(traditionalName)) {
+          names.push(traditionalName);
+          aiNamesGenerated++;
+        }
+      }
+    }
+
+    // Fill remaining slots with traditional approach (1/3 of total)
     while (names.length < count) {
       const name = await this.generateSingleName(type, wordCount, mood, genre);
       if (!names.includes(name)) {
