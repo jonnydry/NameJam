@@ -203,6 +203,7 @@ Changelog:
 - July 13, 2025. Fixed setlist generator to use traditional generation only: created generateTraditionalNames() method for setlist songs, resolved name verification errors by properly extracting strings from returned objects, maintained AI generation exclusively for "Name this Band" feature while ensuring setlists use only traditional algorithms
 - July 13, 2025. Updated "Name this Band" feature to use Grok 3 models: migrated from older grok-2-1212 to latest grok-4/grok-3/grok-3-mini models with same parameter configuration as main name generator, added conditional frequency/presence penalties for grok-3 support, achieved successful generation with names like "Cyber Pulse Horizon" using grok-3 model
 - July 13, 2025. Enhanced AI model compatibility for both Grok 3 and Grok 4: implemented model-specific parameter configuration (Grok 4 uses minimal parameters with plain text, Grok 3 uses full features with JSON), added comprehensive error logging, established robust fallback system where Grok 4 attempts first but automatically falls back to proven Grok 3 when compatibility issues occur, achieved consistent results with names like "Astro Vortex" and "Velvet Quasar"
+- July 13, 2025. Prioritized Grok 3 for AI requests: reordered model priority to use grok-3 first since it works reliably, with grok-4 and grok-3-mini as fallbacks, ensuring faster response times and consistent results for all AI-powered features
 
 ## User Preferences
 
