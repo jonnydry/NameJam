@@ -38,7 +38,7 @@ export default function About() {
               <div className="text-muted-foreground">
                 <p>I made this app because I thought my musician friends and I would have had fun with it in the practice room and when hanging around discussing ideas.</p>
                 <br />
-                <p>Use Name_Jam to find inspiration, generate a quick list to name your practice session segments, name your next big or small project or just jam around to brainstorm ideas and spark your next project!</p>
+                <p>Use NAME_JAM to find inspiration, generate a quick list to name your practice session segments, name your next big or small project or just jam around to brainstorm ideas and spark your next project!</p>
               </div>
               
               {/* Placeholder sections */}
