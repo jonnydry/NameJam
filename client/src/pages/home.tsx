@@ -3,6 +3,7 @@ import { SetListGenerator } from "@/components/setlist-generator";
 import { FermataLogo } from "@/components/fermata-logo";
 import { Stash } from "@/components/stash";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link } from "wouter";
 import { useState } from "react";
 
 export default function Home() {
@@ -73,7 +74,7 @@ export default function Home() {
           <div className="text-center">
             <p className="text-sm text-muted-foreground">© 2024 NameJam. Powered by web-sourced creativity.</p>
             <div className="flex justify-center space-x-6 mt-4">
-              <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">About</a>
+              <Link href="/about" className="text-xs text-muted-foreground hover:text-primary transition-colors">About</Link>
               <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">Contact</a>
               <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">API Documentation</a>
             </div>
