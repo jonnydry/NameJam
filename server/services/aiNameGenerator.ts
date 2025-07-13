@@ -26,8 +26,8 @@ export class AINameGeneratorService {
       return this.generateFallbackName(type, genre, mood, wordCount);
     }
 
-    // Use latest available Grok models (July 2025)
-    const models = ["grok-4", "grok-3", "grok-3-mini"];
+    // Use latest available Grok models (July 2025) - Grok 3 prioritized for reliability
+    const models = ["grok-3", "grok-4", "grok-3-mini"];
     
     for (const model of models) {
       try {
