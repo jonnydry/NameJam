@@ -338,6 +338,9 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
     if (details?.promptType === 'bandNameFromSetlist') {
       const { setlistContext, songNames } = details;
       
+      // Debug logging to see what songs we're working with
+      console.log('Generating band name from setlist with songs:', songNames);
+      
       // Try each Grok model in order
       const models = ['grok-2-1212', 'grok-2-vision-1212', 'grok-beta'];
       
@@ -345,21 +348,28 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
         try {
           console.log(`Attempting to generate band name with model: ${model}`);
           
-          const prompt = `Based on this setlist of songs, imagine what band would have written and performed these songs. Generate a creative, unique band name that fits the style and themes of these songs.
+          const prompt = `You are a music industry expert tasked with naming a band based on their complete setlist. Analyze the following song titles and create a unique, memorable band name that reflects their artistic identity.
 
-Setlist: ${songNames.join(', ')}
-${mood ? `Mood: ${mood}` : ''}
-${genre ? `Genre: ${genre}` : ''}
+SETLIST SONGS:
+${songNames.map((song, index) => `${index + 1}. "${song}"`).join('\n')}
 
-Think about:
-- The themes and words in the song titles
-- The mood and genre specified
-- What kind of band would write songs with these titles
-- Make it creative and memorable
+BAND CONTEXT:
+${mood ? `Musical Mood: ${mood}` : 'Musical Mood: Not specified'}
+${genre ? `Primary Genre: ${genre}` : 'Primary Genre: Not specified'}
+
+ANALYSIS INSTRUCTIONS:
+- Study the themes, emotions, and imagery in these specific song titles
+- Look for recurring words, concepts, or emotional patterns
+- Consider what type of band would create this exact collection of songs
+- Create a name that feels authentic to this particular setlist
+- Avoid generic names - make it unique and memorable
+- The name should feel like it naturally belongs with these songs
+
+Generate ONE unique band name that captures the essence of this specific setlist.
 
 Respond with ONLY a JSON object in this exact format:
 {
-  "bandName": "The Creative Band Name Here"
+  "bandName": "Your Creative Band Name Here"
 }`;
 
           const response = await this.openai.chat.completions.create({
