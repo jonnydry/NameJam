@@ -10,10 +10,44 @@ import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  const nameGenerator = new NameGeneratorService();
-  const nameVerifier = new NameVerifierService();
-  const bandBioGenerator = new BandBioGeneratorService();
-  const aiNameGenerator = new AINameGeneratorService();
+  console.log("Initializing services...");
+  
+  let nameGenerator: NameGeneratorService;
+  let nameVerifier: NameVerifierService;
+  let bandBioGenerator: BandBioGeneratorService;
+  let aiNameGenerator: AINameGeneratorService;
+
+  try {
+    nameGenerator = new NameGeneratorService();
+    console.log("✓ NameGeneratorService initialized");
+  } catch (error) {
+    console.error("✗ Failed to initialize NameGeneratorService:", error);
+    throw error;
+  }
+
+  try {
+    nameVerifier = new NameVerifierService();
+    console.log("✓ NameVerifierService initialized");
+  } catch (error) {
+    console.error("✗ Failed to initialize NameVerifierService:", error);
+    throw error;
+  }
+
+  try {
+    bandBioGenerator = new BandBioGeneratorService();
+    console.log("✓ BandBioGeneratorService initialized");
+  } catch (error) {
+    console.error("✗ Failed to initialize BandBioGeneratorService:", error);
+    throw error;
+  }
+
+  try {
+    aiNameGenerator = new AINameGeneratorService();
+    console.log("✓ AINameGeneratorService initialized");
+  } catch (error) {
+    console.error("✗ Failed to initialize AINameGeneratorService:", error);
+    throw error;
+  }
 
 
   // Generate names endpoint
