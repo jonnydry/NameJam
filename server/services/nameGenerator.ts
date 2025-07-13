@@ -783,9 +783,20 @@ export class NameGeneratorService {
         
       case 'descriptive_pattern':
         if (wordCount === 4) {
-          words.push(getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', getUniqueWord(sources.nouns));
+          const adj1 = getUniqueWord(sources.adjectives);
+          const noun1 = getUniqueWord(sources.nouns);
+          const noun2 = getUniqueWord(sources.nouns);
+          // Add article before final noun for better grammar
+          const finalPhrase = this.addArticleIfNeeded(noun2);
+          words.push(adj1, noun1, 'of', finalPhrase);
         } else if (wordCount === 5) {
-          words.push(getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', getUniqueWord(sources.nouns));
+          const adj1 = getUniqueWord(sources.adjectives);
+          const adj2 = getUniqueWord(sources.adjectives);
+          const noun1 = getUniqueWord(sources.nouns);
+          const noun2 = getUniqueWord(sources.nouns);
+          // Add article before final noun
+          const finalPhrase = this.addArticleIfNeeded(noun2);
+          words.push(adj1, adj2, noun1, 'of', finalPhrase);
         } else { // 6 words
           words.push(getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), 'night');
         }
@@ -793,9 +804,19 @@ export class NameGeneratorService {
         
       case 'narrative_pattern':
         if (wordCount === 4) {
-          words.push('When', getUniqueWord(sources.nouns), getUniqueWord(sources.verbs), getUniqueWord(sources.adjectives));
+          const noun = getUniqueWord(sources.nouns);
+          const verb = getUniqueWord(sources.verbs);
+          const adjective = getUniqueWord(sources.adjectives);
+          // Fix verb agreement: singular noun gets -s/-es on verb
+          const conjugatedVerb = this.conjugateVerbForSingular(verb);
+          words.push('When', noun, conjugatedVerb, adjective);
         } else if (wordCount === 5) {
-          words.push('When', 'the', getUniqueWord(sources.nouns), getUniqueWord(sources.verbs), getUniqueWord(sources.adjectives));
+          const noun = getUniqueWord(sources.nouns);
+          const verb = getUniqueWord(sources.verbs);
+          const adjective = getUniqueWord(sources.adjectives);
+          // "the [noun]" is singular, so verb needs conjugation
+          const conjugatedVerb = this.conjugateVerbForSingular(verb);
+          words.push('When', 'the', noun, conjugatedVerb, adjective);
         } else { // 6 words
           words.push('After', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'fades', 'away');
         }
@@ -1039,11 +1060,17 @@ export class NameGeneratorService {
     // Ensure we don't exceed the requested word count
     const finalWords = words.slice(0, words.length); // This is buildPattern, already correct length
     
+    // Remove duplicate words within the name first
+    const dedupedWords = this.removeDuplicatesFromName(finalWords);
+    
     // Apply grammatical consistency fixes
-    const grammarCorrectedWords = this.ensureGrammaticalConsistency(finalWords);
+    const grammarCorrectedWords = this.ensureGrammaticalConsistency(dedupedWords);
+    
+    // Apply final validation and cleanup
+    const validatedWords = this.validateAndCleanupWords(grammarCorrectedWords);
     
     // Apply poetic evaluation for better lyrical flow
-    const poeticallyOrderedWords = this.evaluateAndReorderPoetically(grammarCorrectedWords);
+    const poeticallyOrderedWords = this.evaluateAndReorderPoetically(validatedWords);
     
     return this.applySmartCapitalization(poeticallyOrderedWords);
   }
@@ -1181,6 +1208,182 @@ export class NameGeneratorService {
       seen.add(lowercaseItem);
       return true;
     });
+  }
+
+  // Prevent duplicate words within individual names
+  private removeDuplicatesFromName(words: string[]): string[] {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    
+    for (const word of words) {
+      const lowercaseWord = word.toLowerCase();
+      // Skip articles, prepositions, and conjunctions in duplicate checking
+      const skipWords = ['the', 'a', 'an', 'of', 'in', 'on', 'at', 'by', 'for', 'with', 'to', 'from', 'when', 'where', 'why', 'how', 'and', 'or', 'but', 'through', 'into', 'before', 'after', 'during', 'while', 'until'];
+      
+      if (skipWords.includes(lowercaseWord) || !seen.has(lowercaseWord)) {
+        if (!skipWords.includes(lowercaseWord)) {
+          seen.add(lowercaseWord);
+        }
+        result.push(word);
+      } else {
+        // Skip duplicate content words (keep function words)
+        console.log(`Skipping duplicate word: ${word}`);
+        continue;
+      }
+    }
+    
+    return result;
+  }
+
+  // Add proper articles before nouns when needed
+  private addArticleIfNeeded(noun: string): string {
+    const lowerNoun = noun.toLowerCase();
+    
+    // Words that typically don't need articles (abstract concepts, mass nouns, proper nouns)
+    const noArticleWords = [
+      'love', 'hate', 'fear', 'hope', 'peace', 'war', 'life', 'death', 'time', 'space',
+      'music', 'art', 'science', 'nature', 'freedom', 'justice', 'truth', 'beauty',
+      'power', 'energy', 'light', 'darkness', 'fire', 'water', 'earth', 'air',
+      'heaven', 'hell', 'chaos', 'order', 'fate', 'destiny', 'magic', 'mystery',
+      'steel', 'iron', 'gold', 'silver', 'blood', 'thunder', 'lightning', 'wind',
+      'stone', 'rock', 'ice', 'snow', 'rain', 'sun', 'moon', 'night', 'day',
+      'sound', 'silence', 'fury', 'rage', 'madness', 'joy', 'sorrow', 'pain'
+    ];
+    
+    // Abstract concepts, mass nouns, and proper nouns typically don't need articles
+    if (noArticleWords.includes(lowerNoun)) {
+      return noun;
+    }
+    
+    // Add "the" for concrete countable nouns
+    return `the ${noun}`;
+  }
+
+  // Conjugate verbs for singular subjects
+  private conjugateVerbForSingular(verb: string): string {
+    const lowerVerb = verb.toLowerCase();
+    
+    // Irregular verbs
+    const irregularVerbs: Record<string, string> = {
+      'be': 'is',
+      'have': 'has',
+      'do': 'does',
+      'go': 'goes',
+      'say': 'says',
+      'get': 'gets',
+      'make': 'makes',
+      'know': 'knows',
+      'think': 'thinks',
+      'take': 'takes',
+      'see': 'sees',
+      'come': 'comes',
+      'want': 'wants',
+      'look': 'looks',
+      'use': 'uses',
+      'find': 'finds',
+      'give': 'gives',
+      'tell': 'tells',
+      'work': 'works',
+      'call': 'calls',
+      'try': 'tries',
+      'ask': 'asks',
+      'need': 'needs',
+      'feel': 'feels',
+      'become': 'becomes',
+      'leave': 'leaves',
+      'put': 'puts',
+      'mean': 'means',
+      'keep': 'keeps',
+      'let': 'lets',
+      'begin': 'begins',
+      'seem': 'seems',
+      'help': 'helps',
+      'talk': 'talks',
+      'turn': 'turns',
+      'start': 'starts',
+      'show': 'shows',
+      'hear': 'hears',
+      'play': 'plays',
+      'run': 'runs',
+      'move': 'moves',
+      'live': 'lives',
+      'believe': 'believes',
+      'hold': 'holds',
+      'bring': 'brings',
+      'happen': 'happens',
+      'write': 'writes',
+      'provide': 'provides',
+      'sit': 'sits',
+      'stand': 'stands',
+      'lose': 'loses',
+      'pay': 'pays',
+      'meet': 'meets',
+      'include': 'includes',
+      'continue': 'continues',
+      'set': 'sets',
+      'learn': 'learns',
+      'change': 'changes',
+      'lead': 'leads',
+      'understand': 'understands',
+      'watch': 'watches',
+      'follow': 'follows',
+      'stop': 'stops',
+      'create': 'creates',
+      'speak': 'speaks',
+      'read': 'reads',
+      'allow': 'allows',
+      'add': 'adds',
+      'spend': 'spends',
+      'grow': 'grows',
+      'open': 'opens',
+      'walk': 'walks',
+      'win': 'wins',
+      'offer': 'offers',
+      'remember': 'remembers',
+      'consider': 'considers',
+      'appear': 'appears',
+      'buy': 'buys',
+      'wait': 'waits',
+      'serve': 'serves',
+      'die': 'dies',
+      'send': 'sends',
+      'expect': 'expects',
+      'build': 'builds',
+      'stay': 'stays',
+      'fall': 'falls',
+      'cut': 'cuts',
+      'reach': 'reaches',
+      'kill': 'kills',
+      'remain': 'remains',
+      'suggest': 'suggests',
+      'raise': 'raises',
+      'pass': 'passes',
+      'sell': 'sells',
+      'require': 'requires',
+      'report': 'reports',
+      'decide': 'decides',
+      'pull': 'pulls'
+    };
+    
+    if (irregularVerbs[lowerVerb]) {
+      return this.preserveCase(verb, irregularVerbs[lowerVerb]);
+    }
+    
+    // Regular verb conjugation rules
+    if (lowerVerb.endsWith('y') && !['ay', 'ey', 'iy', 'oy', 'uy'].some(ending => lowerVerb.endsWith(ending))) {
+      // Consonant + y: try -> tries
+      const base = lowerVerb.slice(0, -1);
+      return this.preserveCase(verb, base + 'ies');
+    } else if (lowerVerb.endsWith('s') || lowerVerb.endsWith('sh') || lowerVerb.endsWith('ch') || lowerVerb.endsWith('x') || lowerVerb.endsWith('z')) {
+      // Add -es: pass -> passes, wash -> washes
+      return this.preserveCase(verb, lowerVerb + 'es');
+    } else if (lowerVerb.endsWith('o')) {
+      // Most o-ending verbs add -es: go -> goes
+      return this.preserveCase(verb, lowerVerb + 'es');
+    } else {
+      // Regular verbs add -s
+      return this.preserveCase(verb, lowerVerb + 's');
+    }
   }
 
   private ensureValidWordSource(sources: WordSource): WordSource {
@@ -1521,9 +1724,70 @@ export class NameGeneratorService {
       } else if (currentWord === 'those' && this.isSingular(nextWord)) {
         result[i] = 'That';
       }
+      
+      // Fix subject-verb agreement for patterns like "When [noun] [verb]"
+      if (currentWord === 'when' && i + 2 < result.length) {
+        const subject = result[i + 1].toLowerCase();
+        const verb = result[i + 2];
+        
+        // Skip articles like "the" to find actual subject and verb
+        let subjectIndex = i + 1;
+        let verbIndex = i + 2;
+        
+        if (result[i + 1].toLowerCase() === 'the' && i + 3 < result.length) {
+          subjectIndex = i + 2;
+          verbIndex = i + 3;
+        }
+        
+        const actualSubject = result[subjectIndex].toLowerCase();
+        const actualVerb = result[verbIndex];
+        
+        // If subject is singular (not plural), ensure verb is conjugated
+        if (this.isSingular(actualSubject) && !this.isAlreadyConjugated(actualVerb)) {
+          result[verbIndex] = this.conjugateVerbForSingular(actualVerb);
+        }
+      }
     }
     
     return result;
+  }
+
+  // Check if verb is already conjugated (ends with -s, -es, etc.)
+  private isAlreadyConjugated(verb: string): boolean {
+    const lowerVerb = verb.toLowerCase();
+    return lowerVerb.endsWith('s') || lowerVerb.endsWith('es') || 
+           ['is', 'has', 'does', 'goes', 'says', 'was', 'were', 'am', 'are'].includes(lowerVerb);
+  }
+
+  // Final validation and cleanup for generated words
+  private validateAndCleanupWords(words: string[]): string[] {
+    const result = [...words];
+    
+    // Additional cleanup for common issues
+    for (let i = 0; i < result.length; i++) {
+      const word = result[i];
+      const lowerWord = word.toLowerCase();
+      
+      // Fix common casing issues
+      if (lowerWord === 'i') {
+        result[i] = 'I';
+      }
+      
+      // Remove empty words
+      if (!word || word.trim() === '') {
+        result.splice(i, 1);
+        i--;
+      }
+    }
+    
+    // Ensure minimum word quality
+    const filteredResult = result.filter(word => 
+      word && 
+      word.length > 0 && 
+      /^[a-zA-Z]+$/.test(word.replace(/['-]/g, '')) // Allow apostrophes and hyphens
+    );
+    
+    return filteredResult;
   }
 
   private makeSingular(word: string): string {
