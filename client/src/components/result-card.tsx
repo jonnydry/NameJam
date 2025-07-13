@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, HeartIcon, CheckCircle, AlertCircle, XCircle, BookOpen } from "lucide-react";
+import { Copy, ExternalLink, Heart, HeartIcon, CheckCircle, AlertCircle, XCircle, BookOpen, Brain } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -22,6 +22,7 @@ interface GenerationResult {
   type: string;
   wordCount: number;
   verification: VerificationResult;
+  isAiGenerated?: boolean;
 }
 
 interface ResultCardProps {
@@ -134,11 +135,16 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       </div>
       
       <div className="text-center">
-        <h3 className={`text-2xl font-semibold text-foreground mb-2 break-words hyphens-auto ${
-          verification.status === 'taken' ? 'line-through' : ''
-        }`}>
-          {name}
-        </h3>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <h3 className={`text-2xl font-semibold text-foreground break-words hyphens-auto ${
+            verification.status === 'taken' ? 'line-through' : ''
+          }`}>
+            {name}
+          </h3>
+          {result.isAiGenerated && (
+            <Brain className="h-5 w-5 text-purple-500 shrink-0" title="AI Generated" />
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">
           {verification.details || `No existing ${nameType} found with this name`}
         </p>
