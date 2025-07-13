@@ -337,12 +337,22 @@ export class NameGeneratorService {
     let aiNamesGenerated = 0;
     while (aiNamesGenerated < aiCount && names.length < count) {
       try {
-        const aiName = await this.aiNameGenerator.generateAIName(
+        const aiResponse = await this.aiNameGenerator.generateAIName(
           type as 'band' | 'song', 
           genre, 
           mood,
           wordCount
         );
+        
+        // Parse the JSON response from AI generator
+        let aiName;
+        try {
+          const parsed = JSON.parse(aiResponse);
+          aiName = parsed.name;
+        } catch (error) {
+          // If parsing fails, treat as plain string (fallback)
+          aiName = aiResponse;
+        }
         
         if (aiName && !names.find(n => n.name === aiName)) {
           names.push({ name: aiName, isAiGenerated: true });
