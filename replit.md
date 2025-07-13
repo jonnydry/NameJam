@@ -185,6 +185,7 @@ Changelog:
 - July 12, 2025. Code cleanup and optimization: removed excessive console.error statements to reduce log spam, maintained graceful error handling with silent fallbacks, ensured all API failures degrade gracefully without impacting user experience
 - July 12, 2025. Expanded XAI API usage with AI name generation: added lightbulb button to name generator for AI-powered creative responses, supports both band and song names with mood/genre customization, includes dedicated AI result display with model attribution, stores generated names in database with verification, provides fallback system for reliability
 - July 12, 2025. Integrated Spotify Web API for enhanced name verification: implemented comprehensive Spotify service for authoritative music database searches, added artist and track verification with popularity scores and genre information, prioritized Spotify results over other sources for accuracy, included direct Spotify search links in verification results
+- July 12, 2025. Enhanced setlist generator with comprehensive improvements: removed word count selector in favor of automatic variation (weighted 1-6 words favoring 2-4), ensured identical naming algorithms as main generator, integrated full Spotify verification for all setlist songs, improved XAI band name generation prompt to analyze specific song titles and themes for more relevant band names
 
 ## User Preferences
 
