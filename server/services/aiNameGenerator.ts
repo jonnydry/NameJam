@@ -79,20 +79,18 @@ export class AINameGeneratorService {
         const generatedName = response.choices[0]?.message?.content?.trim() || "";
         
         if (generatedName && generatedName !== "") {
-          // Clean up the response - remove quotes, "Band name:", etc.
+          // Clean up the response - remove quotes, "Band name:", markdown, etc.
           let cleanName = generatedName
             .replace(/^(Band name|Song title|Name|Title):\s*/i, '')
             .replace(/^["']|["']$/g, '')
             .replace(/^\d+\.\s*/, '')
+            .replace(/\*\*/g, '')  // Remove markdown bold
+            .replace(/\*/g, '')    // Remove markdown italics
+            .replace(/_{2,}/g, '') // Remove markdown underlines
             .trim();
           
           if (cleanName) {
-            return JSON.stringify({
-              name: cleanName,
-              model: model,
-              source: 'ai',
-              type: type
-            });
+            return cleanName;
           }
         }
         
