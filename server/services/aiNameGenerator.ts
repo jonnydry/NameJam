@@ -37,43 +37,35 @@ export class AINameGeneratorService {
           const genreInfo = genre ? ` ${genre}` : '';
           const moodInfo = mood ? ` ${mood}` : '';
           const typeText = type === 'band' ? 'band' : 'song title';
-          const wordCountInfo = wordCount ? ` using exactly ${wordCount} word${wordCount > 1 ? 's' : ''}` : '';
+          const wordCountInfo = wordCount ? ` with ${wordCount} word${wordCount > 1 ? 's' : ''}` : '';
           
           // Create varied prompts based on type
           let prompt;
           if (model === 'grok-3-mini') {
-          // Simpler prompts for Grok 3 mini
+          // Ultra-simple prompts - maximum creativity
           const simplePrompts = type === 'band' ? [
-            `Create a unique${genreInfo} band name with${moodInfo} energy${wordCountInfo}. Avoid overused words like "Echo", "Shadow", "Fire". Make it creative and memorable. Just return the name, nothing else.`,
-            `Generate a cool${genreInfo} band name that sounds${moodInfo}${wordCountInfo}. Skip tired formulas like "Echoes of" or "The Dark". Be original. Return only the name.`,
-            `Invent a${genreInfo} band name with${moodInfo} vibes${wordCountInfo}. Think fresh and unexpected. Make it catchy. Name only.`,
-            `Craft a memorable${genreInfo} band name with${moodInfo} character${wordCountInfo}. Avoid clichés. Be creative and surprising. Name only.`,
-            `Dream up a catchy${genreInfo} band name that embodies${moodInfo} spirit${wordCountInfo}. Mix unexpected elements. Be original. Name only.`
+            `Imagine a random name for a${genreInfo} band${moodInfo}${wordCountInfo}.`,
+            `Random band name${genreInfo}${moodInfo}${wordCountInfo}.`,
+            `Band name${genreInfo}${moodInfo}${wordCountInfo}.`
           ] : [
-            `Create a unique${genreInfo} song title with${moodInfo} feeling${wordCountInfo}. Avoid overused patterns like "Echoes of". Make it poetic and memorable. Just return the title, nothing else.`,
-            `Generate a cool${genreInfo} song title that sounds${moodInfo}${wordCountInfo}. Skip clichés like "Shadow" or "Night". Be creative. Return only the title.`,
-            `Invent a${genreInfo} song title with${moodInfo} vibes${wordCountInfo}. Think fresh and artistic. Title only.`,
-            `Craft a striking${genreInfo} song title with${moodInfo} atmosphere${wordCountInfo}. Avoid predictable words. Be innovative. Title only.`,
-            `Dream up an evocative${genreInfo} song title that captures${moodInfo} essence${wordCountInfo}. Mix unexpected imagery. Be memorable. Title only.`
+            `Imagine a random name for a${genreInfo} song${moodInfo}${wordCountInfo}.`,
+            `Random song title${genreInfo}${moodInfo}${wordCountInfo}.`,
+            `Song title${genreInfo}${moodInfo}${wordCountInfo}.`
           ];
           prompt = simplePrompts[Math.floor(Math.random() * simplePrompts.length)];
         } else {
-          // More complex prompts for other models
+          // Ultra-simple prompts for maximum creativity
           const randomSeed = Math.random();
           const complexPrompts = type === 'band' ? [
-            `Generate a wildly creative${genreInfo} band name with${moodInfo} energy${wordCountInfo}. Seed: ${randomSeed}. Avoid clichés like "Echoes of", "Shadow", "Dark". Create something completely unique and fresh. IMPORTANT: Use exactly ${wordCount || 3} words only. Just the name!`,
-            `Invent an unforgettable${genreInfo} band name that captures${moodInfo} vibes${wordCountInfo}. Random: ${randomSeed}. Avoid overused words like "Echo", "Shadow", "Fire", "Night". Be bold and original! IMPORTANT: Exactly ${wordCount || 3} words only. Return only the band name.`,
-            `Create a${genreInfo} band name that screams${moodInfo} attitude${wordCountInfo}. Variation: ${randomSeed}. Don't use tired formulas - think of something musicians would actually choose. IMPORTANT: Must be exactly ${wordCount || 3} words. Name only!`,
-            `Dream up a${genreInfo} band name with${moodInfo} soul${wordCountInfo}. Randomizer: ${randomSeed}. Mix unexpected elements, use wordplay, avoid predictable patterns. IMPORTANT: Exactly ${wordCount || 3} words only. Just the name!`,
-            `Craft a unique${genreInfo} band name with${moodInfo} character${wordCountInfo}. Seed: ${randomSeed}. Think like a real musician - be creative, not formulaic. IMPORTANT: Use exactly ${wordCount || 3} words only. Just the name!`,
-            `Invent a fresh${genreInfo} band name that embodies${moodInfo} feelings${wordCountInfo}. Random: ${randomSeed}. Surprise me with something nobody would expect! IMPORTANT: Exactly ${wordCount || 3} words only. Return only the band name.`
+            `Imagine a random name for a${genreInfo} band${moodInfo}${wordCountInfo}.`,
+            `Random band name${genreInfo}${moodInfo}${wordCountInfo}. Seed ${randomSeed}.`,
+            `Band name${genreInfo}${moodInfo}${wordCountInfo}.`,
+            `Create a${genreInfo} band name${moodInfo}${wordCountInfo}.`
           ] : [
-            `Generate a poetic${genreInfo} song title with${moodInfo} emotion${wordCountInfo}. Seed: ${randomSeed}. Avoid overused patterns like "Echoes of". Create something unique and evocative. IMPORTANT: Use exactly ${wordCount || 2} words only. Just the title!`,
-            `Invent a memorable${genreInfo} song title that feels${moodInfo}${wordCountInfo}. Random: ${randomSeed}. Skip clichés like "Shadow", "Night", "Dreams". Be artistic and original! IMPORTANT: Exactly ${wordCount || 2} words only. Return only the song title.`,
-            `Create a${genreInfo} song title that captures${moodInfo} essence${wordCountInfo}. Variation: ${randomSeed}. Think of something quotable but avoid tired formulas. IMPORTANT: Must be exactly ${wordCount || 2} words. Title only!`,
-            `Dream up a${genreInfo} song title with${moodInfo} spirit${wordCountInfo}. Randomizer: ${randomSeed}. Mix unexpected imagery, be surprising and fresh. IMPORTANT: Exactly ${wordCount || 2} words only. Just the title!`,
-            `Craft a striking${genreInfo} song title with${moodInfo} atmosphere${wordCountInfo}. Seed: ${randomSeed}. Avoid predictable words - be innovative and memorable. IMPORTANT: Use exactly ${wordCount || 2} words only. Just the title!`,
-            `Invent a compelling${genreInfo} song title that channels${moodInfo} energy${wordCountInfo}. Random: ${randomSeed}. Think like a songwriter - be creative, not formulaic. IMPORTANT: Exactly ${wordCount || 2} words only. Return only the song title.`
+            `Imagine a random name for a${genreInfo} song${moodInfo}${wordCountInfo}.`,
+            `Random song title${genreInfo}${moodInfo}${wordCountInfo}. Seed ${randomSeed}.`,
+            `Song title${genreInfo}${moodInfo}${wordCountInfo}.`,
+            `Create a${genreInfo} song title${moodInfo}${wordCountInfo}.`
           ];
           prompt = complexPrompts[Math.floor(Math.random() * complexPrompts.length)];
         }
@@ -133,8 +125,8 @@ export class AINameGeneratorService {
   private isRepetitivePattern(name: string): boolean {
     const lowerName = name.toLowerCase();
     
-    // Common repetitive patterns to avoid
-    const avoidPatterns = [
+    // Common "X of Y" patterns to avoid
+    const ofPatterns = [
       /^echoes of /,
       /^shadows of /,
       /^whispers of /,
@@ -150,14 +142,39 @@ export class AINameGeneratorService {
       /^shades of /,
       /^glimpses of /,
       /^traces of /,
-      /^remnants of /,
-      /^the dark /,
-      /^midnight /,
-      /^shadow /,
-      /^black /
+      /^remnants of /
     ];
     
-    return avoidPatterns.some(pattern => pattern.test(lowerName));
+    // Overused words to avoid at any position
+    const overusedWords = [
+      'echoes', 'echo',
+      'shadows', 'shadow',
+      'whispers', 'whisper',
+      'darkness', 'dark',
+      'midnight',
+      'sorrow', 'sorrows',
+      'twilight',
+      'ethereal',
+      'enigma',
+      'abyss'
+    ];
+    
+    // Check for "X of Y" patterns
+    if (ofPatterns.some(pattern => pattern.test(lowerName))) {
+      return true;
+    }
+    
+    // Check if name contains overused words
+    const words = lowerName.split(/\s+/);
+    
+    // Check each word in the name
+    for (const word of words) {
+      if (overusedWords.includes(word)) {
+        return true; // Reject if ANY overused word is found
+      }
+    }
+    
+    return false;
   }
 
   private generateFallbackName(type: 'band' | 'song', genre?: string, mood?: string): string {
