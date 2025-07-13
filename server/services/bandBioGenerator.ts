@@ -24,8 +24,8 @@ export class BandBioGeneratorService {
       return this.generateFallbackBio(bandName, genre, mood);
     }
 
-    // Try different models in order of preference
-    const models = ["grok-2-1212", "grok-2-vision-1212", "grok-3-mini"];
+    // Try different models in order of preference (updated to latest Grok models)
+    const models = ["grok-4", "grok-3", "grok-3-mini"];
     
     for (const model of models) {
       try {
@@ -55,7 +55,8 @@ export class BandBioGeneratorService {
           prompt = complexPrompts[Math.floor(Math.random() * complexPrompts.length)] + " Max 150 words, be creative and different each time!";
         }
 
-        const response = await this.openai.chat.completions.create({
+        // Configure parameters based on model capabilities (like aiNameGenerator)
+        const requestParams: any = {
           model: model,
           messages: [
             {
@@ -64,8 +65,17 @@ export class BandBioGeneratorService {
             }
           ],
           max_tokens: model === 'grok-3-mini' ? 500 : 250, // Grok 3 mini needs more tokens for reasoning
-          temperature: 0.8
-        });
+          temperature: 0.8,
+          top_p: 0.9
+        };
+
+        // Only add penalty parameters for models that support them (Grok-3, not Grok-4)
+        if (model.includes('grok-3')) {
+          requestParams.frequency_penalty = 0.3;  // Light penalty for bio generation
+          requestParams.presence_penalty = 0.2;   // Encourage variety
+        }
+
+        const response = await this.openai.chat.completions.create(requestParams);
 
         const bio = response.choices[0]?.message?.content || "";
         
@@ -354,8 +364,8 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
       // Debug logging to see what songs we're working with
       console.log('Generating band name from setlist with songs:', songNames);
       
-      // Try each Grok model in order
-      const models = ['grok-2-1212', 'grok-2-vision-1212', 'grok-beta'];
+      // Try each Grok model in order (updated to latest models)
+      const models = ['grok-4', 'grok-3', 'grok-3-mini'];
       
       for (const model of models) {
         try {
@@ -385,7 +395,8 @@ Respond with ONLY a JSON object in this exact format:
   "bandName": "Your Creative Band Name Here"
 }`;
 
-          const response = await this.openai.chat.completions.create({
+          // Configure parameters based on model capabilities (like other Grok services)
+          const requestParams: any = {
             model: model,
             messages: [
               {
@@ -399,8 +410,17 @@ Respond with ONLY a JSON object in this exact format:
             ],
             temperature: 0.9,
             max_tokens: 150,
-            response_format: { type: "json_object" }
-          });
+            response_format: { type: "json_object" },
+            top_p: 0.9
+          };
+
+          // Only add penalty parameters for models that support them (Grok-3, not Grok-4)
+          if (model.includes('grok-3')) {
+            requestParams.frequency_penalty = 0.4;  // Encourage variety in band names
+            requestParams.presence_penalty = 0.3;   // Promote creative naming
+          }
+
+          const response = await this.openai.chat.completions.create(requestParams);
 
           const content = response.choices[0]?.message?.content || "";
           
@@ -430,7 +450,8 @@ Respond with ONLY a JSON object in this exact format:
           console.log(`Model ${model} returned empty content, trying next model...`);
           
         } catch (error: any) {
-          console.log(`Model ${model} failed:`, error.message);
+          console.log(`Model ${model} failed with error:`, error.message);
+          console.log(`Error details:`, error.response?.data || error.code || 'No additional details');
           // Continue to next model
         }
       }
