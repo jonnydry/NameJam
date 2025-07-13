@@ -18,7 +18,7 @@ export class AINameGeneratorService {
     }
   }
 
-  async generateAIName(type: 'band' | 'song', genre?: string, mood?: string): Promise<string> {
+  async generateAIName(type: 'band' | 'song', genre?: string, mood?: string, wordCount?: number): Promise<string> {
     // If OpenAI client is not available, use fallback
     if (!this.openai) {
       return this.generateFallbackName(type, genre, mood);
@@ -32,34 +32,35 @@ export class AINameGeneratorService {
         const genreInfo = genre ? ` ${genre}` : '';
         const moodInfo = mood ? ` ${mood}` : '';
         const typeText = type === 'band' ? 'band' : 'song title';
+        const wordCountInfo = wordCount ? ` using exactly ${wordCount} word${wordCount > 1 ? 's' : ''}` : '';
         
         // Create varied prompts based on type
         let prompt;
         if (model === 'grok-3-mini') {
           // Simpler prompts for Grok 3 mini
           const simplePrompts = type === 'band' ? [
-            `Create a unique${genreInfo} band name with${moodInfo} energy. Make it creative and memorable. Just return the name, nothing else.`,
-            `Generate a cool${genreInfo} band name that sounds${moodInfo}. Be original. Return only the name.`,
-            `Invent a${genreInfo} band name with${moodInfo} vibes. Make it catchy. Name only.`
+            `Create a unique${genreInfo} band name with${moodInfo} energy${wordCountInfo}. Make it creative and memorable. Just return the name, nothing else.`,
+            `Generate a cool${genreInfo} band name that sounds${moodInfo}${wordCountInfo}. Be original. Return only the name.`,
+            `Invent a${genreInfo} band name with${moodInfo} vibes${wordCountInfo}. Make it catchy. Name only.`
           ] : [
-            `Create a unique${genreInfo} song title with${moodInfo} feeling. Make it poetic and memorable. Just return the title, nothing else.`,
-            `Generate a cool${genreInfo} song title that sounds${moodInfo}. Be creative. Return only the title.`,
-            `Invent a${genreInfo} song title with${moodInfo} vibes. Make it artistic. Title only.`
+            `Create a unique${genreInfo} song title with${moodInfo} feeling${wordCountInfo}. Make it poetic and memorable. Just return the title, nothing else.`,
+            `Generate a cool${genreInfo} song title that sounds${moodInfo}${wordCountInfo}. Be creative. Return only the title.`,
+            `Invent a${genreInfo} song title with${moodInfo} vibes${wordCountInfo}. Make it artistic. Title only.`
           ];
           prompt = simplePrompts[Math.floor(Math.random() * simplePrompts.length)];
         } else {
           // More complex prompts for other models
           const randomSeed = Math.random();
           const complexPrompts = type === 'band' ? [
-            `Generate a wildly creative${genreInfo} band name with${moodInfo} energy. Seed: ${randomSeed}. Think outside the box - combine unexpected words, use wordplay, or create something that sounds legendary. Just the name, nothing else!`,
-            `Invent an unforgettable${genreInfo} band name that captures${moodInfo} vibes. Random: ${randomSeed}. Be bold, be different, surprise me! Return only the band name.`,
-            `Create a${genreInfo} band name that screams${moodInfo} attitude. Variation: ${randomSeed}. Make it sound like they could headline festivals. Name only!`,
-            `Dream up a${genreInfo} band name with${moodInfo} soul. Randomizer: ${randomSeed}. Think of names that would look great on a marquee. Just the name!`
+            `Generate a wildly creative${genreInfo} band name with${moodInfo} energy${wordCountInfo}. Seed: ${randomSeed}. Think outside the box - combine unexpected words, use wordplay, or create something that sounds legendary. IMPORTANT: Use exactly ${wordCount || 3} words only. Just the name, nothing else!`,
+            `Invent an unforgettable${genreInfo} band name that captures${moodInfo} vibes${wordCountInfo}. Random: ${randomSeed}. Be bold, be different, surprise me! IMPORTANT: Exactly ${wordCount || 3} words only. Return only the band name.`,
+            `Create a${genreInfo} band name that screams${moodInfo} attitude${wordCountInfo}. Variation: ${randomSeed}. Make it sound like they could headline festivals. IMPORTANT: Must be exactly ${wordCount || 3} words. Name only!`,
+            `Dream up a${genreInfo} band name with${moodInfo} soul${wordCountInfo}. Randomizer: ${randomSeed}. Think of names that would look great on a marquee. IMPORTANT: Exactly ${wordCount || 3} words only. Just the name!`
           ] : [
-            `Generate a poetic${genreInfo} song title with${moodInfo} emotion. Seed: ${randomSeed}. Think of titles that tell a story, evoke imagery, or capture a moment. Just the title, nothing else!`,
-            `Invent a memorable${genreInfo} song title that feels${moodInfo}. Random: ${randomSeed}. Be artistic, be deep, surprise me! Return only the song title.`,
-            `Create a${genreInfo} song title that captures${moodInfo} essence. Variation: ${randomSeed}. Make it something people would remember and quote. Title only!`,
-            `Dream up a${genreInfo} song title with${moodInfo} spirit. Randomizer: ${randomSeed}. Think of titles that would make great album tracks. Just the title!`
+            `Generate a poetic${genreInfo} song title with${moodInfo} emotion${wordCountInfo}. Seed: ${randomSeed}. Think of titles that tell a story, evoke imagery, or capture a moment. IMPORTANT: Use exactly ${wordCount || 2} words only. Just the title, nothing else!`,
+            `Invent a memorable${genreInfo} song title that feels${moodInfo}${wordCountInfo}. Random: ${randomSeed}. Be artistic, be deep, surprise me! IMPORTANT: Exactly ${wordCount || 2} words only. Return only the song title.`,
+            `Create a${genreInfo} song title that captures${moodInfo} essence${wordCountInfo}. Variation: ${randomSeed}. Make it something people would remember and quote. IMPORTANT: Must be exactly ${wordCount || 2} words. Title only!`,
+            `Dream up a${genreInfo} song title with${moodInfo} spirit${wordCountInfo}. Randomizer: ${randomSeed}. Think of titles that would make great album tracks. IMPORTANT: Exactly ${wordCount || 2} words only. Just the title!`
           ];
           prompt = complexPrompts[Math.floor(Math.random() * complexPrompts.length)];
         }
