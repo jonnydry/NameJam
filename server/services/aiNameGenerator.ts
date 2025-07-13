@@ -26,8 +26,8 @@ export class AINameGeneratorService {
       return this.generateFallbackName(type, genre, mood, wordCount);
     }
 
-    // Try different models in order of preference
-    const models = ["grok-2-1212", "grok-2-vision-1212", "grok-3-mini"];
+    // Use latest available Grok models (July 2025)
+    const models = ["grok-4", "grok-3", "grok-3-mini"];
     
     for (const model of models) {
       try {
@@ -77,7 +77,8 @@ export class AINameGeneratorService {
         prompt += ` ${instructions[Math.floor(Math.random() * instructions.length)]}`;
         prompt += ` [Seed: ${randomSeed}${timestamp}]`;
 
-        const response = await this.openai.chat.completions.create({
+        // Configure parameters based on model capabilities
+        const requestParams: any = {
           model: model,
           messages: [
             {
@@ -87,10 +88,16 @@ export class AINameGeneratorService {
           ],
           max_tokens: 30,
           temperature: 1.0,  // Maximum randomness
-          top_p: 0.9,        // Add nucleus sampling for more variety
-          frequency_penalty: 0.8,  // Penalize repetitive tokens
-          presence_penalty: 0.6    // Encourage new topics
-        });
+          top_p: 0.9         // Add nucleus sampling for more variety
+        };
+
+        // Only add penalty parameters for models that support them (Grok-3, not Grok-4)
+        if (model.includes('grok-3')) {
+          requestParams.frequency_penalty = 0.8;  // Penalize repetitive tokens
+          requestParams.presence_penalty = 0.6;   // Encourage new topics
+        }
+
+        const response = await this.openai.chat.completions.create(requestParams);
 
         const generatedName = response.choices[0]?.message?.content?.trim() || "";
         
@@ -104,21 +111,40 @@ export class AINameGeneratorService {
           
           // Check word count and track words for future avoidance
           if (wordCount && cleanName.split(/\s+/).length === wordCount) {
+            console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
             this.trackRecentWords(cleanName);
-            return cleanName;
+            return JSON.stringify({
+              name: cleanName,
+              model: model,
+              source: 'xAI',
+              type: type
+            });
           } else if (!wordCount && cleanName.length > 0 && cleanName.length < 100) {
+            console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
             this.trackRecentWords(cleanName);
-            return cleanName;
+            return JSON.stringify({
+              name: cleanName,
+              model: model,
+              source: 'xAI',
+              type: type
+            });
           }
         }
         
       } catch (error: any) {
-        console.log(`Model ${model} failed:`, error.message);
+        console.log(`Model ${model} failed with error:`, error.message);
+        console.log(`Error details:`, error.response?.data || error.code || 'No additional details');
       }
     }
 
-    // If all models fail, return fallback
-    return this.generateFallbackName(type, genre, mood, wordCount);
+    // If all models fail, return fallback with JSON format
+    const fallbackName = this.generateFallbackName(type, genre, mood, wordCount);
+    return JSON.stringify({
+      name: fallbackName,
+      model: 'fallback',
+      source: 'fallback',
+      type: type
+    });
   }
 
   private generateFallbackName(type: 'band' | 'song', genre?: string, mood?: string, wordCount?: number): string {
