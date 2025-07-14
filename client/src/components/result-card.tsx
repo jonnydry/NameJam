@@ -48,8 +48,12 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       });
     } else {
       // Trigger animation
+      console.log('Triggering heart animation for:', name);
       setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 600);
+      setTimeout(() => {
+        console.log('Animation complete for:', name);
+        setIsAnimating(false);
+      }, 600);
       
       const success = addToStash({
         name,
@@ -108,14 +112,16 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             variant="ghost"
             size="sm"
             onClick={handleAddToStash}
-            className={`transition-colors p-2 ${
+            className={`p-2 ${
               isInStash(name, nameType) 
                 ? 'text-red-500 hover:text-red-600' 
                 : 'text-muted-foreground hover:text-red-500'
             }`}
             title={isInStash(name, nameType) ? 'Already in stash' : 'Add to stash'}
           >
-            <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''} ${isAnimating ? 'heart-burst' : ''}`} aria-hidden="true" />
+            <span className={`inline-block ${isAnimating ? 'heart-burst' : ''}`}>
+              <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} aria-hidden="true" />
+            </span>
           </Button>
           <Button
             variant="ghost"

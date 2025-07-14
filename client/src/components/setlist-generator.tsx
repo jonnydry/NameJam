@@ -215,7 +215,9 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
               title={isInStash(song.name, 'song') ? 'Already in stash' : 'Add to stash'}
               aria-label={isInStash(song.name, 'song') ? `${song.name} is already in stash` : `Add ${song.name} to stash`}
             >
-              <Heart className={`w-4 h-4 ${isInStash(song.name, 'song') ? 'fill-current' : ''} ${animatingHearts.has(song.name) ? 'heart-burst' : ''}`} aria-hidden="true" />
+              <span className={`inline-block ${animatingHearts.has(song.name) ? 'heart-burst' : ''}`}>
+                <Heart className={`w-4 h-4 ${isInStash(song.name, 'song') ? 'fill-current' : ''}`} aria-hidden="true" />
+              </span>
             </Button>
             <Button
               variant="ghost"
