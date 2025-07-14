@@ -17,14 +17,22 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
         {/* Gradient definitions for glow effect */}
         <defs>
           <radialGradient id="bulbGlow" cx="50%" cy="35%" r="50%">
-            <stop offset="0%" stopColor="currentColor" className="text-primary" stopOpacity="0.15" />
-            <stop offset="50%" stopColor="currentColor" className="text-primary" stopOpacity="0.08" />
+            <stop offset="0%" stopColor="currentColor" className="text-primary" stopOpacity="0.3" />
+            <stop offset="30%" stopColor="currentColor" className="text-primary" stopOpacity="0.15" />
+            <stop offset="60%" stopColor="currentColor" className="text-primary" stopOpacity="0.08" />
             <stop offset="100%" stopColor="currentColor" className="text-primary" stopOpacity="0" />
           </radialGradient>
+          <filter id="softerGlow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
         </defs>
         
-        {/* Outer glow */}
-        <ellipse cx="40" cy="42" rx="35" ry="40" fill="url(#bulbGlow)" />
+        {/* Outer glow with animation */}
+        <ellipse cx="40" cy="42" rx="38" ry="43" fill="url(#bulbGlow)" className="animate-glow-pulse" />
         
         {/* Lightbulb glass - traditional incandescent shape with more interior space */}
         <path 
@@ -34,6 +42,7 @@ export function FermataLogo({ size = "sm", className = "" }: FermataLogoProps) {
           fill="currentColor"
           fillOpacity="0.02"
           className="text-primary"
+          filter="url(#softerGlow)"
         />
         
         {/* Glass highlight */}
