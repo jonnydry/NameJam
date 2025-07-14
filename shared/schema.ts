@@ -59,11 +59,11 @@ export const setListSong = z.object({
 
 export type SetListSong = z.infer<typeof setListSong>;
 
-// Stash item schema for saved names and setlists
+// Stash item schema for saved names, setlists, and band lore
 export const stashItem = z.object({
   id: z.string(),
   name: z.string(),
-  type: z.enum(['band', 'song', 'setlist']),
+  type: z.enum(['band', 'song', 'setlist', 'bandLore']),
   wordCount: z.number(),
   savedAt: z.string(), // ISO date string
   verification: verificationResult.optional(),
@@ -77,6 +77,15 @@ export const stashItem = z.object({
     mood: z.string().optional(),
     genre: z.string().optional(),
     bandName: z.string().optional(),
+  }).optional(),
+  // Additional fields for band lore items
+  bandLoreData: z.object({
+    bio: z.string(),
+    bandName: z.string(),
+    model: z.string().optional(),
+    source: z.string().optional(),
+    genre: z.string().optional(),
+    mood: z.string().optional(),
   }).optional()
 });
 
