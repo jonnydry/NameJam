@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Heart } from "lucide-react";
+import { Loader2, Package2 } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
@@ -162,7 +162,7 @@ export function BandBioModal({
                 }}
                 disabled={isInStash(bandName, 'bandLore')}
               >
-                <Heart className={`h-4 w-4 mr-2 ${isInStash(bandName, 'bandLore') ? 'fill-current' : ''}`} />
+                <Package2 className={`h-4 w-4 mr-2 ${isInStash(bandName, 'bandLore') ? 'fill-current' : ''}`} />
                 {isInStash(bandName, 'bandLore') ? 'Saved' : 'Save Bio'}
               </Button>
             </>

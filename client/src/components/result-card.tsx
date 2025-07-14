@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, HeartIcon, CheckCircle, AlertCircle, XCircle, BookOpen, Brain } from "lucide-react";
+import { Copy, ExternalLink, Package2, CheckCircle, AlertCircle, XCircle, BookOpen, Brain } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -110,7 +110,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             }`}
             title={isInStash(name, nameType) ? 'Already in stash' : 'Add to stash'}
           >
-            <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} aria-hidden="true" />
+            <Package2 className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
