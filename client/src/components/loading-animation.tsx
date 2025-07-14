@@ -26,32 +26,24 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
     return () => setProgress(0);
   }, [stage]);
 
-  // Ode to Joy notes - correct positions on treble clef
-  // E E F G G F E D C C D E E D D
-  const odeToJoyNotes = [
-    { note: 'E', line: 4 },    // E on first line
-    { note: 'E', line: 4 },
-    { note: 'F', line: 3.5 },  // F on first space
-    { note: 'G', line: 3 },    // G on second line
-    { note: 'G', line: 3 },
-    { note: 'F', line: 3.5 },
-    { note: 'E', line: 4 },
-    { note: 'D', line: 4.5 },  // D below first line
-    { note: 'C', line: 5 },    // C below staff (ledger line)
-    { note: 'C', line: 5 },
-    { note: 'D', line: 4.5 },
-    { note: 'E', line: 4 },
-    { note: 'E', line: 4 },
-    { note: 'D', line: 4.5 },
-    { note: 'D', line: 4.5 },
+  // Simplified melody inspired by Ode to Joy - just 8 notes for cleaner animation
+  const melodyNotes = [
+    { note: 'C', line: 5 },    // C (ledger line)
+    { note: 'E', line: 4 },    // E 
+    { note: 'G', line: 3 },    // G
+    { note: 'C', line: 1 },    // High C
+    { note: 'C', line: 1 },    // High C
+    { note: 'G', line: 3 },    // G
+    { note: 'E', line: 4 },    // E
+    { note: 'C', line: 5 },    // C (ledger line)
   ];
 
-  // Position notes evenly across the staff
-  const notes = odeToJoyNotes.map((note, i) => ({
-    position: (i + 1) * (90 / (odeToJoyNotes.length + 1)),
+  // Position notes with more spacing for visual clarity
+  const notes = melodyNotes.map((note, i) => ({
+    position: 15 + (i * 75 / melodyNotes.length),
     line: note.line,
     noteName: note.note,
-    isQuarterNote: true,
+    duration: i % 2 === 0 ? 'quarter' : 'eighth',
   }));
 
   // Calculate which note is currently playing
@@ -140,6 +132,28 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
                         "text-muted-foreground/60"
                       }
                     />
+                    {/* Add flag for eighth notes */}
+                    {note.duration === 'eighth' && (
+                      <path
+                        d="M 4.5 -25 Q 8 -20, 8 -15"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                        className={
+                          isPlaying ? "text-primary" : 
+                          hasPlayed ? "text-primary/70" : 
+                          "text-muted-foreground/60"
+                        }
+                      />
+                    )}
+                    {/* Glow effect when playing */}
+                    {isPlaying && (
+                      <circle
+                        r="12"
+                        fill="currentColor"
+                        className="text-primary/20 animate-ping"
+                      />
+                    )}
                   </g>
                 );
               })}
@@ -192,7 +206,7 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
             </svg>
           </div>
           <div className="text-lg text-foreground font-medium tracking-wide">Composing unique names...</div>
-          <div className="text-sm text-muted-foreground">Playing Ode to Joy while we create</div>
+          <div className="text-sm text-muted-foreground">Creating musical magic</div>
         </>
       ) : (
         <>
