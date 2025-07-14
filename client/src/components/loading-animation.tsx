@@ -26,89 +26,91 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
     return () => setProgress(0);
   }, [stage]);
 
-  // Generate sound wave points
-  const generateWavePoints = () => {
-    const points = [];
-    const segments = 100;
-    for (let i = 0; i <= segments; i++) {
-      const x = (i / segments) * 320;
-      // Create a varied wave pattern
-      const frequency = 0.1;
-      const amplitude = 15;
-      const y = 40 + 
-        Math.sin(i * frequency) * amplitude * Math.sin(i * 0.02) +
-        Math.sin(i * frequency * 2.5) * (amplitude * 0.3) +
-        Math.sin(i * frequency * 5) * (amplitude * 0.1);
-      points.push(`${x},${y}`);
+  // Generate equalizer bars with varying heights
+  const generateEqualizerBars = () => {
+    const barCount = 40;
+    const bars = [];
+    
+    for (let i = 0; i < barCount; i++) {
+      // Create varying heights using sine waves for smooth variation
+      const baseHeight = 20;
+      const variation = 
+        Math.sin(i * 0.3) * 15 + 
+        Math.sin(i * 0.7) * 10 + 
+        Math.sin(i * 1.2) * 5;
+      const height = Math.max(5, baseHeight + variation);
+      
+      bars.push({
+        x: i * 8 + 4,
+        height: height,
+        delay: i * 0.02,
+      });
     }
-    return points.join(' ');
+    return bars;
   };
 
   return (
     <div className="flex flex-col items-center space-y-4">
       {stage === 'generating' ? (
         <>
-          {/* Sound Wave Loading Animation */}
+          {/* Equalizer Loading Animation */}
           <div className="relative w-80 h-20">
             <svg viewBox="0 0 320 80" className="w-full h-full">
-              {/* Background wave (full) */}
-              <polyline
-                points={generateWavePoints()}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="text-muted-foreground/30"
-              />
+              {/* Equalizer bars */}
+              {generateEqualizerBars().map((bar, i) => {
+                const isActive = (i / 40) * 100 <= progress;
+                const isNearActive = Math.abs((i / 40) * 100 - progress) < 10;
+                
+                return (
+                  <rect
+                    key={i}
+                    x={bar.x}
+                    y={40 - bar.height / 2}
+                    width="6"
+                    height={bar.height}
+                    rx="1"
+                    fill="currentColor"
+                    className={
+                      isActive 
+                        ? "text-primary" 
+                        : "text-muted-foreground/30"
+                    }
+                    style={{
+                      transform: isNearActive ? `scaleY(${1 + Math.sin(Date.now() * 0.01 + i) * 0.3})` : 'scaleY(1)',
+                      transformOrigin: 'center',
+                      transition: 'all 0.3s ease',
+                      filter: isActive ? 'drop-shadow(0 0 4px currentColor)' : 'none',
+                    }}
+                  />
+                );
+              })}
               
-              {/* Progress wave (animated) */}
-              <polyline
-                points={generateWavePoints()}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                className="text-primary"
-                strokeDasharray="1000"
-                strokeDashoffset={1000 - (progress * 10)}
-                style={{
-                  filter: 'drop-shadow(0 0 8px currentColor)',
-                }}
-              />
-              
-              {/* Progress indicator dot */}
-              <circle
-                cx={progress * 3.2}
-                cy="40"
-                r="4"
-                fill="currentColor"
-                className="text-primary animate-pulse"
-                style={{
-                  filter: 'drop-shadow(0 0 12px currentColor)',
-                }}
-              />
-              
-              {/* Simple progress bar below */}
+              {/* Progress bar below */}
               <rect
                 x="0"
                 y="70"
                 width="320"
-                height="2"
+                height="3"
                 fill="currentColor"
                 className="text-muted-foreground/20"
-                rx="1"
+                rx="1.5"
               />
               <rect
                 x="0"
                 y="70"
                 width={progress * 3.2}
-                height="2"
+                height="3"
                 fill="currentColor"
                 className="text-primary"
-                rx="1"
+                rx="1.5"
+                style={{
+                  filter: 'drop-shadow(0 0 4px currentColor)',
+                }}
               />
             </svg>
           </div>
           <div className="text-lg text-foreground font-medium tracking-wide">Composing unique names...</div>
-          <div className="text-sm text-muted-foreground">Tuning the creative frequencies</div>
+          <div className="text-sm text-muted-foreground">Mixing the perfect sound</div>
         </>
       ) : (
         <>
