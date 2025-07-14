@@ -50,7 +50,8 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
         name,
         type: nameType,
         wordCount: result.wordCount,
-        verification: result.verification
+        verification: result.verification,
+        isAiGenerated: result.isAiGenerated
       });
       
       if (success) {

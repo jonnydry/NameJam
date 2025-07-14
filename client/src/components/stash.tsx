@@ -1,4 +1,4 @@
-import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight } from 'lucide-react';
+import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -308,6 +308,9 @@ export function Stash() {
                     <Badge variant="outline" className="text-xs">
                       {item.type === 'setlist' ? `setlist • ${item.wordCount} songs` : `${item.type} • ${item.wordCount} word${item.wordCount !== 1 ? 's' : ''}`}
                     </Badge>
+                    {item.isAiGenerated && (
+                      <Brain className="w-4 h-4 text-purple-500" title="AI Generated" />
+                    )}
                   </div>
                   
                   {item.type === 'setlist' ? (
