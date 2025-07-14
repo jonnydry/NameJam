@@ -36,59 +36,90 @@ export class AINameGeneratorService {
         const randomSeed = Math.random().toString(36).substring(7);
         const timestamp = Date.now() % 10000;
         
-        // Build varied prompts with explicit variety instructions and recent word exclusions
-        const avoidWords = ['shadows', 'shadow', 'echoes', 'echo', 'whispers', 'whisper', 'midnight', 'darkness', 'twilight', 'sorrow', 'eclipse'].concat(this.recentWords);
-        const avoidString = avoidWords.slice(0, 15).join(', '); // Limit to prevent overly long prompts
+        // Build enhanced prompts with creativity guidance and recent word exclusions
+        const avoidWords = ['shadows', 'shadow', 'echoes', 'echo', 'whispers', 'whisper', 'midnight', 'darkness', 'twilight', 'sorrow', 'eclipse', 'velvet', 'cosmic', 'neon'].concat(this.recentWords);
+        const avoidString = avoidWords.slice(0, 12).join(', '); // Focused list of overused words
+        
+        const creativityTechniques = [
+          'unexpected color-object combinations',
+          'scientific terms with emotional words',
+          'geometric shapes meeting natural elements',
+          'kitchen items as metaphors',
+          'weather phenomena with urban elements',
+          'architectural terms with organic words',
+          'vintage technology with nature',
+          'mathematical concepts with emotions',
+          'textile words with cosmic elements',
+          'transportation with abstract concepts'
+        ];
         
         const promptVariations = [
-          `Invent a unique ${type === 'band' ? 'band' : 'song'} name. AVOID these overused words: ${avoidString}`,
-          `Come up with an original ${type === 'band' ? 'band' : 'song'} name using unexpected words. DON'T use: ${avoidString}`, 
-          `Generate a creative ${type === 'band' ? 'band' : 'song'} name (be unconventional). Never use: ${avoidString}`,
-          `Think of a fresh ${type === 'band' ? 'band' : 'song'} name with unusual combinations. Exclude: ${avoidString}`,
-          `Create an innovative ${type === 'band' ? 'band' : 'song'} name that nobody would expect. Skip: ${avoidString}`
+          `Create a memorable ${type === 'band' ? 'band' : 'song'} name using ${creativityTechniques[Math.floor(Math.random() * creativityTechniques.length)]}. Avoid: ${avoidString}`,
+          `Invent a striking ${type === 'band' ? 'band' : 'song'} name that combines concrete and abstract concepts. Skip overused words: ${avoidString}`,
+          `Generate a ${type === 'band' ? 'band' : 'song'} name with interesting word textures and sounds. Don't use: ${avoidString}`,
+          `Think of a bold ${type === 'band' ? 'band' : 'song'} name mixing everyday objects with grand concepts. Exclude: ${avoidString}`,
+          `Create a vivid ${type === 'band' ? 'band' : 'song'} name using sensory words and unusual pairings. Avoid clichés: ${avoidString}`,
+          `Craft a unique ${type === 'band' ? 'band' : 'song'} name blending industrial terms with natural imagery. Skip: ${avoidString}`,
+          `Design a catchy ${type === 'band' ? 'band' : 'song'} name using contradictory or surprising word combinations. Don't use: ${avoidString}`
         ];
         
         let prompt = promptVariations[Math.floor(Math.random() * promptVariations.length)];
         
-        // Add context if provided
+        // Add enhanced context if provided
         if (genre || mood) {
           const context = [];
           if (genre) context.push(genre);
           if (mood) context.push(mood);
-          const vibeWords = ['vibe', 'feel', 'style', 'mood', 'energy'];
-          prompt += ` with a ${context.join(' ')} ${vibeWords[Math.floor(Math.random() * vibeWords.length)]}`;
+          
+          const contextDescriptors = [
+            'that captures the essence of',
+            'reflecting the spirit of',
+            'embodying the atmosphere of',
+            'channeling the energy of',
+            'expressing the feeling of',
+            'inspired by the world of',
+            'evoking the mood of'
+          ];
+          
+          prompt += ` ${contextDescriptors[Math.floor(Math.random() * contextDescriptors.length)]} ${context.join(' ')} music`;
         }
         
-        // Add word count if specified
+        // Add word count and quality instructions
         if (wordCount) {
-          prompt += `. Use exactly ${wordCount} word${wordCount > 1 ? 's' : ''}.`;
+          prompt += `. IMPORTANT: Use exactly ${wordCount} word${wordCount > 1 ? 's' : ''} - no more, no less.`;
         } else {
-          prompt += '.';
+          prompt += '. Keep it concise but memorable.';
         }
         
-        // Add randomization elements to ensure uniqueness
-        const instructions = [
-          'Reply with only the name, nothing else.',
-          'Just give me the name.',
-          'Name only.',
-          'Only the name, please.',
-          'Just the name.'
+        // Enhanced instructions for better output
+        const qualityInstructions = [
+          'Be creative and original. Reply with just the name.',
+          'Make it memorable and unique. Just the name, nothing else.',
+          'Think outside the box. Name only.',
+          'Be imaginative and fresh. Only the name.',
+          'Create something unexpected. Just give me the name.'
         ];
         
-        prompt += ` ${instructions[Math.floor(Math.random() * instructions.length)]}`;
-        prompt += ` [Seed: ${randomSeed}${timestamp}]`;
+        prompt += ` ${qualityInstructions[Math.floor(Math.random() * qualityInstructions.length)]}`;
+        
+        // Add subtle randomization to prevent identical responses
+        prompt += ` (Variant: ${randomSeed.slice(0,3)})`;
 
         // Configure parameters based on model capabilities
         const requestParams: any = {
           model: model,
           messages: [
             {
+              role: "system",
+              content: `You are a creative naming expert specializing in ${type === 'band' ? 'band' : 'song'} names. Your goal is to create memorable, unique names that stand out from typical clichéd options. Focus on unexpected word combinations, interesting textures, and emotional resonance.`
+            },
+            {
               role: "user",
               content: prompt
             }
           ],
-          max_tokens: 30,
-          temperature: 1.0
+          max_tokens: 25,
+          temperature: 1.2
         };
 
         // Model-specific parameter configuration
