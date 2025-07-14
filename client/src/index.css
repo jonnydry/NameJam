@@ -239,6 +239,58 @@
     pointer-events: none;
   }
   
+  /* Heart shrink animation for removal */
+  @keyframes heart-shrink {
+    0% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+      filter: drop-shadow(0 0 0px rgba(156, 163, 175, 0));
+    }
+    20% {
+      transform: scale(1.2) rotate(-5deg);
+      filter: drop-shadow(0 0 8px rgba(156, 163, 175, 0.6));
+    }
+    60% {
+      transform: scale(0.3) rotate(180deg);
+      opacity: 0.8;
+      filter: drop-shadow(0 0 12px rgba(156, 163, 175, 0.8));
+    }
+    100% {
+      transform: scale(0) rotate(360deg);
+      opacity: 0;
+      filter: drop-shadow(0 0 0px rgba(156, 163, 175, 0));
+    }
+  }
+  
+  .heart-shrink {
+    animation: heart-shrink 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform-origin: center;
+    position: relative;
+    z-index: 10;
+  }
+  
+  /* Gray pulse effect for removal */
+  @keyframes heart-remove-pulse {
+    0%, 100% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    50% {
+      opacity: 0.3;
+      transform: scale(1.5);
+    }
+  }
+  
+  .heart-shrink::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    background: radial-gradient(circle, rgba(156, 163, 175, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: heart-remove-pulse 0.6s ease-out;
+    pointer-events: none;
+  }
+  
   /* Particle effect for heart */
   @keyframes particle-float {
     0% {
