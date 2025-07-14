@@ -26,34 +26,38 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
     return () => setProgress(0);
   }, [stage]);
 
-  // Generate random note positions (0-4 for staff lines, plus spaces between)
-  const [notes] = useState(() => {
-    const positions = [15, 25, 35, 45, 55, 65, 75, 85];
-    return positions.map(pos => ({
-      position: pos,
-      // Allow half-line positions for more variety (0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4)
-      line: Math.floor(Math.random() * 9) / 2,
-      isWholeNote: Math.random() > 0.5,
-    }));
-  });
+  // Ode to Joy notes (simplified version)
+  // E E F G G F E D C C D E E D D
+  const odeToJoyNotes = [
+    { note: 'E', line: 2 },    // E on the staff
+    { note: 'E', line: 2 },
+    { note: 'F', line: 1.5 },  // F between lines
+    { note: 'G', line: 1 },    // G on line
+    { note: 'G', line: 1 },
+    { note: 'F', line: 1.5 },
+    { note: 'E', line: 2 },
+    { note: 'D', line: 2.5 },  // D between lines
+    { note: 'C', line: 3 },    // C on line
+    { note: 'C', line: 3 },
+    { note: 'D', line: 2.5 },
+    { note: 'E', line: 2 },
+    { note: 'E', line: 2 },
+    { note: 'D', line: 2.5 },
+    { note: 'D', line: 2.5 },
+  ];
 
-  // Calculate the current note position based on progress
-  const getCurrentNoteY = (progress: number) => {
-    // Find which two notes we're between
-    for (let i = 0; i < notes.length - 1; i++) {
-      if (progress >= notes[i].position && progress <= notes[i + 1].position) {
-        // Interpolate between the two notes
-        const t = (progress - notes[i].position) / (notes[i + 1].position - notes[i].position);
-        const startY = 40 - (notes[i].line * 10);
-        const endY = 40 - (notes[i + 1].line * 10);
-        return startY + (endY - startY) * t;
-      }
-    }
-    // Handle edge cases
-    if (progress < notes[0].position) {
-      return 40 - (notes[0].line * 10);
-    }
-    return 40 - (notes[notes.length - 1].line * 10);
+  // Position notes evenly across the staff
+  const notes = odeToJoyNotes.map((note, i) => ({
+    position: (i + 1) * (90 / (odeToJoyNotes.length + 1)),
+    line: note.line,
+    noteName: note.note,
+    isQuarterNote: true,
+  }));
+
+  // Calculate which note is currently playing
+  const getCurrentNoteIndex = (progress: number) => {
+    const noteProgress = (progress / 100) * notes.length;
+    return Math.floor(noteProgress);
   };
 
   return (
@@ -90,88 +94,77 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
               {notes.map((note, i) => {
                 const noteX = (note.position / 100) * 256;
                 const noteY = 40 - note.line * 10;
-                const shouldGlow = progress >= note.position - 5 && progress <= note.position + 5;
+                const currentNoteIndex = getCurrentNoteIndex(progress);
+                const isPlaying = i === currentNoteIndex;
+                const hasPlayed = i < currentNoteIndex;
                 
                 return (
                   <g key={i} transform={`translate(${noteX}, ${noteY})`}>
                     {/* Note head */}
-                    {note.isWholeNote ? (
-                      <ellipse
-                        rx="5"
-                        ry="3.5"
-                        fill={shouldGlow ? "currentColor" : "none"}
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className={shouldGlow ? "text-primary" : "text-muted-foreground/50"}
-                        transform="rotate(-20)"
-                      />
-                    ) : (
-                      <ellipse
-                        rx="4.5"
-                        ry="3"
-                        fill="currentColor"
-                        className={shouldGlow ? "text-primary" : "text-muted-foreground/50"}
-                        transform="rotate(-20)"
-                      />
-                    )}
+                    <ellipse
+                      rx="4.5"
+                      ry="3"
+                      fill="currentColor"
+                      className={
+                        isPlaying ? "text-primary animate-pulse" : 
+                        hasPlayed ? "text-primary/60" : 
+                        "text-muted-foreground/50"
+                      }
+                      transform="rotate(-20)"
+                    />
                     {/* Note stem */}
-                    {!note.isWholeNote && (
-                      <line
-                        x1="3.5"
-                        y1="0"
-                        x2="3.5"
-                        y2={note.line < 2 ? "20" : "-20"}
+                    <line
+                      x1="3.5"
+                      y1="0"
+                      x2="3.5"
+                      y2={note.line < 2 ? "20" : "-20"}
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      className={
+                        isPlaying ? "text-primary" : 
+                        hasPlayed ? "text-primary/60" : 
+                        "text-muted-foreground/50"
+                      }
+                    />
+                    {/* Note flag for quarter notes */}
+                    {note.line < 2 && (
+                      <path
+                        d="M 3.5 20 Q 8 15, 7 10"
                         stroke="currentColor"
                         strokeWidth="1.5"
-                        className={shouldGlow ? "text-primary" : "text-muted-foreground/50"}
-                      />
-                    )}
-                    {/* Add ledger line if note is above or below staff */}
-                    {(note.line < 0 || note.line > 4) && (
-                      <line
-                        x1="-8"
-                        y1="0"
-                        x2="8"
-                        y2="0"
-                        stroke="currentColor"
-                        strokeWidth="1"
-                        className="text-muted-foreground/30"
+                        fill="none"
+                        className={
+                          isPlaying ? "text-primary" : 
+                          hasPlayed ? "text-primary/60" : 
+                          "text-muted-foreground/50"
+                        }
                       />
                     )}
                   </g>
                 );
               })}
               
-              {/* Progress indicator that follows the notes */}
-              <g transform={`translate(${(progress / 100) * 256}, ${getCurrentNoteY(progress)})`}>
-                {/* Glow effect */}
-                <circle
-                  r="12"
-                  fill="currentColor"
-                  className="text-primary/20"
-                />
-                <circle
-                  r="8"
-                  fill="currentColor"
-                  className="text-primary/40"
-                />
-                <circle
-                  r="5"
-                  fill="currentColor"
-                  className="text-primary"
-                />
-                {/* Trailing line effect - shows the path traveled */}
-                <path
-                  d={`M ${-((progress / 100) * 256)} ${-(getCurrentNoteY(progress) - 40)} 
-                      Q ${-((progress / 100) * 256) / 2} ${-(getCurrentNoteY(progress) - 40)} 
-                        0 0`}
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                  className="text-primary/30"
-                  strokeLinecap="round"
-                />
-              </g>
+              {/* Time signature */}
+              <text 
+                x="35" 
+                y="28" 
+                fontSize="16" 
+                fontWeight="bold"
+                fill="currentColor"
+                className="text-muted-foreground/40 font-mono"
+              >
+                4
+              </text>
+              <text 
+                x="35" 
+                y="48" 
+                fontSize="16" 
+                fontWeight="bold"
+                fill="currentColor"
+                className="text-muted-foreground/40 font-mono"
+              >
+                4
+              </text>
               
               {/* Progress bar background */}
               <rect
@@ -197,7 +190,7 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
             </svg>
           </div>
           <div className="text-lg text-foreground font-medium tracking-wide">Composing unique names...</div>
-          <div className="text-sm text-muted-foreground">Following the melody of creativity</div>
+          <div className="text-sm text-muted-foreground">Playing Ode to Joy while we create</div>
         </>
       ) : (
         <>
