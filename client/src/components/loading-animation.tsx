@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 interface LoadingAnimationProps {
   stage: 'generating' | 'verifying';
@@ -26,203 +26,107 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
     return () => setProgress(0);
   }, [stage]);
 
-  // Simplified melody inspired by Ode to Joy - just 8 notes for cleaner animation
-  const melodyNotes = [
-    { note: 'C', line: 5 },    // C (ledger line)
-    { note: 'E', line: 4 },    // E 
-    { note: 'G', line: 3 },    // G
-    { note: 'C', line: 1 },    // High C
-    { note: 'C', line: 1 },    // High C
-    { note: 'G', line: 3 },    // G
-    { note: 'E', line: 4 },    // E
-    { note: 'C', line: 5 },    // C (ledger line)
-  ];
-
-  // Position notes with more spacing for visual clarity
-  const notes = melodyNotes.map((note, i) => ({
-    position: 15 + (i * 75 / melodyNotes.length),
-    line: note.line,
-    noteName: note.note,
-    duration: i % 2 === 0 ? 'quarter' : 'eighth',
-  }));
-
-  // Calculate which note is currently playing
-  const getCurrentNoteIndex = (progress: number) => {
-    const noteProgress = (progress / 100) * notes.length;
-    return Math.floor(noteProgress);
-  };
+  // Generate random notes that scroll across like Guitar Hero
+  const notes = useMemo(() => {
+    const noteCount = 12;
+    return Array.from({ length: noteCount }, (_, i) => ({
+      id: i,
+      position: (i / noteCount) * 100, // Position along the timeline (0-100%)
+      line: Math.floor(Math.random() * 5), // Random staff line (0-4)
+    }));
+  }, []);
 
   return (
     <div className="flex flex-col items-center space-y-4">
       {stage === 'generating' ? (
         <>
-          {/* Musical Staff Loading Animation */}
-          <div className="relative w-80 h-24">
-            <svg viewBox="0 0 320 96" className="w-full h-full">
+          {/* Guitar Hero style Musical Staff Loading Animation */}
+          <div className="relative w-80 h-20 overflow-hidden">
+            <svg viewBox="0 0 320 80" className="w-full h-full">
               {/* Staff lines */}
               {[0, 1, 2, 3, 4].map((i) => (
                 <line
                   key={i}
                   x1="0"
-                  y1={20 + i * 12}
+                  y1={16 + i * 12}
                   x2="320"
-                  y2={20 + i * 12}
+                  y2={16 + i * 12}
                   stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="text-muted-foreground/40"
+                  strokeWidth="1"
+                  className="text-border"
                 />
               ))}
               
-              {/* Treble clef symbol */}
-              <g transform="translate(20, 44)">
-                <path
-                  d="M 0 -25 
-                     L 0 35
-                     M 0 -15
-                     C -8 -15, -12 -5, -12 5
-                     C -12 15, -8 25, 0 25
-                     C 12 25, 16 15, 16 5
-                     C 16 -5, 12 -15, 4 -15
-                     C 8 -15, 12 -10, 12 -5
-                     C 12 0, 8 5, 4 5
-                     C 0 5, -4 0, -4 -5
-                     C -4 -10, 0 -15, 4 -15
-                     M 0 25
-                     C 0 30, -3 35, -6 35
-                     C -9 35, -12 32, -12 29
-                     C -12 26, -9 23, -6 23
-                     C -3 23, 0 26, 0 29
-                     C 0 32, -3 35, -6 35"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  fill="none"
-                  className="text-foreground/80"
-                />
-              </g>
+              {/* Progress line (vertical scanner) */}
+              <line
+                x1={progress * 3.2}
+                y1="0"
+                x2={progress * 3.2}
+                y2="80"
+                stroke="currentColor"
+                strokeWidth="3"
+                className="text-primary"
+                opacity="0.8"
+              />
               
-              {/* Notes on the staff */}
-              {notes.map((note, i) => {
-                const noteX = 50 + (note.position / 100) * 250;
-                const noteY = 20 + note.line * 12;
-                const currentNoteIndex = getCurrentNoteIndex(progress);
-                const isPlaying = i === currentNoteIndex;
-                const hasPlayed = i < currentNoteIndex;
+              {/* Notes scrolling across */}
+              {notes.map((note) => {
+                const noteX = note.position * 3.2;
+                const noteY = 16 + note.line * 12;
+                const hasBeenHit = progress > note.position;
+                const isNearHit = Math.abs(progress - note.position) < 5;
                 
                 return (
-                  <g key={i} transform={`translate(${noteX}, ${noteY})`}>
-                    {/* Ledger line for middle C */}
-                    {note.line >= 5 && (
-                      <line
-                        x1="-8"
-                        y1="0"
-                        x2="8"
-                        y2="0"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className="text-muted-foreground/40"
-                      />
-                    )}
-                    {/* Note head */}
-                    <ellipse
-                      rx="5"
-                      ry="4"
+                  <g key={note.id} transform={`translate(${noteX}, ${noteY})`}>
+                    {/* Note circle */}
+                    <circle
+                      r={isNearHit ? "7" : "5"}
                       fill="currentColor"
                       className={
-                        isPlaying ? "text-primary animate-pulse" : 
-                        hasPlayed ? "text-primary/70" : 
-                        "text-muted-foreground/60"
-                      }
-                      transform="rotate(-20)"
-                    />
-                    {/* Note stem */}
-                    <line
-                      x1="4.5"
-                      y1="0"
-                      x2="4.5"
-                      y2="-25"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className={
-                        isPlaying ? "text-primary" : 
-                        hasPlayed ? "text-primary/70" : 
-                        "text-muted-foreground/60"
+                        hasBeenHit 
+                          ? "text-primary/30" 
+                          : isNearHit
+                          ? "text-primary animate-pulse"
+                          : "text-muted-foreground"
                       }
                     />
-                    {/* Add flag for eighth notes */}
-                    {note.duration === 'eighth' && (
-                      <path
-                        d="M 4.5 -25 Q 8 -20, 8 -15"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="none"
-                        className={
-                          isPlaying ? "text-primary" : 
-                          hasPlayed ? "text-primary/70" : 
-                          "text-muted-foreground/60"
-                        }
-                      />
-                    )}
-                    {/* Glow effect when playing */}
-                    {isPlaying && (
+                    {/* Hit effect */}
+                    {isNearHit && (
                       <circle
                         r="12"
-                        fill="currentColor"
-                        className="text-primary/20 animate-ping"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="text-primary animate-ping"
                       />
                     )}
                   </g>
                 );
               })}
               
-              {/* Time signature */}
-              <text 
-                x="35" 
-                y="40" 
-                fontSize="20" 
-                fontWeight="bold"
-                fill="currentColor"
-                className="text-muted-foreground/50 font-mono"
-                textAnchor="middle"
-              >
-                4
-              </text>
-              <text 
-                x="35" 
-                y="60" 
-                fontSize="20" 
-                fontWeight="bold"
-                fill="currentColor"
-                className="text-muted-foreground/50 font-mono"
-                textAnchor="middle"
-              >
-                4
-              </text>
-              
-              {/* Progress bar background */}
+              {/* Progress bar at bottom */}
               <rect
                 x="0"
-                y="85"
+                y="75"
                 width="320"
-                height="3"
+                height="2"
                 fill="currentColor"
-                className="text-muted-foreground/20"
-                rx="1.5"
+                className="text-muted"
+                rx="1"
               />
-              
-              {/* Progress bar fill */}
               <rect
                 x="0"
-                y="85"
-                width={`${(progress / 100) * 320}`}
-                height="3"
+                y="75"
+                width={progress * 3.2}
+                height="2"
                 fill="currentColor"
                 className="text-primary"
-                rx="1.5"
+                rx="1"
               />
             </svg>
           </div>
           <div className="text-lg text-foreground font-medium tracking-wide">Composing unique names...</div>
-          <div className="text-sm text-muted-foreground">Creating musical magic</div>
+          <div className="text-sm text-muted-foreground">Hitting the right notes</div>
         </>
       ) : (
         <>
