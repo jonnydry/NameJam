@@ -506,6 +506,9 @@ export class NameGeneratorService {
     // Filter out multi-word musical terms to ensure accurate word count
     const singleWordMusicalTerms = safeSource.musicalTerms.filter(term => !term.includes(' '));
     
+    // Ensure we have at least some single-word musical terms, otherwise use nouns as fallback
+    const musicalTermsToUse = singleWordMusicalTerms.length > 0 ? singleWordMusicalTerms : safeSource.nouns;
+    
     const humorousPatterns = [
       // CLASSIC PATTERNS - Boosted for traditional band names
       // Classic "The [adjective] [noun]" - most iconic band name style (increased frequency)
@@ -546,7 +549,7 @@ export class NameGeneratorService {
       },
       
       // Unexpected combinations that create humor
-      () => `${safeSource.adjectives[Math.floor(Math.random() * safeSource.adjectives.length)]} ${safeSource.nouns[Math.floor(Math.random() * safeSource.nouns.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`,
+      () => `${safeSource.adjectives[Math.floor(Math.random() * safeSource.adjectives.length)]} ${safeSource.nouns[Math.floor(Math.random() * safeSource.nouns.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`,
       
       // Grammatically playful structures
       () => `${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
@@ -569,16 +572,16 @@ export class NameGeneratorService {
       () => {
         const letter = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)].charAt(0).toLowerCase();
         const matchingNouns = sources.nouns.filter(n => n.toLowerCase().startsWith(letter));
-        const matchingMusical = singleWordMusicalTerms.filter(m => m.toLowerCase().startsWith(letter));
+        const matchingMusical = musicalTermsToUse.filter(m => m.toLowerCase().startsWith(letter));
         
         if (matchingNouns.length > 0 && Math.random() > 0.5) {
-          return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${matchingNouns[Math.floor(Math.random() * matchingNouns.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`;
+          return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${matchingNouns[Math.floor(Math.random() * matchingNouns.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`;
         } else if (matchingMusical.length > 0) {
           return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${matchingMusical[Math.floor(Math.random() * matchingMusical.length)]}`;
         }
         
         // Fallback to regular pattern
-        return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`;
+        return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`;
       },
       
       // Emotional journey pattern
@@ -607,7 +610,7 @@ export class NameGeneratorService {
     const wordCount = result.split(' ').length;
     if (wordCount !== 3) {
       // Fallback to simple 3-word pattern with single-word musical terms
-      return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`;
+      return `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`;
     }
     
     return result;
@@ -617,6 +620,9 @@ export class NameGeneratorService {
     // Filter out multi-word musical terms to ensure accurate word count
     const singleWordMusicalTerms = sources.musicalTerms.filter(term => !term.includes(' '));
     
+    // Ensure we have at least some single-word musical terms, otherwise use nouns as fallback
+    const musicalTermsToUse = singleWordMusicalTerms.length > 0 ? singleWordMusicalTerms : sources.nouns;
+    
     const humorousPatterns = [
       // Question-like structures
       () => `Who ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} the ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}?`,
@@ -625,7 +631,7 @@ export class NameGeneratorService {
       () => `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} Than ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
       
       // Unexpected professional titles
-      () => `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`,
+      () => `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`,
       
       // Temporal paradoxes for intrigue
       () => `Yesterday's ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]}`,
@@ -634,7 +640,7 @@ export class NameGeneratorService {
       () => `${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} From ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
       
       // Abstract concepts made concrete
-      () => `The ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`
+      () => `The ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`
     ];
     
     const pattern = humorousPatterns[Math.floor(Math.random() * humorousPatterns.length)];
@@ -645,18 +651,21 @@ export class NameGeneratorService {
     // Filter out multi-word musical terms to ensure accurate word count
     const singleWordMusicalTerms = sources.musicalTerms.filter(term => !term.includes(' '));
     
+    // Ensure we have at least some single-word musical terms, otherwise use nouns as fallback
+    const musicalTermsToUse = singleWordMusicalTerms.length > 0 ? singleWordMusicalTerms : sources.nouns;
+    
     const humorousPatterns = [
       // Narrative structures with unexpected endings
-      () => `${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`,
+      () => `${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`,
       
       // Absurd how-to titles
-      () => `How to ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`,
+      () => `How to ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`,
       
       // Impossible scenarios
       () => `When ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]}`,
       
       // Philosophical absurdities
-      () => `Why ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`,
+      () => `Why ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`,
       
       // Compound contradictions
       () => `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} and ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
@@ -665,7 +674,7 @@ export class NameGeneratorService {
       () => `${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} from ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]}`,
       
       // Emotional journeys
-      () => `${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${singleWordMusicalTerms[Math.floor(Math.random() * singleWordMusicalTerms.length)]}`
+      () => `${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)]} ${sources.nouns[Math.floor(Math.random() * sources.nouns.length)]} ${sources.verbs[Math.floor(Math.random() * sources.verbs.length)]} ${musicalTermsToUse[Math.floor(Math.random() * musicalTermsToUse.length)]}`
     ];
     
     const pattern = humorousPatterns[Math.floor(Math.random() * humorousPatterns.length)];
@@ -3633,7 +3642,7 @@ export class NameGeneratorService {
   }
 
   private async fetchWorldCityWords(): Promise<string[]> {
-    return [
+    const cities = [
       'Tokyo', 'Mumbai', 'Delhi', 'Shanghai', 'São Paulo', 'Mexico City', 'Cairo', 'Beijing',
       'Dhaka', 'Osaka', 'New York', 'Karachi', 'Buenos Aires', 'Chongqing', 'Istanbul', 'Kolkata',
       'Manila', 'Lagos', 'Rio de Janeiro', 'Tianjin', 'Kinshasa', 'Guangzhou', 'Los Angeles',
@@ -3646,10 +3655,12 @@ export class NameGeneratorService {
       'Atlanta', 'Fukuoka', 'Khartoum', 'Barcelona', 'Johannesburg', 'Saint Petersburg',
       'Qingdao', 'Dalian', 'Washington', 'Yangon', 'Alexandria', 'Jinan', 'Guadalajara'
     ];
+    // Filter out multi-word city names to maintain accurate word counts
+    return cities.filter(city => !city.includes(' '));
   }
 
   private async fetchLandscapeWords(): Promise<string[]> {
-    return [
+    const landscapes = [
       'Fjord', 'Canyon', 'Valley', 'Plateau', 'Mesa', 'Butte', 'Ridge', 'Peak',
       'Summit', 'Crest', 'Slope', 'Hillside', 'Foothill', 'Lowland', 'Highland', 'Upland',
       'Prairie', 'Steppe', 'Savanna', 'Grassland', 'Meadow', 'Pasture', 'Field', 'Plain',
@@ -3663,6 +3674,8 @@ export class NameGeneratorService {
       'Glacier', 'Icefield', 'Iceberg', 'Tundra', 'Taiga', 'Boreal', 'Deciduous', 'Coniferous',
       'Rainforest', 'Cloud forest', 'Montane', 'Alpine', 'Subalpine', 'Treeline', 'Snowline'
     ];
+    // Filter out multi-word landscape terms to maintain accurate word counts
+    return landscapes.filter(landscape => !landscape.includes(' '));
   }
 
   private async fetchPhysicsWords(): Promise<string[]> {
