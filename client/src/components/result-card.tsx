@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Package2, CheckCircle, AlertCircle, XCircle, BookOpen, Brain } from "lucide-react";
+import { Copy, ExternalLink, Heart, CheckCircle, AlertCircle, XCircle, BookOpen, Brain } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -38,6 +38,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
   const [showBioModal, setShowBioModal] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const handleAddToStash = () => {
     if (isInStash(name, nameType)) {
@@ -46,6 +47,10 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
         description: `"${name}" is already saved in your stash.`,
       });
     } else {
+      // Trigger animation
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 600);
+      
       const success = addToStash({
         name,
         type: nameType,
@@ -110,7 +115,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             }`}
             title={isInStash(name, nameType) ? 'Already in stash' : 'Add to stash'}
           >
-            <Package2 className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} aria-hidden="true" />
+            <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''} ${isAnimating ? 'heart-burst' : ''}`} aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"

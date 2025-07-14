@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Package2 } from "lucide-react";
+import { Loader2, Heart } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ export function BandBioModal({
   const [model, setModel] = useState<string>("");
   const [source, setSource] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const { toast } = useToast();
   const { addToStash, isInStash } = useStash();
 
@@ -133,6 +134,12 @@ export function BandBioModal({
               </Button>
               <Button
                 onClick={() => {
+                  if (!isInStash(bandName, 'bandLore')) {
+                    // Trigger animation
+                    setIsAnimating(true);
+                    setTimeout(() => setIsAnimating(false), 600);
+                  }
+                  
                   const success = addToStash({
                     name: bandName,
                     type: 'bandLore',
@@ -162,7 +169,7 @@ export function BandBioModal({
                 }}
                 disabled={isInStash(bandName, 'bandLore')}
               >
-                <Package2 className={`h-4 w-4 mr-2 ${isInStash(bandName, 'bandLore') ? 'fill-current' : ''}`} />
+                <Heart className={`h-4 w-4 mr-2 ${isInStash(bandName, 'bandLore') ? 'fill-current' : ''} ${isAnimating ? 'heart-burst' : ''}`} />
                 {isInStash(bandName, 'bandLore') ? 'Saved' : 'Save Bio'}
               </Button>
             </>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Copy, Music, RefreshCw, ListMusic, Package2, ExternalLink, Lightbulb, Bookmark } from 'lucide-react';
+import { Copy, Music, RefreshCw, ListMusic, Heart, ExternalLink, Lightbulb, Bookmark } from 'lucide-react';
 import { LoadingAnimation } from './loading-animation';
 import { useStash } from '@/hooks/use-stash';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +24,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   const [error, setError] = useState<string | null>(null);
   const [generatedBandName, setGeneratedBandName] = useState<string | null>(null);
   const [loadingBandName, setLoadingBandName] = useState(false);
+  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(new Set());
   
   const { addToStash, isInStash } = useStash();
   const { toast } = useToast();
@@ -95,6 +96,18 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   };
 
   const handleAddToStash = (song: SetListSong) => {
+    if (!isInStash(song.name, 'song')) {
+      // Trigger animation
+      setAnimatingHearts(prev => new Set(prev).add(song.name));
+      setTimeout(() => {
+        setAnimatingHearts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(song.name);
+          return newSet;
+        });
+      }, 600);
+    }
+    
     const success = addToStash({
       name: song.name,
       type: 'song',
@@ -202,7 +215,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
               title={isInStash(song.name, 'song') ? 'Already in stash' : 'Add to stash'}
               aria-label={isInStash(song.name, 'song') ? `${song.name} is already in stash` : `Add ${song.name} to stash`}
             >
-              <Package2 className={`w-4 h-4 ${isInStash(song.name, 'song') ? 'fill-current' : ''}`} aria-hidden="true" />
+              <Heart className={`w-4 h-4 ${isInStash(song.name, 'song') ? 'fill-current' : ''} ${animatingHearts.has(song.name) ? 'heart-burst' : ''}`} aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"
