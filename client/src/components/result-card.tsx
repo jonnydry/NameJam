@@ -56,7 +56,9 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       type: nameType,
       wordCount: result.wordCount,
       verification: result.verification,
-      isAiGenerated: result.isAiGenerated
+      isAiGenerated: result.isAiGenerated,
+      genre: genre,
+      mood: mood
     });
     
     if (action === 'added' && success) {

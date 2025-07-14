@@ -210,6 +210,7 @@ Changelog:
 - July 14, 2025. Redesigned loading animation with sound wave visualization: replaced musical staff with dynamic sound wave that fills as loading progresses, wave pattern uses multiple sine frequencies for realistic audio waveform appearance, progress indicator dot follows the wave with glow effect, simple progress bar underneath for clear completion tracking, uses app's color scheme with text-primary for active elements
 - July 14, 2025. Redesigned loading animation as equalizer visualization: transformed sound wave into 40-bar equalizer display, bars illuminate progressively as loading advances with subtle animation near progress point, maintains consistent app color scheme with glow effects
 - July 14, 2025. Enhanced Stash feature with band bio saving and category sorting: extended schema to support 'bandLore' type for saving AI-generated band biographies, added "Save Bio" button to band bio modal with heart icon, implemented category filter dropdown to sort stash by band names/song names/setlists/band lore, updated export functions (text/JSON/print) to include band lore with bio previews, band lore items display truncated bio text with model attribution in stash view
+- July 14, 2025. Added band bio generation for stashed band names: implemented book icon button on band items in stash that opens band bio modal, passes stored genre/mood data to bio generation for context-aware results, updated schema to include genre/mood fields on stash items for proper bio generation context
 
 ## User Preferences
 
