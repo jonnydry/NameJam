@@ -409,7 +409,7 @@ Respond with ONLY a JSON object in this exact format:
             messages: [
               {
                 role: "system",
-                content: "You are a creative music expert who generates unique band names based on setlists. Always respond with valid JSON."
+                content: "You are an expert band naming specialist with deep knowledge of linguistic patterns, poetic structures, and grammatical consistency. When analyzing setlists to create band names, apply these principles: ensure perfect grammar (subject-verb agreement, proper articles), use poetic flow with natural stress patterns, create memorable word combinations that reflect the musical themes, and avoid duplicate words. Focus on semantic relationships between the setlist songs and generate names with authentic artistic personality."
               },
               {
                 role: "user",
