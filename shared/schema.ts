@@ -68,6 +68,8 @@ export const stashItem = z.object({
   savedAt: z.string(), // ISO date string
   verification: verificationResult.optional(),
   isAiGenerated: z.boolean().optional(),
+  genre: z.string().optional(), // For band/song items
+  mood: z.string().optional(), // For band/song items
   // Additional fields for setlist items
   setlistData: z.object({
     setOne: z.array(setListSong),

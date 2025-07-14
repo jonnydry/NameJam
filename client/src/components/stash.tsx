@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { BandBioModal } from './band-bio-modal';
 
 export function Stash() {
   const { stash, removeFromStash, clearStash } = useStash();
@@ -20,6 +21,8 @@ export function Stash() {
   const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'band' | 'song' | 'setlist' | 'bandLore'>('all');
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showBioModal, setShowBioModal] = useState(false);
+  const [selectedBandForBio, setSelectedBandForBio] = useState<{ name: string; genre?: string; mood?: string } | null>(null);
 
   const handleCopy = async (name: string) => {
     try {
@@ -515,6 +518,24 @@ export function Stash() {
                   )}
                 </div>
                 <div className="flex items-center space-x-1 ml-4">
+                  {item.type === 'band' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedBandForBio({ 
+                          name: item.name,
+                          genre: item.genre,
+                          mood: item.mood
+                        });
+                        setShowBioModal(true);
+                      }}
+                      className="h-8 w-8 hover:bg-purple-500/20 text-muted-foreground hover:text-purple-500"
+                      title="Generate band bio"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -539,6 +560,15 @@ export function Stash() {
           </Card>
         ))}
         </div>
+      )}
+      {showBioModal && selectedBandForBio && (
+        <BandBioModal
+          bandName={selectedBandForBio.name}
+          genre={selectedBandForBio.genre}
+          mood={selectedBandForBio.mood}
+          open={showBioModal}
+          onOpenChange={setShowBioModal}
+        />
       )}
     </div>
   );
