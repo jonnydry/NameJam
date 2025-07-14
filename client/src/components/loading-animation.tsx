@@ -6,6 +6,25 @@ interface LoadingAnimationProps {
 
 export function LoadingAnimation({ stage }: LoadingAnimationProps) {
   const [progress, setProgress] = useState(0);
+  const [animationTime, setAnimationTime] = useState(0);
+  const [barPattern, setBarPattern] = useState<Array<{x: number, baseHeight: number, frequency: number, amplitude: number, delay: number}>>([]);
+
+  // Generate unique random bar pattern on mount
+  useEffect(() => {
+    const barCount = 40;
+    const bars = [];
+    
+    for (let i = 0; i < barCount; i++) {
+      bars.push({
+        x: i * 8 + 4,
+        baseHeight: Math.random() * 25 + 8, // Random base height between 8-33
+        frequency: Math.random() * 0.003 + 0.001, // Random oscillation speed
+        amplitude: Math.random() * 12 + 3, // Random amplitude for up/down movement
+        delay: Math.random() * Math.PI * 2, // Random phase offset
+      });
+    }
+    setBarPattern(bars);
+  }, [stage]); // Regenerate pattern when stage changes
 
   useEffect(() => {
     const duration = stage === 'generating' ? 3000 : 2000;
@@ -15,6 +34,7 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
       const elapsed = Date.now() - startTime;
       const newProgress = Math.min((elapsed / duration) * 100, 100);
       setProgress(newProgress);
+      setAnimationTime(elapsed);
       
       if (newProgress < 100) {
         requestAnimationFrame(updateProgress);
@@ -23,31 +43,11 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
     
     requestAnimationFrame(updateProgress);
     
-    return () => setProgress(0);
+    return () => {
+      setProgress(0);
+      setAnimationTime(0);
+    };
   }, [stage]);
-
-  // Generate equalizer bars with varying heights
-  const generateEqualizerBars = () => {
-    const barCount = 40;
-    const bars = [];
-    
-    for (let i = 0; i < barCount; i++) {
-      // Create varying heights using sine waves for smooth variation
-      const baseHeight = 20;
-      const variation = 
-        Math.sin(i * 0.3) * 15 + 
-        Math.sin(i * 0.7) * 10 + 
-        Math.sin(i * 1.2) * 5;
-      const height = Math.max(5, baseHeight + variation);
-      
-      bars.push({
-        x: i * 8 + 4,
-        height: height,
-        delay: i * 0.02,
-      });
-    }
-    return bars;
-  };
 
   return (
     <div className="flex flex-col items-center space-y-4">
@@ -56,30 +56,39 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
           {/* Equalizer Loading Animation */}
           <div className="relative w-80 h-20">
             <svg viewBox="0 0 320 80" className="w-full h-full">
-              {/* Equalizer bars */}
-              {generateEqualizerBars().map((bar, i) => {
+              {/* Animated Equalizer bars */}
+              {barPattern.map((bar, i) => {
                 const isActive = (i / 40) * 100 <= progress;
-                const isNearActive = Math.abs((i / 40) * 100 - progress) < 10;
+                const isNearActive = Math.abs((i / 40) * 100 - progress) < 15;
+                
+                // Calculate animated height using sine wave with random parameters
+                const animatedHeightModifier = Math.sin(animationTime * bar.frequency + bar.delay) * bar.amplitude;
+                const currentHeight = Math.max(4, bar.baseHeight + animatedHeightModifier);
+                
+                // Add extra bounce for active and near-active bars
+                const bounceMultiplier = isActive ? 1.4 : (isNearActive ? 1.2 : 1);
+                const finalHeight = currentHeight * bounceMultiplier;
                 
                 return (
                   <rect
                     key={i}
                     x={bar.x}
-                    y={40 - bar.height / 2}
+                    y={40 - finalHeight / 2}
                     width="6"
-                    height={bar.height}
+                    height={finalHeight}
                     rx="1"
                     fill="currentColor"
                     className={
                       isActive 
                         ? "text-primary" 
+                        : isNearActive 
+                        ? "text-primary/50"
                         : "text-muted-foreground/30"
                     }
                     style={{
-                      transform: isNearActive ? `scaleY(${1 + Math.sin(Date.now() * 0.01 + i) * 0.3})` : 'scaleY(1)',
-                      transformOrigin: 'center',
-                      transition: 'all 0.3s ease',
-                      filter: isActive ? 'drop-shadow(0 0 4px currentColor)' : 'none',
+                      filter: isActive ? 'drop-shadow(0 0 6px currentColor)' : 
+                             isNearActive ? 'drop-shadow(0 0 3px currentColor)' : 'none',
+                      transition: 'fill 0.3s ease, filter 0.3s ease',
                     }}
                   />
                 );
