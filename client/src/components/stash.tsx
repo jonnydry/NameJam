@@ -1,4 +1,4 @@
-import { Trash2, Copy, Package2, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain, BookOpen, Filter, EyeOff, Eye } from 'lucide-react';
+import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain, BookOpen, Filter, EyeOff, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -271,11 +271,11 @@ export function Stash() {
       <Card className="bg-muted/50 border-muted">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-            <Package2 className="w-8 h-8 text-muted-foreground" />
+            <Heart className="w-8 h-8 text-muted-foreground" />
           </div>
           <CardTitle className="text-xl">Your Stash is Empty</CardTitle>
           <CardDescription>
-            Save your favorite names by clicking the treasure chest icon on any generated name.
+            Save your favorite names by clicking the heart icon on any generated name.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -286,7 +286,7 @@ export function Stash() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center space-x-2">
-          <Package2 className="w-5 h-5 text-primary" />
+          <Heart className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Your Stash</h2>
           <Badge variant="secondary">{stash.length}</Badge>
         </div>
@@ -322,7 +322,7 @@ export function Stash() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => setCategoryFilter('all')}>
-                <Package2 className="w-4 h-4 mr-2" />
+                <Heart className="w-4 h-4 mr-2" />
                 All Categories
               </DropdownMenuItem>
               <DropdownMenuSeparator />
