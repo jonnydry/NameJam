@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
 interface LoadingAnimationProps {
   stage: 'generating' | 'verifying';
@@ -26,97 +26,79 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
     return () => setProgress(0);
   }, [stage]);
 
-  // Generate random notes that scroll across like Guitar Hero
-  const notes = useMemo(() => {
-    const noteCount = 12;
-    return Array.from({ length: noteCount }, (_, i) => ({
-      id: i,
-      position: (i / noteCount) * 100, // Position along the timeline (0-100%)
-      line: Math.floor(Math.random() * 5), // Random staff line (0-4)
-    }));
-  }, []);
+  // Generate sound wave points
+  const generateWavePoints = () => {
+    const points = [];
+    const segments = 100;
+    for (let i = 0; i <= segments; i++) {
+      const x = (i / segments) * 320;
+      // Create a varied wave pattern
+      const frequency = 0.1;
+      const amplitude = 15;
+      const y = 40 + 
+        Math.sin(i * frequency) * amplitude * Math.sin(i * 0.02) +
+        Math.sin(i * frequency * 2.5) * (amplitude * 0.3) +
+        Math.sin(i * frequency * 5) * (amplitude * 0.1);
+      points.push(`${x},${y}`);
+    }
+    return points.join(' ');
+  };
 
   return (
     <div className="flex flex-col items-center space-y-4">
       {stage === 'generating' ? (
         <>
-          {/* Guitar Hero style Musical Staff Loading Animation */}
-          <div className="relative w-80 h-20 overflow-hidden">
+          {/* Sound Wave Loading Animation */}
+          <div className="relative w-80 h-20">
             <svg viewBox="0 0 320 80" className="w-full h-full">
-              {/* Staff lines */}
-              {[0, 1, 2, 3, 4].map((i) => (
-                <line
-                  key={i}
-                  x1="0"
-                  y1={16 + i * 12}
-                  x2="320"
-                  y2={16 + i * 12}
-                  stroke="currentColor"
-                  strokeWidth="1"
-                  className="text-border"
-                />
-              ))}
-              
-              {/* Progress line (vertical scanner) */}
-              <line
-                x1={progress * 3.2}
-                y1="0"
-                x2={progress * 3.2}
-                y2="80"
+              {/* Background wave (full) */}
+              <polyline
+                points={generateWavePoints()}
+                fill="none"
                 stroke="currentColor"
-                strokeWidth="3"
-                className="text-primary"
-                opacity="0.8"
+                strokeWidth="1.5"
+                className="text-muted-foreground/30"
               />
               
-              {/* Notes scrolling across */}
-              {notes.map((note) => {
-                const noteX = note.position * 3.2;
-                const noteY = 16 + note.line * 12;
-                const hasBeenHit = progress > note.position;
-                const isNearHit = Math.abs(progress - note.position) < 5;
-                
-                return (
-                  <g key={note.id} transform={`translate(${noteX}, ${noteY})`}>
-                    {/* Note circle */}
-                    <circle
-                      r={isNearHit ? "7" : "5"}
-                      fill="currentColor"
-                      className={
-                        hasBeenHit 
-                          ? "text-primary/30" 
-                          : isNearHit
-                          ? "text-primary animate-pulse"
-                          : "text-muted-foreground"
-                      }
-                    />
-                    {/* Hit effect */}
-                    {isNearHit && (
-                      <circle
-                        r="12"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="text-primary animate-ping"
-                      />
-                    )}
-                  </g>
-                );
-              })}
+              {/* Progress wave (animated) */}
+              <polyline
+                points={generateWavePoints()}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                className="text-primary"
+                strokeDasharray="1000"
+                strokeDashoffset={1000 - (progress * 10)}
+                style={{
+                  filter: 'drop-shadow(0 0 8px currentColor)',
+                }}
+              />
               
-              {/* Progress bar at bottom */}
+              {/* Progress indicator dot */}
+              <circle
+                cx={progress * 3.2}
+                cy="40"
+                r="4"
+                fill="currentColor"
+                className="text-primary animate-pulse"
+                style={{
+                  filter: 'drop-shadow(0 0 12px currentColor)',
+                }}
+              />
+              
+              {/* Simple progress bar below */}
               <rect
                 x="0"
-                y="75"
+                y="70"
                 width="320"
                 height="2"
                 fill="currentColor"
-                className="text-muted"
+                className="text-muted-foreground/20"
                 rx="1"
               />
               <rect
                 x="0"
-                y="75"
+                y="70"
                 width={progress * 3.2}
                 height="2"
                 fill="currentColor"
@@ -126,7 +108,7 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
             </svg>
           </div>
           <div className="text-lg text-foreground font-medium tracking-wide">Composing unique names...</div>
-          <div className="text-sm text-muted-foreground">Hitting the right notes</div>
+          <div className="text-sm text-muted-foreground">Tuning the creative frequencies</div>
         </>
       ) : (
         <>
