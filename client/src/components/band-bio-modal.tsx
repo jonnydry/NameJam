@@ -169,7 +169,9 @@ export function BandBioModal({
                 }}
                 disabled={isInStash(bandName, 'bandLore')}
               >
-                <Heart className={`h-4 w-4 mr-2 ${isInStash(bandName, 'bandLore') ? 'fill-current' : ''} ${isAnimating ? 'heart-burst' : ''}`} />
+                <span className={`inline-flex items-center ${isAnimating ? 'heart-burst' : ''}`}>
+                  <Heart className={`h-4 w-4 mr-2 ${isInStash(bandName, 'bandLore') ? 'fill-current' : ''}`} />
+                </span>
                 {isInStash(bandName, 'bandLore') ? 'Saved' : 'Save Bio'}
               </Button>
             </>
