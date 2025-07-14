@@ -74,13 +74,29 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
               ))}
               
               {/* Treble clef symbol */}
-              <g transform="translate(15, 50)">
+              <g transform="translate(20, 44)">
                 <path
-                  d="M 0 -30 C -5 -30, -8 -25, -8 -20 C -8 -15, -5 -10, 0 -10 C 5 -10, 8 -15, 8 -20 C 8 -25, 5 -30, 0 -30 M 0 -10 L 0 20 C 0 25, -3 30, -6 30 C -9 30, -12 27, -12 24 C -12 21, -9 18, -6 18 C -3 18, 0 21, 0 24"
+                  d="M 0 -25 
+                     L 0 35
+                     M 0 -15
+                     C -8 -15, -12 -5, -12 5
+                     C -12 15, -8 25, 0 25
+                     C 12 25, 16 15, 16 5
+                     C 16 -5, 12 -15, 4 -15
+                     C 8 -15, 12 -10, 12 -5
+                     C 12 0, 8 5, 4 5
+                     C 0 5, -4 0, -4 -5
+                     C -4 -10, 0 -15, 4 -15
+                     M 0 25
+                     C 0 30, -3 35, -6 35
+                     C -9 35, -12 32, -12 29
+                     C -12 26, -9 23, -6 23
+                     C -3 23, 0 26, 0 29
+                     C 0 32, -3 35, -6 35"
                   stroke="currentColor"
-                  strokeWidth="2"
+                  strokeWidth="3"
                   fill="none"
-                  className="text-muted-foreground/50"
+                  className="text-foreground/80"
                 />
               </g>
               
