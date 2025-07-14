@@ -1,4 +1,4 @@
-import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain, BookOpen, Filter } from 'lucide-react';
+import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain, BookOpen, Filter, EyeOff, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ export function Stash() {
   const { toast } = useToast();
   const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'band' | 'song' | 'setlist' | 'bandLore'>('all');
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const handleCopy = async (name: string) => {
     try {
@@ -290,6 +291,24 @@ export function Stash() {
           <Badge variant="secondary">{stash.length}</Badge>
         </div>
         <div className="flex items-center space-x-2 flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            {isMinimized ? (
+              <>
+                <Eye className="w-4 h-4 mr-2" />
+                Show Stash
+              </>
+            ) : (
+              <>
+                <EyeOff className="w-4 h-4 mr-2" />
+                Hide Stash
+              </>
+            )}
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -359,7 +378,8 @@ export function Stash() {
         </div>
       </div>
 
-      <div className="grid gap-3">
+      {!isMinimized && (
+        <div className="grid gap-3">
         {stash
           .filter(item => categoryFilter === 'all' || item.type === categoryFilter)
           .map((item) => (
@@ -518,7 +538,8 @@ export function Stash() {
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
