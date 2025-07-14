@@ -24,9 +24,9 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   const [error, setError] = useState<string | null>(null);
   const [generatedBandName, setGeneratedBandName] = useState<string | null>(null);
   const [loadingBandName, setLoadingBandName] = useState(false);
-  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(new Set());
+  const [animatingHearts, setAnimatingHearts] = useState<Map<string, 'add' | 'remove'>>(new Map());
   
-  const { addToStash, isInStash } = useStash();
+  const { toggleStashItem, isInStash } = useStash();
   const { toast } = useToast();
 
   const handleGenerateSetList = async () => {
@@ -96,19 +96,24 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   };
 
   const handleAddToStash = (song: SetListSong) => {
-    if (!isInStash(song.name, 'song')) {
-      // Trigger animation
-      setAnimatingHearts(prev => new Set(prev).add(song.name));
-      setTimeout(() => {
-        setAnimatingHearts(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(song.name);
-          return newSet;
-        });
-      }, 600);
-    }
+    const isCurrentlyInStash = isInStash(song.name, 'song');
     
-    const success = addToStash({
+    // Trigger animation
+    setAnimatingHearts(prev => {
+      const newMap = new Map(prev);
+      newMap.set(song.name, isCurrentlyInStash ? 'remove' : 'add');
+      return newMap;
+    });
+    
+    setTimeout(() => {
+      setAnimatingHearts(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(song.name);
+        return newMap;
+      });
+    }, 600);
+    
+    const { action, success } = toggleStashItem({
       name: song.name,
       type: 'song',
       wordCount: song.name.split(' ').length,
@@ -116,12 +121,17 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
       isAiGenerated: false, // Setlist songs are always traditional generation
     });
     
-    if (success) {
+    if (action === 'added' && success) {
       toast({
         title: "Added to stash!",
         description: `"${song.name}" has been saved to your stash.`,
       });
-    } else {
+    } else if (action === 'removed') {
+      toast({
+        title: "Removed from stash",
+        description: `"${song.name}" has been removed from your stash.`,
+      });
+    } else if (action === 'added' && !success) {
       toast({
         title: "Already in stash",
         description: `"${song.name}" is already in your stash.`,
@@ -212,10 +222,10 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
                   ? 'text-red-500 hover:text-red-600' 
                   : 'text-muted-foreground hover:text-red-500'
               }`}
-              title={isInStash(song.name, 'song') ? 'Already in stash' : 'Add to stash'}
+              title={isInStash(song.name, 'song') ? 'Remove from stash' : 'Add to stash'}
               aria-label={isInStash(song.name, 'song') ? `${song.name} is already in stash` : `Add ${song.name} to stash`}
             >
-              <span className={`inline-block ${animatingHearts.has(song.name) ? 'heart-burst' : ''}`}>
+              <span className={`inline-block ${animatingHearts.has(song.name) ? (animatingHearts.get(song.name) === 'add' ? 'heart-burst' : 'heart-shrink') : ''}`}>
                 <Heart className={`w-4 h-4 ${isInStash(song.name, 'song') ? 'fill-current' : ''}`} aria-hidden="true" />
               </span>
             </Button>

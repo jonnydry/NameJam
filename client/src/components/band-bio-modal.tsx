@@ -31,8 +31,9 @@ export function BandBioModal({
   const [source, setSource] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [animationType, setAnimationType] = useState<'add' | 'remove'>('add');
   const { toast } = useToast();
-  const { addToStash, isInStash } = useStash();
+  const { toggleStashItem, isInStash } = useStash();
 
   const generateBio = async () => {
     setLoading(true);
@@ -134,13 +135,14 @@ export function BandBioModal({
               </Button>
               <Button
                 onClick={() => {
-                  if (!isInStash(bandName, 'bandLore')) {
-                    // Trigger animation
-                    setIsAnimating(true);
-                    setTimeout(() => setIsAnimating(false), 600);
-                  }
+                  const isCurrentlyInStash = isInStash(bandName, 'bandLore');
                   
-                  const success = addToStash({
+                  // Set animation type and trigger
+                  setAnimationType(isCurrentlyInStash ? 'remove' : 'add');
+                  setIsAnimating(true);
+                  setTimeout(() => setIsAnimating(false), 600);
+                  
+                  const { action, success } = toggleStashItem({
                     name: bandName,
                     type: 'bandLore',
                     wordCount: bio.split(' ').length,
@@ -154,12 +156,17 @@ export function BandBioModal({
                     }
                   });
                   
-                  if (success) {
+                  if (action === 'added' && success) {
                     toast({
                       title: "Saved to stash!",
                       description: "Band bio has been saved to your collection.",
                     });
-                  } else {
+                  } else if (action === 'removed') {
+                    toast({
+                      title: "Removed from stash",
+                      description: "Band bio has been removed from your collection.",
+                    });
+                  } else if (action === 'added' && !success) {
                     toast({
                       title: "Already in stash",
                       description: "This band bio is already saved.",
@@ -167,12 +174,11 @@ export function BandBioModal({
                     });
                   }
                 }}
-                disabled={isInStash(bandName, 'bandLore')}
               >
-                <span className={`inline-flex items-center ${isAnimating ? 'heart-burst' : ''}`}>
+                <span className={`inline-flex items-center ${isAnimating ? (animationType === 'add' ? 'heart-burst' : 'heart-shrink') : ''}`}>
                   <Heart className={`h-4 w-4 mr-2 ${isInStash(bandName, 'bandLore') ? 'fill-current' : ''}`} />
                 </span>
-                {isInStash(bandName, 'bandLore') ? 'Saved' : 'Save Bio'}
+                {isInStash(bandName, 'bandLore') ? 'Remove Bio' : 'Save Bio'}
               </Button>
             </>
           )}

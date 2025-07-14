@@ -7,9 +7,11 @@ interface StashContextType {
   stash: StashItem[];
   addToStash: (item: Omit<StashItem, 'id' | 'savedAt'>) => boolean;
   removeFromStash: (id: string) => void;
+  removeFromStashByName: (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore') => void;
   clearStash: () => void;
   isInStash: (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore') => boolean;
   stashCount: number;
+  toggleStashItem: (item: Omit<StashItem, 'id' | 'savedAt'>) => { action: 'added' | 'removed'; success: boolean };
 }
 
 const StashContext = createContext<StashContextType | undefined>(undefined);
@@ -62,6 +64,10 @@ export function StashProvider({ children }: { children: ReactNode }) {
     setStash(prev => prev.filter(item => item.id !== id));
   };
 
+  const removeFromStashByName = (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore') => {
+    setStash(prev => prev.filter(item => !(item.name === name && item.type === type)));
+  };
+
   const clearStash = () => {
     setStash([]);
   };
@@ -70,13 +76,25 @@ export function StashProvider({ children }: { children: ReactNode }) {
     return stash.some(item => item.name === name && item.type === type);
   };
 
+  const toggleStashItem = (item: Omit<StashItem, 'id' | 'savedAt'>) => {
+    if (isInStash(item.name, item.type)) {
+      removeFromStashByName(item.name, item.type);
+      return { action: 'removed' as const, success: true };
+    } else {
+      const success = addToStash(item);
+      return { action: 'added' as const, success };
+    }
+  };
+
   const value: StashContextType = {
     stash,
     addToStash,
     removeFromStash,
+    removeFromStashByName,
     clearStash,
     isInStash,
-    stashCount: stash.length
+    stashCount: stash.length,
+    toggleStashItem
   };
 
   return (

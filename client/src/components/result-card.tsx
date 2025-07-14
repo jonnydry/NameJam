@@ -35,40 +35,45 @@ interface ResultCardProps {
 
 export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCardProps) {
   const { name, verification } = result;
-  const { addToStash, isInStash } = useStash();
+  const { toggleStashItem, isInStash } = useStash();
   const { toast } = useToast();
   const [showBioModal, setShowBioModal] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [animationType, setAnimationType] = useState<'add' | 'remove'>('add');
 
   const handleAddToStash = () => {
-    if (isInStash(name, nameType)) {
+    const isCurrentlyInStash = isInStash(name, nameType);
+    
+    // Set animation type before triggering
+    setAnimationType(isCurrentlyInStash ? 'remove' : 'add');
+    setIsAnimating(true);
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 600);
+    
+    const { action, success } = toggleStashItem({
+      name,
+      type: nameType,
+      wordCount: result.wordCount,
+      verification: result.verification,
+      isAiGenerated: result.isAiGenerated
+    });
+    
+    if (action === 'added' && success) {
+      toast({
+        title: "Added to stash!",
+        description: `"${name}" has been saved to your stash.`,
+      });
+    } else if (action === 'removed') {
+      toast({
+        title: "Removed from stash",
+        description: `"${name}" has been removed from your stash.`,
+      });
+    } else if (action === 'added' && !success) {
       toast({
         title: "Already in stash",
         description: `"${name}" is already saved in your stash.`,
       });
-    } else {
-      // Trigger animation
-      console.log('Triggering heart animation for:', name);
-      setIsAnimating(true);
-      setTimeout(() => {
-        console.log('Animation complete for:', name);
-        setIsAnimating(false);
-      }, 600);
-      
-      const success = addToStash({
-        name,
-        type: nameType,
-        wordCount: result.wordCount,
-        verification: result.verification,
-        isAiGenerated: result.isAiGenerated
-      });
-      
-      if (success) {
-        toast({
-          title: "Added to stash!",
-          description: `"${name}" has been saved to your stash.`,
-        });
-      }
     }
   };
 
@@ -117,9 +122,9 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
                 ? 'text-red-500 hover:text-red-600' 
                 : 'text-muted-foreground hover:text-red-500'
             }`}
-            title={isInStash(name, nameType) ? 'Already in stash' : 'Add to stash'}
+            title={isInStash(name, nameType) ? 'Remove from stash' : 'Add to stash'}
           >
-            <span className={`inline-block ${isAnimating ? 'heart-burst' : ''}`}>
+            <span className={`inline-block ${isAnimating ? (animationType === 'add' ? 'heart-burst' : 'heart-shrink') : ''}`}>
               <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} aria-hidden="true" />
             </span>
           </Button>
