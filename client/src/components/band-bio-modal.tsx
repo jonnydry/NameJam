@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Heart } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useStash } from "@/hooks/use-stash";
 
 interface BandBioModalProps {
   bandName: string;
@@ -30,6 +31,7 @@ export function BandBioModal({
   const [source, setSource] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { addToStash, isInStash } = useStash();
 
   const generateBio = async () => {
     setLoading(true);
@@ -116,17 +118,54 @@ export function BandBioModal({
             Close
           </Button>
           {bio && (
-            <Button
-              onClick={() => {
-                navigator.clipboard.writeText(bio);
-                toast({
-                  title: "Copied to clipboard!",
-                  description: "Band bio has been copied.",
-                });
-              }}
-            >
-              Copy Bio
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(bio);
+                  toast({
+                    title: "Copied to clipboard!",
+                    description: "Band bio has been copied.",
+                  });
+                }}
+              >
+                Copy Bio
+              </Button>
+              <Button
+                onClick={() => {
+                  const success = addToStash({
+                    name: bandName,
+                    type: 'bandLore',
+                    wordCount: bio.split(' ').length,
+                    bandLoreData: {
+                      bio,
+                      bandName,
+                      model,
+                      source,
+                      genre,
+                      mood
+                    }
+                  });
+                  
+                  if (success) {
+                    toast({
+                      title: "Saved to stash!",
+                      description: "Band bio has been saved to your collection.",
+                    });
+                  } else {
+                    toast({
+                      title: "Already in stash",
+                      description: "This band bio is already saved.",
+                      variant: "default",
+                    });
+                  }
+                }}
+                disabled={isInStash(bandName, 'bandLore')}
+              >
+                <Heart className={`h-4 w-4 mr-2 ${isInStash(bandName, 'bandLore') ? 'fill-current' : ''}`} />
+                {isInStash(bandName, 'bandLore') ? 'Saved' : 'Save Bio'}
+              </Button>
+            </>
           )}
         </div>
       </DialogContent>

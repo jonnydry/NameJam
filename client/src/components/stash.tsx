@@ -1,4 +1,4 @@
-import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain } from 'lucide-react';
+import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain, BookOpen, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ export function Stash() {
   const { stash, removeFromStash, clearStash } = useStash();
   const { toast } = useToast();
   const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'band' | 'song' | 'setlist' | 'bandLore'>('all');
 
   const handleCopy = async (name: string) => {
     try {
@@ -75,6 +76,8 @@ export function Stash() {
     
     const bandNames = stash.filter(item => item.type === 'band');
     const songNames = stash.filter(item => item.type === 'song');
+    const setlists = stash.filter(item => item.type === 'setlist');
+    const bandLore = stash.filter(item => item.type === 'bandLore');
     
     if (bandNames.length > 0) {
       content += `BAND NAMES (${bandNames.length}):\n`;
@@ -85,6 +88,23 @@ export function Stash() {
     if (songNames.length > 0) {
       content += `SONG NAMES (${songNames.length}):\n`;
       content += songNames.map((item, index) => `${index + 1}. ${item.name}`).join('\n');
+      content += '\n\n';
+    }
+    
+    if (setlists.length > 0) {
+      content += `SETLISTS (${setlists.length}):\n`;
+      content += setlists.map((item, index) => `${index + 1}. ${item.name} (${item.wordCount} songs)`).join('\n');
+      content += '\n\n';
+    }
+    
+    if (bandLore.length > 0) {
+      content += `BAND LORE (${bandLore.length}):\n`;
+      bandLore.forEach((item, index) => {
+        content += `${index + 1}. ${item.name}\n`;
+        if (item.bandLoreData) {
+          content += `   ${item.bandLoreData.bio.substring(0, 100)}...\n`;
+        }
+      });
       content += '\n\n';
     }
     
@@ -114,11 +134,22 @@ export function Stash() {
       totalNames: stash.length,
       bandNames: stash.filter(item => item.type === 'band').length,
       songNames: stash.filter(item => item.type === 'song').length,
-      names: stash.map(item => ({
+      setlists: stash.filter(item => item.type === 'setlist').length,
+      bandLore: stash.filter(item => item.type === 'bandLore').length,
+      items: stash.map(item => ({
         name: item.name,
         type: item.type,
         savedAt: item.savedAt,
-        wordCount: item.name.split(' ').length
+        wordCount: item.wordCount,
+        ...(item.type === 'bandLore' && item.bandLoreData ? {
+          bio: item.bandLoreData.bio,
+          model: item.bandLoreData.model,
+          bandName: item.bandLoreData.bandName
+        } : {}),
+        ...(item.type === 'setlist' && item.setlistData ? {
+          totalSongs: item.setlistData.totalSongs,
+          bandName: item.setlistData.bandName
+        } : {})
       }))
     };
     
@@ -155,6 +186,7 @@ export function Stash() {
     const bandNames = stash.filter(item => item.type === 'band');
     const songNames = stash.filter(item => item.type === 'song');
     const setlists = stash.filter(item => item.type === 'setlist');
+    const bandLore = stash.filter(item => item.type === 'bandLore');
     
     let printContent = `
       <html>
@@ -182,6 +214,7 @@ export function Stash() {
             ${bandNames.length > 0 ? `• ${bandNames.length} band names` : ''}
             ${songNames.length > 0 ? `• ${songNames.length} song names` : ''}
             ${setlists.length > 0 ? `• ${setlists.length} setlists` : ''}
+            ${bandLore.length > 0 ? `• ${bandLore.length} band lore` : ''}
           </div>
     `;
     
@@ -260,6 +293,41 @@ export function Stash() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
+                <Filter className="w-4 h-4 mr-2" />
+                {categoryFilter === 'all' ? 'All Categories' : 
+                 categoryFilter === 'band' ? 'Band Names' :
+                 categoryFilter === 'song' ? 'Song Names' :
+                 categoryFilter === 'setlist' ? 'Setlists' :
+                 'Band Lore'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setCategoryFilter('all')}>
+                <Heart className="w-4 h-4 mr-2" />
+                All Categories
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setCategoryFilter('band')}>
+                <Users className="w-4 h-4 mr-2" />
+                Band Names
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setCategoryFilter('song')}>
+                <Music className="w-4 h-4 mr-2" />
+                Song Names
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setCategoryFilter('setlist')}>
+                <ListMusic className="w-4 h-4 mr-2" />
+                Setlists
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setCategoryFilter('bandLore')}>
+                <BookOpen className="w-4 h-4 mr-2" />
+                Band Lore
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
@@ -292,7 +360,9 @@ export function Stash() {
       </div>
 
       <div className="grid gap-3">
-        {stash.map((item) => (
+        {stash
+          .filter(item => categoryFilter === 'all' || item.type === categoryFilter)
+          .map((item) => (
           <Card key={item.id} className="bg-card/50 hover:bg-card/80 transition-colors">
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
@@ -302,11 +372,15 @@ export function Stash() {
                       <Users className="w-4 h-4 text-primary" />
                     ) : item.type === 'setlist' ? (
                       <ListMusic className="w-4 h-4 text-primary" />
+                    ) : item.type === 'bandLore' ? (
+                      <BookOpen className="w-4 h-4 text-primary" />
                     ) : (
                       <Music className="w-4 h-4 text-primary" />
                     )}
                     <Badge variant="outline" className="text-xs">
-                      {item.type === 'setlist' ? `setlist • ${item.wordCount} songs` : `${item.type} • ${item.wordCount} word${item.wordCount !== 1 ? 's' : ''}`}
+                      {item.type === 'setlist' ? `setlist • ${item.wordCount} songs` : 
+                       item.type === 'bandLore' ? `band lore • ${item.wordCount} words` :
+                       `${item.type} • ${item.wordCount} word${item.wordCount !== 1 ? 's' : ''}`}
                     </Badge>
                     {item.isAiGenerated && (
                       <Brain className="w-4 h-4 text-purple-500" title="AI Generated" />
@@ -379,6 +453,20 @@ export function Stash() {
                         </div>
                       )}
                     </div>
+                  ) : item.type === 'bandLore' && item.bandLoreData ? (
+                    <div>
+                      <h3 className="font-medium text-base mb-1 break-words">
+                        {item.name}
+                      </h3>
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        <p className="line-clamp-3">{item.bandLoreData.bio}</p>
+                        {item.bandLoreData.model && (
+                          <div className="mt-1 text-xs">
+                            Generated by: {item.bandLoreData.model}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   ) : (
                     <h3 className="font-medium text-base mb-1 break-words">
                       {item.name}
@@ -410,7 +498,7 @@ export function Stash() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleCopy(item.name)}
+                    onClick={() => handleCopy(item.type === 'bandLore' && item.bandLoreData ? item.bandLoreData.bio : item.name)}
                     className="h-8 w-8 hover:bg-primary/20"
                     title="Copy to clipboard"
                   >

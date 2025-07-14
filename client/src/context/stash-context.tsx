@@ -8,7 +8,7 @@ interface StashContextType {
   addToStash: (item: Omit<StashItem, 'id' | 'savedAt'>) => boolean;
   removeFromStash: (id: string) => void;
   clearStash: () => void;
-  isInStash: (name: string, type: 'band' | 'song' | 'setlist') => boolean;
+  isInStash: (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore') => boolean;
   stashCount: number;
 }
 
@@ -66,7 +66,7 @@ export function StashProvider({ children }: { children: ReactNode }) {
     setStash([]);
   };
 
-  const isInStash = (name: string, type: 'band' | 'song' | 'setlist') => {
+  const isInStash = (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore') => {
     return stash.some(item => item.name === name && item.type === type);
   };
 
