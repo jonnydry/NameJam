@@ -67,6 +67,7 @@ export const stashItem = z.object({
   wordCount: z.number(),
   savedAt: z.string(), // ISO date string
   verification: verificationResult.optional(),
+  isAiGenerated: z.boolean().optional(),
   // Additional fields for setlist items
   setlistData: z.object({
     setOne: z.array(setListSong),

@@ -100,6 +100,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
       type: 'song',
       wordCount: song.name.split(' ').length,
       verification: song.verification,
+      isAiGenerated: false, // Setlist songs are always traditional generation
     });
     
     if (success) {
