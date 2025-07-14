@@ -1,10 +1,11 @@
-import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText } from 'lucide-react';
+import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useStash } from '@/hooks/use-stash';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import React, { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,7 @@ import {
 export function Stash() {
   const { stash, removeFromStash, clearStash } = useStash();
   const { toast } = useToast();
+  const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
 
   const handleCopy = async (name: string) => {
     try {
@@ -136,10 +138,23 @@ export function Stash() {
     });
   };
 
+  const toggleSetlistExpansion = (setlistId: string) => {
+    setExpandedSetlists(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(setlistId)) {
+        newSet.delete(setlistId);
+      } else {
+        newSet.add(setlistId);
+      }
+      return newSet;
+    });
+  };
+
   const handlePrint = () => {
     const timestamp = new Date().toLocaleDateString();
     const bandNames = stash.filter(item => item.type === 'band');
     const songNames = stash.filter(item => item.type === 'song');
+    const setlists = stash.filter(item => item.type === 'setlist');
     
     let printContent = `
       <html>
@@ -163,9 +178,10 @@ export function Stash() {
           </div>
           
           <div class="stats">
-            <strong>Summary:</strong> ${stash.length} total names saved
+            <strong>Summary:</strong> ${stash.length} total items saved
             ${bandNames.length > 0 ? `• ${bandNames.length} band names` : ''}
             ${songNames.length > 0 ? `• ${songNames.length} song names` : ''}
+            ${setlists.length > 0 ? `• ${setlists.length} setlists` : ''}
           </div>
     `;
     
@@ -284,23 +300,96 @@ export function Stash() {
                   <div className="flex items-center space-x-2 mb-2">
                     {item.type === 'band' ? (
                       <Users className="w-4 h-4 text-primary" />
+                    ) : item.type === 'setlist' ? (
+                      <ListMusic className="w-4 h-4 text-primary" />
                     ) : (
                       <Music className="w-4 h-4 text-primary" />
                     )}
                     <Badge variant="outline" className="text-xs">
-                      {item.type} • {item.wordCount} word{item.wordCount !== 1 ? 's' : ''}
+                      {item.type === 'setlist' ? `setlist • ${item.wordCount} songs` : `${item.type} • ${item.wordCount} word${item.wordCount !== 1 ? 's' : ''}`}
                     </Badge>
                   </div>
-                  <h3 className="font-medium text-base mb-1 break-words">
-                    {item.name}
-                  </h3>
+                  
+                  {item.type === 'setlist' ? (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleSetlistExpansion(item.id)}
+                          className="h-auto p-0 hover:bg-transparent"
+                        >
+                          {expandedSetlists.has(item.id) ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <h3 className="font-medium text-base break-words cursor-pointer" 
+                            onClick={() => toggleSetlistExpansion(item.id)}>
+                          {item.name}
+                        </h3>
+                      </div>
+                      
+                      {item.setlistData?.bandName && (
+                        <div className="text-sm text-muted-foreground mb-2">
+                          Band: <span className="font-medium">{item.setlistData.bandName}</span>
+                        </div>
+                      )}
+                      
+                      {expandedSetlists.has(item.id) && item.setlistData && (
+                        <div className="mt-3 space-y-3 border-l-2 border-muted pl-4">
+                          {/* Set One */}
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">Set One ({item.setlistData.setOne.length} songs)</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              {item.setlistData.setOne.map((song, idx) => (
+                                <li key={idx} className="flex items-center gap-2">
+                                  <span className="w-6 text-right">{idx + 1}.</span>
+                                  <span>{song.name}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          {/* Set Two */}
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">Set Two ({item.setlistData.setTwo.length} songs)</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              {item.setlistData.setTwo.map((song, idx) => (
+                                <li key={idx} className="flex items-center gap-2">
+                                  <span className="w-6 text-right">{idx + 1}.</span>
+                                  <span>{song.name}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          {/* Encore */}
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">Encore</h4>
+                            <div className="text-sm text-muted-foreground flex items-center gap-2">
+                              <span className="w-6 text-right">♦</span>
+                              <span>{item.setlistData.finale.name}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <h3 className="font-medium text-base mb-1 break-words">
+                      {item.name}
+                    </h3>
+                  )}
+                  
                   <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                     <Calendar className="w-3 h-3" />
                     <span>
                       Saved {formatDistanceToNow(new Date(item.savedAt), { addSuffix: true })}
                     </span>
                   </div>
-                  {item.verification.status && (
+                  
+                  {item.verification?.status && (
                     <div className="mt-2">
                       <Badge 
                         variant={

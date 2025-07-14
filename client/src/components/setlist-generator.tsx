@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Copy, Music, RefreshCw, ListMusic, Heart, ExternalLink, Lightbulb } from 'lucide-react';
+import { Copy, Music, RefreshCw, ListMusic, Heart, ExternalLink, Lightbulb, Bookmark } from 'lucide-react';
 import { LoadingAnimation } from './loading-animation';
 import { useStash } from '@/hooks/use-stash';
 import { useToast } from '@/hooks/use-toast';
@@ -111,6 +111,37 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
       toast({
         title: "Already in stash",
         description: `"${song.name}" is already in your stash.`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveSetlist = () => {
+    if (!setList) return;
+    
+    const setlistName = `${songCount}-Song Setlist${mood ? ` (${mood})` : ''}${genre ? ` - ${genre}` : ''}`;
+    
+    const success = addToStash({
+      name: setlistName,
+      type: 'setlist',
+      wordCount: setList.totalSongs,
+      setlistData: {
+        ...setList,
+        mood: mood && mood !== 'none' ? mood : undefined,
+        genre: genre && genre !== 'none' ? genre : undefined,
+        bandName: generatedBandName || undefined,
+      }
+    });
+    
+    if (success) {
+      toast({
+        title: "Setlist saved!",
+        description: `"${setlistName}" has been saved to your stash.`,
+      });
+    } else {
+      toast({
+        title: "Already in stash",
+        description: `This setlist is already in your stash.`,
         variant: "destructive",
       });
     }
@@ -313,17 +344,29 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
                   </CardDescription>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGenerateBandName}
-                    disabled={loadingBandName}
-                    className="flex items-center gap-2"
-                    title="Generate a band name that would write this setlist"
-                  >
-                    <Lightbulb className={`w-4 h-4 ${loadingBandName ? 'animate-pulse' : ''}`} />
-                    Name this Band
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveSetlist}
+                      className="flex items-center gap-2"
+                      title="Save this setlist to your stash"
+                    >
+                      <Bookmark className="w-4 h-4" />
+                      Save Setlist
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateBandName}
+                      disabled={loadingBandName}
+                      className="flex items-center gap-2"
+                      title="Generate a band name that would write this setlist"
+                    >
+                      <Lightbulb className={`w-4 h-4 ${loadingBandName ? 'animate-pulse' : ''}`} />
+                      Name this Band
+                    </Button>
+                  </div>
                   {generatedBandName && (
                     <div className="text-sm font-medium text-primary animate-in fade-in-50 duration-500">
                       "{generatedBandName}"

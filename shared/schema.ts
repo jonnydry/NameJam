@@ -50,19 +50,7 @@ export const verificationResult = z.object({
 
 export type VerificationResult = z.infer<typeof verificationResult>;
 
-// Stash item schema for saved names
-export const stashItem = z.object({
-  id: z.string(),
-  name: z.string(),
-  type: z.enum(['band', 'song']),
-  wordCount: z.number(),
-  savedAt: z.string(), // ISO date string
-  verification: verificationResult
-});
-
-export type StashItem = z.infer<typeof stashItem>;
-
-// Set List schemas
+// Set List schemas (moved up to be available for stashItem)
 export const setListSong = z.object({
   id: z.number(),
   name: z.string(),
@@ -70,6 +58,28 @@ export const setListSong = z.object({
 });
 
 export type SetListSong = z.infer<typeof setListSong>;
+
+// Stash item schema for saved names and setlists
+export const stashItem = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.enum(['band', 'song', 'setlist']),
+  wordCount: z.number(),
+  savedAt: z.string(), // ISO date string
+  verification: verificationResult.optional(),
+  // Additional fields for setlist items
+  setlistData: z.object({
+    setOne: z.array(setListSong),
+    setTwo: z.array(setListSong),
+    finale: setListSong,
+    totalSongs: z.number(),
+    mood: z.string().optional(),
+    genre: z.string().optional(),
+    bandName: z.string().optional(),
+  }).optional()
+});
+
+export type StashItem = z.infer<typeof stashItem>;
 
 export const setListRequest = z.object({
   songCount: z.enum(['8', '16']),
