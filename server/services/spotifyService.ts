@@ -1,5 +1,3 @@
-import { cacheService } from './cacheService';
-
 interface SpotifyTokenResponse {
   access_token: string;
   token_type: string;
@@ -84,13 +82,6 @@ export class SpotifyService {
   }
 
   async searchArtists(query: string, limit: number = 10): Promise<SpotifyArtist[]> {
-    // Check cache first
-    const cacheKey = `spotify:artist_search:${query}:${limit}`;
-    const cached = await cacheService.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
     const token = await this.getAccessToken();
     if (!token) {
       return [];
@@ -112,12 +103,7 @@ export class SpotifyService {
       }
 
       const data: SpotifySearchResult = await response.json();
-      const artists = data.artists?.items || [];
-      
-      // Cache the result for 1 hour
-      await cacheService.set(cacheKey, artists, 60 * 60);
-      
-      return artists;
+      return data.artists?.items || [];
     } catch (error) {
       console.error('Spotify artist search failed:', error);
       return [];
@@ -125,13 +111,6 @@ export class SpotifyService {
   }
 
   async searchTracks(query: string, limit: number = 10): Promise<SpotifyTrack[]> {
-    // Check cache first
-    const cacheKey = `spotify:track_search:${query}:${limit}`;
-    const cached = await cacheService.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
     const token = await this.getAccessToken();
     if (!token) {
       return [];
@@ -153,12 +132,7 @@ export class SpotifyService {
       }
 
       const data: SpotifySearchResult = await response.json();
-      const tracks = data.tracks?.items || [];
-      
-      // Cache the result for 1 hour
-      await cacheService.set(cacheKey, tracks, 60 * 60);
-      
-      return tracks;
+      return data.tracks?.items || [];
     } catch (error) {
       console.error('Spotify track search failed:', error);
       return [];

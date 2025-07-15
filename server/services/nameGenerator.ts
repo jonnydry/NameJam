@@ -1,6 +1,5 @@
 import type { GenerateNameRequest } from "@shared/schema";
 import type { AINameGeneratorService } from "./aiNameGenerator";
-import { cacheService } from "./cacheService";
 
 interface WordSource {
   adjectives: string[];
@@ -341,9 +340,6 @@ export class NameGeneratorService {
   }
 
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean}>> {
-    // Skip caching for name generation to ensure fresh results
-    // Only cache expensive operations like verification and Spotify searches
-
     const { type, wordCount, count, mood, genre } = request;
     const names: Array<{name: string, isAiGenerated: boolean}> = [];
 
