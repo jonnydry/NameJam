@@ -215,6 +215,7 @@ Changelog:
 - July 14, 2025. Added band bio generation for stashed band names: implemented book icon button on band items in stash that opens band bio modal, passes stored genre/mood data to bio generation for context-aware results, updated schema to include genre/mood fields on stash items for proper bio generation context
 - July 15, 2025. Implemented 5-star rating system for stash items: added rating field to stash schema with 1-5 star validation, created interactive StarRating component with hover effects, added updateRating function to stash context, integrated rating display in stash items, enhanced export functions (text/JSON/print) to include rating information, added sorting options (newest/oldest, highest/lowest rating, alphabetical) with dropdown selector for better stash organization
 - July 15, 2025. Added auto-scroll functionality to "Generate More Names" button: implemented smooth scrolling back to loading bar when users click "Generate More Names", uses useRef to target the loading area, includes 100ms delay to ensure loading state is active, improves user experience by eliminating need to manually scroll up to see progress and new results
+- July 15, 2025. Redesigned stash button layout for better alignment: transformed messy flex-wrap button arrangement into clean 2x2 grid layout, separated header section with title and hide/show button, made all control buttons equal width with consistent left alignment, improved visual organization and eliminated random wrapping behavior in side panel view
 
 ## User Preferences
 

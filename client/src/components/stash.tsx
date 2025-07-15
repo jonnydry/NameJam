@@ -351,134 +351,140 @@ export function Stash() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Heart className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Your Stash</h2>
           <Badge variant="secondary">{stash.length}</Badge>
         </div>
-        <div className="flex items-center space-x-2 flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsMinimized(!isMinimized)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            {isMinimized ? (
-              <>
-                <Eye className="w-4 h-4 mr-2" />
-                Show Stash
-              </>
-            ) : (
-              <>
-                <EyeOff className="w-4 h-4 mr-2" />
-                Hide Stash
-              </>
-            )}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                {categoryFilter === 'all' ? 'All Categories' : 
-                 categoryFilter === 'band' ? 'Band Names' :
-                 categoryFilter === 'song' ? 'Song Names' :
-                 categoryFilter === 'setlist' ? 'Setlists' :
-                 'Band Lore'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setCategoryFilter('all')}>
-                <Heart className="w-4 h-4 mr-2" />
-                All Categories
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setCategoryFilter('band')}>
-                <Users className="w-4 h-4 mr-2" />
-                Band Names
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setCategoryFilter('song')}>
-                <Music className="w-4 h-4 mr-2" />
-                Song Names
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setCategoryFilter('setlist')}>
-                <ListMusic className="w-4 h-4 mr-2" />
-                Setlists
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setCategoryFilter('bandLore')}>
-                <BookOpen className="w-4 h-4 mr-2" />
-                Band Lore
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Star className="w-4 h-4 mr-2" />
-                {sortBy === 'newest' ? 'Newest First' :
-                 sortBy === 'oldest' ? 'Oldest First' :
-                 sortBy === 'rating-high' ? 'Highest Rated' :
-                 sortBy === 'rating-low' ? 'Lowest Rated' :
-                 'Alphabetical'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setSortBy('newest')}>
-                <Calendar className="w-4 h-4 mr-2" />
-                Newest First
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy('oldest')}>
-                <Calendar className="w-4 h-4 mr-2" />
-                Oldest First
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setSortBy('rating-high')}>
-                <Star className="w-4 h-4 mr-2" />
-                Highest Rated
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy('rating-low')}>
-                <Star className="w-4 h-4 mr-2" />
-                Lowest Rated
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setSortBy('alphabetical')}>
-                <Music className="w-4 h-4 mr-2" />
-                Alphabetical
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={handleExportTxt}>
-                <FileText className="w-4 h-4 mr-2" />
-                Export as Text File
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportJson}>
-                <Download className="w-4 h-4 mr-2" />
-                Export as JSON
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handlePrint}>
-                <Printer className="w-4 h-4 mr-2" />
-                Print Stash
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleClearAll}
-            className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Clear All
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsMinimized(!isMinimized)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {isMinimized ? (
+            <>
+              <Eye className="w-4 h-4 mr-2" />
+              Show Stash
+            </>
+          ) : (
+            <>
+              <EyeOff className="w-4 h-4 mr-2" />
+              Hide Stash
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Control Buttons - Organized in 2x2 grid with aligned spacing */}
+      <div className="grid grid-cols-2 gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="w-full justify-start">
+              <Filter className="w-4 h-4 mr-2" />
+              {categoryFilter === 'all' ? 'All Categories' : 
+               categoryFilter === 'band' ? 'Band Names' :
+               categoryFilter === 'song' ? 'Song Names' :
+               categoryFilter === 'setlist' ? 'Setlists' :
+               'Band Lore'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuItem onClick={() => setCategoryFilter('all')}>
+              <Heart className="w-4 h-4 mr-2" />
+              All Categories
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setCategoryFilter('band')}>
+              <Users className="w-4 h-4 mr-2" />
+              Band Names
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setCategoryFilter('song')}>
+              <Music className="w-4 h-4 mr-2" />
+              Song Names
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setCategoryFilter('setlist')}>
+              <ListMusic className="w-4 h-4 mr-2" />
+              Setlists
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setCategoryFilter('bandLore')}>
+              <BookOpen className="w-4 h-4 mr-2" />
+              Band Lore
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="w-full justify-start">
+              <Star className="w-4 h-4 mr-2" />
+              {sortBy === 'newest' ? 'Newest First' :
+               sortBy === 'oldest' ? 'Oldest First' :
+               sortBy === 'rating-high' ? 'Highest Rated' :
+               sortBy === 'rating-low' ? 'Lowest Rated' :
+               'Alphabetical'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => setSortBy('newest')}>
+              <Calendar className="w-4 h-4 mr-2" />
+              Newest First
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortBy('oldest')}>
+              <Calendar className="w-4 h-4 mr-2" />
+              Oldest First
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setSortBy('rating-high')}>
+              <Star className="w-4 h-4 mr-2" />
+              Highest Rated
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortBy('rating-low')}>
+              <Star className="w-4 h-4 mr-2" />
+              Lowest Rated
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setSortBy('alphabetical')}>
+              <Music className="w-4 h-4 mr-2" />
+              Alphabetical
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="w-full justify-start">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuItem onClick={handleExportTxt}>
+              <FileText className="w-4 h-4 mr-2" />
+              Export as Text File
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportJson}>
+              <Download className="w-4 h-4 mr-2" />
+              Export as JSON
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handlePrint}>
+              <Printer className="w-4 h-4 mr-2" />
+              Print Stash
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleClearAll}
+          className="w-full justify-start text-destructive hover:text-destructive-foreground hover:bg-destructive"
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Clear All
+        </Button>
       </div>
 
       {!isMinimized && (
