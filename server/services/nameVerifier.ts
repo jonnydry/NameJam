@@ -4,6 +4,16 @@ import { spotifyService } from "./spotifyService";
 export class NameVerifierService {
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
     try {
+      // Easter egg for Name Jam variations
+      const normalizedName = name.toLowerCase().replace(/[^a-z]/g, '');
+      if (normalizedName === 'namejam') {
+        return {
+          status: 'available',
+          details: 'We love you. Go to bed. <3',
+          verificationLinks: []
+        };
+      }
+
       // Generate verification links that users can actually use
       const verificationLinks = this.generateVerificationLinks(name, type);
 
