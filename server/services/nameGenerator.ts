@@ -1,5 +1,6 @@
 import type { GenerateNameRequest } from "@shared/schema";
 import type { AINameGeneratorService } from "./aiNameGenerator";
+import { cacheService } from "./cacheService";
 
 interface WordSource {
   adjectives: string[];
@@ -340,6 +341,13 @@ export class NameGeneratorService {
   }
 
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean}>> {
+    // Check cache first
+    const cacheKey = `names:${JSON.stringify(request)}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const { type, wordCount, count, mood, genre } = request;
     const names: Array<{name: string, isAiGenerated: boolean}> = [];
 
@@ -393,7 +401,12 @@ export class NameGeneratorService {
       }
     }
 
-    return names.slice(0, count);
+    const result = names.slice(0, count);
+    
+    // Cache the result for 30 minutes
+    await cacheService.set(cacheKey, result, 30 * 60);
+    
+    return result;
   }
 
   private async generateSingleName(type: string, wordCount: number, mood?: string, genre?: string): Promise<string> {
