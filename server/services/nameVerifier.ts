@@ -1,9 +1,17 @@
 import type { VerificationResult } from "@shared/schema";
 import { spotifyService } from "./spotifyService";
+import { cacheService } from "./cacheService";
 
 export class NameVerifierService {
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
     try {
+      // Check cache first for complete verification result
+      const cacheKey = `verification:${type}:${name.toLowerCase()}`;
+      const cached = await cacheService.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       // Generate verification links that users can actually use
       const verificationLinks = this.generateVerificationLinks(name, type);
 
@@ -28,22 +36,27 @@ export class NameVerifierService {
         const match = spotifyResults.matches[0];
         const similarNames = this.generateSimilarNames(name);
         
+        let result: VerificationResult;
         if (type === 'band') {
           const genreInfo = match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : '';
-          return {
+          result = {
             status: 'taken',
             details: `This band name exists on Spotify${genreInfo}. Popularity: ${match.popularity}/100. Try these alternatives:`,
             similarNames,
             verificationLinks
           };
         } else {
-          return {
+          result = {
             status: 'taken',
             details: `This song exists on Spotify by ${match.artist} (${match.album}). Try these alternatives:`,
             similarNames,
             verificationLinks
           };
         }
+        
+        // Cache the result for 24 hours
+        await cacheService.set(cacheKey, result, 24 * 60 * 60);
+        return result;
       }
 
       // Check Spotify similar matches (second priority)
@@ -51,34 +64,43 @@ export class NameVerifierService {
         const match = spotifyResults.matches[0];
         const similarNames = this.generateSimilarNames(name);
         
+        let result: VerificationResult;
         if (type === 'band') {
           const genreInfo = match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : '';
-          return {
+          result = {
             status: 'similar',
             details: `Similar band names found on Spotify${genreInfo}. Consider these alternatives:`,
             similarNames,
             verificationLinks
           };
         } else {
-          return {
+          result = {
             status: 'similar',
             details: `Similar song titles found on Spotify by various artists. Consider these alternatives:`,
             similarNames,
             verificationLinks
           };
         }
+        
+        // Cache the result for 24 hours
+        await cacheService.set(cacheKey, result, 24 * 60 * 60);
+        return result;
       }
 
       // Famous names database check (third priority)
       const famousMatch = this.checkFamousNames(name, type);
       if (famousMatch) {
         const similarNames = this.generateSimilarNames(name);
-        return {
+        const result: VerificationResult = {
           status: 'taken',
           details: `This is a famous ${type}${famousMatch.artist ? ` by ${famousMatch.artist}` : ''}. Try these alternatives:`,
           similarNames,
           verificationLinks
         };
+        
+        // Cache the result for 24 hours
+        await cacheService.set(cacheKey, result, 24 * 60 * 60);
+        return result;
       }
 
       // Other API sources as fallback (Last.fm, MusicBrainz)
@@ -118,12 +140,16 @@ export class NameVerifierService {
         const artistInfo = match.artist ? ` by ${match.artist}` : '';
         const similarNames = this.generateSimilarNames(name);
         console.log(`Exact match found for "${name}": ${match.name} by ${match.artist || 'Unknown'}`);
-        return {
+        const result: VerificationResult = {
           status: 'taken',
           details: `Found existing ${type}${artistInfo}. Try these alternatives:`,
           similarNames,
           verificationLinks
         };
+        
+        // Cache the result for 24 hours
+        await cacheService.set(cacheKey, result, 24 * 60 * 60);
+        return result;
       }
 
 
@@ -161,19 +187,24 @@ export class NameVerifierService {
         // Close matches found = Similar
         const similarNames = this.generateSimilarNames(name);
         console.log(`Close matches found for "${name}":`, closeMatches.slice(0, 2));
-        return {
+        const result: VerificationResult = {
           status: 'similar',
           details: `Similar names found in music databases. Consider these alternatives:`,
           similarNames,
           verificationLinks
         };
+        
+        // Cache the result for 24 hours
+        await cacheService.set(cacheKey, result, 24 * 60 * 60);
+        return result;
       }
 
       // Only mark as available if we have fewer than 5 very weak results
       // This handles cases where APIs return tons of unrelated results
+      let result: VerificationResult;
       if (searchResults.length <= 5) {
         // Few or no relevant matches - marking as available
-        return {
+        result = {
           status: 'available',
           details: `No existing ${type} found with this name in our databases.`,
           verificationLinks
@@ -181,12 +212,16 @@ export class NameVerifierService {
       } else {
         // Many results but none are close matches - still available but note the search volume
         // No close matches found - marking as available
-        return {
+        result = {
           status: 'available',
           details: `No existing ${type} found with this exact name in our databases.`,
           verificationLinks
         };
       }
+      
+      // Cache the result for 24 hours
+      await cacheService.set(cacheKey, result, 24 * 60 * 60);
+      return result;
     } catch (error) {
       console.error('Name verification error:', error);
       return {
