@@ -40,6 +40,9 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   const [showBioModal, setShowBioModal] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationType, setAnimationType] = useState<'add' | 'remove'>('add');
+  
+  // Check if this is the easter egg
+  const isEasterEgg = verification.details === 'We love you. Go to bed. <3';
 
   const handleAddToStash = () => {
     const isCurrentlyInStash = isInStash(name, nameType);
@@ -108,7 +111,11 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   };
 
   return (
-    <div className="relative p-6 rounded-lg border border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200">
+    <div className={`relative p-6 rounded-lg border transition-all duration-200 ${
+      isEasterEgg 
+        ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
+        : 'border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20'
+    }`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2 text-sm">
           {getStatusIcon(verification.status)}
@@ -164,7 +171,11 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             <Brain className="h-5 w-5 text-purple-500 shrink-0" title="AI Generated" />
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className={`text-sm ${
+          isEasterEgg 
+            ? 'text-pink-600 dark:text-pink-300 font-medium text-base' 
+            : 'text-muted-foreground'
+        }`}>
           {verification.details || `No existing ${nameType} found with this name`}
         </p>
         
