@@ -12,6 +12,7 @@ interface StashContextType {
   isInStash: (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore') => boolean;
   stashCount: number;
   toggleStashItem: (item: Omit<StashItem, 'id' | 'savedAt'>) => { action: 'added' | 'removed'; success: boolean };
+  updateRating: (id: string, rating: number) => void;
 }
 
 const StashContext = createContext<StashContextType | undefined>(undefined);
@@ -86,6 +87,12 @@ export function StashProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateRating = (id: string, rating: number) => {
+    setStash(prev => prev.map(item => 
+      item.id === id ? { ...item, rating } : item
+    ));
+  };
+
   const value: StashContextType = {
     stash,
     addToStash,
@@ -94,7 +101,8 @@ export function StashProvider({ children }: { children: ReactNode }) {
     clearStash,
     isInStash,
     stashCount: stash.length,
-    toggleStashItem
+    toggleStashItem,
+    updateRating
   };
 
   return (

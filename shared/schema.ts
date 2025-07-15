@@ -66,6 +66,7 @@ export const stashItem = z.object({
   type: z.enum(['band', 'song', 'setlist', 'bandLore']),
   wordCount: z.number(),
   savedAt: z.string(), // ISO date string
+  rating: z.number().min(1).max(5).optional(), // 1-5 star rating
   verification: verificationResult.optional(),
   isAiGenerated: z.boolean().optional(),
   genre: z.string().optional(), // For band/song items

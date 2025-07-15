@@ -1,4 +1,4 @@
-import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain, BookOpen, Filter, EyeOff, Eye } from 'lucide-react';
+import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain, BookOpen, Filter, EyeOff, Eye, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,10 +16,11 @@ import {
 import { BandBioModal } from './band-bio-modal';
 
 export function Stash() {
-  const { stash, removeFromStash, clearStash } = useStash();
+  const { stash, removeFromStash, clearStash, updateRating } = useStash();
   const { toast } = useToast();
   const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'band' | 'song' | 'setlist' | 'bandLore'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'alphabetical'>('newest');
   const [isMinimized, setIsMinimized] = useState(false);
   const [showBioModal, setShowBioModal] = useState(false);
   const [selectedBandForBio, setSelectedBandForBio] = useState<{ name: string; genre?: string; mood?: string } | null>(null);
@@ -73,6 +74,68 @@ export function Stash() {
     });
   };
 
+  const handleRating = (id: string, rating: number) => {
+    updateRating(id, rating);
+    toast({
+      title: "Rating updated",
+      description: `Rated ${rating} star${rating !== 1 ? 's' : ''}`,
+    });
+  };
+
+  // StarRating component
+  const StarRating = ({ rating, itemId }: { rating?: number; itemId: string }) => {
+    const [hoveredRating, setHoveredRating] = useState(0);
+
+    return (
+      <div className="flex items-center space-x-1 mt-2">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Button
+            key={star}
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 hover:bg-transparent"
+            onClick={() => handleRating(itemId, star)}
+            onMouseEnter={() => setHoveredRating(star)}
+            onMouseLeave={() => setHoveredRating(0)}
+          >
+            <Star
+              className={`w-4 h-4 ${
+                star <= (hoveredRating || rating || 0)
+                  ? 'fill-yellow-400 text-yellow-400'
+                  : 'text-muted-foreground'
+              }`}
+            />
+          </Button>
+        ))}
+        {rating && (
+          <span className="text-xs text-muted-foreground ml-2">
+            {rating}/5
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  // Sort stash items
+  const sortedStash = stash
+    .filter(item => categoryFilter === 'all' || item.type === categoryFilter)
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
+        case 'oldest':
+          return new Date(a.savedAt).getTime() - new Date(b.savedAt).getTime();
+        case 'rating-high':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'rating-low':
+          return (a.rating || 0) - (b.rating || 0);
+        case 'alphabetical':
+          return a.name.localeCompare(b.name);
+        default:
+          return 0;
+      }
+    });
+
   const handleExportTxt = () => {
     const timestamp = new Date().toISOString().split('T')[0];
     let content = `NameJam Stash Export - ${timestamp}\n`;
@@ -85,19 +148,19 @@ export function Stash() {
     
     if (bandNames.length > 0) {
       content += `BAND NAMES (${bandNames.length}):\n`;
-      content += bandNames.map((item, index) => `${index + 1}. ${item.name}`).join('\n');
+      content += bandNames.map((item, index) => `${index + 1}. ${item.name}${item.rating ? ` (${item.rating}/5 stars)` : ''}`).join('\n');
       content += '\n\n';
     }
     
     if (songNames.length > 0) {
       content += `SONG NAMES (${songNames.length}):\n`;
-      content += songNames.map((item, index) => `${index + 1}. ${item.name}`).join('\n');
+      content += songNames.map((item, index) => `${index + 1}. ${item.name}${item.rating ? ` (${item.rating}/5 stars)` : ''}`).join('\n');
       content += '\n\n';
     }
     
     if (setlists.length > 0) {
       content += `SETLISTS (${setlists.length}):\n`;
-      content += setlists.map((item, index) => `${index + 1}. ${item.name} (${item.wordCount} songs)`).join('\n');
+      content += setlists.map((item, index) => `${index + 1}. ${item.name} (${item.wordCount} songs)${item.rating ? ` (${item.rating}/5 stars)` : ''}`).join('\n');
       content += '\n\n';
     }
     
@@ -145,6 +208,7 @@ export function Stash() {
         type: item.type,
         savedAt: item.savedAt,
         wordCount: item.wordCount,
+        rating: item.rating,
         ...(item.type === 'bandLore' && item.bandLoreData ? {
           bio: item.bandLoreData.bio,
           model: item.bandLoreData.model,
@@ -227,7 +291,7 @@ export function Stash() {
         <h2>Band Names (${bandNames.length})</h2>
         <div class="name-list">
           ${bandNames.map((item, index) => 
-            `<div class="name-item">${index + 1}. <strong>${item.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong></div>`
+            `<div class="name-item">${index + 1}. <strong>${item.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong>${item.rating ? ` (${item.rating}/5 stars)` : ''}</div>`
           ).join('')}
         </div>
       `;
@@ -238,7 +302,7 @@ export function Stash() {
         <h2>Song Names (${songNames.length})</h2>
         <div class="name-list">
           ${songNames.map((item, index) => 
-            `<div class="name-item">${index + 1}. <strong>${item.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong></div>`
+            `<div class="name-item">${index + 1}. <strong>${item.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong>${item.rating ? ` (${item.rating}/5 stars)` : ''}</div>`
           ).join('')}
         </div>
       `;
@@ -350,6 +414,42 @@ export function Stash() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
+                <Star className="w-4 h-4 mr-2" />
+                {sortBy === 'newest' ? 'Newest First' :
+                 sortBy === 'oldest' ? 'Oldest First' :
+                 sortBy === 'rating-high' ? 'Highest Rated' :
+                 sortBy === 'rating-low' ? 'Lowest Rated' :
+                 'Alphabetical'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                <Calendar className="w-4 h-4 mr-2" />
+                Newest First
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('oldest')}>
+                <Calendar className="w-4 h-4 mr-2" />
+                Oldest First
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setSortBy('rating-high')}>
+                <Star className="w-4 h-4 mr-2" />
+                Highest Rated
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('rating-low')}>
+                <Star className="w-4 h-4 mr-2" />
+                Lowest Rated
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setSortBy('alphabetical')}>
+                <Music className="w-4 h-4 mr-2" />
+                Alphabetical
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
@@ -383,9 +483,7 @@ export function Stash() {
 
       {!isMinimized && (
         <div className="grid gap-3">
-        {stash
-          .filter(item => categoryFilter === 'all' || item.type === categoryFilter)
-          .map((item) => (
+        {sortedStash.map((item) => (
           <Card key={item.id} className="bg-card/50 hover:bg-card/80 transition-colors">
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
@@ -516,6 +614,9 @@ export function Stash() {
                       </Badge>
                     </div>
                   )}
+                  
+                  {/* Star Rating */}
+                  <StarRating rating={item.rating} itemId={item.id} />
                 </div>
                 <div className="flex items-center space-x-1 ml-4">
                   {item.type === 'band' && (
