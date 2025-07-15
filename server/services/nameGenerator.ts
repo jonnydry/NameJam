@@ -430,18 +430,19 @@ export class NameGeneratorService {
     sources = this.ensureValidWordSource(sources);
     
     // For 3-word names, use specific humorous patterns
-    if (wordCount === 3) {
+    if (wordCount === 3 && type === 'band') {
       return this.buildHumorousThreeWordPattern(sources, type);
     }
     
     // Generate names with enhanced randomization to prevent repetition
     const words: string[] = [];
     const usedWords = new Set<string>();
+    const usedRoots = new Set<string>(); // Track root words to prevent similar words
     
     for (let i = 0; i < wordCount; i++) {
       let selectedWord: string;
       let attempts = 0;
-      const maxAttempts = 20;
+      const maxAttempts = 50; // Increased for better duplicate prevention
       
       do {
         if (i === 0) {
@@ -449,17 +450,38 @@ export class NameGeneratorService {
         } else if (i === wordCount - 1) {
           selectedWord = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
         } else {
-          const allWords = [...sources.verbs, ...sources.musicalTerms];
-          selectedWord = allWords[Math.floor(Math.random() * allWords.length)];
+          // Mix all word types for middle positions for variety
+          const allMiddleWords = [
+            ...sources.adjectives,
+            ...sources.nouns,
+            ...sources.verbs,
+            ...sources.musicalTerms
+          ];
+          selectedWord = allMiddleWords[Math.floor(Math.random() * allMiddleWords.length)];
         }
         attempts++;
-      } while (usedWords.has(selectedWord.toLowerCase()) && attempts < maxAttempts);
+        
+        // Extract root word (first 4+ characters) to prevent similar words
+        const root = selectedWord.toLowerCase().substring(0, Math.max(4, selectedWord.length - 3));
+        
+        // Check both exact word and root to prevent duplicates like "Silent" and "Silently"
+        if (usedWords.has(selectedWord.toLowerCase()) || usedRoots.has(root)) {
+          continue;
+        } else {
+          break;
+        }
+      } while (attempts < maxAttempts);
       
       words.push(selectedWord);
       usedWords.add(selectedWord.toLowerCase());
+      usedRoots.add(selectedWord.toLowerCase().substring(0, Math.max(4, selectedWord.length - 3)));
     }
     
-    return words.join(' ');
+    // Apply grammatical corrections
+    const correctedWords = this.ensureGrammaticalConsistency(words);
+    
+    // Apply smart capitalization
+    return this.applySmartCapitalization(correctedWords);
   }
 
   private async generateShortForm(type: string, wordCount: number, mood?: string): Promise<string> {
@@ -847,12 +869,20 @@ export class NameGeneratorService {
     ];
 
     const pattern = simplePatterns[Math.floor(Math.random() * simplePatterns.length)];
-    return pattern();
+    const result = pattern();
+    
+    // Apply grammatical corrections
+    const words = result.split(' ');
+    const correctedWords = this.ensureGrammaticalConsistency(words);
+    
+    // Apply smart capitalization
+    return this.applySmartCapitalization(correctedWords);
   }
   
   private generateSimpleNaturalPattern(wordCount: number, sources: WordSource, patternType: string): string {
     const words: string[] = [];
     const usedWords = new Set<string>();
+    const usedRoots = new Set<string>();
     
     // Helper to get unique word
     const getUniqueWord = (wordArray: string[]): string => {
@@ -860,6 +890,13 @@ export class NameGeneratorService {
       let word: string;
       do {
         word = wordArray[Math.floor(Math.random() * wordArray.length)];
+        const root = word.toLowerCase().substring(0, Math.max(4, word.length - 3));
+        
+        if (!usedWords.has(word.toLowerCase()) && !usedRoots.has(root)) {
+          usedWords.add(word.toLowerCase());
+          usedRoots.add(root);
+          return word;
+        }
         attempts++;
       } while (usedWords.has(word.toLowerCase()) && attempts < 20);
       
@@ -1106,60 +1143,16 @@ export class NameGeneratorService {
           word = articles[Math.floor(Math.random() * articles.length)];
           break;
         case 'adjective':
-          // 30% chance to use expanded categories for more variety
-          if (Math.random() < 0.3 && this.expandedCategories) {
-            const categoryChoice = Math.random();
-            if (categoryChoice < 0.25 && this.expandedCategories.emotions.length > 0) {
-              word = this.expandedCategories.emotions[Math.floor(Math.random() * this.expandedCategories.emotions.length)];
-            } else if (categoryChoice < 0.5 && this.expandedCategories.colors.length > 0) {
-              word = this.expandedCategories.colors[Math.floor(Math.random() * this.expandedCategories.colors.length)];
-            } else if (categoryChoice < 0.75 && this.expandedCategories.textures.length > 0) {
-              word = this.expandedCategories.textures[Math.floor(Math.random() * this.expandedCategories.textures.length)];
-            } else if (this.expandedCategories.tastes.length > 0) {
-              word = this.expandedCategories.tastes[Math.floor(Math.random() * this.expandedCategories.tastes.length)];
-            }
-          }
-          if (!word) {
-            word = validSources.adjectives[Math.floor(Math.random() * validSources.adjectives.length)];
-          }
+          word = validSources.adjectives[Math.floor(Math.random() * validSources.adjectives.length)];
           break;
         case 'noun':
-          // 40% chance to use expanded categories for maximum variety
-          if (Math.random() < 0.4 && this.expandedCategories) {
-            const categoryChoice = Math.random();
-            if (categoryChoice < 0.2 && this.expandedCategories.animals.length > 0) {
-              word = this.expandedCategories.animals[Math.floor(Math.random() * this.expandedCategories.animals.length)];
-            } else if (categoryChoice < 0.4 && this.expandedCategories.mythology.length > 0) {
-              word = this.expandedCategories.mythology[Math.floor(Math.random() * this.expandedCategories.mythology.length)];
-            } else if (categoryChoice < 0.6 && this.expandedCategories.cosmic.length > 0) {
-              word = this.expandedCategories.cosmic[Math.floor(Math.random() * this.expandedCategories.cosmic.length)];
-            } else if (categoryChoice < 0.8 && this.expandedCategories.nature.length > 0) {
-              word = this.expandedCategories.nature[Math.floor(Math.random() * this.expandedCategories.nature.length)];
-            } else if (this.expandedCategories.technology.length > 0) {
-              word = this.expandedCategories.technology[Math.floor(Math.random() * this.expandedCategories.technology.length)];
-            }
-          }
-          if (!word) {
-            word = validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)];
-          }
+          word = validSources.nouns[Math.floor(Math.random() * validSources.nouns.length)];
           break;
         case 'verb':
-          // 25% chance to use movement words for dynamic feel
-          if (Math.random() < 0.25 && this.expandedCategories && this.expandedCategories.movement.length > 0) {
-            word = this.expandedCategories.movement[Math.floor(Math.random() * this.expandedCategories.movement.length)];
-          }
-          if (!word) {
-            word = validSources.verbs[Math.floor(Math.random() * validSources.verbs.length)];
-          }
+          word = validSources.verbs[Math.floor(Math.random() * validSources.verbs.length)];
           break;
         case 'musical':
-          // 20% chance to use sound words for musical relevance
-          if (Math.random() < 0.2 && this.expandedCategories && this.expandedCategories.sounds.length > 0) {
-            word = this.expandedCategories.sounds[Math.floor(Math.random() * this.expandedCategories.sounds.length)];
-          }
-          if (!word) {
-            word = validSources.musicalTerms[Math.floor(Math.random() * validSources.musicalTerms.length)];
-          }
+          word = validSources.musicalTerms[Math.floor(Math.random() * validSources.musicalTerms.length)];
           break;
         case 'preposition':
           word = prepositions[Math.floor(Math.random() * prepositions.length)];
