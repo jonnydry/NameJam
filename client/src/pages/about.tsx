@@ -55,15 +55,16 @@ export default function About() {
                 <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
                   <h3 className="font-medium mb-3">Key Features</h3>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• <strong>Advanced Name Generation:</strong> Create unique band and song names using 2,300+ carefully curated words across 32 specialized categories</li>
-                    <li>• <strong>AI-Powered Creativity:</strong> Optional XAI Grok integration for enhanced creative name generation with intelligent fallback</li>
-                    <li>• <strong>Smart Customization:</strong> Choose from 1-6 word combinations, 12 mood themes, and 14 musical genres</li>
-                    <li>• <strong>Real-Time Verification:</strong> Instant availability checking using Spotify Web API, Last.fm, and MusicBrainz databases</li>
-                    <li>• <strong>Set List Generator:</strong> Create professional performance sets (8 or 16 songs) with automatic song verification</li>
-                    <li>• <strong>Stash System:</strong> Save favorite names with local storage persistence and export capabilities</li>
-                    <li>• <strong>Linguistic Intelligence:</strong> Advanced grammatical patterns, smart capitalization, and poetic flow optimization</li>
-                    <li>• <strong>Export Options:</strong> Export stash as text files, JSON, or print-friendly formats</li>
-                    <li>• <strong>Responsive Design:</strong> Fully responsive interface with dark theme and modern typography</li>
+                    <li>• <strong>Massive Vocabulary Engine:</strong> Generate names using 3,000+ words across 40+ specialized domains including cosmic, mythological, scientific, culinary, and architectural terms</li>
+                    <li>• <strong>AI-Powered Creativity:</strong> XAI Grok 3/4 integration for enhanced creative generation with intelligent fallback and model attribution</li>
+                    <li>• <strong>Advanced Customization:</strong> Choose 1-6 word combinations, 12 mood themes, 14 musical genres with contextual filtering</li>
+                    <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, plus Last.fm and MusicBrainz</li>
+                    <li>• <strong>Professional Set Lists:</strong> Generate organized performance sets (8/16 songs) with automatic verification and band name suggestions</li>
+                    <li>• <strong>Enhanced Stash System:</strong> Save names, setlists, and band bios with 5-star ratings, category sorting, and comprehensive export options</li>
+                    <li>• <strong>Linguistic Intelligence:</strong> Advanced grammatical consistency, poetic flow optimization, and smart capitalization rules</li>
+                    <li>• <strong>Auto-Scroll Navigation:</strong> Seamless user experience with automatic scrolling and optimized loading animations</li>
+                    <li>• <strong>Comprehensive Export:</strong> Export stash as text, JSON, or print-friendly formats with timestamps and statistics</li>
+                    <li>• <strong>Modern Typography:</strong> Futuristic monospace design with JetBrains Mono font and console-style animations</li>
                   </ul>
                 </div>
                 
@@ -73,29 +74,44 @@ export default function About() {
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Frontend</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• React 18 with TypeScript for type-safe development</li>
-                        <li>• Tailwind CSS with shadcn/ui components for modern design</li>
+                        <li>• React 18 with TypeScript for complete type safety</li>
+                        <li>• Tailwind CSS with shadcn/ui components and JetBrains Mono typography</li>
                         <li>• Wouter for lightweight client-side routing</li>
-                        <li>• TanStack React Query for server state management</li>
-                        <li>• Vite for fast development and optimized builds</li>
+                        <li>• TanStack React Query v5 for advanced server state management</li>
+                        <li>• Vite with optimized build process and hot reload</li>
+                        <li>• Framer Motion for smooth animations and transitions</li>
+                        <li>• React Context for global stash state management</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Backend</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• Node.js with Express.js and TypeScript</li>
-                        <li>• PostgreSQL database with Drizzle ORM</li>
-                        <li>• Neon Database for serverless PostgreSQL hosting</li>
-                        <li>• Session management with connect-pg-simple</li>
-                        <li>• RESTful API architecture</li>
+                        <li>• Node.js 20 with Express.js and ES modules</li>
+                        <li>• PostgreSQL with Drizzle ORM for type-safe database operations</li>
+                        <li>• Neon Database serverless PostgreSQL with edge compatibility</li>
+                        <li>• Advanced session management with PostgreSQL storage</li>
+                        <li>• Comprehensive error handling and graceful API degradation</li>
+                        <li>• TSX for TypeScript execution and development</li>
                       </ul>
                     </div>
                     <div>
-                      <h4 className="font-medium text-foreground mb-1">External APIs</h4>
+                      <h4 className="font-medium text-foreground mb-1">AI & Verification APIs</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• Spotify Web API for music database verification</li>
-                        <li>• XAI Grok models for AI-powered name generation</li>
-                        <li>• Last.fm and MusicBrainz for comprehensive music data</li>
+                        <li>• XAI Grok 3, Grok 4, and Grok 3-mini for creative AI generation</li>
+                        <li>• Spotify Web API (priority) for authoritative music verification</li>
+                        <li>• Last.fm API for additional music database coverage</li>
+                        <li>• MusicBrainz API for comprehensive artist and track data</li>
+                        <li>• Intelligent fallback system with automatic retry mechanisms</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-foreground mb-1">Core Features</h4>
+                      <ul className="space-y-1 ml-2">
+                        <li>• 872 adjectives, 1,250 nouns, 500 verbs, 400 musical terms</li>
+                        <li>• Advanced linguistic patterns and grammatical consistency</li>
+                        <li>• Real-time name verification with popularity scoring</li>
+                        <li>• Local storage persistence with export capabilities</li>
+                        <li>• Responsive design with dark theme optimization</li>
                       </ul>
                     </div>
                   </div>
