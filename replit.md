@@ -97,6 +97,8 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Stash Context**: `client/src/context/stash-context.tsx` provides React Context for sharing stash state
 - **Local Storage**: Persistent storage for saved names across browser sessions
 - **Real-time Updates**: Context-based state ensures immediate UI updates when names are added/removed
+- **Rating System**: 1-5 star rating system with hover effects for better organization of saved items
+- **Sorting Options**: Sort stash items by newest/oldest, highest/lowest rating, or alphabetical order
 
 ## Data Flow
 
@@ -211,6 +213,7 @@ Changelog:
 - July 14, 2025. Redesigned loading animation as equalizer visualization: transformed sound wave into 40-bar equalizer display, bars illuminate progressively as loading advances with subtle animation near progress point, maintains consistent app color scheme with glow effects
 - July 14, 2025. Enhanced Stash feature with band bio saving and category sorting: extended schema to support 'bandLore' type for saving AI-generated band biographies, added "Save Bio" button to band bio modal with heart icon, implemented category filter dropdown to sort stash by band names/song names/setlists/band lore, updated export functions (text/JSON/print) to include band lore with bio previews, band lore items display truncated bio text with model attribution in stash view
 - July 14, 2025. Added band bio generation for stashed band names: implemented book icon button on band items in stash that opens band bio modal, passes stored genre/mood data to bio generation for context-aware results, updated schema to include genre/mood fields on stash items for proper bio generation context
+- July 15, 2025. Implemented 5-star rating system for stash items: added rating field to stash schema with 1-5 star validation, created interactive StarRating component with hover effects, added updateRating function to stash context, integrated rating display in stash items, enhanced export functions (text/JSON/print) to include rating information, added sorting options (newest/oldest, highest/lowest rating, alphabetical) with dropdown selector for better stash organization
 
 ## User Preferences
 
