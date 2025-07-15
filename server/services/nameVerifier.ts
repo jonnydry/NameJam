@@ -4,9 +4,42 @@ import { spotifyService } from "./spotifyService";
 export class NameVerifierService {
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
     try {
+      // Easter eggs - check these FIRST before any real verification
+      
       // Easter egg for Name Jam variations
       const normalizedName = name.toLowerCase().replace(/[^a-z]/g, '');
       if (normalizedName === 'namejam') {
+        return {
+          status: 'available',
+          details: 'We love you. Go to bed. <3',
+          verificationLinks: []
+        };
+      }
+
+      // Easter egg for obviously famous artists (trolling people testing the app)
+      const obviousFamousArtists = [
+        'the beatles', 'rolling stones', 'the rolling stones', 'queen', 'led zeppelin',
+        'pink floyd', 'the doors', 'nirvana', 'metallica', 'ac dc', 'acdc', 'ac/dc',
+        'guns n roses', 'guns n\' roses', 'u2', 'radiohead', 'red hot chili peppers',
+        'the who', 'black sabbath', 'deep purple', 'eagles', 'fleetwood mac',
+        'bob dylan', 'elvis presley', 'michael jackson', 'madonna', 'prince',
+        'david bowie', 'elton john', 'john lennon', 'paul mccartney', 'mick jagger',
+        'freddie mercury', 'jimi hendrix', 'eric clapton', 'bruce springsteen',
+        'johnny cash', 'aretha franklin', 'stevie wonder', 'ray charles',
+        'the kinks', 'the beach boys', 'simon and garfunkel', 'creedence clearwater revival',
+        'lynyrd skynyrd', 'aerosmith', 'kiss', 'van halen', 'def leppard',
+        'bon jovi', 'journey', 'foreigner', 'styx', 'toto', 'chicago',
+        'santana', 'grateful dead', 'jefferson airplane', 'janis joplin',
+        'the velvet underground', 'iggy pop', 'the stooges', 'ramones',
+        'sex pistols', 'the clash', 'green day', 'pearl jam', 'soundgarden',
+        'alice in chains', 'stone temple pilots', 'smashing pumpkins',
+        'foo fighters', 'linkin park', 'coldplay', 'oasis', 'blur',
+        'the cure', 'depeche mode', 'new order', 'joy division',
+        'talking heads', 'r.e.m.', 'rem', 'pixies', 'sonic youth'
+      ];
+
+      const lowerName = name.toLowerCase().trim();
+      if (obviousFamousArtists.includes(lowerName)) {
         return {
           status: 'available',
           details: 'We love you. Go to bed. <3',
