@@ -154,11 +154,15 @@ QUALITY STANDARDS:
         if (model === 'grok-4') {
           // Grok 4 - minimal parameters for maximum compatibility
           requestParams.top_p = 0.95;
-        } else if (model.includes('grok-3')) {
-          // Grok 3 variants - full parameter support
+        } else if (model === 'grok-3') {
+          // Grok 3 full - supports all parameters
           requestParams.top_p = 0.9;
           requestParams.frequency_penalty = 0.8;
           requestParams.presence_penalty = 0.6;
+        } else if (model === 'grok-3-mini') {
+          // Grok 3 mini - limited parameter support
+          requestParams.top_p = 0.9;
+          // No frequency_penalty or presence_penalty for mini
         } else {
           // Other models - basic parameters
           requestParams.top_p = 0.9;
