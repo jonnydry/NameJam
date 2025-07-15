@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ export function NameGenerator() {
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
 
   const { toast } = useToast();
+  const loadingRef = useRef<HTMLDivElement>(null);
 
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -121,6 +122,13 @@ export function NameGenerator() {
 
   const handleGenerateMore = () => {
     generateMutation.mutate();
+    // Scroll to loading area
+    setTimeout(() => {
+      loadingRef.current?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }, 100);
   };
 
   const handleSearch = () => {
@@ -331,7 +339,7 @@ export function NameGenerator() {
 
       {/* Loading States */}
       {(generateMutation.isPending || searchMutation.isPending) && (
-        <div className="bg-card rounded-xl shadow-sm border border-border p-8">
+        <div ref={loadingRef} className="bg-card rounded-xl shadow-sm border border-border p-8">
           <LoadingAnimation 
             stage={generateMutation.isPending ? 'generating' : 'verifying'}
           />
