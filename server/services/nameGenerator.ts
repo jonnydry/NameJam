@@ -341,12 +341,8 @@ export class NameGeneratorService {
   }
 
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean}>> {
-    // Check cache first
-    const cacheKey = `names:${JSON.stringify(request)}`;
-    const cached = await cacheService.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
+    // Skip caching for name generation to ensure fresh results
+    // Only cache expensive operations like verification and Spotify searches
 
     const { type, wordCount, count, mood, genre } = request;
     const names: Array<{name: string, isAiGenerated: boolean}> = [];
@@ -401,12 +397,7 @@ export class NameGeneratorService {
       }
     }
 
-    const result = names.slice(0, count);
-    
-    // Cache the result for 30 minutes
-    await cacheService.set(cacheKey, result, 30 * 60);
-    
-    return result;
+    return names.slice(0, count);
   }
 
   private async generateSingleName(type: string, wordCount: number, mood?: string, genre?: string): Promise<string> {
