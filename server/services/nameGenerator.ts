@@ -176,7 +176,11 @@ export class NameGeneratorService {
         'Sleepy', 'Hungry', 'Thirsty', 'Restless', 'Impatient', 'Overwhelmed', 'Procrastinating',
         'Peculiar', 'Bizarre', 'Ridiculous', 'Absurd', 'Nonsensical', 'Whimsical', 'Zany',
         'Fluffy', 'Squishy', 'Bouncy', 'Wobbly', 'Jiggly', 'Sparkly', 'Glittery', 'Shiny',
-        'Fuzzy', 'Scratchy', 'Ticklish', 'Giggly', 'Wiggly', 'Squirmy', 'Fidgety', 'Jittery'
+        'Fuzzy', 'Scratchy', 'Ticklish', 'Giggly', 'Wiggly', 'Squirmy', 'Fidgety', 'Jittery',
+        // New creative adjectives
+        'Hypnotic', 'Phantom', 'Cryptic', 'Sublime', 'Visceral', 'Elusive', 'Surreal', 'Lucid',
+        'Prismatic', 'Holographic', 'Kaleidoscopic', 'Chromatic', 'Monolithic', 'Arcane', 'Esoteric',
+        'Liminal', 'Ephemeral', 'Transcendent', 'Immersive', 'Enigmatic', 'Paradoxical', 'Recursive'
       ],
       nouns: [
         // Core concepts (expanded)
@@ -231,7 +235,12 @@ export class NameGeneratorService {
         'Pajamas', 'Mustaches', 'Eyebrows', 'Elbows', 'Knees', 'Toes', 'Buttons', 'Zippers',
         'Sandwiches', 'Burritos', 'Cupcakes', 'Muffins', 'Bagels', 'Pretzels', 'Crackers', 'Cookies',
         'Bubbles', 'Sprinkles', 'Confetti', 'Glitter', 'Sparkles', 'Giggles', 'Wiggles', 'Squiggles',
-        'Doodles', 'Noodles', 'Poodles', 'Oodles', 'Caboodles', 'Fidgets', 'Gadgets', 'Widgets'
+        'Doodles', 'Noodles', 'Poodles', 'Oodles', 'Caboodles', 'Fidgets', 'Gadgets', 'Widgets',
+        // New creative nouns
+        'Nexus', 'Vortex', 'Matrix', 'Paradox', 'Enigma', 'Cipher', 'Riddle', 'Labyrinth',
+        'Kaleidoscope', 'Prism', 'Spectrum', 'Continuum', 'Dimension', 'Portal', 'Gateway', 'Threshold',
+        'Catalyst', 'Paradigm', 'Archetype', 'Blueprint', 'Framework', 'Canvas', 'Tapestry', 'Mosaic',
+        'Algorithm', 'Frequency', 'Wavelength', 'Resonance', 'Vibration', 'Oscillation', 'Pulse', 'Signal'
       ],
       verbs: [
         // Core action verbs (expanded)
@@ -273,6 +282,10 @@ export class NameGeneratorService {
         'Giggle', 'Tickle', 'Bounce', 'Wiggle', 'Jiggle', 'Squirm', 'Fidget', 'Wobble',
         'Stumble', 'Fumble', 'Bumble', 'Tumble', 'Rumble', 'Grumble', 'Mumble', 'Jumble',
         'Snooze', 'Doze', 'Nap', 'Yawn', 'Stretch', 'Scratch', 'Itch', 'Twitch',
+        // New creative verbs
+        'Transcend', 'Manifest', 'Illuminate', 'Resonate', 'Amplify', 'Modulate', 'Transmute', 'Morph',
+        'Decode', 'Encrypt', 'Unravel', 'Interweave', 'Converge', 'Diverge', 'Intersect', 'Overlap',
+        'Reverberate', 'Cascade', 'Percolate', 'Precipitate', 'Sublimate', 'Crystallize', 'Liquify', 'Vaporize',
         'Hiccup', 'Sneeze', 'Cough', 'Burp', 'Gulp', 'Slurp', 'Chomp', 'Munch',
         'Procrastinate', 'Overthink', 'Overanalyze', 'Underestimate', 'Overestimate', 'Misunderstand', 'Confuse', 'Perplex',
         'Bamboozle', 'Flabbergast', 'Discombobulate', 'Befuddle', 'Mystify', 'Puzzle', 'Baffle', 'Stupefy',
@@ -318,7 +331,11 @@ export class NameGeneratorService {
         'Recorder', 'Tambourine', 'Maracas', 'Harmonica', 'Ocarina', 'Didgeridoo', 'Spoons', 'Washboard',
         'Castanet', 'Kalimba', 'Melodica', 'Theremin', 'Autoharp', 'Banjo', 'Mandolin', 'Concertina',
         'Jaw Harp', 'Musical Saw', 'Glass Harmonica', 'Hang Drum', 'Steel Drum', 'Rain Stick',
-        'Singing Bowl', 'Wind Chimes', 'Thumb Piano', 'Nose Flute', 'Slide Whistle', 'Wobble Board'
+        'Singing Bowl', 'Wind Chimes', 'Thumb Piano', 'Nose Flute', 'Slide Whistle', 'Wobble Board',
+        // New creative musical terms
+        'Synth', 'Beat', 'Groove', 'Vibe', 'Flow', 'Drop', 'Bass Line', 'Hook', 'Riff',
+        'Lick', 'Fill', 'Break', 'Build', 'Breakdown', 'Outro', 'Intro', 'Verse', 'Chorus',
+        'Turntable', 'Crossfade', 'Beatmatch', 'Scratch', 'Sample', 'Loop Station', 'Pedal Board'
       ]
     };
   }
