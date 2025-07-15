@@ -180,7 +180,43 @@ export class NameGeneratorService {
         // New creative adjectives
         'Hypnotic', 'Phantom', 'Cryptic', 'Sublime', 'Visceral', 'Elusive', 'Surreal', 'Lucid',
         'Prismatic', 'Holographic', 'Kaleidoscopic', 'Chromatic', 'Monolithic', 'Arcane', 'Esoteric',
-        'Liminal', 'Ephemeral', 'Transcendent', 'Immersive', 'Enigmatic', 'Paradoxical', 'Recursive'
+        'Liminal', 'Ephemeral', 'Transcendent', 'Immersive', 'Enigmatic', 'Paradoxical', 'Recursive',
+        // Atmospheric & Environmental
+        'Nebulous', 'Ethereal', 'Celestial', 'Terrestrial', 'Subterranean', 'Stratospheric', 'Atmospheric',
+        'Aquatic', 'Volcanic', 'Seismic', 'Tectonic', 'Glacial', 'Thermal', 'Geothermal', 'Meteorological',
+        'Astral', 'Stellar', 'Lunar', 'Solar', 'Galactic', 'Intergalactic', 'Dimensional', 'Interdimensional',
+        // Emotional Depth
+        'Poignant', 'Bittersweet', 'Mellifluous', 'Cacophonous', 'Euphonious', 'Dissonant', 'Harmonious',
+        'Somber', 'Jubilant', 'Effervescent', 'Languorous', 'Tempestuous', 'Serene', 'Tumultuous', 'Placid',
+        'Fervent', 'Zealous', 'Apathetic', 'Passionate', 'Stoic', 'Ebullient', 'Despondent', 'Exultant',
+        // Textural & Material
+        'Crystalline', 'Amorphous', 'Fibrous', 'Porous', 'Granular', 'Viscid', 'Gelatinous', 'Membranous',
+        'Osseous', 'Cartilaginous', 'Vitreous', 'Pearlescent', 'Opalescent', 'Nacreous', 'Lustrous',
+        'Diaphanous', 'Pellucid', 'Turbid', 'Occluded', 'Refractive', 'Reflective', 'Absorptive', 'Conductive',
+        // Abstract Concepts
+        'Ontological', 'Epistemological', 'Phenomenological', 'Existential', 'Metaphysical', 'Axiological',
+        'Teleological', 'Deontological', 'Utilitarian', 'Nihilistic', 'Solipsistic', 'Deterministic', 'Stochastic',
+        'Heuristic', 'Algorithmic', 'Fractal', 'Iterative', 'Recursive', 'Emergent', 'Synergistic', 'Entropic',
+        // Mythological & Legendary
+        'Promethean', 'Sisyphean', 'Herculean', 'Orphic', 'Dionysian', 'Apollonian', 'Mercurial', 'Protean',
+        'Chthonic', 'Olympian', 'Titanic', 'Elysian', 'Stygian', 'Lethe', 'Tartarean', 'Hyperborean',
+        'Arthurian', 'Quixotic', 'Byronic', 'Faustian', 'Kafkaesque', 'Orwellian', 'Lovecraftian', 'Borgesian',
+        // Cinematic & Visual
+        'Cinematic', 'Panoramic', 'Kaleidoscopic', 'Stereoscopic', 'Telescopic', 'Microscopic', 'Macroscopic', 'Holoscopic',
+        'Monochromatic', 'Polychromatic', 'Prismatic', 'Spectral', 'Ultraviolet', 'Infrared', 'Luminescent', 'Bioluminescent',
+        'Incandescent', 'Fluorescent', 'Phosphorescent', 'Iridescent', 'Opalescent', 'Pearlescent', 'Effulgent', 'Radiant',
+        // Botanical & Organic
+        'Verdant', 'Lush', 'Fecund', 'Fertile', 'Barren', 'Arid', 'Succulent', 'Deciduous',
+        'Evergreen', 'Perennial', 'Annual', 'Biennial', 'Herbaceous', 'Woody', 'Arboreal', 'Foliar',
+        'Floral', 'Fruiting', 'Blossoming', 'Budding', 'Germinal', 'Seedling', 'Saprophytic', 'Symbiotic',
+        // Mechanical & Industrial
+        'Hydraulic', 'Pneumatic', 'Kinetic', 'Static', 'Dynamic', 'Ergonomic', 'Aerodynamic', 'Hydrodynamic',
+        'Mechanical', 'Electrical', 'Electronic', 'Digital', 'Analog', 'Binary', 'Quantum', 'Nuclear',
+        'Robotic', 'Cybernetic', 'Bionic', 'Prosthetic', 'Synthetic', 'Artificial', 'Automated', 'Autonomous',
+        // Linguistic & Literary
+        'Lexical', 'Semantic', 'Syntactic', 'Phonetic', 'Morphological', 'Etymological', 'Rhetorical', 'Dialectical',
+        'Vernacular', 'Colloquial', 'Idiomatic', 'Metaphorical', 'Allegorical', 'Symbolic', 'Figurative', 'Literal',
+        'Poetic', 'Prosaic', 'Lyrical', 'Epic', 'Dramatic', 'Tragic', 'Comic', 'Satirical'
       ],
       nouns: [
         // Core concepts (expanded)
@@ -240,7 +276,59 @@ export class NameGeneratorService {
         'Nexus', 'Vortex', 'Matrix', 'Paradox', 'Enigma', 'Cipher', 'Riddle', 'Labyrinth',
         'Kaleidoscope', 'Prism', 'Spectrum', 'Continuum', 'Dimension', 'Portal', 'Gateway', 'Threshold',
         'Catalyst', 'Paradigm', 'Archetype', 'Blueprint', 'Framework', 'Canvas', 'Tapestry', 'Mosaic',
-        'Algorithm', 'Frequency', 'Wavelength', 'Resonance', 'Vibration', 'Oscillation', 'Pulse', 'Signal'
+        'Algorithm', 'Frequency', 'Wavelength', 'Resonance', 'Vibration', 'Oscillation', 'Pulse', 'Signal',
+        // Cosmic & Astronomical
+        'Quasar', 'Pulsar', 'Magnetar', 'Supernova', 'Singularity', 'Event Horizon', 'Dark Matter', 'Antimatter',
+        'Parallax', 'Perihelion', 'Aphelion', 'Zenith', 'Nadir', 'Azimuth', 'Meridian', 'Ecliptic',
+        'Chromosphere', 'Photosphere', 'Corona', 'Heliosphere', 'Magnetosphere', 'Ionosphere', 'Exosphere', 'Mesosphere',
+        // Natural Elements
+        'Permafrost', 'Magma', 'Lava', 'Obsidian', 'Basalt', 'Granite', 'Quartz', 'Feldspar',
+        'Stalactite', 'Stalagmite', 'Geode', 'Fossil', 'Amber', 'Petrified', 'Sediment', 'Stratum',
+        'Confluence', 'Tributary', 'Estuary', 'Lagoon', 'Atoll', 'Reef', 'Abyss', 'Trench',
+        // Philosophical Concepts
+        'Zeitgeist', 'Weltanschauung', 'Dasein', 'Gestalt', 'Angst', 'Ennui', 'Schadenfreude', 'Wanderlust',
+        'Saudade', 'Hiraeth', 'Ikigai', 'Hygge', 'Lagom', 'Ubuntu', 'Meraki', 'Yugen',
+        'Kairos', 'Chronos', 'Logos', 'Pathos', 'Ethos', 'Hubris', 'Nemesis', 'Catharsis',
+        // Mythical Creatures & Beings
+        'Chimera', 'Basilisk', 'Manticore', 'Gryphon', 'Sphinx', 'Hydra', 'Cerberus', 'Pegasus',
+        'Leviathan', 'Behemoth', 'Kraken', 'Jormungandr', 'Fenrir', 'Valkyrie', 'Banshee', 'Wraith',
+        'Djinn', 'Ifrit', 'Marid', 'Ghoul', 'Lich', 'Revenant', 'Wendigo', 'Skinwalker',
+        // Abstract Phenomena
+        'Synesthesia', 'Pareidolia', 'Apophenia', 'Serendipity', 'Synchronicity', 'Entropy', 'Negentropy', 'Emergence',
+        'Fractals', 'Chaos', 'Turbulence', 'Vorticity', 'Helicity', 'Chirality', 'Parity', 'Symmetry',
+        'Asymptote', 'Inflection', 'Singularity', 'Discontinuity', 'Gradient', 'Divergence', 'Convergence', 'Flux',
+        // Architectural Elements
+        'Buttress', 'Parapet', 'Rampart', 'Turret', 'Minaret', 'Spire', 'Cupola', 'Dome',
+        'Arch', 'Vault', 'Keystone', 'Lintel', 'Pilaster', 'Portico', 'Loggia', 'Arcade',
+        'Cloister', 'Vestibule', 'Foyer', 'Atelier', 'Solarium', 'Sanctum', 'Chamber', 'Alcove',
+        // Gemstones & Minerals
+        'Diamond', 'Ruby', 'Sapphire', 'Emerald', 'Amethyst', 'Topaz', 'Garnet', 'Peridot',
+        'Aquamarine', 'Tourmaline', 'Citrine', 'Moonstone', 'Sunstone', 'Labradorite', 'Malachite', 'Turquoise',
+        'Jade', 'Onyx', 'Agate', 'Jasper', 'Carnelian', 'Chalcedony', 'Chrysocolla', 'Rhodonite',
+        // Weather Phenomena
+        'Zephyr', 'Gale', 'Squall', 'Tempest', 'Maelstrom', 'Vortex', 'Cyclone', 'Anticyclone',
+        'Nimbus', 'Cumulus', 'Stratus', 'Cirrus', 'Cumulonimbus', 'Altocumulus', 'Stratocumulus', 'Cirrostratus',
+        'Fog', 'Mist', 'Haze', 'Smog', 'Frost', 'Rime', 'Hoarfrost', 'Glaze',
+        // Biological & Medical
+        'Cortex', 'Medulla', 'Synapse', 'Neuron', 'Dendrite', 'Axon', 'Ganglion', 'Plexus',
+        'Enzyme', 'Hormone', 'Peptide', 'Protein', 'Lipid', 'Carbohydrate', 'Nucleotide', 'Chromosome',
+        'Genome', 'Phenotype', 'Genotype', 'Allele', 'Mutation', 'Evolution', 'Adaptation', 'Selection',
+        // Time Periods & Eras
+        'Epoch', 'Era', 'Eon', 'Age', 'Period', 'Millennium', 'Century', 'Decade',
+        'Jurassic', 'Cretaceous', 'Permian', 'Devonian', 'Cambrian', 'Precambrian', 'Holocene', 'Pleistocene',
+        'Renaissance', 'Enlightenment', 'Romanticism', 'Modernism', 'Postmodernism', 'Futurism', 'Dadaism', 'Surrealism',
+        // Oceanic & Maritime
+        'Harbor', 'Port', 'Wharf', 'Jetty', 'Pier', 'Marina', 'Anchorage', 'Berth',
+        'Starboard', 'Port', 'Bow', 'Stern', 'Hull', 'Keel', 'Mast', 'Rigging',
+        'Galleon', 'Frigate', 'Schooner', 'Clipper', 'Brigantine', 'Sloop', 'Catamaran', 'Trimaran',
+        // Fabrics & Textiles
+        'Velvet', 'Silk', 'Satin', 'Chiffon', 'Organza', 'Tulle', 'Lace', 'Brocade',
+        'Damask', 'Jacquard', 'Chenille', 'Corduroy', 'Tweed', 'Herringbone', 'Paisley', 'Gingham',
+        'Muslin', 'Linen', 'Hemp', 'Jute', 'Burlap', 'Canvas', 'Denim', 'Chambray',
+        // Culinary & Gastronomic
+        'Amuse-bouche', 'Antipasto', 'Charcuterie', 'Crudité', 'Tapas', 'Mezze', 'Dim Sum', 'Kaiseki',
+        'Bouillabaisse', 'Cassoulet', 'Coq au Vin', 'Ratatouille', 'Paella', 'Risotto', 'Osso Buco', 'Tagine',
+        'Mole', 'Ceviche', 'Empanada', 'Chimichurri', 'Sofrito', 'Mirepoix', 'Bouquet Garni', 'Roux'
       ],
       verbs: [
         // Core action verbs (expanded)
@@ -286,10 +374,45 @@ export class NameGeneratorService {
         'Transcend', 'Manifest', 'Illuminate', 'Resonate', 'Amplify', 'Modulate', 'Transmute', 'Morph',
         'Decode', 'Encrypt', 'Unravel', 'Interweave', 'Converge', 'Diverge', 'Intersect', 'Overlap',
         'Reverberate', 'Cascade', 'Percolate', 'Precipitate', 'Sublimate', 'Crystallize', 'Liquify', 'Vaporize',
+        // Transformative Actions
+        'Metamorphose', 'Transmogrify', 'Alchemize', 'Catalyze', 'Synthesize', 'Hybridize', 'Amalgamate', 'Coalesce',
+        'Disseminate', 'Proliferate', 'Propagate', 'Germinate', 'Incubate', 'Gestate', 'Ferment', 'Distill',
+        'Refract', 'Diffract', 'Deflect', 'Inflect', 'Reflect', 'Project', 'Inject', 'Eject',
+        // Cognitive & Mental
+        'Cognize', 'Perceive', 'Apprehend', 'Comprehend', 'Intuit', 'Deduce', 'Induce', 'Infer',
+        'Extrapolate', 'Interpolate', 'Correlate', 'Postulate', 'Hypothesize', 'Theorize', 'Axiomatize', 'Systematize',
+        'Categorize', 'Taxonomize', 'Stratify', 'Hierarchize', 'Prioritize', 'Optimize', 'Maximize', 'Minimize',
+        // Physical Phenomena
+        'Oscillate', 'Undulate', 'Pulsate', 'Fluctuate', 'Modulate', 'Attenuate', 'Accentuate', 'Punctuate',
+        'Permeate', 'Saturate', 'Infiltrate', 'Exfiltrate', 'Dissipate', 'Evaporate', 'Condense', 'Nucleate',
+        'Ionize', 'Atomize', 'Vaporize', 'Solidify', 'Liquefy', 'Gasify', 'Plasticize', 'Elasticize',
+        // Creative & Artistic
+        'Improvise', 'Extemporize', 'Stylize', 'Romanticize', 'Dramatize', 'Theatricalize', 'Cinematize', 'Novelitize',
+        'Versify', 'Poeticize', 'Lyricize', 'Harmonize', 'Melodize', 'Rhythmicize', 'Syncopate', 'Accentuate',
+        // Elemental & Alchemical
+        'Sublimate', 'Precipitate', 'Coagulate', 'Dissolve', 'Suspend', 'Emulsify', 'Homogenize', 'Fractionate',
+        'Oxidize', 'Reduce', 'Neutralize', 'Acidify', 'Alkalize', 'Saponify', 'Esterify', 'Polymerize',
+        'Calcine', 'Distill', 'Rectify', 'Purify', 'Refine', 'Temper', 'Anneal', 'Quench',
+        // Motion & Dynamics
+        'Gyrate', 'Precess', 'Nutate', 'Librate', 'Oscillate', 'Vacillate', 'Fluctuate', 'Palpitate',
+        'Circumnavigate', 'Circumambulate', 'Perambulate', 'Ambulate', 'Locomote', 'Migrate', 'Emigrate', 'Immigrate',
+        'Levitate', 'Gravitate', 'Accelerate', 'Decelerate', 'Propel', 'Repel', 'Attract', 'Detract',
+        // Sensory & Perceptual
+        'Visualize', 'Audialize', 'Tactilize', 'Olfactorize', 'Gustatorize', 'Synesthetize', 'Perceive', 'Apperceive',
+        'Hallucinate', 'Fantasize', 'Daydream', 'Lucid-dream', 'Astral-project', 'Remote-view', 'Clairvoyance', 'Telepathize',
+        'Intuit', 'Empathize', 'Sympathize', 'Telepathize', 'Psychometrize', 'Dowse', 'Divine', 'Augur',
         'Hiccup', 'Sneeze', 'Cough', 'Burp', 'Gulp', 'Slurp', 'Chomp', 'Munch',
         'Procrastinate', 'Overthink', 'Overanalyze', 'Underestimate', 'Overestimate', 'Misunderstand', 'Confuse', 'Perplex',
         'Bamboozle', 'Flabbergast', 'Discombobulate', 'Befuddle', 'Mystify', 'Puzzle', 'Baffle', 'Stupefy',
-        'Gallivant', 'Traipse', 'Meander', 'Wander', 'Roam', 'Ramble', 'Saunter', 'Amble'
+        'Gallivant', 'Traipse', 'Meander', 'Wander', 'Roam', 'Ramble', 'Saunter', 'Amble',
+        // Contemplative & Philosophical
+        'Ruminate', 'Cogitate', 'Deliberate', 'Speculate', 'Conjecture', 'Surmise', 'Presume', 'Assume',
+        'Philosophize', 'Theologize', 'Moralize', 'Sermonize', 'Pontificate', 'Expatiate', 'Elaborate', 'Elucidate',
+        'Explicate', 'Interpret', 'Construe', 'Decipher', 'Decode', 'Unpack', 'Analyze', 'Scrutinize',
+        // Social & Interactive
+        'Collaborate', 'Cooperate', 'Coordinate', 'Synchronize', 'Harmonize', 'Integrate', 'Amalgamate', 'Unite',
+        'Fraternize', 'Socialize', 'Mingle', 'Hobnob', 'Network', 'Schmooze', 'Kibitz', 'Banter',
+        'Negotiate', 'Mediate', 'Arbitrate', 'Adjudicate', 'Facilitate', 'Moderate', 'Orchestrate', 'Choreograph'
       ],
       musicalTerms: [
         // Classical Music Theory
@@ -335,7 +458,27 @@ export class NameGeneratorService {
         // New creative musical terms
         'Synth', 'Beat', 'Groove', 'Vibe', 'Flow', 'Drop', 'Bass Line', 'Hook', 'Riff',
         'Lick', 'Fill', 'Break', 'Build', 'Breakdown', 'Outro', 'Intro', 'Verse', 'Chorus',
-        'Turntable', 'Crossfade', 'Beatmatch', 'Scratch', 'Sample', 'Loop Station', 'Pedal Board'
+        'Turntable', 'Crossfade', 'Beatmatch', 'Scratch', 'Sample', 'Loop Station', 'Pedal Board',
+        // Extended Musical Concepts
+        'Polyrhythm', 'Syncopation', 'Ostinato', 'Pedal Point', 'Drone', 'Tremolo', 'Vibrato', 'Portamento',
+        'Melisma', 'Ornament', 'Trill', 'Mordent', 'Turn', 'Appoggiatura', 'Acciaccatura', 'Glissando',
+        'Pizzicato', 'Arco', 'Col Legno', 'Sul Ponticello', 'Sul Tasto', 'Harmonics', 'Flageolet', 'Multiphonics',
+        // World Music Terms
+        'Raga', 'Tala', 'Maqam', 'Gamelan', 'Mbira', 'Kora', 'Balafon', 'Shakuhachi',
+        'Taiko', 'Shamisen', 'Erhu', 'Pipa', 'Guqin', 'Zheng', 'Saz', 'Oud',
+        'Bouzouki', 'Hurdy-Gurdy', 'Nyckelharpa', 'Hardanger', 'Kantele', 'Bayan', 'Bandura', 'Domra',
+        // Electronic Music Production
+        'Sidechain', 'Compression', 'Gate', 'Limiter', 'Expander', 'De-esser', 'Exciter', 'Saturator',
+        'Bitcrusher', 'Decimator', 'Vocoder', 'Talkbox', 'Autotune', 'Pitch-shift', 'Time-stretch', 'Granular',
+        'Wavetable', 'FM Synthesis', 'Additive', 'Subtractive', 'Physical Modeling', 'Spectral', 'Resynthesis', 'Convolution',
+        // Classical Forms
+        'Fugue', 'Canon', 'Ricercar', 'Toccata', 'Passacaglia', 'Chaconne', 'Sarabande', 'Gavotte',
+        'Minuet', 'Scherzo', 'Waltz', 'Mazurka', 'Polonaise', 'Tarantella', 'Bolero', 'Habanera',
+        'Nocturne', 'Etude', 'Impromptu', 'Ballade', 'Berceuse', 'Barcarolle', 'Capriccio', 'Fantasia',
+        // Performance Techniques
+        'Rubato', 'Ritardando', 'Accelerando', 'Rallentando', 'Allargando', 'Stringendo', 'Calando', 'Morendo',
+        'Spiccato', 'Martele', 'Sautille', 'Ricochet', 'Jeté', 'Louré', 'Détaché', 'Martelé',
+        'Double-stop', 'Triple-stop', 'Quadruple-stop', 'Bariolage', 'Scordatura', 'Prepared', 'Extended', 'Multiphonic'
       ]
     };
   }
