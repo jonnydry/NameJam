@@ -36,32 +36,33 @@ export class BandBioGeneratorService {
         let prompt;
         const timestamp = Date.now();
         const uniqueElements = [
-          'legendary sandwich incident', 'cursed guitar pick', 'time travel mishap', 'alien intervention', 
-          'laundromat discovery', 'fortune cookie prophecy', 'rubber duck inspiration', 'lightning storm revelation',
-          'cosmic bowling accident', 'mystical pizza delivery', 'interdimensional garage sale', 'telepathic hamster'
+          'legendary sandwich incident that ended three relationships', 'cursed guitar pick from a sketchy pawn shop', 'time travel mishap involving expired milk', 'alien intervention during a really bad hangover', 
+          'laundromat discovery after losing a bet', 'fortune cookie prophecy written by a drunk poet', 'rubber duck inspiration during a questionable life phase', 'lightning storm revelation while skinny dipping',
+          'cosmic bowling accident with terrible consequences', 'mystical pizza delivery at 3 AM', 'interdimensional garage sale scam', 'telepathic hamster with commitment issues',
+          'bathroom mirror epiphany after bad breakup', 'gas station hot dog vision quest', 'parking ticket that changed everything', 'drunk text to the wrong number'
         ];
         const randomElement = uniqueElements[Math.floor(Math.random() * uniqueElements.length)];
         
         if (model === 'grok-3-mini' || model === 'grok-3-mini-fast') {
-          // Humor-focused simple prompts
+          // Edgy humor-focused simple prompts
           const humorPrompts = [
-            `Write a hilarious biography for "${bandName}", a ${genreInfo} band. Include a ridiculous origin story involving ${randomElement}, absurd band member nicknames, and their most embarrassing moment. Be FUNNY and original! Under 150 words. Timestamp: ${timestamp}`,
-            `Create a comedy bio for "${bandName}" (${genreInfo}). Focus on their bizarre formation story, ridiculous band traditions, and the weirdest thing that ever happened to them. Make it genuinely amusing! Under 150 words. ID: ${timestamp}`,
-            `Tell the funny story of "${bandName}" - their ${genreInfo} sound came from ${randomElement}. Include silly member backstories and their most absurd performance. Be witty and entertaining! Under 150 words. Seed: ${timestamp}`
+            `Write a wickedly funny biography for "${bandName}", a ${genreInfo} band. Include their chaotic origin involving ${randomElement}, questionable life choices, member drama, and their most cringe-worthy public moment. Be EDGY, irreverent, and brutally honest! Under 150 words. Timestamp: ${timestamp}`,
+            `Create a no-holds-barred bio for "${bandName}" (${genreInfo}). Focus on their dysfunctional formation story, their terrible decisions, messy relationships, and the most awkward thing that ever happened. Be SAVAGE and witty! Under 150 words. ID: ${timestamp}`,
+            `Tell the unfiltered story of "${bandName}" - their ${genreInfo} sound emerged from ${randomElement} and poor judgment. Include messy member backstories, questionable morals, and their most embarrassing performance disaster. Be SHARP and merciless! Under 150 words. Seed: ${timestamp}`
           ];
           prompt = humorPrompts[Math.floor(Math.random() * humorPrompts.length)];
         } else {
-          // Complex humor-focused prompts with explicit anti-template instructions
+          // Edgy, R-rated humor prompts with no-holds-barred approach
           const advancedHumorPrompts = [
-            `COMEDY FOCUS: Write an outrageously funny biography for "${bandName}", a ${genreInfo} band. Feature: ${randomElement}, ridiculous member personalities, absurd backstory, and their most embarrassing performance. AVOID clichés like "destiny," "musical journey," or "passion for music." Be WEIRD and ORIGINAL! Max 150 words. Unique ID: ${timestamp}`,
+            `EDGY COMEDY: Write a brutally honest, darkly funny biography for "${bandName}", a ${genreInfo} band. Feature: ${randomElement}, dysfunctional member relationships, terrible life choices, and their most spectacularly embarrassing meltdown. AVOID all sanitized band bio clichés. Be SAVAGE, witty, and unapologetically honest about their messy reality! Max 150 words. Chaos ID: ${timestamp}`,
             
-            `HUMOR PRIORITY: Create a hilariously unconventional bio for "${bandName}" (${genreInfo}, ${moodInfo}). Include: bizarre formation story involving ${randomElement}, completely ridiculous band member names/personalities, and their most cringe-worthy moment. NO generic band bio language! Be genuinely FUNNY! Max 150 words. Chaos seed: ${timestamp}`,
+            `NO-FILTER MODE: Create a wickedly funny exposé of "${bandName}" (${genreInfo}, ${moodInfo}). Include: their chaotic formation via ${randomElement}, members with questionable morals and worse judgment, plus their most cringe-inducing public disaster. REJECT all wholesome music industry BS! Be SHARP, irreverent, and mercilessly entertaining! Max 150 words. Anarchy seed: ${timestamp}`,
             
-            `COMEDY GOLD: Document the absolutely absurd story of "${bandName}" - ${moodInfo} ${genreInfo} weirdos. Start with ${randomElement}, add preposterous member backgrounds, include their most embarrassing tradition. REJECT all standard bio formulas! Be HILARIOUS and unexpected! Max 150 words. Randomizer: ${timestamp}`,
+            `DARK HUMOR ALERT: Document the trainwreck story of "${bandName}" - ${moodInfo} ${genreInfo} disasters. Start with ${randomElement}, add member drama involving bad decisions and worse relationships, include their most mortifying tradition. DESTROY all feel-good bio templates! Be EDGY, sarcastic, and brutally amusing! Max 150 words. Mayhem code: ${timestamp}`,
             
-            `LAUGHS REQUIRED: Chronicle the ridiculous rise of "${bandName}" in ${genreInfo}. Feature: ${randomElement} origin, completely bonkers member stories, and their most awkward public moment. AVOID boring band bio templates! Make it genuinely AMUSING! Max 150 words. Entropy: ${timestamp}`,
+            `SAVAGE ROAST MODE: Chronicle the messy reality of "${bandName}" in ${genreInfo}. Feature: ${randomElement} catalyst, members with commitment issues and substance problems, their most awkward public humiliation. BURN all generic music bios! Make it CUTTING, honest, and hilariously uncomfortable! Max 150 words. Destruction level: ${timestamp}`,
             
-            `PURE COMEDY: Tell the wildly funny tale of "${bandName}" - ${genreInfo} misfits with ${moodInfo} energy. Include: ${randomElement} catalyst, hilariously weird band dynamics, and their most embarrassing mistake. NO standard music bio language! Be WITTY and fresh! Max 150 words. Chaos level: ${timestamp}`
+            `UNHINGED COMEDY: Tell the unvarnished truth about "${bandName}" - ${genreInfo} degenerates with ${moodInfo} energy. Include: ${randomElement} as the turning point, spectacularly dysfunctional band dynamics, and their most embarrassing personal failures made public. TORCH all sanitized storytelling! Be RUTHLESS and savagely funny! Max 150 words. Chaos maximum: ${timestamp}`
           ];
           prompt = advancedHumorPrompts[Math.floor(Math.random() * advancedHumorPrompts.length)];
         }
@@ -72,7 +73,7 @@ export class BandBioGeneratorService {
           messages: [
             {
               role: "system",
-              content: "You are a comedy writer specializing in band biographies. Your goal is to be genuinely funny, creative, and completely original. Avoid all standard music industry language and clichés. Each bio should feel like a unique comedy sketch. Be weird, unexpected, and genuinely amusing."
+              content: "You are a sarcastic music journalist with zero filter and a dark sense of humor. Write band biographies that are brutally honest, wickedly funny, and unapologetically edgy. Think 'roast comedy meets music journalism.' Expose the messy reality behind the facade - failed relationships, poor decisions, embarrassing moments, and dysfunctional dynamics. Be sharp, irreverent, and savagely entertaining while staying clever rather than crude. No sanitized industry speak allowed."
             },
             {
               role: "user", 
