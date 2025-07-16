@@ -32,58 +32,75 @@ export class BandBioGeneratorService {
         const genreInfo = genre ? ` ${genre}` : 'rock';
         const moodInfo = mood ? ` ${mood}` : 'energetic';
         
-        // Use simpler prompts for Grok 3 mini, more complex for others
+        // Enhanced humor-focused prompts with anti-formulaic instructions
         let prompt;
+        const timestamp = Date.now();
+        const uniqueElements = [
+          'legendary sandwich incident', 'cursed guitar pick', 'time travel mishap', 'alien intervention', 
+          'laundromat discovery', 'fortune cookie prophecy', 'rubber duck inspiration', 'lightning storm revelation',
+          'cosmic bowling accident', 'mystical pizza delivery', 'interdimensional garage sale', 'telepathic hamster'
+        ];
+        const randomElement = uniqueElements[Math.floor(Math.random() * uniqueElements.length)];
+        
         if (model === 'grok-3-mini' || model === 'grok-3-mini-fast') {
-          // Simpler prompts for Grok 3 mini to avoid reasoning token overuse
-          const simplePrompts = [
-            `Write a creative biography for "${bandName}", a ${genreInfo} band with ${moodInfo} energy. Include their formation story, band members, and what makes them unique. Keep it under 150 words.`,
-            `Create a band bio for "${bandName}" (${genreInfo}). Tell their story: how they formed, their breakthrough moment, and their signature style. Make it entertaining and under 150 words.`,
-            `Describe the rock band "${bandName}" - their ${genreInfo} sound, ${moodInfo} vibe, key members, and their journey to fame. Be creative and keep it concise.`
+          // Humor-focused simple prompts
+          const humorPrompts = [
+            `Write a hilarious biography for "${bandName}", a ${genreInfo} band. Include a ridiculous origin story involving ${randomElement}, absurd band member nicknames, and their most embarrassing moment. Be FUNNY and original! Under 150 words. Timestamp: ${timestamp}`,
+            `Create a comedy bio for "${bandName}" (${genreInfo}). Focus on their bizarre formation story, ridiculous band traditions, and the weirdest thing that ever happened to them. Make it genuinely amusing! Under 150 words. ID: ${timestamp}`,
+            `Tell the funny story of "${bandName}" - their ${genreInfo} sound came from ${randomElement}. Include silly member backstories and their most absurd performance. Be witty and entertaining! Under 150 words. Seed: ${timestamp}`
           ];
-          prompt = simplePrompts[Math.floor(Math.random() * simplePrompts.length)];
+          prompt = humorPrompts[Math.floor(Math.random() * humorPrompts.length)];
         } else {
-          // More complex prompts for other models
-          const randomSeed = Math.random();
-          const complexPrompts = [
-            `Create a wildly imaginative biography for "${bandName}", a ${genreInfo} band. Random seed: ${randomSeed}. Include an unusual formation story, eccentric band members, and a bizarre incident. Be unpredictable!`,
-            `Tell the outrageous story of "${bandName}" (${genreInfo}, ${moodInfo} vibe). Seed: ${randomSeed}. Focus on their weirdest moment, strangest member, and most unexpected influence.`,
-            `Write about "${bandName}"'s journey - ${genreInfo} legends with ${moodInfo} energy. Random: ${randomSeed}. Include a scandal, a miracle, and a ridiculous tradition.`,
-            `Document the chaos of "${bandName}" - ${moodInfo} ${genreInfo} rebels. Variation: ${randomSeed}. Start with their craziest gig, add colorful personalities, end with their motto.`,
-            `Chronicle "${bandName}"'s rise in ${genreInfo}. Randomizer: ${randomSeed}. Feature an unlikely beginning, notorious performances, and their signature quirk.`
+          // Complex humor-focused prompts with explicit anti-template instructions
+          const advancedHumorPrompts = [
+            `COMEDY FOCUS: Write an outrageously funny biography for "${bandName}", a ${genreInfo} band. Feature: ${randomElement}, ridiculous member personalities, absurd backstory, and their most embarrassing performance. AVOID clichés like "destiny," "musical journey," or "passion for music." Be WEIRD and ORIGINAL! Max 150 words. Unique ID: ${timestamp}`,
+            
+            `HUMOR PRIORITY: Create a hilariously unconventional bio for "${bandName}" (${genreInfo}, ${moodInfo}). Include: bizarre formation story involving ${randomElement}, completely ridiculous band member names/personalities, and their most cringe-worthy moment. NO generic band bio language! Be genuinely FUNNY! Max 150 words. Chaos seed: ${timestamp}`,
+            
+            `COMEDY GOLD: Document the absolutely absurd story of "${bandName}" - ${moodInfo} ${genreInfo} weirdos. Start with ${randomElement}, add preposterous member backgrounds, include their most embarrassing tradition. REJECT all standard bio formulas! Be HILARIOUS and unexpected! Max 150 words. Randomizer: ${timestamp}`,
+            
+            `LAUGHS REQUIRED: Chronicle the ridiculous rise of "${bandName}" in ${genreInfo}. Feature: ${randomElement} origin, completely bonkers member stories, and their most awkward public moment. AVOID boring band bio templates! Make it genuinely AMUSING! Max 150 words. Entropy: ${timestamp}`,
+            
+            `PURE COMEDY: Tell the wildly funny tale of "${bandName}" - ${genreInfo} misfits with ${moodInfo} energy. Include: ${randomElement} catalyst, hilariously weird band dynamics, and their most embarrassing mistake. NO standard music bio language! Be WITTY and fresh! Max 150 words. Chaos level: ${timestamp}`
           ];
-          prompt = complexPrompts[Math.floor(Math.random() * complexPrompts.length)] + " Max 150 words, be creative and different each time!";
+          prompt = advancedHumorPrompts[Math.floor(Math.random() * advancedHumorPrompts.length)];
         }
 
-        // Configure parameters based on model capabilities (like aiNameGenerator)
+        // Configure parameters for maximum creativity and humor
         const requestParams: any = {
           model: model,
           messages: [
             {
-              role: "user",
+              role: "system",
+              content: "You are a comedy writer specializing in band biographies. Your goal is to be genuinely funny, creative, and completely original. Avoid all standard music industry language and clichés. Each bio should feel like a unique comedy sketch. Be weird, unexpected, and genuinely amusing."
+            },
+            {
+              role: "user", 
               content: prompt
             }
           ],
-          max_tokens: model === 'grok-3-mini' ? 500 : 250,
-          temperature: 0.8
+          max_tokens: model === 'grok-3-mini' ? 500 : 300,
+          temperature: 1.2 // Increased for maximum creativity
         };
 
-        // Model-specific parameter configuration  
+        // Model-specific parameter configuration optimized for humor and uniqueness
         if (model === 'grok-4') {
           // Grok 4 - minimal parameters for maximum compatibility
-          requestParams.top_p = 0.95;
+          requestParams.top_p = 0.98; // Higher for more randomness
         } else if (model === 'grok-3') {
-          // Grok 3 full - supports all parameters
-          requestParams.top_p = 0.9;
-          requestParams.frequency_penalty = 0.3;
-          requestParams.presence_penalty = 0.2;
+          // Grok 3 full - supports all parameters, optimize for creativity
+          requestParams.top_p = 0.95;
+          requestParams.frequency_penalty = 0.6; // Higher to avoid repetition
+          requestParams.presence_penalty = 0.4; // Higher to encourage new topics
         } else if (model === 'grok-3-mini') {
-          // Grok 3 mini - limited parameter support
-          requestParams.top_p = 0.9;
+          // Grok 3 mini - limited parameter support but maximize creativity
+          requestParams.top_p = 0.95;
           // No frequency_penalty or presence_penalty for mini
         } else {
-          // Other models - basic parameters
-          requestParams.top_p = 0.9;
+          // Other models - optimize for uniqueness
+          requestParams.top_p = 0.95;
+          requestParams.frequency_penalty = 0.4;
+          requestParams.presence_penalty = 0.3;
         }
 
         const response = await this.openai.chat.completions.create(requestParams);
