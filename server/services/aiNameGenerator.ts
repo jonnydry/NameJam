@@ -3,7 +3,7 @@ import OpenAI from "openai";
 export class AINameGeneratorService {
   private openai: OpenAI | null = null;
   private recentWords: string[] = [];
-  private maxRecentWords = 20;
+  private maxRecentWords = 30; // Increased to track more words
 
   constructor() {
     // Initialize OpenAI only if API key is available
@@ -30,15 +30,19 @@ export class AINameGeneratorService {
     const models = ["grok-3", "grok-4", "grok-3-mini"];
     
     for (const model of models) {
-      try {
-        console.log(`Attempting model: ${model}`);
-        // Add randomization to force variety
-        const randomSeed = Math.random().toString(36).substring(7);
-        const timestamp = Date.now() % 10000;
+      // Try each model up to 3 times to avoid repeated words
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          console.log(`Attempting model: ${model} (attempt ${attempt + 1})`);
+          // Add randomization to force variety
+          const randomSeed = Math.random().toString(36).substring(7);
+          const timestamp = Date.now() % 10000;
         
         // Build enhanced prompts with creativity guidance and recent word exclusions
-        const avoidWords = ['shadows', 'shadow', 'echoes', 'echo', 'whispers', 'whisper', 'midnight', 'darkness', 'twilight', 'sorrow', 'eclipse', 'velvet', 'cosmic', 'neon'].concat(this.recentWords);
-        const avoidString = avoidWords.slice(0, 12).join(', '); // Focused list of overused words
+        const overusedWords = ['shadows', 'shadow', 'echoes', 'echo', 'whispers', 'whisper', 'midnight', 'darkness', 'twilight', 'sorrow', 'eclipse', 'velvet', 'cosmic', 'neon'];
+        const recentWordsToAvoid = this.recentWords.slice(0, 10); // Focus on most recent 10 words
+        const avoidWords = [...new Set([...recentWordsToAvoid, ...overusedWords])]; // Combine and deduplicate
+        const avoidString = avoidWords.slice(0, 15).join(', '); // Show more words to avoid
         
         const creativityTechniques = [
           'unexpected color-object combinations',
@@ -54,13 +58,13 @@ export class AINameGeneratorService {
         ];
         
         const promptVariations = [
-          `Create a memorable ${type === 'band' ? 'band' : 'song'} name using ${creativityTechniques[Math.floor(Math.random() * creativityTechniques.length)]}. Avoid: ${avoidString}`,
-          `Invent a striking ${type === 'band' ? 'band' : 'song'} name that combines concrete and abstract concepts. Skip overused words: ${avoidString}`,
-          `Generate a ${type === 'band' ? 'band' : 'song'} name with interesting word textures and sounds. Don't use: ${avoidString}`,
-          `Think of a bold ${type === 'band' ? 'band' : 'song'} name mixing everyday objects with grand concepts. Exclude: ${avoidString}`,
-          `Create a vivid ${type === 'band' ? 'band' : 'song'} name using sensory words and unusual pairings. Avoid clichés: ${avoidString}`,
-          `Craft a unique ${type === 'band' ? 'band' : 'song'} name blending industrial terms with natural imagery. Skip: ${avoidString}`,
-          `Design a catchy ${type === 'band' ? 'band' : 'song'} name using contradictory or surprising word combinations. Don't use: ${avoidString}`
+          `Create a memorable ${type === 'band' ? 'band' : 'song'} name using ${creativityTechniques[Math.floor(Math.random() * creativityTechniques.length)]}. MUST AVOID these words: ${avoidString}`,
+          `Invent a striking ${type === 'band' ? 'band' : 'song'} name that combines concrete and abstract concepts. NEVER use these overused words: ${avoidString}`,
+          `Generate a ${type === 'band' ? 'band' : 'song'} name with interesting word textures and sounds. ABSOLUTELY DO NOT include: ${avoidString}`,
+          `Think of a bold ${type === 'band' ? 'band' : 'song'} name mixing everyday objects with grand concepts. STRICTLY EXCLUDE: ${avoidString}`,
+          `Create a vivid ${type === 'band' ? 'band' : 'song'} name using sensory words and unusual pairings. FORBIDDEN words: ${avoidString}`,
+          `Craft a unique ${type === 'band' ? 'band' : 'song'} name blending industrial terms with natural imagery. BANNED words: ${avoidString}`,
+          `Design a catchy ${type === 'band' ? 'band' : 'song'} name using contradictory or surprising word combinations. PROHIBITED: ${avoidString}`
         ];
         
         let prompt = promptVariations[Math.floor(Math.random() * promptVariations.length)];
@@ -111,7 +115,11 @@ export class AINameGeneratorService {
           messages: [
             {
               role: "system",
-              content: `You are an expert ${type === 'band' ? 'band' : 'song'} naming specialist with deep knowledge of linguistic patterns, poetic structures, and grammatical consistency. Apply these advanced naming principles:
+              content: `You are an expert ${type === 'band' ? 'band' : 'song'} naming specialist with deep knowledge of linguistic patterns, poetic structures, and grammatical consistency. 
+
+CRITICAL: You MUST avoid using ANY of the forbidden words listed in the prompt. This is your top priority. If you use a forbidden word, your response will be rejected.
+
+Apply these advanced naming principles:
 
 LINGUISTIC RULES:
 - Ensure perfect subject-verb agreement ("Fire Burns" not "Fire Burn")
@@ -180,6 +188,17 @@ QUALITY STANDARDS:
             .replace(/[.!?:,]$/g, '') // Remove ending punctuation
             .trim();
           
+          // Check if name contains recently used words
+          const nameWords = cleanName.toLowerCase().split(/\s+/);
+          const containsRecentWord = nameWords.some(word => 
+            this.recentWords.slice(0, 5).includes(word.toLowerCase()) // Check against 5 most recent words
+          );
+          
+          if (containsRecentWord) {
+            console.log(`Rejected "${cleanName}" - contains recently used word`);
+            continue; // Try again with same model
+          }
+          
           // Check word count and track words for future avoidance
           if (wordCount && cleanName.split(/\s+/).length === wordCount) {
             console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
@@ -202,10 +221,12 @@ QUALITY STANDARDS:
           }
         }
         
-      } catch (error: any) {
-        console.log(`Model ${model} failed with error:`, error.message);
-        console.log(`Error details:`, error.response?.data || error.code || 'No additional details');
-        console.log(`Request params used:`, JSON.stringify(requestParams, null, 2));
+        } catch (error: any) {
+          console.log(`Model ${model} failed with error:`, error.message);
+          console.log(`Error details:`, error.response?.data || error.code || 'No additional details');
+          console.log(`Request params used:`, JSON.stringify(requestParams, null, 2));
+          // Continue to next attempt
+        }
       }
     }
 
@@ -300,5 +321,7 @@ QUALITY STANDARDS:
     
     // Remove duplicates while preserving order
     this.recentWords = [...new Set(this.recentWords)];
+    
+    console.log(`Recent words tracked: ${this.recentWords.slice(0, 10).join(', ')}`);
   }
 }
