@@ -658,6 +658,30 @@
   animation: pulse-glow 2s infinite;
 }
 
+/* Mobile-specific tab adjustments */
+@media (max-width: 768px) {
+  .tabs-list-enhanced {
+    @apply p-1;
+    gap: 0.25rem;
+  }
+  
+  .tabs-trigger-enhanced {
+    @apply px-2 py-2 text-xs;
+    font-size: 0.75rem;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .tabs-trigger-enhanced[data-state="active"]::after {
+    left: 10%;
+    right: 10%;
+    height: 1px;
+  }
+}
+
 .tabs-trigger-enhanced::before {
   content: '';
   position: absolute;
