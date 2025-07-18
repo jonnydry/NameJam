@@ -55,16 +55,18 @@ export default function About() {
                 <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
                   <h3 className="font-medium mb-3">Key Features</h3>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• <strong>Massive Vocabulary Engine:</strong> Generate names using 3,000+ words across 40+ specialized domains including cosmic, mythological, scientific, culinary, and architectural terms</li>
-                    <li>• <strong>AI-Powered Creativity:</strong> XAI Grok 3/4 integration for enhanced creative generation with intelligent fallback and model attribution</li>
-                    <li>• <strong>Advanced Customization:</strong> Choose 1-6 word combinations, 12 mood themes, 14 musical genres with contextual filtering</li>
-                    <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, plus Last.fm and MusicBrainz</li>
-                    <li>• <strong>Professional Set Lists:</strong> Generate organized performance sets (8/16 songs) with automatic verification and band name suggestions</li>
-                    <li>• <strong>Enhanced Stash System:</strong> Save names, setlists, and band bios with 5-star ratings, category sorting, and comprehensive export options</li>
-                    <li>• <strong>Linguistic Intelligence:</strong> Advanced grammatical consistency, poetic flow optimization, and smart capitalization rules</li>
-                    <li>• <strong>Auto-Scroll Navigation:</strong> Seamless user experience with automatic scrolling and optimized loading animations</li>
-                    <li>• <strong>Comprehensive Export:</strong> Export stash as text, JSON, or print-friendly formats with timestamps and statistics</li>
-                    <li>• <strong>Modern Typography:</strong> Futuristic monospace design with JetBrains Mono font and console-style animations</li>
+                    <li>• <strong>Massive Vocabulary Engine:</strong> Generate names using 3,069+ words across 32 specialized domains including science fiction, fantasy, culinary, architecture, psychology, physics, chemistry, biology, and sensory terms</li>
+                    <li>• <strong>AI-Powered Creativity:</strong> XAI Grok 3/4 integration for enhanced creative generation with advanced anti-repetition system and model attribution</li>
+                    <li>• <strong>Advanced Customization:</strong> Choose 1-6 word combinations, 12 mood themes, 14 musical genres with focused contextual filtering</li>
+                    <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, plus Last.fm, MusicBrainz, and famous names database</li>
+                    <li>• <strong>Professional Set Lists:</strong> Generate organized performance sets (8/16 songs) with automatic verification and AI-powered band name suggestions</li>
+                    <li>• <strong>Enhanced Stash System:</strong> Save names, setlists, and band bios with 5-star ratings, category sorting, and comprehensive export options (text/JSON/print)</li>
+                    <li>• <strong>Linguistic Intelligence:</strong> Advanced grammatical consistency, poetic flow optimization, smart capitalization, and duplicate word prevention</li>
+                    <li>• <strong>AI Band Bio Generator:</strong> Create hilarious, edgy R-rated band biographies with sophisticated humor and anti-formulaic storytelling</li>
+                    <li>• <strong>Easter Egg System:</strong> Special responses for app testing with famous artist trolling and "Name Jam" detection</li>
+                    <li>• <strong>Auto-Scroll Navigation:</strong> Seamless user experience with automatic scrolling to loading areas and optimized equalizer animations</li>
+                    <li>• <strong>Anti-Repetition Technology:</strong> Advanced word tracking system prevents consecutive repeated words in AI generation</li>
+                    <li>• <strong>Modern Typography:</strong> Futuristic monospace design with JetBrains Mono font, typing animations, and rainbow hover effects</li>
                   </ul>
                 </div>
                 
@@ -97,21 +99,26 @@ export default function About() {
                     <div>
                       <h4 className="font-medium text-foreground mb-1">AI & Verification APIs</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• XAI Grok 3, Grok 4, and Grok 3-mini for creative AI generation</li>
-                        <li>• Spotify Web API (priority) for authoritative music verification</li>
-                        <li>• Last.fm API for additional music database coverage</li>
-                        <li>• MusicBrainz API for comprehensive artist and track data</li>
-                        <li>• Intelligent fallback system with automatic retry mechanisms</li>
+                        <li>• XAI Grok 3, Grok 4, and Grok 3-mini for creative AI generation with anti-repetition filtering</li>
+                        <li>• Spotify Web API (priority) for authoritative music verification with popularity scoring</li>
+                        <li>• Last.fm API for additional music database coverage and artist data</li>
+                        <li>• MusicBrainz API for comprehensive artist and track metadata</li>
+                        <li>• Famous Names Database with 60+ well-known artists for easter egg responses</li>
+                        <li>• Intelligent fallback system with 3-attempt retry mechanisms per model</li>
+                        <li>• Advanced word tracking to prevent consecutive repetition in AI results</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Core Features</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• 872 adjectives, 1,250 nouns, 500 verbs, 400 musical terms</li>
-                        <li>• Advanced linguistic patterns and grammatical consistency</li>
-                        <li>• Real-time name verification with popularity scoring</li>
-                        <li>• Local storage persistence with export capabilities</li>
-                        <li>• Responsive design with dark theme optimization</li>
+                        <li>• 877 adjectives, 1,262 nouns, 517 verbs, 418 musical terms across 32 domains</li>
+                        <li>• Advanced linguistic patterns with grammatical consistency and poetic flow evaluation</li>
+                        <li>• Real-time name verification with Spotify-priority checking and popularity scoring</li>
+                        <li>• Enhanced stash system with 5-star ratings, category filtering, and export options</li>
+                        <li>• AI band bio generation with edgy R-rated humor and anti-formulaic prompts</li>
+                        <li>• Anti-repetition technology tracking 30 recent words to prevent duplicates</li>
+                        <li>• Local storage persistence with comprehensive export capabilities</li>
+                        <li>• Responsive design with dark theme optimization and monospace typography</li>
                       </ul>
                     </div>
                   </div>
