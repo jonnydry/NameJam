@@ -125,11 +125,20 @@ export function LyricJam() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All genres</SelectItem>
-                  {genres.map((g) => (
-                    <SelectItem key={g} value={g}>
-                      {g.charAt(0).toUpperCase() + g.slice(1)}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="rock">🎸 Rock</SelectItem>
+                  <SelectItem value="pop">💫 Pop</SelectItem>
+                  <SelectItem value="country">🤠 Country</SelectItem>
+                  <SelectItem value="hip-hop">🎤 Hip-Hop</SelectItem>
+                  <SelectItem value="indie">🎨 Indie</SelectItem>
+                  <SelectItem value="folk">🪕 Folk</SelectItem>
+                  <SelectItem value="metal">🤘 Metal</SelectItem>
+                  <SelectItem value="jazz">🎺 Jazz</SelectItem>
+                  <SelectItem value="electronic">🎛️ Electronic</SelectItem>
+                  <SelectItem value="blues">🎵 Blues</SelectItem>
+                  <SelectItem value="punk">⚡ Punk</SelectItem>
+                  <SelectItem value="alternative">🌀 Alternative</SelectItem>
+                  <SelectItem value="reggae">🌴 Reggae</SelectItem>
+                  <SelectItem value="classical">🎼 Classical</SelectItem>
                 </SelectContent>
               </Select>
               
