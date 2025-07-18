@@ -5,6 +5,7 @@ import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGeneratorService } from "./services/bandBioGenerator";
 import { AINameGeneratorService } from "./services/aiNameGenerator";
+import { LyricStarterService } from "./services/lyricStarterService";
 
 import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
@@ -16,6 +17,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let nameVerifier: NameVerifierService;
   let bandBioGenerator: BandBioGeneratorService;
   let aiNameGenerator: AINameGeneratorService;
+  let lyricStarterService: LyricStarterService;
 
   try {
     aiNameGenerator = new AINameGeneratorService();
@@ -46,6 +48,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("✓ BandBioGeneratorService initialized");
   } catch (error) {
     console.error("✗ Failed to initialize BandBioGeneratorService:", error);
+    throw error;
+  }
+
+  try {
+    lyricStarterService = new LyricStarterService();
+    console.log("✓ LyricStarterService initialized");
+  } catch (error) {
+    console.error("✗ Failed to initialize LyricStarterService:", error);
     throw error;
   }
 
@@ -446,6 +456,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error generating band bio:", error);
       res.status(500).json({ 
         error: "Failed to generate band biography",
+        suggestion: "The AI service may be temporarily unavailable. Please try again later."
+      });
+    }
+  });
+
+  // Generate lyric starter endpoint
+  app.post("/api/generate-lyric-starter", async (req, res) => {
+    try {
+      const { genre } = req.body;
+      
+      const lyricResult = await lyricStarterService.generateLyricStarter(genre);
+      
+      res.json({ 
+        id: Date.now(), // Simple ID generation
+        lyric: lyricResult.lyric,
+        genre: genre || null,
+        songSection: lyricResult.songSection,
+        model: lyricResult.model,
+        generatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error generating lyric starter:", error);
+      res.status(500).json({ 
+        error: "Failed to generate lyric starter",
         suggestion: "The AI service may be temporarily unavailable. Please try again later."
       });
     }
