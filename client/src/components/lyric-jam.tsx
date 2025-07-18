@@ -118,9 +118,9 @@ export function LyricJam() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Select value={genre} onValueChange={setGenre}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue placeholder="Select genre (optional)" />
                 </SelectTrigger>
                 <SelectContent>
@@ -145,10 +145,11 @@ export function LyricJam() {
               <Button 
                 onClick={generateLyric} 
                 disabled={isLoading}
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 <Sparkles className="w-4 h-4" />
-                Generate Lyric Starter
+                <span className="hidden sm:inline">Generate Lyric Starter</span>
+                <span className="sm:hidden">Generate Starter</span>
               </Button>
             </div>
 
@@ -174,14 +175,14 @@ export function LyricJam() {
             {currentLyric && !isLoading && (
               <Card className="border-2">
                 <CardHeader className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-2 flex-1 min-w-0">
                       {currentLyric.songSection && (
                         <Badge className={`${getSectionColor(currentLyric.songSection)} text-white`}>
                           {currentLyric.songSection.toUpperCase()}
                         </Badge>
                       )}
-                      <p className="text-xl font-medium italic leading-relaxed">
+                      <p className="text-lg sm:text-xl font-medium italic leading-relaxed break-words">
                         "{currentLyric.lyric}"
                       </p>
                     </div>
@@ -189,7 +190,7 @@ export function LyricJam() {
                       variant="ghost"
                       size="icon"
                       onClick={handleAddToStash}
-                      className="hover:text-red-500"
+                      className="hover:text-red-500 shrink-0"
                     >
                       <Heart className="w-5 h-5" />
                     </Button>
@@ -201,7 +202,7 @@ export function LyricJam() {
                     </div>
                   )}
                 </CardHeader>
-                <CardFooter className="flex justify-between items-center">
+                <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="text-sm text-muted-foreground">
                     {genre !== "all" && <span>Genre: {genre}</span>}
                   </div>
@@ -209,10 +210,11 @@ export function LyricJam() {
                     variant="outline"
                     size="sm"
                     onClick={generateLyric}
-                    className="gap-2"
+                    className="gap-2 w-full sm:w-auto"
                   >
                     <RefreshCw className="w-4 h-4" />
-                    Generate Another
+                    <span className="hidden sm:inline">Generate Another</span>
+                    <span className="sm:hidden">Another</span>
                   </Button>
                 </CardFooter>
               </Card>
