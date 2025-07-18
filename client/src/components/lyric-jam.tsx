@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { LoadingAnimation } from "./loading-animation";
 import { useStash } from "@/context/stash-context";
 
 interface LyricResult {
@@ -146,7 +145,20 @@ export function LyricJam() {
 
             {isLoading && (
               <div className="py-8">
-                <LoadingAnimation message={getRandomLoadingMessage()} />
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-muted-foreground/20 to-muted-foreground/10 animate-spin">
+                      <div className="absolute inset-2 rounded-full bg-background"></div>
+                      <div className="absolute inset-4 rounded-full bg-primary/20"></div>
+                      <div className="absolute inset-6 rounded-full bg-background"></div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="text-lg text-foreground font-medium">{getRandomLoadingMessage()}</div>
+                  <div className="text-sm text-muted-foreground">Channeling the lyrical spirits</div>
+                </div>
               </div>
             )}
 
