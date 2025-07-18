@@ -48,7 +48,7 @@ export default function Home() {
             {/* Generator Section - Takes 2/3 on large screens */}
             <div className="lg:col-span-2">
               <Tabs defaultValue="names" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 tabs-list-enhanced">
+                <TabsList className="grid w-full grid-cols-3 gap-2 tabs-list-enhanced">
                   <TabsTrigger value="names" className="tabs-trigger-enhanced">Name Generator</TabsTrigger>
                   <TabsTrigger value="setlist" className="tabs-trigger-enhanced">Set List Generator</TabsTrigger>
                   <TabsTrigger value="lyric" className="tabs-trigger-enhanced">Lyric_Jam</TabsTrigger>

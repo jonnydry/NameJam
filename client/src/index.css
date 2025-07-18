@@ -602,10 +602,11 @@
 
 /* Enhanced Tab Styles */
 .tabs-list-enhanced {
-  @apply relative p-1 rounded-lg border;
+  @apply relative p-2 rounded-lg border;
   background-color: rgba(18, 18, 18, 0.3);
   border-color: rgba(29, 161, 242, 0.2);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  gap: 0.5rem;
 }
 
 .tabs-trigger-enhanced {
