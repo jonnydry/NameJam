@@ -602,15 +602,15 @@
 
 /* Enhanced Tab Styles */
 .tabs-list-enhanced {
-  @apply relative p-2 rounded-lg border;
+  @apply relative p-1 rounded-lg border flex;
   background-color: rgba(18, 18, 18, 0.3);
   border-color: rgba(29, 161, 242, 0.2);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-  gap: 0.5rem;
+  gap: 4px;
 }
 
 .tabs-trigger-enhanced {
-  @apply relative text-muted-foreground transition-all duration-300 ease-in-out;
+  @apply relative text-muted-foreground transition-all duration-300 ease-in-out flex-1;
   @apply border border-transparent rounded-md px-4 py-2;
   font-weight: 500;
   letter-spacing: 0.025em;
