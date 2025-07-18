@@ -23,35 +23,44 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Main Content */}
-      <main className="flex-1 px-4 py-12">
+      <main className="flex-1 px-4 py-8 md:py-12">
         <div className="max-w-7xl mx-auto">
           {/* Logo and Title Section */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 md:mb-8">
             <div className="flex flex-col items-center">
               {/* Logo */}
-              <div className="mb-4">
+              <div className="mb-3 md:mb-4">
                 <FermataLogo size="xl" />
               </div>
               {/* Title with special alignment */}
               <div className="relative">
-                <h1 className="text-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center">
+                <h1 className="text-3xl md:text-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center">
                   <span className="typing-prompt absolute" style={{ left: 'calc(50% - 6ch)' }}>&gt;</span>
                   <span className="title-text title-align">Name_Jam</span>
                 </h1>
               </div>
             </div>
-            <p className="text-lg text-muted-foreground font-medium subtitle-fade">Generate unique band names, song titles, set lists, and lyric starters</p>
+            <p className="text-base md:text-lg text-muted-foreground font-medium subtitle-fade px-2">Generate unique band names, song titles, set lists, and lyric starters</p>
           </div>
 
           {/* Two Column Layout with Tabs */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Generator Section - Takes 2/3 on large screens */}
             <div className="lg:col-span-2">
               <Tabs defaultValue="names" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 tabs-list-enhanced">
-                  <TabsTrigger value="names" className="tabs-trigger-enhanced">Name Generator</TabsTrigger>
-                  <TabsTrigger value="setlist" className="tabs-trigger-enhanced">Set List Generator</TabsTrigger>
-                  <TabsTrigger value="lyric" className="tabs-trigger-enhanced">Lyric_Jam</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 tabs-list-enhanced mb-4 md:mb-6">
+                  <TabsTrigger value="names" className="tabs-trigger-enhanced">
+                    <span className="hidden sm:inline">Name Generator</span>
+                    <span className="sm:hidden">Names</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="setlist" className="tabs-trigger-enhanced">
+                    <span className="hidden sm:inline">Set List Generator</span>
+                    <span className="sm:hidden">Set Lists</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="lyric" className="tabs-trigger-enhanced">
+                    <span className="hidden sm:inline">Lyric_Jam</span>
+                    <span className="sm:hidden">Lyrics</span>
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="names">
                   <NameGenerator />
