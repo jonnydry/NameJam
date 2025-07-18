@@ -1,5 +1,6 @@
 import { NameGenerator } from "@/components/name-generator";
 import { SetListGenerator } from "@/components/setlist-generator";
+import { LyricJam } from "@/components/lyric-jam";
 import { FermataLogo } from "@/components/fermata-logo";
 import { Stash } from "@/components/stash";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,7 +40,7 @@ export default function Home() {
                 </h1>
               </div>
             </div>
-            <p className="text-lg text-muted-foreground font-medium subtitle-fade">Generate unique band names, song titles, and set lists</p>
+            <p className="text-lg text-muted-foreground font-medium subtitle-fade">Generate unique band names, song titles, set lists, and lyric starters</p>
           </div>
 
           {/* Two Column Layout with Tabs */}
@@ -47,15 +48,19 @@ export default function Home() {
             {/* Generator Section - Takes 2/3 on large screens */}
             <div className="lg:col-span-2">
               <Tabs defaultValue="names" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="names">Name Generator</TabsTrigger>
                   <TabsTrigger value="setlist">Set List Generator</TabsTrigger>
+                  <TabsTrigger value="lyric">Lyric_Jam</TabsTrigger>
                 </TabsList>
                 <TabsContent value="names">
                   <NameGenerator />
                 </TabsContent>
                 <TabsContent value="setlist">
                   <SetListGenerator onCopy={handleCopy} />
+                </TabsContent>
+                <TabsContent value="lyric">
+                  <LyricJam />
                 </TabsContent>
               </Tabs>
             </div>
