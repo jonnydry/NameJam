@@ -187,21 +187,6 @@ export function LyricJam() {
           </div>
         </CardContent>
       </Card>
-
-      <Card className="bg-muted/50">
-        <CardHeader>
-          <CardTitle className="text-lg">Songwriting Tips</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• <strong>Verse:</strong> Tell your story, set the scene, build the narrative</li>
-            <li>• <strong>Chorus:</strong> Express the main emotion or message - make it memorable</li>
-            <li>• <strong>Bridge:</strong> Offer a new perspective or emotional shift</li>
-            <li>• <strong>Pre-Chorus:</strong> Build tension before the emotional release</li>
-            <li>• <strong>Outro:</strong> Leave a lasting impression or final thought</li>
-          </ul>
-        </CardContent>
-      </Card>
     </div>
   );
 }
