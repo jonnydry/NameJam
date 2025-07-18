@@ -644,16 +644,6 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0.8;
-  animation: rotate-gradient 3s linear infinite;
-}
-
-@keyframes rotate-gradient {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
 }
 
 .tabs-trigger-enhanced[data-state="active"]::after {
