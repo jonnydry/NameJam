@@ -18,7 +18,7 @@ interface LyricResult {
 }
 
 export function LyricJam() {
-  const [genre, setGenre] = useState("");
+  const [genre, setGenre] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
   const [currentLyric, setCurrentLyric] = useState<LyricResult | null>(null);
   const { addToStash } = useStash();
@@ -35,7 +35,7 @@ export function LyricJam() {
       const response = await fetch("/api/generate-lyric-starter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ genre: genre || undefined }),
+        body: JSON.stringify({ genre: genre === "all" ? undefined : genre }),
       });
 
       if (!response.ok) {
@@ -62,7 +62,7 @@ export function LyricJam() {
         name: currentLyric.lyric,
         type: 'lyricJam',
         wordCount: currentLyric.lyric.split(' ').length,
-        genre: genre || undefined,
+        genre: genre === "all" ? undefined : genre,
         metadata: {
           songSection: currentLyric.songSection,
           model: currentLyric.model
@@ -106,7 +106,7 @@ export function LyricJam() {
                   <SelectValue placeholder="Select genre (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All genres</SelectItem>
+                  <SelectItem value="all">All genres</SelectItem>
                   {genres.map((g) => (
                     <SelectItem key={g} value={g}>
                       {g.charAt(0).toUpperCase() + g.slice(1)}
@@ -163,7 +163,7 @@ export function LyricJam() {
                 </CardHeader>
                 <CardFooter className="flex justify-between items-center">
                   <div className="text-sm text-muted-foreground">
-                    {genre && <span>Genre: {genre}</span>}
+                    {genre !== "all" && <span>Genre: {genre}</span>}
                   </div>
                   <Button
                     variant="outline"
