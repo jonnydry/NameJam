@@ -29,6 +29,25 @@ export function LyricJam() {
     "alternative", "reggae", "classical"
   ];
 
+  const loadingMessages = [
+    "One sec...",
+    "Compiling Vibe",
+    "Resisting stasis",
+    "Calling the Muse",
+    "Lost in the soup brb",
+    "Saucing the aesthetic",
+    "Beginning to begin",
+    "Taxes and Regulations",
+    "Launching Lunch",
+    "Recording a message for the aliens",
+    "Anticipating failure",
+    "I sound my barbaric yawp over the roofs of the world"
+  ];
+
+  const getRandomLoadingMessage = () => {
+    return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+  };
+
   const generateLyric = async () => {
     setIsLoading(true);
     try {
@@ -127,7 +146,7 @@ export function LyricJam() {
 
             {isLoading && (
               <div className="py-8">
-                <LoadingAnimation />
+                <LoadingAnimation message={getRandomLoadingMessage()} />
               </div>
             )}
 
