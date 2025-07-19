@@ -165,7 +165,7 @@ export function NameGenerator() {
   return (
     <div className="space-y-6">
       {/* Controls Panel */}
-      <div className="bg-gradient-to-r from-blue-500/20 to-blue-400/10 border-blue-500/30 rounded-xl shadow-sm border p-6">
+      <div className="bg-gradient-to-r from-blue-500/30 to-white/10 border-blue-500/30 rounded-xl shadow-sm border p-6">
         {/* Type Toggle */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex rounded-lg bg-muted p-1">
