@@ -136,6 +136,7 @@ export default function About() {
                     <li>• Spotify</li>
                     <li>• Last.fm</li>
                     <li>• and my incredibly intelligent cat, Marci ♥</li>
+                    <li>• My beautiful and wonderful girlfriend Sam, who knows me better than anyone ever will ❤</li>
                   </ul>
                 </div>
               </div>
