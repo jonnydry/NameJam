@@ -292,6 +292,7 @@ export function NameGenerator() {
             Generate Names
           </Button>
         </div>
+        </div>
       </div>
 
       {/* Search Section */}
