@@ -11,8 +11,9 @@ import { LyricStarterService } from "./services/lyricStarterService";
 import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
 import { verificationCache } from "./services/verificationCache";
+import { validationRules, handleValidationErrors } from "./security";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, rateLimiters?: any): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
@@ -64,8 +65,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     throw error;
   }
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Auth routes (with rate limiting)
+  app.get('/api/auth/user', 
+    rateLimiters?.auth || ((req, res, next) => next()), 
+    isAuthenticated, 
+    async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -76,8 +80,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate names endpoint (protected)
-  app.post("/api/generate-names", isAuthenticated, async (req: any, res) => {
+  // Generate names endpoint (protected with rate limiting and validation)
+  app.post("/api/generate-names", 
+    rateLimiters?.generation || ((req, res, next) => next()), 
+    isAuthenticated, 
+    validationRules.generateNames, 
+    handleValidationErrors, 
+    async (req: any, res) => {
     try {
       const request = generateNameRequestSchema.parse(req.body);
       
@@ -162,8 +171,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Verify specific name
-  app.post("/api/verify-name", async (req, res) => {
+  // Verify specific name (with validation)
+  app.post("/api/verify-name", 
+    validationRules.verifyName, 
+    handleValidationErrors, 
+    async (req, res) => {
     try {
       const { name, type } = req.body;
       
@@ -194,8 +206,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate set list with timeout (protected)
-  app.post("/api/generate-setlist", isAuthenticated, async (req: any, res) => {
+  // Generate set list with timeout (protected with rate limiting and validation)
+  app.post("/api/generate-setlist", 
+    rateLimiters?.generation || ((req, res, next) => next()), 
+    isAuthenticated, 
+    validationRules.generateSetlist, 
+    handleValidationErrors, 
+    async (req: any, res) => {
     const timeoutMs = 20000; // 20 second timeout
     
     const generateSetListWithTimeout = async () => {
@@ -310,8 +327,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate band name from setlist endpoint (protected)
-  app.post("/api/generate-band-from-setlist", isAuthenticated, async (req: any, res) => {
+  // Generate band name from setlist endpoint (protected with rate limiting)
+  app.post("/api/generate-band-from-setlist", 
+    rateLimiters?.generation || ((req, res, next) => next()), 
+    isAuthenticated, 
+    async (req: any, res) => {
     try {
       const { songNames, mood, genre } = req.body;
       
@@ -399,8 +419,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate AI name endpoint (protected)
-  app.post("/api/generate-ai-name", isAuthenticated, async (req: any, res) => {
+  // Generate AI name endpoint (protected with rate limiting and validation)
+  app.post("/api/generate-ai-name", 
+    rateLimiters?.generation || ((req, res, next) => next()), 
+    isAuthenticated, 
+    validationRules.generateNames, 
+    handleValidationErrors, 
+    async (req: any, res) => {
     try {
       const { type, genre, mood } = req.body;
       
@@ -461,8 +486,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate band bio endpoint (protected)
-  app.post("/api/generate-band-bio", isAuthenticated, async (req: any, res) => {
+  // Generate band bio endpoint (protected with rate limiting and validation)
+  app.post("/api/generate-band-bio", 
+    rateLimiters?.generation || ((req, res, next) => next()), 
+    isAuthenticated, 
+    validationRules.generateBandBio, 
+    handleValidationErrors, 
+    async (req: any, res) => {
     try {
       const { bandName, genre, mood } = req.body;
       
@@ -503,8 +533,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate lyric starter endpoint (protected)
-  app.post("/api/generate-lyric-starter", isAuthenticated, async (req: any, res) => {
+  // Generate lyric starter endpoint (protected with rate limiting and validation)
+  app.post("/api/generate-lyric-starter", 
+    rateLimiters?.generation || ((req, res, next) => next()), 
+    isAuthenticated, 
+    validationRules.generateLyricStarter, 
+    handleValidationErrors, 
+    async (req: any, res) => {
     try {
       const { genre } = req.body;
       
