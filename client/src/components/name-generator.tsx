@@ -423,7 +423,7 @@ export function NameGenerator() {
       {/* Generated Results */}
       {results.length > 0 && !generateMutation.isPending && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
+          <div className="flex flex-col gap-4 max-w-2xl mx-auto">
             {results.map((result, index) => (
               <div
                 key={result.id}
