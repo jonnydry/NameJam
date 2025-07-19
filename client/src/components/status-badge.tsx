@@ -27,8 +27,8 @@ export function StatusBadge({ status, className = "" }: StatusBadgeProps) {
   const { icon: Icon, text, className: statusClass } = config[status];
 
   return (
-    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusClass} ${className}`}>
-      <Icon className="w-4 h-4 mr-1.5" />
+    <div className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${statusClass} ${className}`}>
+      <Icon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
       {text}
     </div>
   );

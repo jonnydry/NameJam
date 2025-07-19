@@ -336,7 +336,7 @@ export function NameGenerator() {
             <Lightbulb className="w-4 h-4 mr-2" />
             Generate Names
           </Button>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="hidden sm:block text-xs text-muted-foreground mt-2">
             Press <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border border-border">Space</kbd> or <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border border-border">G</kbd> to generate
           </p>
         </div>
