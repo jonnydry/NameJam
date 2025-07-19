@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
 
 export class AINameGeneratorService {
   private openai: OpenAI | null = null;
@@ -176,7 +177,12 @@ QUALITY STANDARDS:
           requestParams.top_p = 0.9;
         }
 
-        const response = await this.openai.chat.completions.create(requestParams);
+        const response = await xaiRateLimiter.execute(async () => {
+          return withRetry(async () => {
+            const resp = await this.openai!.chat.completions.create(requestParams);
+            return resp;
+          }, 3, 2000);
+        });
 
         const generatedName = response.choices[0]?.message?.content?.trim() || "";
         
