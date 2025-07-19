@@ -23,6 +23,7 @@ export function LyricJam() {
   const [currentLyric, setCurrentLyric] = useState<LyricResult | null>(null);
   const { addToStash } = useStash();
   const loadingRef = useRef<HTMLDivElement>(null);
+  const generateButtonRef = useRef<HTMLButtonElement>(null);
 
   const genres = [
     "rock", "pop", "country", "hip-hop", "indie", "folk", 
