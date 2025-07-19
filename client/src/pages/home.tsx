@@ -55,23 +55,30 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header with User Menu */}
-      <header className="border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <FermataLogo size="sm" />
-            <span className="font-mono font-bold">Name_Jam</span>
-          </div>
-          <UserMenu />
-        </div>
-      </header>
+      {/* Floating User Menu */}
+      <div className="fixed top-4 right-4 z-50">
+        <UserMenu />
+      </div>
 
       {/* Main Content */}
       <main className="flex-1 px-4 py-8 md:py-12">
         <div className="max-w-7xl mx-auto">
-          {/* Logo and Title Section - Simplified since header exists */}
+          {/* Logo and Title Section - Restored Original Design */}
           <div className="text-center mb-6 md:mb-8">
-            <p className="text-responsive-base md:text-responsive-lg text-muted-foreground font-medium px-2">Generate unique band names, song titles, set lists, and lyrics</p>
+            <div className="flex flex-col items-center">
+              {/* Logo */}
+              <div className="mb-3 md:mb-4">
+                <FermataLogo size="xl" />
+              </div>
+              {/* Title with special alignment */}
+              <div className="relative">
+                <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center">
+                  <span className="typing-prompt absolute" style={{ left: 'calc(50% - 6ch)' }}>&gt;</span>
+                  <span className="title-text title-align">Name_Jam</span>
+                </h1>
+              </div>
+            </div>
+            <p className="text-responsive-base md:text-responsive-lg text-muted-foreground font-medium subtitle-fade px-2">Generate unique band names, song titles, set lists, and lyrics</p>
           </div>
 
           {/* Two Column Layout with Tabs */}
