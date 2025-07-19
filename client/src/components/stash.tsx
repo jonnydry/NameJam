@@ -301,7 +301,7 @@ export function Stash() {
             ${songNames.length > 0 ? `• ${songNames.length} song names` : ''}
             ${setlists.length > 0 ? `• ${setlists.length} setlists` : ''}
             ${bandLore.length > 0 ? `• ${bandLore.length} band lore` : ''}
-            ${lyricJams.length > 0 ? `• ${lyricJams.length} lyric starters` : ''}
+            ${lyricJams.length > 0 ? `• ${lyricJams.length} lyric sparks` : ''}
           </div>
     `;
     
@@ -329,7 +329,7 @@ export function Stash() {
     
     if (lyricJams.length > 0) {
       printContent += `
-        <h2>Lyric Starters (${lyricJams.length})</h2>
+        <h2>Lyric Sparks (${lyricJams.length})</h2>
         <div class="name-list">
           ${lyricJams.map((item, index) => 
             `<div class="name-item">${index + 1}. <strong>"${item.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"</strong>${item.metadata?.songSection ? ` [${item.metadata.songSection.toUpperCase()}]` : ''}${item.rating ? ` (${item.rating}/5 stars)` : ''}</div>`
@@ -420,7 +420,7 @@ export function Stash() {
                  categoryFilter === 'song' ? 'Song Names' :
                  categoryFilter === 'setlist' ? 'Setlists' :
                  categoryFilter === 'bandLore' ? 'Band Lore' :
-                 'Lyric Starters'}
+                 'Lyric Sparks'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
@@ -446,8 +446,8 @@ export function Stash() {
                 Band Lore
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setCategoryFilter('lyricJam')}>
-                <Music className="w-4 h-4 mr-2" />
-                Lyric Starters
+                <Sparkles className="w-4 h-4 mr-2" />
+                Lyric Sparks
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -546,7 +546,7 @@ export function Stash() {
                     <Badge variant="outline" className="text-xs">
                       {item.type === 'setlist' ? `setlist • ${item.wordCount} songs` : 
                        item.type === 'bandLore' ? `band lore • ${item.wordCount} words` :
-                       item.type === 'lyricJam' ? `lyric starter • ${item.wordCount} words` :
+                       item.type === 'lyricJam' ? `lyric spark • ${item.wordCount} words` :
                        `${item.type} • ${item.wordCount} word${item.wordCount !== 1 ? 's' : ''}`}
                     </Badge>
                     {item.isAiGenerated && item.type !== 'bandLore' && item.type !== 'lyricJam' && (

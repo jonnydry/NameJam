@@ -477,9 +477,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         generatedAt: new Date().toISOString()
       });
     } catch (error) {
-      console.error("Error generating lyric starter:", error);
+      console.error("Error generating lyric spark:", error);
       res.status(500).json({ 
-        error: "Failed to generate lyric starter",
+        error: "Failed to generate lyric spark",
         suggestion: "The AI service may be temporarily unavailable. Please try again later."
       });
     }
