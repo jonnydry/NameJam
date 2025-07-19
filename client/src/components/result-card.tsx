@@ -88,14 +88,14 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
 
 
   return (
-    <div className={`relative p-6 rounded-lg border transition-all duration-200 ${
+    <div className={`relative p-4 sm:p-6 rounded-lg border transition-all duration-200 ${
       isEasterEgg 
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
         : 'border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20'
     }`}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <StatusBadge status={verification.status} />
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-end space-x-2">
           <Button
             variant="ghost"
             size="sm"
@@ -136,13 +136,13 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <h3 className={`text-2xl font-semibold text-foreground break-words hyphens-auto ${
+          <h3 className={`text-xl sm:text-2xl font-semibold text-foreground break-words hyphens-auto ${
             verification.status === 'taken' ? 'line-through' : ''
           }`}>
             {name}
           </h3>
           {result.isAiGenerated && (
-            <Brain className="h-5 w-5 text-purple-500 shrink-0" title="AI Generated" />
+            <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 shrink-0" title="AI Generated" />
           )}
         </div>
         <p className={`text-sm ${
@@ -175,12 +175,12 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
 
         {/* Compact Verification Links */}
         {verification.verificationLinks && verification.verificationLinks.length > 0 && (
-          <div className="mt-3 bg-muted/30 rounded-lg p-3">
+          <div className="mt-3 bg-muted/30 rounded-lg p-2 sm:p-3">
             <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-2">
               <ExternalLink className="h-3 w-3" />
               <span>Verify Availability:</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {verification.verificationLinks.map((link, index) => (
                 <a
                   key={index}
@@ -189,8 +189,8 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-2 py-1 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded transition-colors"
                 >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  {link.name}
+                  <ExternalLink className="h-3 w-3 mr-1 shrink-0" />
+                  <span className="truncate max-w-[100px] sm:max-w-none">{link.name}</span>
                 </a>
               ))}
             </div>

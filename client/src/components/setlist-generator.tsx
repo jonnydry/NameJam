@@ -199,11 +199,11 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
 
   const SongCard = ({ song, setName }: { song: SetListSong; setName: string }) => (
     <Card key={song.id} className="bg-muted/30 border-muted/50 hover:bg-muted/40 transition-colors">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex-1">
-            <h3 className="font-semibold text-lg">{song.name}</h3>
-            <div className="flex items-center gap-2 mt-2">
+            <h3 className="font-semibold text-base sm:text-lg">{song.name}</h3>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               <Badge variant="outline" className="text-xs">
                 {setName}
               </Badge>
@@ -212,7 +212,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
               </Badge>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-end space-x-2">
             <Button
               variant="ghost"
               size="sm"
@@ -359,38 +359,38 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
         <div className="space-y-6">
           <Card className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-500/20">
             <CardHeader>
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <ListMusic className="w-5 h-5" />
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <ListMusic className="w-4 h-4 sm:w-5 sm:h-5" />
                     Your Set List
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-sm">
                     {setList.totalSongs} songs organized for your performance
                   </CardDescription>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleSaveSetlist}
-                      className="flex items-center gap-2"
+                      className="flex items-center justify-center gap-2 w-full sm:w-auto"
                       title="Save this setlist to your stash"
                     >
                       <Bookmark className="w-4 h-4" />
-                      Save Setlist
+                      <span className="sm:inline">Save Setlist</span>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleGenerateBandName}
                       disabled={loadingBandName}
-                      className="flex items-center gap-2"
+                      className="flex items-center justify-center gap-2 w-full sm:w-auto"
                       title="Generate a band name that would write this setlist"
                     >
                       <Lightbulb className={`w-4 h-4 ${loadingBandName ? 'animate-pulse' : ''}`} />
-                      Name this Band
+                      <span className="sm:inline">Name this Band</span>
                     </Button>
                   </div>
                   {generatedBandName && (
