@@ -88,7 +88,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
 
 
   return (
-    <div className={`relative p-4 sm:p-6 rounded-lg border transition-all duration-200 ${
+    <div className={`relative p-4 sm:p-6 rounded-lg border transition-all duration-200 overflow-hidden ${
       isEasterEgg 
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
         : 'border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20'
@@ -135,8 +135,8 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       </div>
       
       <div className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <h3 className={`text-xl sm:text-2xl font-semibold text-foreground break-words hyphens-auto ${
+        <div className="flex items-center justify-center gap-2 mb-2 min-w-0">
+          <h3 className={`text-xl sm:text-2xl font-semibold text-foreground break-all ${
             verification.status === 'taken' ? 'line-through' : ''
           }`}>
             {name}
@@ -175,8 +175,8 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
 
         {/* Compact Verification Links */}
         {verification.verificationLinks && verification.verificationLinks.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
-            <span className="opacity-60">Check:</span>
+          <div className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground overflow-hidden">
+            <span className="opacity-60 shrink-0">Check:</span>
             {verification.verificationLinks.slice(0, 3).map((link, index) => (
               <span key={index} className="inline-flex items-center">
                 {index > 0 && <span className="opacity-40 mx-1">·</span>}
