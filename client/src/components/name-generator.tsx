@@ -34,6 +34,7 @@ export function NameGenerator() {
   const [results, setResults] = useState<GenerationResult[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   const { toast } = useToast();
   const loadingRef = useRef<HTMLDivElement>(null);
@@ -296,7 +297,14 @@ export function NameGenerator() {
       </div>
 
       {/* Search Section */}
-      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+      <div 
+        className={`relative rounded-xl shadow-sm transition-all duration-300 ${
+          isSearchActive ? 'p-[2px] bg-gradient-to-r from-blue-500 to-white' : 'border border-border'
+        }`}
+        onMouseEnter={() => setIsSearchActive(true)}
+        onMouseLeave={() => setIsSearchActive(false)}
+      >
+        <div className={`${isSearchActive ? 'bg-gradient-to-r from-black/90 to-gray-900/90' : 'bg-card'} rounded-xl p-6 h-full`}>
         <div className="text-center mb-4">
           <h3 className="text-lg font-medium text-foreground mb-2">Check Your Own Name</h3>
           <p className="text-sm text-muted-foreground">Enter a name you've thought of to verify its availability</p>
@@ -308,6 +316,8 @@ export function NameGenerator() {
             placeholder={`Enter a ${nameType} name...`}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
+            onFocus={() => setIsSearchActive(true)}
+            onBlur={() => setIsSearchActive(false)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !searchMutation.isPending && searchInput.trim()) {
                 handleSearch();
@@ -336,6 +346,7 @@ export function NameGenerator() {
               </>
             )}
           </Button>
+        </div>
         </div>
       </div>
 
