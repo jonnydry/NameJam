@@ -166,8 +166,7 @@ export function NameGenerator() {
   return (
     <div className="space-y-6">
       {/* Controls Panel */}
-      <div className="relative rounded-xl shadow-sm p-[1px] bg-gradient-to-r from-blue-500 to-white">
-        <div className="bg-gradient-to-r from-black/90 to-gray-900/90 rounded-xl p-6 h-full">
+      <div className="bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 rounded-xl shadow-sm border p-6">
         {/* Type Toggle */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex rounded-lg bg-muted p-1">
@@ -293,18 +292,16 @@ export function NameGenerator() {
             Generate Names
           </Button>
         </div>
-        </div>
       </div>
 
       {/* Search Section */}
       <div 
-        className={`relative rounded-xl shadow-sm transition-all duration-300 ${
-          isSearchActive ? 'p-[1px] bg-gradient-to-r from-blue-500 to-white' : 'border border-border'
+        className={`rounded-xl shadow-sm transition-all duration-300 border p-6 ${
+          isSearchActive ? 'bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20' : 'bg-card border-border'
         }`}
         onMouseEnter={() => setIsSearchActive(true)}
         onMouseLeave={() => setIsSearchActive(false)}
       >
-        <div className={`${isSearchActive ? 'bg-gradient-to-r from-black/90 to-gray-900/90' : 'bg-card'} rounded-xl p-6 h-full`}>
         <div className="text-center mb-4">
           <h3 className="text-lg font-medium text-foreground mb-2">Check Your Own Name</h3>
           <p className="text-sm text-muted-foreground">Enter a name you've thought of to verify its availability</p>
@@ -346,7 +343,6 @@ export function NameGenerator() {
               </>
             )}
           </Button>
-        </div>
         </div>
       </div>
 
