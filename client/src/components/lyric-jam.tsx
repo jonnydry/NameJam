@@ -186,7 +186,7 @@ export function LyricJam() {
             )}
 
             {currentLyric && !isLoading && (
-              <Card className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20">
+              <Card className="bg-gradient-to-r from-blue-500/10 to-green-500/10 border-blue-500/20">
                 <CardHeader className="space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-2 flex-1 min-w-0">
@@ -223,7 +223,7 @@ export function LyricJam() {
                     variant="outline"
                     size="sm"
                     onClick={generateLyric}
-                    className="gap-2 w-full sm:w-auto border-green-500/50 hover:border-green-500 hover:bg-green-500/10"
+                    className="gap-2 w-full sm:w-auto border-blue-500/50 hover:border-blue-500 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-green-500/10"
                   >
                     <RefreshCw className="w-4 h-4" />
                     <span className="hidden sm:inline">Generate Another</span>
