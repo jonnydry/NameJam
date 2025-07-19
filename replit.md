@@ -238,6 +238,7 @@ Changelog:
 - July 19, 2025. Updated tab labels to uppercase: changed all main tab titles to ALL CAPS (NAME_JAM, SET_JAM, LYRIC_JAM) for stronger visual impact and consistent terminal-style branding
 - July 19, 2025. Updated About page with current features and technology: added Lyric_Jam feature description, updated vocabulary counts to 874+ adjectives and 1,262+ nouns, included mobile optimization details, fixed dropdown animations, updated copyright to 2025, enhanced stash system documentation to include lyrics and band bios
 - July 19, 2025. Added personal acknowledgment to About page: included heartfelt dedication to girlfriend Sam in the Credits & Acknowledgments section
+- July 19, 2025. Cleaned up Credits formatting: removed "and" from Marci's entry for better list consistency
 
 ## User Preferences
 
