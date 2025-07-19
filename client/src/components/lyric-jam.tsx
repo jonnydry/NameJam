@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useStash } from "@/context/stash-context";
+import { handleApiError } from "@/lib/api-error-handler";
 import { LoadingAnimation } from "./loading-animation";
 
 interface LyricResponse {
@@ -76,11 +77,9 @@ export function LyricJam() {
       
       setCurrentLyric(data);
     } catch (error) {
-      console.error("Error generating lyric:", error);
-      toast({
+      handleApiError(error, {
         title: "Error",
-        description: "Failed to generate lyric. Please try again.",
-        variant: "destructive",
+        description: "Failed to generate lyric. Please try again."
       });
     } finally {
       setIsLoading(false);

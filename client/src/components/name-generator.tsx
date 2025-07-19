@@ -7,7 +7,9 @@ import { LoadingAnimation } from "./loading-animation";
 import { ResultCard } from "./result-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useClipboard } from "@/hooks/use-clipboard";
 import { Music, Users, Search, Palette, RefreshCw, Copy, Lightbulb, CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { createMutationErrorHandler } from "@/lib/api-error-handler";
 
 interface GenerationResult {
   id: number;
@@ -38,6 +40,7 @@ export function NameGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const { toast } = useToast();
+  const { copyToClipboard } = useClipboard();
   const loadingRef = useRef<HTMLDivElement>(null);
   const generateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -65,14 +68,7 @@ export function NameGenerator() {
         description: `Generated ${data.results.length} unique ${nameType} names.`,
       });
     },
-    onError: (error) => {
-      console.error('Error generating names:', error);
-      toast({
-        title: "Generation failed",
-        description: "Failed to generate names. Please try again.",
-        variant: "destructive",
-      });
-    },
+    onError: createMutationErrorHandler("Generation failed", "Failed to generate names. Please try again."),
   });
 
   const searchMutation = useMutation({
@@ -109,14 +105,7 @@ export function NameGenerator() {
         description: `Checked availability of "${searchInput.trim()}".`,
       });
     },
-    onError: (error) => {
-      console.error('Error verifying name:', error);
-      toast({
-        title: "Verification failed",
-        description: error instanceof Error ? error.message : "Failed to verify name. Please try again.",
-        variant: "destructive",
-      });
-    },
+    onError: createMutationErrorHandler("Verification failed", "Failed to verify name. Please try again."),
   });
 
   const handleGenerate = useCallback(() => {
@@ -160,33 +149,6 @@ export function NameGenerator() {
 
   const handleSearch = () => {
     searchMutation.mutate();
-  };
-
-  const copyToClipboard = async (name: string) => {
-    try {
-      if (!navigator.clipboard) {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = name;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-      } else {
-        await navigator.clipboard.writeText(name);
-      }
-      toast({
-        title: "Copied to clipboard!",
-        description: `"${name}" has been copied to your clipboard.`,
-      });
-    } catch (error) {
-      console.error('Copy failed:', error);
-      toast({
-        title: "Copy failed",
-        description: "Failed to copy to clipboard. Please copy manually.",
-        variant: "destructive",
-      });
-    }
   };
 
   // Keyboard shortcuts
