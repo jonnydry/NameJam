@@ -38,7 +38,7 @@ export default function About() {
               <div className="text-muted-foreground">
                 <p>I made this app because I thought my musician friends and I would have had fun with it in the practice room and when hanging around discussing ideas.</p>
                 <br />
-                <p>Use NAME_JAM to find inspiration, generate a quick list to name your practice session segments, name your next big or small project or just jam around to brainstorm ideas and spark your next project!</p>
+                <p>Use NAME_JAM to find inspiration, generate performance set lists, create lyrical sparks, or just jam around to brainstorm ideas and spark your next project!</p>
               </div>
               
               {/* Placeholder sections */}
@@ -60,13 +60,14 @@ export default function About() {
                     <li>• <strong>Advanced Customization:</strong> Choose 1-6 word combinations, 12 mood themes, 14 musical genres with focused contextual filtering</li>
                     <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, plus Last.fm, MusicBrainz, and famous names database</li>
                     <li>• <strong>Professional Set Lists:</strong> Generate organized performance sets (8/16 songs) with automatic verification and AI-powered band name suggestions</li>
-                    <li>• <strong>Enhanced Stash System:</strong> Save names, setlists, and band bios with 5-star ratings, category sorting, and comprehensive export options (text/JSON/print)</li>
+                    <li>• <strong>Lyric_Jam Feature:</strong> Generate creative lyrical lines for songwriting inspiration with genre awareness and song structure integration (verse/chorus/bridge/pre-chorus/outro)</li>
+                    <li>• <strong>Enhanced Stash System:</strong> Save names, setlists, lyrics, and band bios with 5-star ratings, category sorting, and comprehensive export options (text/JSON/print)</li>
                     <li>• <strong>Linguistic Intelligence:</strong> Advanced grammatical consistency, poetic flow optimization, smart capitalization, and duplicate word prevention</li>
                     <li>• <strong>AI Band Bio Generator:</strong> Create hilarious, edgy R-rated band biographies with sophisticated humor and anti-formulaic storytelling</li>
                     <li>• <strong>Easter Egg System:</strong> Special responses for app testing with famous artist trolling and "Name Jam" detection</li>
-                    <li>• <strong>Auto-Scroll Navigation:</strong> Seamless user experience with automatic scrolling to loading areas and optimized equalizer animations</li>
+                    <li>• <strong>Mobile Optimization:</strong> Responsive text scaling with CSS clamp() function, mobile-friendly dropdown interactions, and dynamic padding</li>
                     <li>• <strong>Anti-Repetition Technology:</strong> Advanced word tracking system prevents consecutive repeated words in AI generation</li>
-                    <li>• <strong>Modern Typography:</strong> Futuristic monospace design with JetBrains Mono font, typing animations, and rainbow hover effects</li>
+                    <li>• <strong>Modern Typography:</strong> Futuristic monospace design with JetBrains Mono font, typing animations, rainbow hover effects, and uppercase tab branding</li>
                   </ul>
                 </div>
                 
@@ -111,14 +112,16 @@ export default function About() {
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Core Features</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• 877 adjectives, 1,262 nouns, 517 verbs, 418 musical terms across 32 domains</li>
+                        <li>• 874+ adjectives, 1,262+ nouns, 517+ verbs, 418+ musical terms across 32 domains</li>
                         <li>• Advanced linguistic patterns with grammatical consistency and poetic flow evaluation</li>
                         <li>• Real-time name verification with Spotify-priority checking and popularity scoring</li>
-                        <li>• Enhanced stash system with 5-star ratings, category filtering, and export options</li>
+                        <li>• Enhanced stash system with 5-star ratings, category filtering, and export options for names, setlists, lyrics, and band bios</li>
                         <li>• AI band bio generation with edgy R-rated humor and anti-formulaic prompts</li>
+                        <li>• Lyric generation for songwriting inspiration with genre awareness and song structure context</li>
                         <li>• Anti-repetition technology tracking 30 recent words to prevent duplicates</li>
                         <li>• Local storage persistence with comprehensive export capabilities</li>
-                        <li>• Responsive design with dark theme optimization and monospace typography</li>
+                        <li>• Responsive design with dark theme optimization, monospace typography, and mobile text scaling</li>
+                        <li>• Fixed dropdown animations and improved mobile interactions</li>
                       </ul>
                     </div>
                   </div>
@@ -145,7 +148,7 @@ export default function About() {
       <footer className="bg-card border-t border-border py-6">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">© 2024 Name_Jam. Powered by web-sourced creativity.</p>
+            <p className="text-sm text-muted-foreground">© 2025 Name_Jam. Powered by web-sourced creativity.</p>
           </div>
         </div>
       </footer>
