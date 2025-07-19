@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
 
 export class LyricStarterService {
   private openai: OpenAI | null = null;
@@ -141,7 +142,12 @@ Write lyrics that could open a Grammy-winning song.`
           requestParams.presence_penalty = 0.3;
         }
 
-        const completion = await this.openai.chat.completions.create(requestParams);
+        const completion = await xaiRateLimiter.execute(async () => {
+          return withRetry(async () => {
+            const resp = await this.openai!.chat.completions.create(requestParams);
+            return resp;
+          }, 3, 2000);
+        });
         const generatedLyric = completion.choices[0]?.message?.content?.trim();
         
         if (generatedLyric && generatedLyric.length > 5 && generatedLyric.length < 200) {

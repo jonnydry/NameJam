@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
 
 export class BandBioGeneratorService {
   private openai: OpenAI | null = null;
@@ -104,7 +105,12 @@ export class BandBioGeneratorService {
           requestParams.presence_penalty = 0.3;
         }
 
-        const response = await this.openai.chat.completions.create(requestParams);
+        const response = await xaiRateLimiter.execute(async () => {
+          return withRetry(async () => {
+            const resp = await this.openai!.chat.completions.create(requestParams);
+            return resp;
+          }, 3, 2000);
+        });
 
         const bio = response.choices[0]?.message?.content || "";
         
@@ -466,7 +472,12 @@ Respond with ONLY the band name, nothing else.`;
             requestParams.response_format = { type: "json_object" };
           }
 
-          const response = await this.openai.chat.completions.create(requestParams);
+          const response = await xaiRateLimiter.execute(async () => {
+            return withRetry(async () => {
+              const resp = await this.openai!.chat.completions.create(requestParams);
+              return resp;
+            }, 3, 2000);
+          });
 
           const content = response.choices[0]?.message?.content || "";
           

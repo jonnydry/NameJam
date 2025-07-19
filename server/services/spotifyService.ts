@@ -1,3 +1,5 @@
+import { spotifyRateLimiter, withRetry } from '../utils/rateLimiter';
+
 interface SpotifyTokenResponse {
   access_token: string;
   token_type: string;
@@ -87,27 +89,31 @@ export class SpotifyService {
       return [];
     }
 
-    try {
-      const encodedQuery = encodeURIComponent(query);
-      const response = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodedQuery}&type=artist&limit=${limit}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
+    return spotifyRateLimiter.execute(async () => {
+      return withRetry(async () => {
+        const encodedQuery = encodeURIComponent(query);
+        const response = await fetch(
+          `https://api.spotify.com/v1/search?q=${encodedQuery}&type=artist&limit=${limit}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
           }
+        );
+
+        if (!response.ok) {
+          const error: any = new Error(`Spotify search failed: ${response.status}`);
+          error.status = response.status;
+          throw error;
         }
-      );
 
-      if (!response.ok) {
-        throw new Error(`Spotify search failed: ${response.status}`);
-      }
-
-      const data: SpotifySearchResult = await response.json();
-      return data.artists?.items || [];
-    } catch (error) {
+        const data: SpotifySearchResult = await response.json();
+        return data.artists?.items || [];
+      }, 3, 1000);
+    }).catch(error => {
       console.error('Spotify artist search failed:', error);
       return [];
-    }
+    });
   }
 
   async searchTracks(query: string, limit: number = 10): Promise<SpotifyTrack[]> {
@@ -116,27 +122,31 @@ export class SpotifyService {
       return [];
     }
 
-    try {
-      const encodedQuery = encodeURIComponent(query);
-      const response = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodedQuery}&type=track&limit=${limit}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
+    return spotifyRateLimiter.execute(async () => {
+      return withRetry(async () => {
+        const encodedQuery = encodeURIComponent(query);
+        const response = await fetch(
+          `https://api.spotify.com/v1/search?q=${encodedQuery}&type=track&limit=${limit}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
           }
+        );
+
+        if (!response.ok) {
+          const error: any = new Error(`Spotify search failed: ${response.status}`);
+          error.status = response.status;
+          throw error;
         }
-      );
 
-      if (!response.ok) {
-        throw new Error(`Spotify search failed: ${response.status}`);
-      }
-
-      const data: SpotifySearchResult = await response.json();
-      return data.tracks?.items || [];
-    } catch (error) {
+        const data: SpotifySearchResult = await response.json();
+        return data.tracks?.items || [];
+      }, 3, 1000);
+    }).catch(error => {
       console.error('Spotify track search failed:', error);
       return [];
-    }
+    });
   }
 
   async verifyBandName(name: string): Promise<{

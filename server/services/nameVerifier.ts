@@ -1,5 +1,6 @@
 import type { VerificationResult } from "@shared/schema";
 import { spotifyService } from "./spotifyService";
+import { lastFmRateLimiter, musicBrainzRateLimiter, withRetry } from '../utils/rateLimiter';
 
 export class NameVerifierService {
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
@@ -440,7 +441,12 @@ export class NameVerifierService {
       const param = type === 'band' ? 'artist' : 'track';
       const url = `http://ws.audioscrobbler.com/2.0/?method=${method}&${param}=${encodeURIComponent(name)}&api_key=${apiKey}&format=json&limit=10`;
       
-      const response = await fetch(url);
+      const response = await lastFmRateLimiter.execute(async () => {
+        return withRetry(async () => {
+          const resp = await fetch(url);
+          return resp;
+        }, 3, 2000);
+      });
       if (!response.ok) {
         throw new Error(`Last.fm API responded with ${response.status}`);
       }
@@ -473,10 +479,15 @@ export class NameVerifierService {
       const entity = type === 'band' ? 'artist' : 'recording';
       const url = `https://musicbrainz.org/ws/2/${entity}/?query=${encodeURIComponent(name)}&fmt=json&limit=10`;
       
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': userAgent
-        }
+      const response = await musicBrainzRateLimiter.execute(async () => {
+        return withRetry(async () => {
+          const resp = await fetch(url, {
+            headers: {
+              'User-Agent': userAgent
+            }
+          });
+          return resp;
+        }, 3, 2000);
       });
       
       if (!response.ok) {
