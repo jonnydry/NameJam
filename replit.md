@@ -236,6 +236,7 @@ Changelog:
 - July 19, 2025. Updated subtitle text: changed "lyric starters" to "lyrics" in the main description under the Name_Jam logo for cleaner, simpler messaging
 - July 19, 2025. Renamed tab labels for consistent branding: changed "Name Generator" tab to "Name_Jam" and "Set List Generator" tab to "Set_Jam" to match the monospace typography theme with underscore styling
 - July 19, 2025. Updated tab labels to uppercase: changed all main tab titles to ALL CAPS (NAME_JAM, SET_JAM, LYRIC_JAM) for stronger visual impact and consistent terminal-style branding
+- July 19, 2025. Updated About page with current features and technology: added Lyric_Jam feature description, updated vocabulary counts to 874+ adjectives and 1,262+ nouns, included mobile optimization details, fixed dropdown animations, updated copyright to 2025, enhanced stash system documentation to include lyrics and band bios
 
 ## User Preferences
 
