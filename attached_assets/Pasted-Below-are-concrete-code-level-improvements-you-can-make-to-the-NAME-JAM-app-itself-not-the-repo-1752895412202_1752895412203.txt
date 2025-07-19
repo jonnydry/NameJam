@@ -1,0 +1,50 @@
+Below are concrete, **code-level** improvements you can make to the NAME_JAM app itself—not the repo housekeeping.  I’ve kept them small enough that you can knock most of them out in an evening or two.
+
+────────────────────────────────────────
+1. **Stop double-checking the same name**
+   • Cache web-search results for 24 h (Redis, Upstash, or just an in-memory LRU if you stay on Replit).  
+   • Key by lower-cased, trimmed name; 99 % of repeat traffic is people regenerating until they see something they like.
+
+2. **Add a “lock” toggle on any name**  
+   • One click adds the name to a local-storage “shortlist”.  
+   • Shortlist survives page refresh and can be exported as JSON or copied to clipboard.
+
+3. **Make the search status obvious (UX)**  
+   • Replace the generic spinner with a three-state badge:  
+     ✅ “Looks available” / ⚠️ “In use on Spotify/IG/etc.” / ❌ “Blocked by trademark”.  
+   • Color-blind safe palette: green #22c55e, amber #f59e0b, red #ef4444.
+
+4. **Debounce the “Generate” button**  
+   • 350 ms debounce on rapid clicks prevents 5–6 identical calls in <1 s.
+
+5. **Return **why** a name was suggested**  
+   • Add a micro-tooltip on hover: “Derived from ‘space + lizard’ because you picked Sci-Fi + Animals”.
+
+6. **Responsive grid for the name cards**  
+   • `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4` is one line of Tailwind and instantly looks better on desktop.
+
+7. **Keyboard shortcuts**  
+   • `Space` = generate new batch, `S` = save highlighted card.  Add tiny `kbd` hints under the button.
+
+8. **Plausible deniability for duplicates**  
+   • Append a two-digit random hex if the exact name exists on Spotify (“Neon Tigers” → “Neon Tigers 7f”).  
+   • Makes it trivial for the user to claim “close enough”.
+
+9. **Server: rate-limit the web-search endpoint**  
+   • 30 req / IP / minute is generous but stops abuse.  
+   • Use `express-rate-limit` or Replit’s built-in analytics to get IP.
+
+10. **Progressive Web-App shell**  
+    • Add a minimal `manifest.json` + service worker that caches the last 50 generated names offline.  
+    • Users can “install” the page on Android/iOS and still browse their shortlist with no connection.
+
+11. **A/B test two generation prompts**  
+    • Keep the current prompt as “A”;  add a second prompt that is more literal (“Combine these two words: {genre} {animal}”).  
+    • Track click-to-copy rate in the front-end;  promote the winner after 1 k impressions.
+
+12. **Accessibility quick wins**  
+    • Add `aria-live="polite"` to the result container so screen readers announce new names.  
+    • Ensure every button has `focus:ring-2 focus:ring-offset-2`.
+
+────────────────────────────────────────
+Pick any three of these and ship them—you’ll get an immediate bump in perceived polish and user retention.
