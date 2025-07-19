@@ -654,11 +654,56 @@
   border-radius: 50% 50% 0 0;
 }
 
-/* Smooth transitions for all elements */
-* {
+/* Smooth transitions for most elements - excluding dropdowns to prevent animation conflicts */
+*:not([role="listbox"]):not([role="menu"]):not([data-radix-popper-content-wrapper]):not([data-state]):not([data-radix-select-content]):not([data-radix-dropdown-menu-content]) {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+/* Ensure dropdown triggers still have smooth transitions */
+button[role="combobox"],
+button[data-state] {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Fix dropdown z-index layering and prevent overflow issues */
+[data-radix-popper-content-wrapper] {
+  z-index: 50 !important;
+}
+
+/* Ensure dropdown content is properly positioned above other elements */
+[role="listbox"],
+[role="menu"],
+[data-radix-select-content],
+[data-radix-dropdown-menu-content] {
+  z-index: 50 !important;
+}
+
+/* Prevent dropdown content from being cut off */
+[data-radix-select-viewport],
+[data-radix-dropdown-menu-viewport] {
+  max-height: var(--radix-select-content-available-height);
+  overflow-y: auto;
+}
+
+/* Improve dropdown interaction on mobile devices */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase touch target size on mobile */
+  [data-radix-dropdown-menu-item],
+  [data-radix-select-item] {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Prevent accidental closing on mobile */
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content] {
+    touch-action: none;
+  }
 }
 
 /* Enhanced Tab Styles */
