@@ -166,7 +166,7 @@ export function NameGenerator() {
   return (
     <div className="space-y-6">
       {/* Controls Panel */}
-      <div className="relative rounded-xl shadow-sm p-[2px] bg-gradient-to-r from-blue-500 to-white">
+      <div className="relative rounded-xl shadow-sm p-[1px] bg-gradient-to-r from-blue-500 to-white">
         <div className="bg-gradient-to-r from-black/90 to-gray-900/90 rounded-xl p-6 h-full">
         {/* Type Toggle */}
         <div className="flex justify-center mb-6">
@@ -299,7 +299,7 @@ export function NameGenerator() {
       {/* Search Section */}
       <div 
         className={`relative rounded-xl shadow-sm transition-all duration-300 ${
-          isSearchActive ? 'p-[2px] bg-gradient-to-r from-blue-500 to-white' : 'border border-border'
+          isSearchActive ? 'p-[1px] bg-gradient-to-r from-blue-500 to-white' : 'border border-border'
         }`}
         onMouseEnter={() => setIsSearchActive(true)}
         onMouseLeave={() => setIsSearchActive(false)}
