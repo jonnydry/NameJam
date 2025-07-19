@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { LoadingAnimation } from "./loading-animation";
 import { ResultCard } from "./result-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Music, Users, Search, Palette, RefreshCw, Copy, Lightbulb } from "lucide-react";
+import { Music, Users, Search, Palette, RefreshCw, Copy, Lightbulb, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 
 interface GenerationResult {
   id: number;
@@ -35,9 +35,11 @@ export function NameGenerator() {
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { toast } = useToast();
   const loadingRef = useRef<HTMLDivElement>(null);
+  const generateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -117,20 +119,44 @@ export function NameGenerator() {
     },
   });
 
-  const handleGenerate = () => {
-    generateMutation.mutate();
-  };
+  const handleGenerate = useCallback(() => {
+    // Clear any existing timeout
+    if (generateTimeoutRef.current) {
+      clearTimeout(generateTimeoutRef.current);
+    }
 
-  const handleGenerateMore = () => {
-    generateMutation.mutate();
-    // Scroll to loading area
-    setTimeout(() => {
-      loadingRef.current?.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
-    }, 100);
-  };
+    // Set generating state immediately for UI feedback
+    setIsGenerating(true);
+
+    // Debounce the actual generation
+    generateTimeoutRef.current = setTimeout(() => {
+      generateMutation.mutate();
+      setIsGenerating(false);
+    }, 350); // 350ms debounce as suggested
+  }, [generateMutation]);
+
+  const handleGenerateMore = useCallback(() => {
+    // Clear any existing timeout
+    if (generateTimeoutRef.current) {
+      clearTimeout(generateTimeoutRef.current);
+    }
+
+    // Set generating state immediately for UI feedback
+    setIsGenerating(true);
+
+    // Debounce the actual generation
+    generateTimeoutRef.current = setTimeout(() => {
+      generateMutation.mutate();
+      setIsGenerating(false);
+      // Scroll to loading area
+      setTimeout(() => {
+        loadingRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }, 100);
+    }, 350); // 350ms debounce
+  }, [generateMutation]);
 
   const handleSearch = () => {
     searchMutation.mutate();
@@ -162,6 +188,25 @@ export function NameGenerator() {
       });
     }
   };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Space to generate (only when not typing in input)
+      if (e.key === ' ' && e.target === document.body) {
+        e.preventDefault();
+        handleGenerate();
+      }
+      // 'g' for generate as alternative
+      if (e.key === 'g' && e.target === document.body && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        handleGenerate();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [handleGenerate]);
 
   return (
     <div className="space-y-6">
@@ -285,12 +330,15 @@ export function NameGenerator() {
         <div className="text-center">
           <Button
             onClick={handleGenerate}
-            disabled={generateMutation.isPending}
+            disabled={generateMutation.isPending || isGenerating}
             className="inline-flex items-center px-8 py-3 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
           >
             <Lightbulb className="w-4 h-4 mr-2" />
             Generate Names
           </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            Press <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border border-border">Space</kbd> or <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border border-border">G</kbd> to generate
+          </p>
         </div>
       </div>
 
@@ -375,21 +423,23 @@ export function NameGenerator() {
       {/* Generated Results */}
       {results.length > 0 && !generateMutation.isPending && (
         <div className="space-y-4">
-          {results.map((result, index) => (
-            <div
-              key={result.id}
-              className="animate-slide-up"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <ResultCard
-                result={result}
-                nameType={nameType}
-                onCopy={copyToClipboard}
-                genre={genre !== 'none' ? genre : undefined}
-                mood={mood !== 'none' ? mood : undefined}
-              />
-            </div>
-          ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {results.map((result, index) => (
+              <div
+                key={result.id}
+                className="animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <ResultCard
+                  result={result}
+                  nameType={nameType}
+                  onCopy={copyToClipboard}
+                  genre={genre !== 'none' ? genre : undefined}
+                  mood={mood !== 'none' ? mood : undefined}
+                />
+              </div>
+            ))}
+          </div>
           
           {/* Generate More Button */}
           <div className="text-center pt-4">
