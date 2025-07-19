@@ -18,7 +18,7 @@ interface VerificationResult {
 }
 
 interface GenerationResult {
-  id: number;
+  id: number | null;
   name: string;
   type: string;
   wordCount: number;
@@ -46,6 +46,16 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   const isEasterEgg = verification.details === 'We love you. Go to bed. <3';
 
   const handleAddToStash = () => {
+    // Check if user is authenticated (guest users have null IDs)
+    if (!result.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save names to your stash",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const isCurrentlyInStash = isInStash(name, nameType);
     
     // Set animation type before triggering

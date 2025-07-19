@@ -242,6 +242,7 @@ Changelog:
 - July 19, 2025. Implemented comprehensive user authentication and authorization system: added Replit OpenID Connect integration with PostgreSQL session storage, user-specific data isolation for all generated names and stash items, protected all API endpoints requiring authentication, created landing page for logged-out users, implemented user menu with profile display and logout functionality, added authentication middleware and user management database schema
 - July 19, 2025. Enhanced landing page to highlight multiple sign-in options: updated design to clearly show Google, GitHub, X (Twitter), Apple, and Email authentication options available through Replit Auth, improved accessibility messaging and feature showcase with expanded grid layout
 - July 19, 2025. Implemented comprehensive Security & Privacy infrastructure: added API rate limiting (100 requests/15min general, 30/10min generation, 10/15min auth), CORS configuration with origin validation, Helmet security headers, input sanitization with XSS protection, data encryption service for sensitive information, express-validator for request validation, complete input sanitization middleware across all endpoints
+- July 19, 2025. Implemented mixed authentication approach: basic name generation, set lists, and lyric starters work without login; stash functionality, AI features, and band bios require authentication; guest users see "Sign In" button and get prompts when trying to save; all features rate-limited but functional for both authenticated and guest users
 
 ## User Preferences
 
