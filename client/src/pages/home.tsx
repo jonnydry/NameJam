@@ -50,11 +50,11 @@ export default function Home() {
               <Tabs defaultValue="names" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 tabs-list-enhanced mb-4 md:mb-6">
                   <TabsTrigger value="names" className="tabs-trigger-enhanced">
-                    <span className="hidden sm:inline">Name Generator</span>
+                    <span className="hidden sm:inline">Name_Jam</span>
                     <span className="sm:hidden">Names</span>
                   </TabsTrigger>
                   <TabsTrigger value="setlist" className="tabs-trigger-enhanced">
-                    <span className="hidden sm:inline">Set List Generator</span>
+                    <span className="hidden sm:inline">Set_Jam</span>
                     <span className="sm:hidden">Set Lists</span>
                   </TabsTrigger>
                   <TabsTrigger value="lyric" className="tabs-trigger-enhanced">

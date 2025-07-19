@@ -234,6 +234,7 @@ Changelog:
 - July 19, 2025. Enhanced mobile text scaling: implemented dynamic responsive text utilities using CSS clamp() function for smooth text scaling across all viewport sizes, created text-responsive utilities (xs through 5xl) that scale between minimum and maximum sizes based on viewport width, applied responsive text sizing to all major components including result cards, titles, labels, stash items, and footer, added responsive padding utilities for better mobile spacing
 - July 19, 2025. Fixed dropdown animation bugs: removed global CSS transitions from dropdown elements that were interfering with Radix UI animations, maintained smooth transitions for dropdown triggers, fixed z-index layering issues, added overflow handling to prevent content cutoff, improved mobile interactions with larger touch targets and prevented accidental closing
 - July 19, 2025. Updated subtitle text: changed "lyric starters" to "lyrics" in the main description under the Name_Jam logo for cleaner, simpler messaging
+- July 19, 2025. Renamed tab labels for consistent branding: changed "Name Generator" tab to "Name_Jam" and "Set List Generator" tab to "Set_Jam" to match the monospace typography theme with underscore styling
 
 ## User Preferences
 
