@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Music, RefreshCw, Heart, Sparkles } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useStash } from "@/context/stash-context";
+import { LoadingAnimation } from "./loading-animation";
 
 interface LyricResult {
   id: number;
@@ -21,6 +22,7 @@ export function LyricJam() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentLyric, setCurrentLyric] = useState<LyricResult | null>(null);
   const { addToStash } = useStash();
+  const loadingRef = useRef<HTMLDivElement>(null);
 
   const genres = [
     "rock", "pop", "country", "hip-hop", "indie", "folk", 
@@ -49,6 +51,12 @@ export function LyricJam() {
 
   const generateLyric = async () => {
     setIsLoading(true);
+    
+    // Scroll to loading animation
+    setTimeout(() => {
+      loadingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+    
     try {
       const response = await fetch("/api/generate-lyric-starter", {
         method: "POST",
@@ -88,7 +96,7 @@ export function LyricJam() {
       });
       toast({
         title: "Added to Stash",
-        description: "Lyric starter saved to your collection",
+        description: "Lyric spark saved to your collection",
       });
     }
   };
@@ -148,24 +156,15 @@ export function LyricJam() {
                 className="gap-2 w-full sm:w-auto"
               >
                 <Sparkles className="w-4 h-4" />
-                <span className="hidden sm:inline">Generate Lyric Starter</span>
-                <span className="sm:hidden">Generate Starter</span>
+                <span className="hidden sm:inline">Generate Lyric Spark</span>
+                <span className="sm:hidden">Generate Spark</span>
               </Button>
             </div>
 
             {isLoading && (
-              <div className="py-8">
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-muted-foreground/20 to-muted-foreground/10 animate-spin">
-                      <div className="absolute inset-2 rounded-full bg-background"></div>
-                      <div className="absolute inset-4 rounded-full bg-primary/20"></div>
-                      <div className="absolute inset-6 rounded-full bg-background"></div>
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    </div>
-                  </div>
+              <div ref={loadingRef} className="py-8">
+                <LoadingAnimation stage="generating" />
+                <div className="text-center space-y-2 mt-4">
                   <div className="text-lg text-foreground font-medium">{getRandomLoadingMessage()}</div>
                   <div className="text-sm text-muted-foreground">Channeling the lyrical spirits</div>
                 </div>
