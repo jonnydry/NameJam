@@ -40,7 +40,7 @@ export default function Home() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-base md:text-responsive-lg text-muted-foreground font-medium subtitle-fade px-2">Generate unique band names, song titles, set lists, and lyric starters</p>
+            <p className="text-responsive-base md:text-responsive-lg text-muted-foreground font-medium subtitle-fade px-2">Generate unique band names, song titles, set lists, and lyrics</p>
           </div>
 
           {/* Two Column Layout with Tabs */}
