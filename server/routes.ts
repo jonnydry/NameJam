@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGeneratorService } from "./services/bandBioGenerator";
@@ -12,6 +13,9 @@ import { z } from "zod";
 import { verificationCache } from "./services/verificationCache";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth middleware
+  await setupAuth(app);
+
   console.log("Initializing services...");
   
   let nameGenerator: NameGeneratorService;
@@ -60,9 +64,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     throw error;
   }
 
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
-  // Generate names endpoint
-  app.post("/api/generate-names", async (req, res) => {
+  // Generate names endpoint (protected)
+  app.post("/api/generate-names", isAuthenticated, async (req: any, res) => {
     try {
       const request = generateNameRequestSchema.parse(req.body);
       
@@ -85,7 +100,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             verificationCache.set(nameResult.name, request.type, verification);
           }
           
-          // Store in database
+          // Store in database with user ID
+          const userId = req.user.claims.sub;
           const storedName = await storage.createGeneratedName({
             name: nameResult.name,
             type: request.type,
@@ -93,6 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             verificationStatus: verification.status,
             verificationDetails: verification.details || null,
             isAiGenerated: nameResult.isAiGenerated,
+            userId: userId,
           });
 
           return {
@@ -121,17 +138,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get recent generated names
-  app.get("/api/recent-names", async (req, res) => {
+  // Get recent generated names (protected)
+  app.get("/api/recent-names", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const type = req.query.type as string;
       const limit = parseInt(req.query.limit as string) || 20;
 
       let names;
       if (type && (type === 'band' || type === 'song')) {
-        names = await storage.getGeneratedNamesByType(type, limit);
+        names = await storage.getGeneratedNamesByType(type, userId, limit);
       } else {
-        names = await storage.getGeneratedNames(limit);
+        names = await storage.getGeneratedNames(userId, limit);
       }
 
       res.json({ names });
@@ -176,8 +194,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate set list with timeout
-  app.post("/api/generate-setlist", async (req, res) => {
+  // Generate set list with timeout (protected)
+  app.post("/api/generate-setlist", isAuthenticated, async (req: any, res) => {
     const timeoutMs = 20000; // 20 second timeout
     
     const generateSetListWithTimeout = async () => {
@@ -292,8 +310,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate band name from setlist endpoint
-  app.post("/api/generate-band-from-setlist", async (req, res) => {
+  // Generate band name from setlist endpoint (protected)
+  app.post("/api/generate-band-from-setlist", isAuthenticated, async (req: any, res) => {
     try {
       const { songNames, mood, genre } = req.body;
       
@@ -381,8 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate AI name endpoint
-  app.post("/api/generate-ai-name", async (req, res) => {
+  // Generate AI name endpoint (protected)
+  app.post("/api/generate-ai-name", isAuthenticated, async (req: any, res) => {
     try {
       const { type, genre, mood } = req.body;
       
@@ -413,13 +431,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify the generated name
       const verification = await nameVerifier.verifyName(parsedResponse.name, type);
       
-      // Store in database
+      // Store in database with user ID
+      const userId = req.user.claims.sub;
       const storedName = await storage.createGeneratedName({
         name: parsedResponse.name,
         type: type,
         wordCount: parsedResponse.name.split(' ').length,
         verificationStatus: verification.status,
         verificationDetails: verification.details || null,
+        isAiGenerated: true,
+        userId: userId,
       });
 
       res.json({ 
@@ -440,8 +461,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate band bio endpoint
-  app.post("/api/generate-band-bio", async (req, res) => {
+  // Generate band bio endpoint (protected)
+  app.post("/api/generate-band-bio", isAuthenticated, async (req: any, res) => {
     try {
       const { bandName, genre, mood } = req.body;
       
@@ -482,8 +503,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate lyric starter endpoint
-  app.post("/api/generate-lyric-starter", async (req, res) => {
+  // Generate lyric starter endpoint (protected)
+  app.post("/api/generate-lyric-starter", isAuthenticated, async (req: any, res) => {
     try {
       const { genre } = req.body;
       
