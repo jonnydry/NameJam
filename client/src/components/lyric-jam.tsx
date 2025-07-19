@@ -8,7 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { useStash } from "@/context/stash-context";
 import { LoadingAnimation } from "./loading-animation";
 
-interface LyricResult {
+interface LyricResponse {
   id: number;
   lyric: string;
   genre?: string;
@@ -20,7 +20,7 @@ interface LyricResult {
 export function LyricJam() {
   const [genre, setGenre] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentLyric, setCurrentLyric] = useState<LyricResult | null>(null);
+  const [currentLyric, setCurrentLyric] = useState<LyricResponse | null>(null);
   const { addToStash } = useStash();
   const loadingRef = useRef<HTMLDivElement>(null);
   const generateButtonRef = useRef<HTMLButtonElement>(null);
@@ -126,30 +126,32 @@ export function LyricJam() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Genre</label>
-            <Select value={genre} onValueChange={setGenre}>
-              <SelectTrigger>
-                <SelectValue placeholder="Any genre" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Any genre</SelectItem>
-                <SelectItem value="rock">🎸 Rock</SelectItem>
-                <SelectItem value="pop">💫 Pop</SelectItem>
-                <SelectItem value="country">🤠 Country</SelectItem>
-                <SelectItem value="hip-hop">🎤 Hip-Hop</SelectItem>
-                <SelectItem value="indie">🎨 Indie</SelectItem>
-                <SelectItem value="folk">🪕 Folk</SelectItem>
-                <SelectItem value="metal">🤘 Metal</SelectItem>
-                <SelectItem value="jazz">🎺 Jazz</SelectItem>
-                <SelectItem value="electronic">🎛️ Electronic</SelectItem>
-                <SelectItem value="blues">🎵 Blues</SelectItem>
-                <SelectItem value="punk">⚡ Punk</SelectItem>
-                <SelectItem value="alternative">🌀 Alternative</SelectItem>
-                <SelectItem value="reggae">🌴 Reggae</SelectItem>
-                <SelectItem value="classical">🎼 Classical</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Genre</label>
+              <Select value={genre} onValueChange={setGenre}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any genre" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any genre</SelectItem>
+                  <SelectItem value="rock">🎸 Rock</SelectItem>
+                  <SelectItem value="pop">💫 Pop</SelectItem>
+                  <SelectItem value="country">🤠 Country</SelectItem>
+                  <SelectItem value="hip-hop">🎤 Hip-Hop</SelectItem>
+                  <SelectItem value="indie">🎨 Indie</SelectItem>
+                  <SelectItem value="folk">🪕 Folk</SelectItem>
+                  <SelectItem value="metal">🤘 Metal</SelectItem>
+                  <SelectItem value="jazz">🎺 Jazz</SelectItem>
+                  <SelectItem value="electronic">🎛️ Electronic</SelectItem>
+                  <SelectItem value="blues">🎵 Blues</SelectItem>
+                  <SelectItem value="punk">⚡ Punk</SelectItem>
+                  <SelectItem value="alternative">🌀 Alternative</SelectItem>
+                  <SelectItem value="reggae">🌴 Reggae</SelectItem>
+                  <SelectItem value="classical">🎼 Classical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           <Button
