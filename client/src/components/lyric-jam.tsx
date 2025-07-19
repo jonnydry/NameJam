@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Music, RefreshCw, Heart, Sparkles, Brain } from "lucide-react";
+import { Music, RefreshCw, Heart, Brain } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -114,7 +114,7 @@ export function LyricJam() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <Card>
+      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-950 border-zinc-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Music className="w-5 h-5" />
@@ -124,42 +124,53 @@ export function LyricJam() {
             Get inspired with a powerful opening line for your next song
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Genre</label>
+            <Select value={genre} onValueChange={setGenre}>
+              <SelectTrigger>
+                <SelectValue placeholder="Any genre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any genre</SelectItem>
+                <SelectItem value="rock">🎸 Rock</SelectItem>
+                <SelectItem value="pop">💫 Pop</SelectItem>
+                <SelectItem value="country">🤠 Country</SelectItem>
+                <SelectItem value="hip-hop">🎤 Hip-Hop</SelectItem>
+                <SelectItem value="indie">🎨 Indie</SelectItem>
+                <SelectItem value="folk">🪕 Folk</SelectItem>
+                <SelectItem value="metal">🤘 Metal</SelectItem>
+                <SelectItem value="jazz">🎺 Jazz</SelectItem>
+                <SelectItem value="electronic">🎛️ Electronic</SelectItem>
+                <SelectItem value="blues">🎵 Blues</SelectItem>
+                <SelectItem value="punk">⚡ Punk</SelectItem>
+                <SelectItem value="alternative">🌀 Alternative</SelectItem>
+                <SelectItem value="reggae">🌴 Reggae</SelectItem>
+                <SelectItem value="classical">🎼 Classical</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Button
+            onClick={generateLyric}
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+            ref={generateButtonRef}
+          >
+            {isLoading ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Generating Lyric Spark...
+              </>
+            ) : (
+              <>
+                <Music className="w-4 h-4 mr-2" />
+                Generate Lyric Spark
+              </>
+            )}
+          </Button>
+          
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Select value={genre} onValueChange={setGenre}>
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Select genre (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All genres</SelectItem>
-                  <SelectItem value="rock">🎸 Rock</SelectItem>
-                  <SelectItem value="pop">💫 Pop</SelectItem>
-                  <SelectItem value="country">🤠 Country</SelectItem>
-                  <SelectItem value="hip-hop">🎤 Hip-Hop</SelectItem>
-                  <SelectItem value="indie">🎨 Indie</SelectItem>
-                  <SelectItem value="folk">🪕 Folk</SelectItem>
-                  <SelectItem value="metal">🤘 Metal</SelectItem>
-                  <SelectItem value="jazz">🎺 Jazz</SelectItem>
-                  <SelectItem value="electronic">🎛️ Electronic</SelectItem>
-                  <SelectItem value="blues">🎵 Blues</SelectItem>
-                  <SelectItem value="punk">⚡ Punk</SelectItem>
-                  <SelectItem value="alternative">🌀 Alternative</SelectItem>
-                  <SelectItem value="reggae">🌴 Reggae</SelectItem>
-                  <SelectItem value="classical">🎼 Classical</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Button 
-                onClick={generateLyric} 
-                disabled={isLoading}
-                className="gap-2 w-full sm:w-auto"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span className="hidden sm:inline">Generate Lyric Spark</span>
-                <span className="sm:hidden">Generate Spark</span>
-              </Button>
-            </div>
 
             {isLoading && (
               <div ref={loadingRef} className="py-8">
@@ -172,7 +183,7 @@ export function LyricJam() {
             )}
 
             {currentLyric && !isLoading && (
-              <Card className="border-2">
+              <Card className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20">
                 <CardHeader className="space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-2 flex-1 min-w-0">
@@ -209,7 +220,7 @@ export function LyricJam() {
                     variant="outline"
                     size="sm"
                     onClick={generateLyric}
-                    className="gap-2 w-full sm:w-auto"
+                    className="gap-2 w-full sm:w-auto border-green-500/50 hover:border-green-500 hover:bg-green-500/10"
                   >
                     <RefreshCw className="w-4 h-4" />
                     <span className="hidden sm:inline">Generate Another</span>
@@ -222,7 +233,7 @@ export function LyricJam() {
             {!currentLyric && !isLoading && (
               <div className="text-center py-12 text-muted-foreground">
                 <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Click "Generate Lyric Starter" to begin your songwriting journey</p>
+                <p>Click "Generate Lyric Spark" to begin your songwriting journey</p>
               </div>
             )}
           </div>
