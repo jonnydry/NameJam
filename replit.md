@@ -233,6 +233,7 @@ Changelog:
 - July 19, 2025. Code efficiency improvements: created shared clipboard hook (use-clipboard.ts) to eliminate duplicate clipboard code across components, implemented centralized API error handler (api-error-handler.ts) to reduce repetitive try-catch patterns, updated all components to use these shared utilities resulting in cleaner, more maintainable code
 - July 19, 2025. Enhanced mobile text scaling: implemented dynamic responsive text utilities using CSS clamp() function for smooth text scaling across all viewport sizes, created text-responsive utilities (xs through 5xl) that scale between minimum and maximum sizes based on viewport width, applied responsive text sizing to all major components including result cards, titles, labels, stash items, and footer, added responsive padding utilities for better mobile spacing
 - July 19, 2025. Fixed dropdown animation bugs: removed global CSS transitions from dropdown elements that were interfering with Radix UI animations, maintained smooth transitions for dropdown triggers, fixed z-index layering issues, added overflow handling to prevent content cutoff, improved mobile interactions with larger touch targets and prevented accidental closing
+- July 19, 2025. Updated subtitle text: changed "lyric starters" to "lyrics" in the main description under the Name_Jam logo for cleaner, simpler messaging
 
 ## User Preferences
 
