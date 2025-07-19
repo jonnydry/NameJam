@@ -3,12 +3,33 @@ import { SetListGenerator } from "@/components/setlist-generator";
 import { LyricJam } from "@/components/lyric-jam";
 import { FermataLogo } from "@/components/fermata-logo";
 import { Stash } from "@/components/stash";
+import { UserMenu } from "@/components/user-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
 
 export default function Home() {
   const [copiedName, setCopiedName] = useState<string | null>(null);
+  const { isAuthenticated, isLoading } = useAuth();
+  const { toast } = useToast();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
 
   const handleCopy = async (name: string) => {
     try {
@@ -20,27 +41,37 @@ export default function Home() {
     }
   };
 
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <FermataLogo size="xl" />
+          <p className="text-muted-foreground mt-4">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Header with User Menu */}
+      <header className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <FermataLogo size="sm" />
+            <span className="font-mono font-bold">Name_Jam</span>
+          </div>
+          <UserMenu />
+        </div>
+      </header>
+
       {/* Main Content */}
       <main className="flex-1 px-4 py-8 md:py-12">
         <div className="max-w-7xl mx-auto">
-          {/* Logo and Title Section */}
+          {/* Logo and Title Section - Simplified since header exists */}
           <div className="text-center mb-6 md:mb-8">
-            <div className="flex flex-col items-center">
-              {/* Logo */}
-              <div className="mb-3 md:mb-4">
-                <FermataLogo size="xl" />
-              </div>
-              {/* Title with special alignment */}
-              <div className="relative">
-                <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center">
-                  <span className="typing-prompt absolute" style={{ left: 'calc(50% - 6ch)' }}>&gt;</span>
-                  <span className="title-text title-align">Name_Jam</span>
-                </h1>
-              </div>
-            </div>
-            <p className="text-responsive-base md:text-responsive-lg text-muted-foreground font-medium subtitle-fade px-2">Generate unique band names, song titles, set lists, and lyrics</p>
+            <p className="text-responsive-base md:text-responsive-lg text-muted-foreground font-medium px-2">Generate unique band names, song titles, set lists, and lyrics</p>
           </div>
 
           {/* Two Column Layout with Tabs */}

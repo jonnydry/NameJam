@@ -1,45 +1,51 @@
-import { generatedNames, type GeneratedName, type InsertGeneratedName } from "@shared/schema";
+import {
+  generatedNames,
+  users,
+  type GeneratedName,
+  type InsertGeneratedName,
+  type User,
+  type UpsertUser,
+} from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: number): Promise<any | undefined>;
-  getUserByUsername(username: string): Promise<any | undefined>;
-  createUser(user: any): Promise<any>;
+  // User operations (mandatory for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Generated Names CRUD
   createGeneratedName(name: InsertGeneratedName): Promise<GeneratedName>;
-  getGeneratedNames(limit?: number): Promise<GeneratedName[]>;
-  getGeneratedNamesByType(type: string, limit?: number): Promise<GeneratedName[]>;
+  getGeneratedNames(userId?: string, limit?: number): Promise<GeneratedName[]>;
+  getGeneratedNamesByType(type: string, userId?: string, limit?: number): Promise<GeneratedName[]>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, any>;
+  private users: Map<string, User>;
   private generatedNames: Map<number, GeneratedName>;
-  currentUserId: number;
   currentNameId: number;
 
   constructor() {
     this.users = new Map();
     this.generatedNames = new Map();
-    this.currentUserId = 1;
     this.currentNameId = 1;
   }
 
-  async getUser(id: number): Promise<any | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<any | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: any): Promise<any> {
-    const id = this.currentUserId++;
-    const user: any = { ...insertUser, id };
-    this.users.set(id, user);
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const user: User = {
+      id: userData.id,
+      email: userData.email || null,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: userData.profileImageUrl || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(userData.id, user);
     return user;
   }
 
@@ -49,40 +55,49 @@ export class MemStorage implements IStorage {
       ...insertName, 
       id, 
       createdAt: new Date(),
-      verificationDetails: insertName.verificationDetails || null
+      verificationDetails: insertName.verificationDetails || null,
+      isAiGenerated: insertName.isAiGenerated || false,
+      userId: insertName.userId || null
     };
     this.generatedNames.set(id, name);
     return name;
   }
 
-  async getGeneratedNames(limit: number = 50): Promise<GeneratedName[]> {
+  async getGeneratedNames(userId?: string, limit: number = 50): Promise<GeneratedName[]> {
     const names = Array.from(this.generatedNames.values())
+      .filter(name => !userId || name.userId === userId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return names.slice(0, limit);
   }
 
-  async getGeneratedNamesByType(type: string, limit: number = 50): Promise<GeneratedName[]> {
+  async getGeneratedNamesByType(type: string, userId?: string, limit: number = 50): Promise<GeneratedName[]> {
     const names = Array.from(this.generatedNames.values())
-      .filter(name => name.type === type)
+      .filter(name => name.type === type && (!userId || name.userId === userId))
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return names.slice(0, limit);
   }
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<any | undefined> {
-    // User functionality not currently used but kept for interface compatibility
-    return undefined;
+  // User operations (mandatory for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
-  async getUserByUsername(username: string): Promise<any | undefined> {
-    // User functionality not currently used but kept for interface compatibility
-    return undefined;
-  }
-
-  async createUser(insertUser: any): Promise<any> {
-    // User functionality not currently used but kept for interface compatibility
-    return insertUser;
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
   async createGeneratedName(insertName: InsertGeneratedName): Promise<GeneratedName> {
@@ -93,23 +108,39 @@ export class DatabaseStorage implements IStorage {
     return name;
   }
 
-  async getGeneratedNames(limit: number = 50): Promise<GeneratedName[]> {
-    const names = await db
-      .select()
-      .from(generatedNames)
-      .orderBy(desc(generatedNames.createdAt))
-      .limit(limit);
-    return names;
+  async getGeneratedNames(userId?: string, limit: number = 50): Promise<GeneratedName[]> {
+    if (userId) {
+      return await db
+        .select()
+        .from(generatedNames)
+        .where(eq(generatedNames.userId, userId))
+        .orderBy(desc(generatedNames.createdAt))
+        .limit(limit);
+    } else {
+      return await db
+        .select()
+        .from(generatedNames)
+        .orderBy(desc(generatedNames.createdAt))
+        .limit(limit);
+    }
   }
 
-  async getGeneratedNamesByType(type: string, limit: number = 50): Promise<GeneratedName[]> {
-    const names = await db
-      .select()
-      .from(generatedNames)
-      .where(eq(generatedNames.type, type))
-      .orderBy(desc(generatedNames.createdAt))
-      .limit(limit);
-    return names;
+  async getGeneratedNamesByType(type: string, userId?: string, limit: number = 50): Promise<GeneratedName[]> {
+    if (userId) {
+      return await db
+        .select()
+        .from(generatedNames)
+        .where(and(eq(generatedNames.type, type), eq(generatedNames.userId, userId)))
+        .orderBy(desc(generatedNames.createdAt))
+        .limit(limit);
+    } else {
+      return await db
+        .select()
+        .from(generatedNames)
+        .where(eq(generatedNames.type, type))
+        .orderBy(desc(generatedNames.createdAt))
+        .limit(limit);
+    }
   }
 }
 

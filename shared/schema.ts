@@ -1,6 +1,28 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table for Replit Auth
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 export const generatedNames = pgTable("generated_names", {
   id: serial("id").primaryKey(),
@@ -10,8 +32,12 @@ export const generatedNames = pgTable("generated_names", {
   verificationStatus: text("verification_status").notNull(), // 'available', 'similar', 'taken'
   verificationDetails: text("verification_details"),
   isAiGenerated: boolean("is_ai_generated").default(false).notNull(),
+  userId: varchar("user_id"), // Link to users table, nullable for backward compatibility
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
 
 export const insertGeneratedNameSchema = createInsertSchema(generatedNames).omit({
   id: true,
