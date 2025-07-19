@@ -8,6 +8,7 @@ import { Copy, Music, RefreshCw, ListMusic, Heart, ExternalLink, Lightbulb, Book
 import { LoadingAnimation } from './loading-animation';
 import { useStash } from '@/hooks/use-stash';
 import { useToast } from '@/hooks/use-toast';
+import { handleApiError } from '@/lib/api-error-handler';
 import { apiRequest } from '@/lib/queryClient';
 import type { SetListResponse, SetListSong } from '@shared/schema';
 
@@ -48,7 +49,13 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
       const data: SetListResponse = await response.json();
       setSetList(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate set list');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to generate set list';
+      setError(errorMsg);
+      handleApiError(err, {
+        title: "Generation failed",
+        description: errorMsg,
+        showToast: false // Since we're setting error state, no need for toast
+      });
     } finally {
       setLoading(false);
     }
@@ -85,10 +92,9 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
         description: `Imagined band: "${data.bandName}"`,
       });
     } catch (err) {
-      toast({
+      handleApiError(err, {
         title: "Generation failed",
-        description: err instanceof Error ? err.message : 'Failed to generate band name',
-        variant: "destructive",
+        description: err instanceof Error ? err.message : 'Failed to generate band name'
       });
     } finally {
       setLoadingBandName(false);

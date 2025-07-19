@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useStash } from '@/hooks/use-stash';
 import { useToast } from '@/hooks/use-toast';
+import { useClipboard } from '@/hooks/use-clipboard';
 import { formatDistanceToNow } from 'date-fns';
 import React, { useState } from 'react';
 import {
@@ -18,6 +19,7 @@ import { BandBioModal } from './band-bio-modal';
 export function Stash() {
   const { stash, removeFromStash, clearStash, updateRating } = useStash();
   const { toast } = useToast();
+  const { copyToClipboard } = useClipboard();
   const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'alphabetical'>('newest');
@@ -25,38 +27,7 @@ export function Stash() {
   const [showBioModal, setShowBioModal] = useState(false);
   const [selectedBandForBio, setSelectedBandForBio] = useState<{ name: string; genre?: string; mood?: string } | null>(null);
 
-  const handleCopy = async (name: string) => {
-    try {
-      await navigator.clipboard.writeText(name);
-      toast({
-        title: "Copied to clipboard!",
-        description: `"${name}" has been copied.`,
-      });
-    } catch (error) {
-      // Fallback for older browsers or HTTP contexts
-      const textArea = document.createElement('textarea');
-      textArea.value = name;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        toast({
-          title: "Copied to clipboard!",
-          description: `"${name}" has been copied.`,
-        });
-      } catch (err) {
-        toast({
-          title: "Copy failed",
-          description: "Please copy the text manually.",
-          variant: "destructive",
-        });
-      } finally {
-        document.body.removeChild(textArea);
-      }
-    }
-  };
+
 
   const handleRemove = (id: string, name: string) => {
     removeFromStash(id);
@@ -702,7 +673,7 @@ export function Stash() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleCopy(item.type === 'bandLore' && item.bandLoreData ? item.bandLoreData.bio : item.name)}
+                    onClick={() => copyToClipboard(item.type === 'bandLore' && item.bandLoreData ? item.bandLoreData.bio : item.name)}
                     className="h-8 w-8 hover:bg-primary/20"
                     title="Copy to clipboard"
                   >

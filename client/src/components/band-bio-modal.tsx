@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useStash } from "@/hooks/use-stash";
+import { handleApiError } from "@/lib/api-error-handler";
 
 interface BandBioModalProps {
   bandName: string;
@@ -60,11 +61,9 @@ export function BandBioModal({
       setModel(data.model || "unknown");
       setSource(data.source || "unknown");
     } catch (error) {
-      console.error("Error generating bio:", error);
-      toast({
+      handleApiError(error, {
         title: "Failed to generate bio",
-        description: error instanceof Error ? error.message : "Please try again later",
-        variant: "destructive",
+        description: error instanceof Error ? error.message : "Please try again later"
       });
       onOpenChange(false);
     } finally {
