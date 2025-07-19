@@ -70,6 +70,10 @@ export function LyricJam() {
       }
 
       const data = await response.json();
+      
+      // Add delay to let users read loading messages
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       setCurrentLyric(data);
     } catch (error) {
       console.error("Error generating lyric:", error);
