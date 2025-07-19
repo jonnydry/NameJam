@@ -59,14 +59,24 @@ export function Landing() {
 
           {/* Call to Action */}
           <div className="text-center">
-            <Button 
-              size="lg" 
-              className="font-semibold px-8 py-4 text-lg mb-4"
-              onClick={() => window.location.href = "/api/login"}
-            >
-              <LogIn className="mr-2 h-5 w-5" />
-              Sign In to Start Creating
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="font-semibold px-8 py-4 text-lg"
+                onClick={() => window.location.href = "/"}
+              >
+                Try Free Version
+              </Button>
+              <Button 
+                size="lg" 
+                className="font-semibold px-8 py-4 text-lg"
+                onClick={() => window.location.href = "/api/login"}
+              >
+                <LogIn className="mr-2 h-5 w-5" />
+                Sign In for Full Features
+              </Button>
+            </div>
             <div className="text-sm text-muted-foreground space-y-2">
               <p className="font-medium">Choose your preferred sign-in method:</p>
               <div className="flex flex-wrap justify-center items-center gap-2 text-xs">

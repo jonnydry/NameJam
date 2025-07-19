@@ -1,13 +1,25 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, LogIn } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function UserMenu() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
-  if (!user) return null;
+  if (!isAuthenticated) {
+    return (
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={() => window.location.href = "/api/login"}
+        className="flex items-center gap-2"
+      >
+        <LogIn className="w-4 h-4" />
+        Sign In
+      </Button>
+    );
+  }
 
   const displayName = user.firstName && user.lastName 
     ? `${user.firstName} ${user.lastName}`

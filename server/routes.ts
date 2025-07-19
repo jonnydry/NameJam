@@ -80,10 +80,9 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     }
   });
 
-  // Generate names endpoint (protected with rate limiting and validation)
+  // Generate names endpoint (public with optional auth for saving)
   app.post("/api/generate-names", 
     rateLimiters?.generation || ((req, res, next) => next()), 
-    isAuthenticated, 
     validationRules.generateNames, 
     handleValidationErrors, 
     async (req: any, res) => {
@@ -96,7 +95,9 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       // Names are now always an array
       const names = generateResult;
       
-      // Verify each name and store results
+      // Verify each name and optionally store if user is authenticated
+      const isUserAuthenticated = req.isAuthenticated && req.isAuthenticated();
+      
       const results = await Promise.all(
         names.map(async (nameResult) => {
           // Check cache first
@@ -109,24 +110,28 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
             verificationCache.set(nameResult.name, request.type, verification);
           }
           
-          // Store in database with user ID
-          const userId = req.user.claims.sub;
-          const storedName = await storage.createGeneratedName({
+          let storedName = null;
+          
+          // Only store in database if user is authenticated
+          if (isUserAuthenticated) {
+            const userId = req.user.claims.sub;
+            storedName = await storage.createGeneratedName({
+              name: nameResult.name,
+              type: request.type,
+              wordCount: request.wordCount,
+              verificationStatus: verification.status,
+              verificationDetails: verification.details || null,
+              isAiGenerated: nameResult.isAiGenerated,
+              userId: userId,
+            });
+          }
+
+          return {
+            id: storedName?.id || null,
             name: nameResult.name,
             type: request.type,
             wordCount: request.wordCount,
-            verificationStatus: verification.status,
-            verificationDetails: verification.details || null,
             isAiGenerated: nameResult.isAiGenerated,
-            userId: userId,
-          });
-
-          return {
-            id: storedName.id,
-            name: storedName.name,
-            type: storedName.type,
-            wordCount: storedName.wordCount,
-            isAiGenerated: storedName.isAiGenerated,
             verification
           };
         })
@@ -206,10 +211,9 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     }
   });
 
-  // Generate set list with timeout (protected with rate limiting and validation)
+  // Generate set list with timeout (public with optional auth for saving)
   app.post("/api/generate-setlist", 
     rateLimiters?.generation || ((req, res, next) => next()), 
-    isAuthenticated, 
     validationRules.generateSetlist, 
     handleValidationErrors, 
     async (req: any, res) => {
@@ -327,10 +331,9 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     }
   });
 
-  // Generate band name from setlist endpoint (protected with rate limiting)
+  // Generate band name from setlist endpoint (public)
   app.post("/api/generate-band-from-setlist", 
     rateLimiters?.generation || ((req, res, next) => next()), 
-    isAuthenticated, 
     async (req: any, res) => {
     try {
       const { songNames, mood, genre } = req.body;
@@ -533,10 +536,9 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     }
   });
 
-  // Generate lyric starter endpoint (protected with rate limiting and validation)
+  // Generate lyric starter endpoint (public with optional auth for saving)  
   app.post("/api/generate-lyric-starter", 
     rateLimiters?.generation || ((req, res, next) => next()), 
-    isAuthenticated, 
     validationRules.generateLyricStarter, 
     handleValidationErrors, 
     async (req: any, res) => {
