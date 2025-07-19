@@ -34,13 +34,13 @@ export default function Home() {
               </div>
               {/* Title with special alignment */}
               <div className="relative">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center">
+                <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center">
                   <span className="typing-prompt absolute" style={{ left: 'calc(50% - 6ch)' }}>&gt;</span>
                   <span className="title-text title-align">Name_Jam</span>
                 </h1>
               </div>
             </div>
-            <p className="text-base md:text-lg text-muted-foreground font-medium subtitle-fade px-2">Generate unique band names, song titles, set lists, and lyric starters</p>
+            <p className="text-responsive-base md:text-responsive-lg text-muted-foreground font-medium subtitle-fade px-2">Generate unique band names, song titles, set lists, and lyric starters</p>
           </div>
 
           {/* Two Column Layout with Tabs */}
@@ -86,11 +86,11 @@ export default function Home() {
       <footer className="bg-card border-t border-border py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">© 2024 NameJam. Powered by web-sourced creativity.</p>
+            <p className="text-responsive-sm text-muted-foreground">© 2024 NameJam. Powered by web-sourced creativity.</p>
             <div className="flex justify-center space-x-6 mt-4">
-              <Link href="/about" className="text-xs text-muted-foreground hover:text-primary transition-colors">About</Link>
-              <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">Contact</a>
-              <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">API Documentation</a>
+              <Link href="/about" className="text-responsive-xs text-muted-foreground hover:text-primary transition-colors">About</Link>
+              <a href="#" className="text-responsive-xs text-muted-foreground hover:text-primary transition-colors">Contact</a>
+              <a href="#" className="text-responsive-xs text-muted-foreground hover:text-primary transition-colors">API Documentation</a>
             </div>
           </div>
         </div>

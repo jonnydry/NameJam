@@ -540,7 +540,7 @@ export function Stash() {
                             <ChevronRight className="w-4 h-4" />
                           )}
                         </Button>
-                        <h3 className="font-medium text-base break-words cursor-pointer" 
+                        <h3 className="font-medium text-responsive-base break-words cursor-pointer" 
                             onClick={() => toggleSetlistExpansion(item.id)}>
                           {item.name}
                         </h3>
@@ -593,7 +593,7 @@ export function Stash() {
                     </div>
                   ) : item.type === 'bandLore' && item.bandLoreData ? (
                     <div>
-                      <h3 className="font-medium text-base mb-1 break-words">
+                      <h3 className="font-medium text-responsive-base mb-1 break-words">
                         {item.name}
                       </h3>
                       <div className="mt-2 text-sm text-muted-foreground">
@@ -607,7 +607,7 @@ export function Stash() {
                     </div>
                   ) : item.type === 'lyricJam' ? (
                     <div>
-                      <h3 className="font-medium text-base mb-1 break-words italic">
+                      <h3 className="font-medium text-responsive-base mb-1 break-words italic">
                         "{item.name}"
                       </h3>
                       {item.metadata?.songSection && (
@@ -622,7 +622,7 @@ export function Stash() {
                       )}
                     </div>
                   ) : (
-                    <h3 className="font-medium text-base mb-1 break-words">
+                    <h3 className="font-medium text-responsive-base mb-1 break-words">
                       {item.name}
                     </h3>
                   )}

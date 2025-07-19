@@ -88,7 +88,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
 
 
   return (
-    <div className={`relative p-4 sm:p-6 rounded-lg border transition-all duration-200 overflow-hidden ${
+    <div className={`relative p-responsive rounded-lg border transition-all duration-200 overflow-hidden ${
       isEasterEgg 
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
         : 'border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20'
@@ -136,7 +136,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-2 min-w-0">
-          <h3 className={`text-xl sm:text-2xl font-semibold text-foreground break-all ${
+          <h3 className={`text-responsive-xl sm:text-responsive-2xl font-semibold text-foreground break-all ${
             verification.status === 'taken' ? 'line-through' : ''
           }`}>
             {name}
@@ -145,9 +145,9 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 shrink-0" title="AI Generated" />
           )}
         </div>
-        <p className={`text-sm ${
+        <p className={`text-responsive-sm ${
           isEasterEgg 
-            ? 'text-pink-600 dark:text-pink-300 font-medium text-base' 
+            ? 'text-pink-600 dark:text-pink-300 font-medium text-responsive-base' 
             : 'text-muted-foreground'
         }`}>
           {verification.details || `No existing ${nameType} found with this name`}
