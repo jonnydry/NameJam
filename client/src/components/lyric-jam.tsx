@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Music, RefreshCw, Heart, Brain } from "lucide-react";
+import { NotebookPen, RefreshCw, Heart, Brain, Music } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -122,7 +122,7 @@ export function LyricJam() {
       <Card className="bg-gradient-to-r from-blue-500/10 to-green-500/10 border-blue-500/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Music className="w-5 h-5" />
+            <NotebookPen className="w-5 h-5" />
             Lyric_Jam Generator
           </CardTitle>
           <CardDescription>
