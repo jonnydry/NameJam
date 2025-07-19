@@ -212,7 +212,7 @@ export function NameGenerator() {
 
         {/* Word Count Selector */}
         <div className="flex items-center justify-center space-x-4 mb-6">
-          <label htmlFor="wordCount" className="text-sm font-medium text-muted-foreground">
+          <label htmlFor="wordCount" className="text-responsive-sm font-medium text-muted-foreground">
             Number of words:
           </label>
           <Select value={wordCount.toString()} onValueChange={(value) => setWordCount(parseInt(value))}>
@@ -232,7 +232,7 @@ export function NameGenerator() {
 
         {/* Mood Selector */}
         <div className="flex items-center justify-center space-x-4 mb-4">
-          <label htmlFor="mood" className="text-sm font-medium text-muted-foreground flex items-center">
+          <label htmlFor="mood" className="text-responsive-sm font-medium text-muted-foreground flex items-center">
             <Palette className="w-4 h-4 mr-2" />
             Mood:
           </label>
@@ -260,7 +260,7 @@ export function NameGenerator() {
 
         {/* Genre Selector */}
         <div className="flex items-center justify-center space-x-4 mb-6">
-          <label htmlFor="genre" className="text-sm font-medium text-muted-foreground flex items-center">
+          <label htmlFor="genre" className="text-responsive-sm font-medium text-muted-foreground flex items-center">
             <Music className="w-4 h-4 mr-2" />
             Genre:
           </label>
