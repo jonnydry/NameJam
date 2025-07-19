@@ -46,7 +46,7 @@ export function NameGenerator() {
       const response = await apiRequest('POST', '/api/generate-names', {
         type: nameType,
         wordCount,
-        count: 3,
+        count: 4,
         ...(mood && mood !== 'none' && { mood }),
         ...(genre && genre !== 'none' && { genre })
       });
@@ -423,7 +423,7 @@ export function NameGenerator() {
       {/* Generated Results */}
       {results.length > 0 && !generateMutation.isPending && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 max-w-7xl mx-auto">
             {results.map((result, index) => (
               <div
                 key={result.id}
