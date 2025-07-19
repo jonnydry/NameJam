@@ -9,6 +9,7 @@ import { LyricStarterService } from "./services/lyricStarterService";
 
 import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
+import { verificationCache } from "./services/verificationCache";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log("Initializing services...");
@@ -74,7 +75,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify each name and store results
       const results = await Promise.all(
         names.map(async (nameResult) => {
-          const verification = await nameVerifier.verifyName(nameResult.name, request.type);
+          // Check cache first
+          let verification = verificationCache.get(nameResult.name, request.type);
+          
+          if (!verification) {
+            // If not cached, verify normally
+            verification = await nameVerifier.verifyName(nameResult.name, request.type);
+            // Store in cache
+            verificationCache.set(nameResult.name, request.type, verification);
+          }
           
           // Store in database
           const storedName = await storage.createGeneratedName({
@@ -144,7 +153,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Name and valid type (band/song) are required" });
       }
 
+      // Check cache first
+      const cached = verificationCache.get(name, type);
+      if (cached) {
+        console.log(`Cache hit for ${type}: ${name}`);
+        return res.json({ verification: cached });
+      }
+
+      // If not cached, verify normally
       const verification = await nameVerifier.verifyName(name, type);
+      
+      // Store in cache
+      verificationCache.set(name, type, verification);
+      
       res.json({ verification });
     } catch (error) {
       console.error("Error verifying name:", error);

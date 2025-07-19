@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, CheckCircle, AlertCircle, XCircle, BookOpen, Brain } from "lucide-react";
+import { Copy, ExternalLink, Heart, BookOpen, Brain } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { BandBioModal } from "./band-bio-modal";
+import { StatusBadge } from "./status-badge";
 
 interface VerificationResult {
   status: 'available' | 'similar' | 'taken';
@@ -84,31 +85,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
 
 
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'available':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'similar':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'taken':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
-    }
-  };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'available':
-        return 'Available';
-      case 'similar':
-        return 'Similar Found';
-      case 'taken':
-        return 'Already Taken';
-      default:
-        return 'Unknown';
-    }
-  };
 
   return (
     <div className={`relative p-6 rounded-lg border transition-all duration-200 ${
@@ -117,10 +94,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
         : 'border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20'
     }`}>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2 text-sm">
-          {getStatusIcon(verification.status)}
-          <span className="text-muted-foreground">{getStatusText(verification.status)}</span>
-        </div>
+        <StatusBadge status={verification.status} />
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
