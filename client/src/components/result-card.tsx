@@ -175,25 +175,21 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
 
         {/* Compact Verification Links */}
         {verification.verificationLinks && verification.verificationLinks.length > 0 && (
-          <div className="mt-3 bg-muted/30 rounded-lg p-2 sm:p-3">
-            <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-2">
-              <ExternalLink className="h-3 w-3" />
-              <span>Verify Availability:</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              {verification.verificationLinks.map((link, index) => (
+          <div className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+            <span className="opacity-60">Check:</span>
+            {verification.verificationLinks.slice(0, 3).map((link, index) => (
+              <span key={index} className="inline-flex items-center">
+                {index > 0 && <span className="opacity-40 mx-1">·</span>}
                 <a
-                  key={index}
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center px-2 py-1 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded transition-colors"
+                  className="hover:text-primary transition-colors underline-offset-2 hover:underline"
                 >
-                  <ExternalLink className="h-3 w-3 mr-1 shrink-0" />
-                  <span className="truncate max-w-[100px] sm:max-w-none">{link.name}</span>
+                  {link.name.replace(' Search', '')}
                 </a>
-              ))}
-            </div>
+              </span>
+            ))}
           </div>
         )}
 
