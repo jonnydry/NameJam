@@ -142,4 +142,19 @@ export const setListResponse = z.object({
 
 export type SetListResponse = z.infer<typeof setListResponse>;
 
+// Error logs table for simple error tracking
+export const errorLogs = pgTable("error_logs", {
+  id: serial("id").primaryKey(),
+  message: text("message").notNull(),
+  stack: text("stack"),
+  componentStack: text("component_stack"),
+  userAgent: text("user_agent"),
+  url: text("url"),
+  userId: varchar("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type ErrorLog = typeof errorLogs.$inferSelect;
+export type InsertErrorLog = typeof errorLogs.$inferInsert;
+
 
