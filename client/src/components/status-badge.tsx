@@ -1,35 +1,43 @@
-import { CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { Check, AlertTriangle, X } from "lucide-react";
 
 interface StatusBadgeProps {
   status: 'available' | 'similar' | 'taken';
-  className?: string;
 }
 
-export function StatusBadge({ status, className = "" }: StatusBadgeProps) {
-  const config = {
-    available: {
-      icon: CheckCircle,
-      text: "Looks available",
-      className: "bg-green-500/10 text-green-600 border-green-500/20",
-    },
-    similar: {
-      icon: AlertCircle,
-      text: "Similar exists",
-      className: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    },
-    taken: {
-      icon: XCircle,
-      text: "In use",
-      className: "bg-red-500/10 text-red-600 border-red-500/20",
-    },
+export function StatusBadge({ status }: StatusBadgeProps) {
+  const getStatusConfig = () => {
+    switch (status) {
+      case 'available':
+        return {
+          icon: <Check className="w-4 h-4" />,
+          text: 'Looks available',
+          className: 'text-green-700 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950 dark:border-green-800',
+        };
+      case 'similar':
+        return {
+          icon: <AlertTriangle className="w-4 h-4" />,
+          text: 'Similar exists',
+          className: 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950 dark:border-amber-800',
+        };
+      case 'taken':
+        return {
+          icon: <X className="w-4 h-4" />,
+          text: 'Already taken',
+          className: 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950 dark:border-red-800',
+        };
+    }
   };
 
-  const { icon: Icon, text, className: statusClass } = config[status];
+  const config = getStatusConfig();
 
   return (
-    <div className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${statusClass} ${className}`}>
-      <Icon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-      {text}
+    <div 
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${config.className}`}
+      role="status"
+      aria-label={config.text}
+    >
+      {config.icon}
+      <span>{config.text}</span>
     </div>
   );
 }

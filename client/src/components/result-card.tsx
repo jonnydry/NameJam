@@ -110,12 +110,13 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             variant="ghost"
             size="sm"
             onClick={handleAddToStash}
-            className={`p-2 ${
+            className={`p-2 focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
               isInStash(name, nameType) 
                 ? 'text-red-500 hover:text-red-600' 
                 : 'text-muted-foreground hover:text-red-500'
             }`}
             title={isInStash(name, nameType) ? 'Remove from stash' : 'Add to stash'}
+            aria-label={isInStash(name, nameType) ? `Remove "${name}" from stash` : `Add "${name}" to stash`}
           >
             <span className={`inline-block ${isAnimating ? (animationType === 'add' ? 'heart-burst' : 'heart-shrink') : ''}`}>
               <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} aria-hidden="true" />
