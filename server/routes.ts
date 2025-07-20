@@ -7,6 +7,8 @@ import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGeneratorService } from "./services/bandBioGenerator";
 import { AINameGeneratorService } from "./services/aiNameGenerator";
 import { LyricStarterService } from "./services/lyricStarterService";
+import { db } from "./db";
+import { users, errorLogs } from "@shared/schema";
 
 import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
@@ -564,7 +566,49 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     }
   });
 
+  // Health check endpoint for deployment monitoring
+  app.get("/api/health", async (req, res) => {
+    try {
+      // Check database connectivity
+      await db.select().from(users).limit(1);
+      res.json({ 
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+        service: "name-jam-api",
+        database: "connected"
+      });
+    } catch (error) {
+      res.status(503).json({ 
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        service: "name-jam-api",
+        database: "disconnected",
+        error: "Database connection failed"
+      });
+    }
+  });
 
+  // Error logging endpoint
+  app.post("/api/log-error", async (req, res) => {
+    try {
+      const { message, stack, componentStack, userAgent, url } = req.body;
+      const userId = req.user?.claims?.sub || null;
+      
+      await db.insert(errorLogs).values({
+        message: message || "Unknown error",
+        stack,
+        componentStack,
+        userAgent,
+        url,
+        userId,
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      // Silently fail - don't break the app if error logging fails
+      res.status(200).json({ success: false });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

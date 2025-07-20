@@ -10,6 +10,7 @@ import Home from "@/pages/home";
 import About from "@/pages/about";
 import NotFound from "@/pages/not-found";
 import { Landing } from "@/components/landing";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 function Router() {
   const { isLoading } = useAuth();
@@ -37,14 +38,16 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <StashProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </StashProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <StashProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </StashProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
