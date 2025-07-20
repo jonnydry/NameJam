@@ -66,7 +66,7 @@ export function Landing() {
                   variant="outline"
                   className="font-semibold px-8 py-4 text-lg w-full sm:w-auto"
                 >
-                  Proceed as Guest
+                  Proceed as Guest Artist
                 </Button>
               </Link>
               <Button 
