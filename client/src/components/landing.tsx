@@ -8,7 +8,7 @@ export function Landing() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Main Content */}
       <main className="flex-1 px-4 py-8 md:py-12">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-8 md:p-12">
           {/* Logo and Title Section */}
           <div className="text-center mb-8">
             <div className="flex flex-col items-center">
