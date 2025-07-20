@@ -1,5 +1,7 @@
 import type { GenerateNameRequest } from "@shared/schema";
 import type { AINameGeneratorService } from "./aiNameGenerator";
+import { advancedLinguistics } from "./advancedLinguistics";
+import { genreAnalyzer } from "./genreAnalyzer";
 
 interface WordSource {
   adjectives: string[];
@@ -557,7 +559,32 @@ export class NameGeneratorService {
   }
 
   private async generateSingleName(type: string, wordCount: number, mood?: string, genre?: string): Promise<string> {
-    // Use expanded vocabulary only when no specific genre/mood filtering is applied
+    // Use ultimate advanced generation for maximum uniqueness (15% chance)
+    if (Math.random() < 0.15) {
+      return this.generateUltimateAdvancedName(type, wordCount, mood, genre);
+    }
+    
+    // Use advanced generation for genre-specific requests
+    if (genre && genre !== 'none' && Math.random() < 0.5) {
+      return this.generateAdvancedGenreName(type, wordCount, genre, mood);
+    }
+    
+    // Use phonetic harmony for certain word counts
+    if (wordCount === 2 && Math.random() < 0.3) {
+      return this.generatePhoneticHarmonyName(type, mood, genre);
+    }
+    
+    // Use cultural references occasionally
+    if (Math.random() < 0.2) {
+      return this.generateCulturallyInformedName(type, wordCount, mood, genre);
+    }
+    
+    // Use multilingual compound generation
+    if (wordCount === 1 && Math.random() < 0.3) {
+      return this.generateMultilingualCompound(type, mood, genre);
+    }
+    
+    // Default generation paths
     if (wordCount <= 3) {
       return this.generateSimpleName(type, wordCount, mood, genre);
     } else {
@@ -3944,5 +3971,727 @@ export class NameGeneratorService {
     }
     
     return compounds;
+  }
+
+  // Generate names using advanced genre analysis
+  private generateAdvancedGenreName(type: string, wordCount: number, genre: string, mood?: string): string {
+    const genreAnalysis = genreAnalyzer.analyzeGenre(genre);
+    let sources = this.getGenreFilteredWords(genre, this.getBaseWordSources());
+    
+    if (mood && mood !== 'none') {
+      sources = this.blendMoodWithGenre(mood, genre, sources);
+    }
+    
+    // Use genre-specific structures
+    const structures = genreAnalysis.suggestedStructures;
+    const selectedStructure = structures[Math.floor(Math.random() * structures.length)];
+    
+    // Build name based on structure
+    const words = this.buildFromGenreStructure(selectedStructure, sources, genreAnalysis.keyWords);
+    
+    // Apply linguistic enhancements
+    const enhancedWords = this.applyLinguisticEnhancements(words, genre);
+    
+    // Ensure grammatical consistency
+    const correctedWords = this.ensureGrammaticalConsistency(enhancedWords);
+    
+    return this.applySmartCapitalization(correctedWords);
+  }
+
+  // Generate names with phonetic harmony
+  private generatePhoneticHarmonyName(type: string, mood?: string, genre?: string): string {
+    let sources = this.getFilteredSources(mood, genre);
+    
+    // Select first word
+    const wordType = Math.random() < 0.7 ? 'adjectives' : 'nouns';
+    const word1 = sources[wordType][Math.floor(Math.random() * sources[wordType].length)];
+    
+    // Find harmonious second word
+    let bestWord2 = '';
+    let bestScore = 0;
+    
+    // Try multiple candidates
+    for (let i = 0; i < 20; i++) {
+      const candidate = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+      const score = advancedLinguistics.analyzePhoneticHarmony(word1, candidate);
+      
+      if (score > bestScore && candidate !== word1) {
+        bestScore = score;
+        bestWord2 = candidate;
+      }
+    }
+    
+    // If we found a good match, use it
+    if (bestScore > 0.5) {
+      return this.applySmartCapitalization([word1, bestWord2]);
+    }
+    
+    // Fallback to alliterative pairing
+    const alliterativeWords = sources.nouns.filter(n => 
+      n[0].toLowerCase() === word1[0].toLowerCase() && n !== word1
+    );
+    
+    if (alliterativeWords.length > 0) {
+      const word2 = alliterativeWords[Math.floor(Math.random() * alliterativeWords.length)];
+      return this.applySmartCapitalization([word1, word2]);
+    }
+    
+    // Final fallback
+    const word2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+    return this.applySmartCapitalization([word1, word2]);
+  }
+
+  // Generate culturally informed names
+  private generateCulturallyInformedName(type: string, wordCount: number, mood?: string, genre?: string): string {
+    const theme = mood || 'mysterious';
+    const culturalRefs = advancedLinguistics.getCulturalReferences(theme);
+    
+    if (culturalRefs.length === 0) {
+      // Fallback to regular generation
+      return this.generateSimpleName(type, wordCount, mood, genre);
+    }
+    
+    let sources = this.getFilteredSources(mood, genre);
+    const words: string[] = [];
+    
+    // Include at least one cultural reference
+    const culturalWord = culturalRefs[Math.floor(Math.random() * culturalRefs.length)];
+    const culturalPosition = Math.floor(Math.random() * wordCount);
+    
+    for (let i = 0; i < wordCount; i++) {
+      if (i === culturalPosition) {
+        words.push(this.capitalizeFirst(culturalWord));
+      } else if (i === 0 && wordCount > 2 && Math.random() < 0.5) {
+        words.push('The');
+      } else {
+        const wordType = i === wordCount - 1 ? 'nouns' : 
+                        Math.random() < 0.6 ? 'adjectives' : 'nouns';
+        words.push(sources[wordType][Math.floor(Math.random() * sources[wordType].length)]);
+      }
+    }
+    
+    // Apply emotional mapping to ensure coherence
+    const emotionalMapping = advancedLinguistics.getEmotionalMapping(words.join(' '));
+    
+    // If emotional tone doesn't match mood, try to adjust
+    if (mood && this.emotionalMismatch(emotionalMapping, mood)) {
+      return this.adjustEmotionalTone(words, mood, sources);
+    }
+    
+    return this.applySmartCapitalization(words);
+  }
+
+  // Build name from genre-specific structure
+  private buildFromGenreStructure(structure: string, sources: WordSource, keyWords: string[]): string[] {
+    const words: string[] = [];
+    const parts = structure.split(' ');
+    
+    for (const part of parts) {
+      if (part === 'The') {
+        words.push('The');
+      } else if (part.includes('[') && part.includes(']')) {
+        // Extract the word type
+        const wordType = part.replace('[', '').replace(']', '').toLowerCase();
+        
+        // Map structure types to word sources
+        let selectedWord = '';
+        switch (wordType) {
+          case 'adjective':
+          case 'dark adjective':
+          case 'rebellious word':
+            // Prefer genre key words if they're adjectives
+            const adjKeyWords = keyWords.filter(w => sources.adjectives.includes(w));
+            selectedWord = adjKeyWords.length > 0 && Math.random() < 0.5 ?
+              adjKeyWords[Math.floor(Math.random() * adjKeyWords.length)] :
+              sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+            break;
+            
+          case 'noun':
+          case 'plural noun':
+          case 'violent noun':
+            const nounKeyWords = keyWords.filter(w => sources.nouns.includes(w));
+            selectedWord = nounKeyWords.length > 0 && Math.random() < 0.5 ?
+              nounKeyWords[Math.floor(Math.random() * nounKeyWords.length)] :
+              sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+            
+            // Make plural if needed
+            if (wordType === 'plural noun' && !selectedWord.endsWith('s')) {
+              selectedWord = this.makePlural(selectedWord);
+            }
+            break;
+            
+          case 'verb':
+          case 'verbing':
+          case 'aggressive verb':
+            selectedWord = sources.verbs[Math.floor(Math.random() * sources.verbs.length)];
+            if (wordType === 'verbing' && !selectedWord.endsWith('ing')) {
+              selectedWord = this.makeGerund(selectedWord);
+            }
+            break;
+            
+          case 'musical term':
+          case 'group':
+          case 'musicians':
+            selectedWord = sources.musicalTerms[Math.floor(Math.random() * sources.musicalTerms.length)];
+            break;
+            
+          default:
+            // For specific types like 'tech word', 'abstract concept', etc.
+            selectedWord = this.getSpecializedWord(wordType, sources);
+        }
+        
+        words.push(selectedWord);
+      } else {
+        // Literal word (like "and", "of", etc.)
+        words.push(part);
+      }
+    }
+    
+    return words;
+  }
+
+  // Apply linguistic enhancements to words
+  private applyLinguisticEnhancements(words: string[], genre: string): string[] {
+    const enhanced = [...words];
+    
+    // Analyze current phonetic harmony
+    if (words.length >= 2) {
+      const harmony = advancedLinguistics.analyzePhoneticHarmony(words[0], words[words.length - 1]);
+      
+      // If harmony is poor, try to find better alternatives
+      if (harmony < 0.3) {
+        // Try swapping adjectives or finding alternatives
+        for (let i = 0; i < words.length; i++) {
+          if (this.isAdjective(words[i])) {
+            const alternatives = this.findPhoneticAlternatives(words[i], words, genre);
+            if (alternatives.length > 0) {
+              enhanced[i] = alternatives[0];
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    // Apply syllable pattern optimization
+    const syllableInfo = words.map(w => advancedLinguistics.analyzeSyllablePattern(w));
+    const totalSyllables = syllableInfo.reduce((sum, info) => sum + info.count, 0);
+    
+    // Genre-specific syllable preferences
+    const genrePattern = genreAnalyzer.genrePatterns.get(genre);
+    if (genrePattern) {
+      const preferredLength = Object.entries(genrePattern.lengthDistribution)
+        .reduce((acc, [len, freq]) => acc + parseInt(len) * freq, 0);
+      
+      // Adjust if too far from preferred
+      if (Math.abs(totalSyllables - preferredLength * 1.5) > 2) {
+        // Find opportunities to shorten/lengthen
+        enhanced.forEach((word, i) => {
+          if (totalSyllables > preferredLength * 1.5 && word.length > 8) {
+            // Try to find shorter synonym
+            const shorter = this.findShorterAlternative(word, genre);
+            if (shorter) enhanced[i] = shorter;
+          }
+        });
+      }
+    }
+    
+    return enhanced;
+  }
+
+  // Get filtered sources based on mood and genre
+  private getFilteredSources(mood?: string, genre?: string): WordSource {
+    if (genre && genre !== 'none') {
+      let sources = this.getGenreFilteredWords(genre, this.getBaseWordSources());
+      if (mood && mood !== 'none') {
+        sources = this.blendMoodWithGenre(mood, genre, sources);
+      }
+      return sources;
+    } else if (mood && mood !== 'none') {
+      return this.getStaticMoodFilteredWords(mood);
+    }
+    return this.wordSources;
+  }
+
+  // Check if emotional mapping matches mood
+  private emotionalMismatch(mapping: any, mood: string): boolean {
+    const moodExpectations: { [key: string]: { valence: number, arousal: number } } = {
+      'dark': { valence: -0.6, arousal: 0.4 },
+      'bright': { valence: 0.7, arousal: 0.6 },
+      'mysterious': { valence: -0.2, arousal: 0.3 },
+      'energetic': { valence: 0.3, arousal: 0.8 },
+      'melancholy': { valence: -0.5, arousal: 0.2 },
+      'ethereal': { valence: 0.2, arousal: 0.3 },
+      'aggressive': { valence: -0.4, arousal: 0.9 },
+      'peaceful': { valence: 0.6, arousal: 0.1 }
+    };
+    
+    const expected = moodExpectations[mood];
+    if (!expected) return false;
+    
+    return Math.abs(mapping.valence - expected.valence) > 0.5 ||
+           Math.abs(mapping.arousal - expected.arousal) > 0.5;
+  }
+
+  // Adjust emotional tone of name
+  private adjustEmotionalTone(words: string[], mood: string, sources: WordSource): string {
+    // Get mood-appropriate words
+    const moodWords = this.getStaticMoodFilteredWords(mood);
+    
+    // Replace one word with a mood-appropriate one
+    const replaceIndex = Math.floor(Math.random() * words.length);
+    const wordType = replaceIndex === words.length - 1 ? 'nouns' : 'adjectives';
+    
+    words[replaceIndex] = moodWords[wordType][Math.floor(Math.random() * moodWords[wordType].length)];
+    
+    return this.applySmartCapitalization(words);
+  }
+
+  // Check if word is an adjective (simplified)
+  private isAdjective(word: string): boolean {
+    return this.wordSources.adjectives.includes(word) ||
+           word.endsWith('ly') || word.endsWith('ous') || word.endsWith('ive') ||
+           word.endsWith('al') || word.endsWith('ic') || word.endsWith('ed');
+  }
+
+  // Find phonetically harmonious alternatives
+  private findPhoneticAlternatives(word: string, otherWords: string[], genre: string): string[] {
+    const alternatives: { word: string, score: number }[] = [];
+    const sources = this.getGenreFilteredWords(genre, this.getBaseWordSources());
+    
+    // Check adjectives for alternatives
+    for (const candidate of sources.adjectives) {
+      if (candidate === word) continue;
+      
+      let totalScore = 0;
+      for (const other of otherWords) {
+        if (other !== word) {
+          totalScore += advancedLinguistics.analyzePhoneticHarmony(candidate, other);
+        }
+      }
+      
+      alternatives.push({ word: candidate, score: totalScore });
+    }
+    
+    // Sort by score and return top candidates
+    return alternatives
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(a => a.word);
+  }
+
+  // Find shorter alternative for a word
+  private findShorterAlternative(word: string, genre: string): string | null {
+    const sources = this.getGenreFilteredWords(genre, this.getBaseWordSources());
+    const allWords = [...sources.adjectives, ...sources.nouns, ...sources.verbs];
+    
+    // Find words with similar starting letters but shorter
+    const candidates = allWords.filter(w => 
+      w.startsWith(word.substring(0, 2)) && 
+      w.length < word.length &&
+      w.length >= 4
+    );
+    
+    return candidates.length > 0 ? 
+      candidates[Math.floor(Math.random() * candidates.length)] : null;
+  }
+
+  // Get specialized words for specific types
+  private getSpecializedWord(wordType: string, sources: WordSource): string {
+    const specializationMap: { [key: string]: string[] } = {
+      'tech word': ['cyber', 'digital', 'quantum', 'neural', 'synthetic', 'binary', 'pixel', 'matrix'],
+      'abstract concept': ['infinity', 'paradox', 'entropy', 'chaos', 'harmony', 'essence', 'void', 'nexus'],
+      'mythological reference': ['phoenix', 'atlas', 'prometheus', 'valkyrie', 'kraken', 'chimera', 'hydra'],
+      'power word': ['dominion', 'reign', 'force', 'surge', 'impact', 'revolution', 'empire', 'dynasty'],
+      'nature word': ['storm', 'mountain', 'ocean', 'forest', 'thunder', 'glacier', 'volcano', 'desert'],
+      'color': ['crimson', 'obsidian', 'azure', 'emerald', 'onyx', 'scarlet', 'violet', 'amber']
+    };
+    
+    const specialized = specializationMap[wordType.toLowerCase()];
+    if (specialized && specialized.length > 0) {
+      return specialized[Math.floor(Math.random() * specialized.length)];
+    }
+    
+    // Fallback to regular noun
+    return sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+  }
+
+  // Make a word gerund form
+  private makeGerund(verb: string): string {
+    if (verb.endsWith('ing')) return verb;
+    if (verb.endsWith('e') && !verb.endsWith('ee')) return verb.slice(0, -1) + 'ing';
+    if (verb.endsWith('ie')) return verb.slice(0, -2) + 'ying';
+    if (this.needsDoubledConsonant(verb)) {
+      return verb + verb.slice(-1) + 'ing';
+    }
+    return verb + 'ing';
+  }
+
+  // Check if verb needs doubled consonant
+  private needsDoubledConsonant(verb: string): boolean {
+    if (verb.length < 3) return false;
+    const lastThree = verb.slice(-3);
+    const pattern = /[aeiou][bcdfghjklmnpqrstvwxyz]$/;
+    return pattern.test(lastThree) && !verb.endsWith('w') && !verb.endsWith('x') && !verb.endsWith('y');
+  }
+
+  // Generate multilingual compound names
+  private generateMultilingualCompound(type: string, mood?: string, genre?: string): string {
+    // Select concept based on mood/genre
+    const concepts = this.getConceptsForContext(mood, genre);
+    const concept = concepts[Math.floor(Math.random() * concepts.length)];
+    
+    // Generate compound
+    const compound = advancedLinguistics.generateMultilingualCompound(concept);
+    
+    // Enhance with prefix/suffix if needed
+    if (Math.random() < 0.3) {
+      const enhancements = this.getEnhancementsForContext(mood, genre);
+      const enhancement = enhancements[Math.floor(Math.random() * enhancements.length)];
+      return this.capitalizeFirst(enhancement + compound.toLowerCase());
+    }
+    
+    return this.capitalizeFirst(compound);
+  }
+
+  // Get concepts based on context
+  private getConceptsForContext(mood?: string, genre?: string): string[] {
+    const baseContexts = ['fire', 'water', 'earth', 'air', 'light', 'dark', 'time', 'space'];
+    
+    const moodConcepts: { [key: string]: string[] } = {
+      'dark': ['shadow', 'night', 'void', 'death', 'fear'],
+      'bright': ['sun', 'star', 'light', 'dawn', 'joy'],
+      'mysterious': ['hidden', 'secret', 'unknown', 'mystic', 'enigma'],
+      'energetic': ['power', 'force', 'energy', 'motion', 'speed'],
+      'ethereal': ['spirit', 'soul', 'dream', 'mist', 'ghost'],
+      'aggressive': ['war', 'battle', 'rage', 'fury', 'storm']
+    };
+    
+    const genreConcepts: { [key: string]: string[] } = {
+      'metal': ['death', 'power', 'darkness', 'fire', 'war'],
+      'electronic': ['digital', 'cyber', 'quantum', 'neural', 'synthetic'],
+      'folk': ['earth', 'nature', 'home', 'heart', 'story'],
+      'jazz': ['rhythm', 'soul', 'groove', 'blue', 'night']
+    };
+    
+    let concepts = [...baseContexts];
+    if (mood && moodConcepts[mood]) concepts.push(...moodConcepts[mood]);
+    if (genre && genreConcepts[genre]) concepts.push(...genreConcepts[genre]);
+    
+    return concepts;
+  }
+
+  // Get enhancements based on context
+  private getEnhancementsForContext(mood?: string, genre?: string): string[] {
+    const baseEnhancements = ['ultra', 'mega', 'neo', 'meta'];
+    
+    const genreEnhancements: { [key: string]: string[] } = {
+      'metal': ['death', 'blood', 'dark', 'black'],
+      'electronic': ['cyber', 'tech', 'digital', 'quantum'],
+      'punk': ['anti', 'rebel', 'chaos', 'riot']
+    };
+    
+    let enhancements = [...baseEnhancements];
+    if (genre && genreEnhancements[genre]) {
+      enhancements.push(...genreEnhancements[genre]);
+    }
+    
+    return enhancements;
+  }
+
+  // Ultimate advanced name generation combining all techniques
+  private generateUltimateAdvancedName(type: string, wordCount: number, mood?: string, genre?: string): string {
+    // Analyze context deeply
+    const genreAnalysis = genre ? genreAnalyzer.analyzeGenre(genre) : null;
+    const emotionalTarget = mood ? this.getEmotionalTarget(mood) : null;
+    
+    // Choose sophisticated strategy based on word count
+    switch (wordCount) {
+      case 1:
+        return this.generateAdvancedSingleWord(type, mood, genre);
+      case 2:
+        return this.generateAdvancedTwoWords(type, mood, genre, genreAnalysis);
+      case 3:
+        return this.generateAdvancedThreeWords(type, mood, genre, genreAnalysis);
+      default:
+        return this.generateAdvancedLongForm(type, wordCount, mood, genre, genreAnalysis);
+    }
+  }
+
+  // Advanced single word generation
+  private generateAdvancedSingleWord(type: string, mood?: string, genre?: string): string {
+    const strategies = [
+      // Multilingual compound
+      () => this.generateMultilingualCompound(type, mood, genre),
+      
+      // Portmanteau with semantic meaning
+      () => {
+        const sources = this.getFilteredSources(mood, genre);
+        const emotionalWords = this.getEmotionalWords(mood);
+        const word1 = emotionalWords[Math.floor(Math.random() * emotionalWords.length)];
+        const word2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        
+        // Create meaningful blend
+        const syllables1 = advancedLinguistics.analyzeSyllablePattern(word1);
+        const syllables2 = advancedLinguistics.analyzeSyllablePattern(word2);
+        
+        const breakPoint1 = Math.ceil(word1.length * (syllables1.count > 2 ? 0.6 : 0.5));
+        const breakPoint2 = Math.floor(word2.length * (syllables2.count > 2 ? 0.4 : 0.5));
+        
+        return this.capitalizeFirst(word1.substring(0, breakPoint1) + word2.substring(breakPoint2).toLowerCase());
+      },
+      
+      // Neologism with proper morphology
+      () => {
+        const roots = ['chron', 'morph', 'path', 'phon', 'graph', 'scope', 'tron', 'flux'];
+        const prefixes = ['hyper', 'meta', 'para', 'trans', 'ultra', 'omni', 'poly', 'mono'];
+        const suffixes = ['osis', 'ation', 'ient', 'ance', 'ity', 'ous', 'ive', 'al'];
+        
+        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        const root = roots[Math.floor(Math.random() * roots.length)];
+        const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+        
+        return this.capitalizeFirst(prefix + root + suffix);
+      }
+    ];
+    
+    const strategy = strategies[Math.floor(Math.random() * strategies.length)];
+    return strategy();
+  }
+
+  // Advanced two word generation
+  private generateAdvancedTwoWords(type: string, mood?: string, genre?: string, genreAnalysis: any): string {
+    const sources = this.getFilteredSources(mood, genre);
+    
+    // Select words with maximum phonetic and semantic harmony
+    let bestPair = { word1: '', word2: '', score: 0 };
+    
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const wordType1 = Math.random() < 0.7 ? 'adjectives' : 'nouns';
+      const word1 = sources[wordType1][Math.floor(Math.random() * sources[wordType1].length)];
+      const word2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+      
+      // Calculate comprehensive score
+      const phoneticScore = advancedLinguistics.analyzePhoneticHarmony(word1, word2);
+      const emotionalMapping = advancedLinguistics.getEmotionalMapping(`${word1} ${word2}`);
+      const emotionalScore = mood ? this.calculateEmotionalAlignment(emotionalMapping, mood) : 0.5;
+      const genreScore = genreAnalysis ? 
+        genreAnalyzer.scoreGenreFit(`${word1} ${word2}`, genre).score / 100 : 0.5;
+      
+      const totalScore = phoneticScore * 0.4 + emotionalScore * 0.3 + genreScore * 0.3;
+      
+      if (totalScore > bestPair.score && word1 !== word2) {
+        bestPair = { word1, word2, score: totalScore };
+      }
+    }
+    
+    // Apply advanced formatting
+    if (type === 'band' && Math.random() < 0.4) {
+      return `The ${bestPair.word1} ${bestPair.word2}`;
+    }
+    
+    return this.applySmartCapitalization([bestPair.word1, bestPair.word2]);
+  }
+
+  // Advanced three word generation
+  private generateAdvancedThreeWords(type: string, mood?: string, genre?: string, genreAnalysis: any): string {
+    // Use genre-specific patterns if available
+    if (genreAnalysis && genreAnalysis.suggestedStructures.length > 0) {
+      const structure = genreAnalysis.suggestedStructures[0];
+      if (structure.split(' ').length === 3) {
+        const sources = this.getFilteredSources(mood, genre);
+        const words = this.buildFromGenreStructure(structure, sources, genreAnalysis.keyWords);
+        return this.applySmartCapitalization(this.ensureGrammaticalConsistency(words));
+      }
+    }
+    
+    // Create poetically structured name
+    const sources = this.getFilteredSources(mood, genre);
+    const patterns = [
+      // Alliterative pattern
+      () => {
+        const letter = 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)];
+        const adjectives = sources.adjectives.filter(w => w[0].toLowerCase() === letter);
+        const nouns = sources.nouns.filter(w => w[0].toLowerCase() === letter);
+        
+        if (adjectives.length > 0 && nouns.length > 1) {
+          const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+          const noun1 = nouns[Math.floor(Math.random() * nouns.length)];
+          let noun2 = nouns[Math.floor(Math.random() * nouns.length)];
+          while (noun2 === noun1) noun2 = nouns[Math.floor(Math.random() * nouns.length)];
+          
+          return this.applySmartCapitalization(['The', adj, noun1]);
+        }
+        return null;
+      },
+      
+      // Semantic progression
+      () => {
+        // Use mood-based semantic progression
+        const moodWords = mood ? this.getStaticMoodFilteredWords(mood) : sources;
+        const adj = moodWords.adjectives[Math.floor(Math.random() * moodWords.adjectives.length)];
+        const noun1 = moodWords.nouns[Math.floor(Math.random() * moodWords.nouns.length)];
+        const noun2 = moodWords.nouns[Math.floor(Math.random() * moodWords.nouns.length)];
+        
+        if (noun1 !== noun2) {
+          return this.applySmartCapitalization([adj, noun1, noun2]);
+        }
+        return null;
+      },
+      
+      // Cultural reference pattern
+      () => {
+        const culturalRefs = advancedLinguistics.getCulturalReferences(mood || 'epic');
+        if (culturalRefs.length > 0) {
+          const cultural = culturalRefs[Math.floor(Math.random() * culturalRefs.length)];
+          const adj = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+          
+          return this.applySmartCapitalization(['The', adj, this.capitalizeFirst(cultural)]);
+        }
+        return null;
+      }
+    ];
+    
+    // Try patterns until one works
+    for (const pattern of patterns) {
+      const result = pattern();
+      if (result) return result;
+    }
+    
+    // Fallback to standard generation
+    return this.generateSimpleName(type, 3, mood, genre);
+  }
+
+  // Advanced long form generation
+  private generateAdvancedLongForm(type: string, wordCount: number, mood?: string, genre?: string, genreAnalysis: any): string {
+    const sources = this.getFilteredSources(mood, genre);
+    const words: string[] = [];
+    
+    // Create narrative structure
+    const narrativeTemplates = [
+      // Epic journey: "Beyond the [adj] [noun] of [noun]"
+      () => {
+        const connector = ['Beyond', 'Through', 'Beneath', 'Above'][Math.floor(Math.random() * 4)];
+        const adj = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+        const noun1 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        const noun2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        
+        const baseWords = [connector, 'the', adj, noun1, 'of', noun2];
+        return this.adjustToWordCount(baseWords, wordCount, sources);
+      },
+      
+      // Mythological: "When [noun] [verb] the [adj] [noun]"
+      () => {
+        const noun1 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        const verb = this.conjugateVerb(sources.verbs[Math.floor(Math.random() * sources.verbs.length)], 'third');
+        const adj = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+        const noun2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        
+        const baseWords = ['When', noun1, verb, 'the', adj, noun2];
+        return this.adjustToWordCount(baseWords, wordCount, sources);
+      },
+      
+      // Poetic statement: "The [adj] [noun] [verb] [adverb] [prep] [noun]"
+      () => {
+        const adj = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
+        const noun1 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        const verb = sources.verbs[Math.floor(Math.random() * sources.verbs.length)];
+        const adverbs = ['slowly', 'gently', 'fiercely', 'silently', 'eternally'];
+        const adverb = adverbs[Math.floor(Math.random() * adverbs.length)];
+        const prepositions = ['through', 'across', 'beyond', 'within', 'beneath'];
+        const prep = prepositions[Math.floor(Math.random() * prepositions.length)];
+        const noun2 = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
+        
+        const baseWords = ['The', adj, noun1, verb, adverb, prep, noun2];
+        return this.adjustToWordCount(baseWords, wordCount, sources);
+      }
+    ];
+    
+    const template = narrativeTemplates[Math.floor(Math.random() * narrativeTemplates.length)];
+    const result = template();
+    
+    // Apply all enhancements
+    const enhanced = this.applyLinguisticEnhancements(result, genre || 'none');
+    const corrected = this.ensureGrammaticalConsistency(enhanced);
+    
+    return this.applySmartCapitalization(corrected);
+  }
+
+  // Adjust word array to target word count
+  private adjustToWordCount(words: string[], targetCount: number, sources: WordSource): string[] {
+    while (words.length < targetCount) {
+      // Add descriptive words
+      const position = Math.floor(Math.random() * (words.length - 1)) + 1;
+      const wordType = Math.random() < 0.7 ? 'adjectives' : 'nouns';
+      const newWord = sources[wordType][Math.floor(Math.random() * sources[wordType].length)];
+      words.splice(position, 0, newWord);
+    }
+    
+    while (words.length > targetCount) {
+      // Remove less important words (avoid removing structure words)
+      const removableIndices = words.map((w, i) => 
+        !['the', 'of', 'and', 'when', 'beyond', 'through'].includes(w.toLowerCase()) ? i : -1
+      ).filter(i => i !== -1);
+      
+      if (removableIndices.length > 0) {
+        const removeIndex = removableIndices[Math.floor(Math.random() * removableIndices.length)];
+        words.splice(removeIndex, 1);
+      } else {
+        break;
+      }
+    }
+    
+    return words;
+  }
+
+  // Get emotional target based on mood
+  private getEmotionalTarget(mood: string): any {
+    const targets: { [key: string]: any } = {
+      'dark': { valence: -0.7, arousal: 0.4, dominance: 0.6 },
+      'bright': { valence: 0.8, arousal: 0.6, dominance: 0.5 },
+      'mysterious': { valence: -0.2, arousal: 0.3, dominance: 0.4 },
+      'energetic': { valence: 0.4, arousal: 0.9, dominance: 0.7 },
+      'melancholy': { valence: -0.6, arousal: 0.2, dominance: 0.3 },
+      'ethereal': { valence: 0.3, arousal: 0.3, dominance: 0.3 },
+      'aggressive': { valence: -0.5, arousal: 0.9, dominance: 0.8 },
+      'peaceful': { valence: 0.7, arousal: 0.1, dominance: 0.4 }
+    };
+    
+    return targets[mood] || { valence: 0, arousal: 0.5, dominance: 0.5 };
+  }
+
+  // Calculate emotional alignment score
+  private calculateEmotionalAlignment(mapping: any, mood: string): number {
+    const target = this.getEmotionalTarget(mood);
+    
+    const valenceDiff = Math.abs(mapping.valence - target.valence);
+    const arousalDiff = Math.abs(mapping.arousal - target.arousal);
+    const dominanceDiff = Math.abs(mapping.dominance - target.dominance);
+    
+    // Convert to 0-1 score (1 = perfect alignment)
+    return 1 - (valenceDiff + arousalDiff + dominanceDiff) / 3;
+  }
+
+  // Get emotional words for mood
+  private getEmotionalWords(mood?: string): string[] {
+    if (!mood) return this.wordSources.adjectives;
+    
+    const moodWords = this.getStaticMoodFilteredWords(mood);
+    return [...moodWords.adjectives, ...moodWords.nouns.slice(0, 20)];
+  }
+
+  // Conjugate verb to specific form
+  private conjugateVerb(verb: string, person: 'first' | 'second' | 'third'): string {
+    if (person === 'third') {
+      if (verb.endsWith('s') || verb.endsWith('x') || verb.endsWith('z') || 
+          verb.endsWith('ch') || verb.endsWith('sh')) {
+        return verb + 'es';
+      } else if (verb.endsWith('y') && !/[aeiou]y$/.test(verb)) {
+        return verb.slice(0, -1) + 'ies';
+      } else {
+        return verb + 's';
+      }
+    }
+    return verb;
   }
 }

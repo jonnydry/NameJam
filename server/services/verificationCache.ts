@@ -1,58 +1,72 @@
-interface CacheEntry {
-  result: any;
-  timestamp: number;
-}
+// Simple in-memory LRU cache for verification results
+export class VerificationCache {
+  private cache: Map<string, { result: any; timestamp: number }> = new Map();
+  private maxSize = 1000;
+  private ttl = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-class VerificationCache {
-  private cache: Map<string, CacheEntry> = new Map();
-  private readonly maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-  private readonly maxSize = 1000; // Maximum number of entries
-
-  private getCacheKey(name: string, type: string): string {
+  // Normalize key for consistent caching
+  private normalizeKey(name: string, type: string): string {
     return `${type}:${name.toLowerCase().trim()}`;
   }
 
+  // Get cached result if it exists and is not expired
   get(name: string, type: string): any | null {
-    const key = this.getCacheKey(name, type);
-    const entry = this.cache.get(key);
+    const key = this.normalizeKey(name, type);
+    const cached = this.cache.get(key);
     
-    if (!entry) {
-      return null;
-    }
-
-    // Check if entry has expired
-    if (Date.now() - entry.timestamp > this.maxAge) {
+    if (!cached) return null;
+    
+    // Check if expired
+    if (Date.now() - cached.timestamp > this.ttl) {
       this.cache.delete(key);
       return null;
     }
-
-    return entry.result;
+    
+    // Move to end (most recently used)
+    this.cache.delete(key);
+    this.cache.set(key, cached);
+    
+    return cached.result;
   }
 
+  // Set a cache entry
   set(name: string, type: string, result: any): void {
-    const key = this.getCacheKey(name, type);
+    const key = this.normalizeKey(name, type);
     
-    // Remove oldest entries if cache is full
+    // Remove oldest entry if at max size
     if (this.cache.size >= this.maxSize) {
-      const oldestKey = Array.from(this.cache.entries())
-        .sort((a, b) => a[1].timestamp - b[1].timestamp)[0][0];
-      this.cache.delete(oldestKey);
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
     }
-
+    
     this.cache.set(key, {
       result,
       timestamp: Date.now()
     });
   }
 
-  clear(): void {
-    this.cache.clear();
+  // Clear expired entries
+  clearExpired(): void {
+    const now = Date.now();
+    for (const [key, value] of this.cache.entries()) {
+      if (now - value.timestamp > this.ttl) {
+        this.cache.delete(key);
+      }
+    }
   }
 
-  size(): number {
-    return this.cache.size;
+  // Get cache stats
+  getStats(): { size: number; maxSize: number } {
+    return {
+      size: this.cache.size,
+      maxSize: this.maxSize
+    };
   }
 }
 
-// Export singleton instance
 export const verificationCache = new VerificationCache();
+
+// Clear expired entries every hour
+setInterval(() => {
+  verificationCache.clearExpired();
+}, 60 * 60 * 1000);

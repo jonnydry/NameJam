@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { Music, Users, Search, Palette, RefreshCw, Copy, Lightbulb, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { createMutationErrorHandler } from "@/lib/api-error-handler";
+import { useKeyboardShortcuts, KeyboardHint } from "@/hooks/use-keyboard-shortcuts";
 
 interface GenerationResult {
   id: number;
@@ -293,14 +294,18 @@ export function NameGenerator() {
           <Button
             onClick={handleGenerate}
             disabled={generateMutation.isPending || isGenerating}
-            className="inline-flex items-center px-8 py-3 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+            className="inline-flex items-center px-8 py-3 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            aria-label="Generate band or song names"
           >
             <Lightbulb className="w-4 h-4 mr-2" />
             Generate Names
           </Button>
-          <p className="hidden sm:block text-xs text-muted-foreground mt-2">
-            Press <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border border-border">Space</kbd> or <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border border-border">G</kbd> to generate
-          </p>
+          <div className="mt-2 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            <KeyboardHint keys={['Space']} />
+            <span>or</span>
+            <KeyboardHint keys={['G']} />
+            <span>to generate</span>
+          </div>
         </div>
       </div>
 
@@ -384,8 +389,8 @@ export function NameGenerator() {
 
       {/* Generated Results */}
       {results.length > 0 && !generateMutation.isPending && (
-        <div className="space-y-4">
-          <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+        <div className="space-y-4" aria-live="polite" aria-atomic="true">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {results.map((result, index) => (
               <div
                 key={result.id}
