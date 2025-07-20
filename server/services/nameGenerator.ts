@@ -4135,6 +4135,22 @@ export class NameGeneratorService {
             selectedWord = sources.musicalTerms[Math.floor(Math.random() * sources.musicalTerms.length)];
             break;
             
+          case 'single word':
+            // For single word band names, pick a strong noun or create a compound
+            const singleWordOptions = [
+              ...sources.nouns.filter(n => n.length > 4), // Prefer longer nouns
+              ...sources.adjectives.map(adj => adj + 'core'), // Create compounds
+              ...sources.verbs.filter(v => v.endsWith('er') || v.endsWith('or')) // Agent nouns
+            ];
+            selectedWord = singleWordOptions[Math.floor(Math.random() * singleWordOptions.length)];
+            break;
+            
+          case 'person name':
+            // Generate a surname-like word
+            const surnames = ['Stone', 'Storm', 'Fire', 'Sky', 'Moon', 'Star', 'Wolf', 'Fox'];
+            selectedWord = surnames[Math.floor(Math.random() * surnames.length)];
+            break;
+            
           default:
             // For specific types like 'tech word', 'abstract concept', etc.
             selectedWord = this.getSpecializedWord(wordType, sources);
