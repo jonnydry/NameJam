@@ -15,7 +15,12 @@ import { z } from "zod";
 import { verificationCache } from "./services/verificationCache";
 import { validationRules, handleValidationErrors } from "./security";
 
+import { cacheHeaders } from "./middleware/cacheHeaders";
+
 export async function registerRoutes(app: Express, rateLimiters?: any): Promise<Server> {
+  // Add caching headers middleware
+  app.use(cacheHeaders);
+  
   // Auth middleware
   await setupAuth(app);
 
