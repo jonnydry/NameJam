@@ -60,34 +60,27 @@ export function Landing() {
           {/* Call to Action */}
           <div className="text-center">
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="font-semibold px-8 py-4 text-lg"
-                onClick={() => window.location.href = "/"}
-              >
-                Try Free Version
-              </Button>
+              <Link href="/app">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="font-semibold px-8 py-4 text-lg w-full sm:w-auto"
+                >
+                  Proceed as Guest
+                </Button>
+              </Link>
               <Button 
                 size="lg" 
                 className="font-semibold px-8 py-4 text-lg"
                 onClick={() => window.location.href = "/api/login"}
               >
-                <LogIn className="mr-2 h-5 w-5" />
-                Sign In for Full Features
+                <LogIn className="w-5 h-5 mr-2" />
+                Sign In
               </Button>
             </div>
-            <div className="text-sm text-muted-foreground space-y-2">
-              <p className="font-medium">Choose your preferred sign-in method:</p>
-              <div className="flex flex-wrap justify-center items-center gap-2 text-xs">
-                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">Google</span>
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 rounded">GitHub</span>
-                <span className="px-2 py-1 bg-black dark:bg-white/10 text-white dark:text-white rounded">X (Twitter)</span>
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 rounded">Apple</span>
-                <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Email</span>
-              </div>
-              <p className="text-xs">All sign-in options are handled securely by Replit</p>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Sign in to save your favorites, access AI features, and create personalized stashes
+            </p>
           </div>
         </div>
       </main>

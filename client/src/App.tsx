@@ -13,7 +13,7 @@ import { Landing } from "@/components/landing";
 import { ErrorBoundary } from "@/components/error-boundary";
 
 function Router() {
-  const { isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
@@ -21,8 +21,8 @@ function Router() {
         <Route path="/" component={() => <div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>} />
       ) : (
         <>
-          <Route path="/" component={Home} />
-          <Route path="/welcome" component={Landing} />
+          <Route path="/" component={isAuthenticated ? Home : Landing} />
+          <Route path="/app" component={Home} />
           <Route path="/about" component={About} />
         </>
       )}

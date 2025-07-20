@@ -248,6 +248,8 @@ Changelog:
 - July 20, 2025. Fixed result card display layout: changed from responsive grid (2-4 columns) back to vertical single-column layout per user preference, results now display in a centered column with max-width of 672px for better readability across all screen sizes
 - July 20, 2025. Improved setlist generator visual design: toned down glaring colors by changing bright gradient backgrounds to subtle neutral gradients, updated status badges from solid bright colors to transparent backgrounds with colored borders, made the visual design consistent with the app's dark theme aesthetic, confirmed setlist songs are using full Spotify verification
 - July 20, 2025. Fixed "[single Word]" bug in setlist generator: added proper handling for single word band name patterns in genre-based generation, preventing placeholder text from appearing in generated names
+- July 20, 2025. Enhanced gradient button styling: added purple border theme for SET_JAM tab to match card gradient, updated Generate Set List button to use blue-purple gradient, created new blue-green gradient for Generate Lyric Spark button matching Lyric_Jam theme
+- July 20, 2025. Restored landing page for unauthenticated users: updated router to show landing page at root for logged-out users, added "Proceed as Guest" button linking to /app route, maintained mixed authentication approach allowing basic features without login
 
 ## User Preferences
 
