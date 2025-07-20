@@ -160,7 +160,7 @@ export function LyricJam() {
           <Button
             onClick={generateLyric}
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+            className="w-full btn-gradient-blue-green text-white"
             ref={generateButtonRef}
           >
             {isLoading ? (
