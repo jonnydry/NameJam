@@ -180,13 +180,13 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available':
-        return 'bg-green-500 text-white';
+        return 'bg-green-500/20 text-green-400 border border-green-500/30';
       case 'similar':
-        return 'bg-yellow-500 text-white';
+        return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
       case 'taken':
-        return 'bg-red-500 text-white';
+        return 'bg-red-500/20 text-red-400 border border-red-500/30';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
     }
   };
 
@@ -204,7 +204,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   };
 
   const SongCard = ({ song, setName }: { song: SetListSong; setName: string }) => (
-    <Card key={song.id} className="bg-muted/30 border-muted/50 hover:bg-muted/40 transition-colors">
+    <Card key={song.id} className="bg-neutral-900/30 border-neutral-800 hover:bg-neutral-900/50 transition-colors">
       <CardContent className="p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex-1">
@@ -332,7 +332,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
           <Button
             onClick={handleGenerateSetList}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+            className="w-full btn-gradient"
           >
             {loading ? (
               <>
@@ -363,7 +363,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
 
       {setList && !loading && (
         <div className="space-y-6">
-          <Card className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-500/20">
+          <Card className="bg-gradient-to-r from-neutral-800 to-neutral-700 border-neutral-600">
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div>
@@ -410,7 +410,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
           </Card>
 
           {/* Set One */}
-          <Card className="bg-muted/50 border-muted">
+          <Card className="bg-neutral-900/50 border-neutral-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Music className="w-5 h-5" />
@@ -426,7 +426,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
           </Card>
 
           {/* Set Two */}
-          <Card className="bg-muted/50 border-muted">
+          <Card className="bg-neutral-900/50 border-neutral-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Music className="w-5 h-5" />
@@ -442,12 +442,12 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
           </Card>
 
           {/* Encore */}
-          <Card className="bg-gradient-to-r from-yellow-500/10 to-red-500/10 border-yellow-500/20">
+          <Card className="bg-gradient-to-r from-neutral-800 to-neutral-700 border-neutral-600">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Music className="w-5 h-5" />
                 Encore
-                <Badge variant="secondary" className="bg-yellow-500 text-black">
+                <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
                   Grand Encore
                 </Badge>
               </CardTitle>
