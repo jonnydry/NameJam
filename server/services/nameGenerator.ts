@@ -2152,6 +2152,8 @@ export class NameGeneratorService {
       'deer': 'deer',
       'sheep': 'sheep',
       'fish': 'fish',
+      'these': 'this',
+      'those': 'that',
       'penguins': 'penguin',
       'dolphins': 'dolphin',
       'elephants': 'elephant',
@@ -3989,6 +3991,11 @@ export class NameGeneratorService {
     // Build name based on structure
     const words = this.buildFromGenreStructure(selectedStructure, sources, genreAnalysis.keyWords);
     
+    // If we got a literal structure back (like "[single Word]"), fall back to simple generation
+    if (words.length === 1 && words[0].includes('[') && words[0].includes(']')) {
+      return this.generateSimpleName(type, wordCount, mood, genre);
+    }
+    
     // Apply linguistic enhancements
     const enhancedWords = this.applyLinguisticEnhancements(words, genre);
     
@@ -4084,14 +4091,15 @@ export class NameGeneratorService {
   // Build name from genre-specific structure
   private buildFromGenreStructure(structure: string, sources: WordSource, keyWords: string[]): string[] {
     const words: string[] = [];
-    const parts = structure.split(' ');
+    // Handle structures with brackets properly
+    const parts = this.parseStructureParts(structure);
     
     for (const part of parts) {
       if (part === 'The') {
         words.push('The');
       } else if (part.includes('[') && part.includes(']')) {
         // Extract the word type
-        const wordType = part.replace('[', '').replace(']', '').toLowerCase();
+        const wordType = part.replace(/\[|\]/g, '').toLowerCase();
         
         // Map structure types to word sources
         let selectedWord = '';
@@ -4142,7 +4150,12 @@ export class NameGeneratorService {
               ...sources.adjectives.map(adj => adj + 'core'), // Create compounds
               ...sources.verbs.filter(v => v.endsWith('er') || v.endsWith('or')) // Agent nouns
             ];
-            selectedWord = singleWordOptions[Math.floor(Math.random() * singleWordOptions.length)];
+            if (singleWordOptions.length > 0) {
+              selectedWord = singleWordOptions[Math.floor(Math.random() * singleWordOptions.length)];
+            } else {
+              // Fallback to any noun if no options
+              selectedWord = sources.nouns[Math.floor(Math.random() * sources.nouns.length)] || 'Echo';
+            }
             break;
             
           case 'person name':
@@ -4154,9 +4167,19 @@ export class NameGeneratorService {
           default:
             // For specific types like 'tech word', 'abstract concept', etc.
             selectedWord = this.getSpecializedWord(wordType, sources);
+            // Ensure we got a valid word
+            if (!selectedWord || selectedWord.includes('[') || selectedWord.includes(']')) {
+              selectedWord = sources.nouns[Math.floor(Math.random() * sources.nouns.length)] || 'Echo';
+            }
         }
         
-        words.push(selectedWord);
+        // Final validation before pushing
+        if (selectedWord && !selectedWord.includes('[') && !selectedWord.includes(']')) {
+          words.push(selectedWord);
+        } else {
+          // Emergency fallback
+          words.push(sources.nouns[Math.floor(Math.random() * sources.nouns.length)] || 'Echo');
+        }
       } else {
         // Literal word (like "and", "of", etc.)
         words.push(part);
@@ -4164,6 +4187,40 @@ export class NameGeneratorService {
     }
     
     return words;
+  }
+
+  // Parse structure parts, handling bracketed phrases as single units
+  private parseStructureParts(structure: string): string[] {
+    const parts: string[] = [];
+    let current = '';
+    let inBrackets = false;
+    
+    for (let i = 0; i < structure.length; i++) {
+      const char = structure[i];
+      
+      if (char === '[') {
+        inBrackets = true;
+        current += char;
+      } else if (char === ']') {
+        inBrackets = false;
+        current += char;
+        parts.push(current);
+        current = '';
+      } else if (char === ' ' && !inBrackets) {
+        if (current) {
+          parts.push(current);
+          current = '';
+        }
+      } else {
+        current += char;
+      }
+    }
+    
+    if (current) {
+      parts.push(current);
+    }
+    
+    return parts;
   }
 
   // Apply linguistic enhancements to words

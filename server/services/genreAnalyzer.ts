@@ -21,7 +21,7 @@ export class GenreAnalyzer {
         'The [Adjective] [Plural Noun]', // The Rolling Stones, The Black Keys
         'The [Noun]', // The Doors, The Who
         '[Adjective] [Noun]', // Led Zeppelin, Deep Purple
-        '[Single Word]', // Queen, Rush, Kiss
+        '[single word]', // Queen, Rush, Kiss
         '[Person Name]', // Santana, Van Halen
       ],
       wordFrequency: new Map([
@@ -223,7 +223,7 @@ export class GenreAnalyzer {
     const pattern = this.genrePatterns.get(genre);
     if (!pattern) {
       return {
-        suggestedStructures: ['[Adjective] [Noun]', 'The [Noun]', '[Single Word]'],
+        suggestedStructures: ['[Adjective] [Noun]', 'The [Noun]', '[single word]'],
         keyWords: ['music', 'sound', 'rhythm'],
         avoidWords: [],
         tips: ['Keep it simple and memorable']
