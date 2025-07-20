@@ -247,6 +247,7 @@ Changelog:
 - July 20, 2025. Implemented CDN optimization through client-side caching: added Service Worker for offline-first caching of static assets with cache-first strategy for JS/CSS/fonts and network-first for HTML, created PWA manifest for installable web app support, implemented cache headers middleware for proper HTTP caching directives, added performance optimization utilities for resource prefetching and font preloading, achieved effective edge caching at the browser level without requiring external CDN infrastructure
 - July 20, 2025. Fixed result card display layout: changed from responsive grid (2-4 columns) back to vertical single-column layout per user preference, results now display in a centered column with max-width of 672px for better readability across all screen sizes
 - July 20, 2025. Improved setlist generator visual design: toned down glaring colors by changing bright gradient backgrounds to subtle neutral gradients, updated status badges from solid bright colors to transparent backgrounds with colored borders, made the visual design consistent with the app's dark theme aesthetic, confirmed setlist songs are using full Spotify verification
+- July 20, 2025. Fixed "[single Word]" bug in setlist generator: added proper handling for single word band name patterns in genre-based generation, preventing placeholder text from appearing in generated names
 
 ## User Preferences
 
