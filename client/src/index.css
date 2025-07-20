@@ -634,7 +634,7 @@
 }
 
 .btn-gradient {
-  background: linear-gradient(-45deg, hsl(195, 100%, 50%), hsl(210, 100%, 60%), hsl(185, 100%, 45%), hsl(200, 100%, 55%));
+  background: linear-gradient(-45deg, hsl(210, 100%, 60%), hsl(270, 100%, 60%), hsl(200, 100%, 55%), hsl(260, 100%, 65%));
   background-size: 400% 400%;
   transition: all 0.3s ease;
 }
@@ -642,7 +642,7 @@
 .btn-gradient:hover {
   animation: gradientShift 2s ease infinite;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 184, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
 }
 
 /* Fermata symbol styles */
@@ -859,6 +859,21 @@ button[data-state] {
     opacity: 1;
     transform: translateX(-50%) scaleX(1);
   }
+}
+
+/* Set_Jam tab purple theme */
+[role="tablist"] button:nth-child(2).tabs-trigger-enhanced[data-state="active"] {
+  border-color: rgb(147 51 234);
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3), inset 0 0 15px rgba(147, 51, 234, 0.1);
+}
+
+[role="tablist"] button:nth-child(2).tabs-trigger-enhanced[data-state="active"]::before {
+  background: linear-gradient(135deg, transparent, rgb(147 51 234), transparent);
+}
+
+[role="tablist"] button:nth-child(2).tabs-trigger-enhanced[data-state="active"]::after {
+  background: rgb(147 51 234);
+  box-shadow: 0 0 10px rgb(147 51 234);
 }
 
 /* Lyric_Jam tab green theme */
