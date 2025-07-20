@@ -49,9 +49,18 @@ export function addResourceHints() {
 // Initialize all performance optimizations
 export function initializePerformanceOptimizations() {
   // Run optimizations after initial render
-  requestIdleCallback(() => {
-    prefetchCriticalData();
-    preloadFonts();
-    addResourceHints();
-  }, { timeout: 2000 });
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      prefetchCriticalData();
+      preloadFonts();
+      addResourceHints();
+    }, { timeout: 2000 });
+  } else {
+    // Fallback for browsers that don't support requestIdleCallback
+    setTimeout(() => {
+      prefetchCriticalData();
+      preloadFonts();
+      addResourceHints();
+    }, 100);
+  }
 }

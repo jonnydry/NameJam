@@ -1,6 +1,7 @@
 // Service Worker Registration
 export function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
+  // Only register service worker in production
+  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
     window.addEventListener('load', async () => {
       try {
         const registration = await navigator.serviceWorker.register('/service-worker.js');
