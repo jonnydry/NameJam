@@ -21,22 +21,22 @@ export function UserMenu() {
     );
   }
 
-  const displayName = user.firstName && user.lastName 
+  const displayName = user?.firstName && user?.lastName 
     ? `${user.firstName} ${user.lastName}`
-    : user.firstName || user.email || "User";
+    : user?.firstName || user?.email || "User";
 
-  const initials = user.firstName && user.lastName
+  const initials = user?.firstName && user?.lastName
     ? `${user.firstName[0]}${user.lastName[0]}`
-    : user.firstName
+    : user?.firstName
     ? user.firstName[0]
-    : user.email?.[0] || "U";
+    : user?.email?.[0] || "U";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.profileImageUrl || undefined} alt={displayName} />
+            <AvatarImage src={user?.profileImageUrl || undefined} alt={displayName} />
             <AvatarFallback>{initials.toUpperCase()}</AvatarFallback>
           </Avatar>
         </Button>
