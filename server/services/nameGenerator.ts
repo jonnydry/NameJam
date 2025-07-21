@@ -584,12 +584,8 @@ export class NameGeneratorService {
       return this.generateMultilingualCompound(type, mood, genre);
     }
     
-    // Default generation paths
-    if (wordCount <= 3) {
-      return this.generateSimpleName(type, wordCount, mood, genre);
-    } else {
-      return this.generateLongForm(type, wordCount, mood, genre);
-    }
+    // Default generation paths - use simple patterns for all word counts
+    return this.generateSimpleName(type, wordCount, mood, genre);
   }
 
   private generateSimpleName(type: string, wordCount: number, mood?: string, genre?: string): string {
@@ -621,6 +617,9 @@ export class NameGeneratorService {
       return this.buildHumorousThreeWordPattern(sources, type);
     }
     
+    // For 4+ words, use the new musical patterns instead of complex longform
+    if (wordCount >= 4) {
+    
     // Use coherent patterns for 4+ words to avoid disconnected results
     const words: string[] = [];
     const usedWords = new Set<string>();
@@ -646,34 +645,59 @@ export class NameGeneratorService {
       return word;
     };
     
-    // Use structured patterns for better coherence
-    const coherentPatterns = [
-      // The [adj] [noun] [noun] pattern
+    // Use proven musical name patterns for coherence
+    const musicalPatterns = [
+      // Classic "The [adj] [noun]" + extension
       () => {
         if (wordCount === 4) {
-          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.nouns)];
+          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.musicalTerms)];
         } else if (wordCount === 5) {
-          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.musicalTerms)];
+          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'and', getUniqueWord(sources.nouns)];
         } else { // 6 words
-          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'the', getUniqueWord(sources.nouns)];
+          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'my', 'dreams'];
         }
       },
-      // [adj] [noun] [connector] [adj/noun] pattern
+      // Simple adjective noun combinations
       () => {
-        const connectors = ['and', 'of', 'with', 'through'];
         if (wordCount === 4) {
-          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'and', getUniqueWord(sources.adjectives)];
+          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
         } else if (wordCount === 5) {
-          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'the', getUniqueWord(sources.nouns)];
+          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'and', getUniqueWord(sources.nouns)];
         } else { // 6 words
-          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
+          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), 'night'];
+        }
+      },
+      // Musical focused patterns
+      () => {
+        if (wordCount === 4) {
+          return [getUniqueWord(sources.nouns), 'of', getUniqueWord(sources.adjectives), getUniqueWord(sources.musicalTerms)];
+        } else if (wordCount === 5) {
+          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.musicalTerms), 'and', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
+        } else { // 6 words
+          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'under', 'the', getUniqueWord(sources.adjectives), 'sky'];
         }
       }
     ];
     
-    // Select and execute a coherent pattern
-    const patternIndex = Math.floor(Math.random() * coherentPatterns.length);
-    words.push(...coherentPatterns[patternIndex]());
+    // Select and execute a musical pattern
+    const patternIndex = Math.floor(Math.random() * musicalPatterns.length);
+    words.push(...musicalPatterns[patternIndex]());
+    
+    // Apply grammatical corrections and return
+    const correctedWords = this.ensureGrammaticalConsistency(words);
+    return this.applySmartCapitalization(correctedWords);
+    }
+    
+    // Fallback for shorter names - simple pattern
+    for (let i = 0; i < wordCount; i++) {
+      if (i === 0) {
+        words.push(getUniqueWord(sources.adjectives));
+      } else if (i === wordCount - 1) {
+        words.push(getUniqueWord(sources.nouns));
+      } else {
+        words.push(getUniqueWord(sources.nouns));
+      }
+    }
     
     // Apply grammatical corrections
     const correctedWords = this.ensureGrammaticalConsistency(words);
