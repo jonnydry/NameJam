@@ -11,6 +11,7 @@ import { useClipboard } from "@/hooks/use-clipboard";
 import { Music, Users, Search, Palette, RefreshCw, Copy, Lightbulb, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { createMutationErrorHandler } from "@/lib/api-error-handler";
 import { useKeyboardShortcuts, KeyboardHint } from "@/hooks/use-keyboard-shortcuts";
+import { useDebouncedCallback } from "@/hooks/use-debounce";
 
 interface GenerationResult {
   id: number;
@@ -66,7 +67,7 @@ export function NameGenerator() {
       
       toast({
         title: "Names generated successfully!",
-        description: `Generated ${data.results.length} unique ${nameType} names.`,
+        description: `Generated ${data.results.length} unique ${nameType} names${data.cached ? ' (cached)' : ''}.`,
       });
     },
     onError: createMutationErrorHandler("Generation failed", "Failed to generate names. Please try again."),
@@ -109,44 +110,23 @@ export function NameGenerator() {
     onError: createMutationErrorHandler("Verification failed", "Failed to verify name. Please try again."),
   });
 
-  const handleGenerate = useCallback(() => {
-    // Clear any existing timeout
-    if (generateTimeoutRef.current) {
-      clearTimeout(generateTimeoutRef.current);
-    }
-
-    // Set generating state immediately for UI feedback
+  // Optimized generate function with better debouncing
+  const handleGenerate = useDebouncedCallback(() => {
     setIsGenerating(true);
+    generateMutation.mutate();
+  }, 300);
 
-    // Debounce the actual generation
-    generateTimeoutRef.current = setTimeout(() => {
-      generateMutation.mutate();
-      setIsGenerating(false);
-    }, 350); // 350ms debounce as suggested
-  }, [generateMutation]);
-
-  const handleGenerateMore = useCallback(() => {
-    // Clear any existing timeout
-    if (generateTimeoutRef.current) {
-      clearTimeout(generateTimeoutRef.current);
-    }
-
-    // Set generating state immediately for UI feedback
+  const handleGenerateMore = useDebouncedCallback(() => {
     setIsGenerating(true);
-
-    // Debounce the actual generation
-    generateTimeoutRef.current = setTimeout(() => {
-      generateMutation.mutate();
-      setIsGenerating(false);
-      // Scroll to loading area
-      setTimeout(() => {
-        loadingRef.current?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        });
-      }, 100);
-    }, 350); // 350ms debounce
-  }, [generateMutation]);
+    generateMutation.mutate();
+    // Scroll to loading area
+    setTimeout(() => {
+      loadingRef.current?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }, 100);
+  }, 300);
 
   const handleSearch = () => {
     searchMutation.mutate();
