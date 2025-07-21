@@ -84,23 +84,16 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Get all domains from environment and add localhost for development
+  // Use only the configured Replit domains - don't add localhost for development
   const domains = process.env.REPLIT_DOMAINS!.split(",");
-  if (process.env.NODE_ENV === 'development') {
-    domains.push('localhost');
-  }
   
   for (const domain of domains) {
-    const isLocalhost = domain === 'localhost';
-    const protocol = isLocalhost ? 'http' : 'https';
-    const port = isLocalhost ? ':5000' : '';
-    
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
         config,
         scope: "openid email profile offline_access",
-        callbackURL: `${protocol}://${domain}${port}/api/callback`,
+        callbackURL: `https://${domain}/api/callback`,
       },
       verify,
     );
@@ -111,6 +104,15 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
+    // For development (localhost), redirect to the production domain for authentication
+    const domains = process.env.REPLIT_DOMAINS!.split(",");
+    const productionDomain = domains[0]; // Use first domain as primary
+    
+    if (req.hostname === 'localhost' && process.env.NODE_ENV === 'development') {
+      // Redirect to production domain for OAuth
+      return res.redirect(`https://${productionDomain}/api/login`);
+    }
+    
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
@@ -119,7 +121,7 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
+      successReturnToOrRedirect: "/app",
       failureRedirect: "/api/login",
     })(req, res, next);
   });
