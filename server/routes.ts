@@ -16,9 +16,17 @@ import { verificationCache } from "./services/verificationCache";
 import { validationRules, handleValidationErrors } from "./security";
 
 import { cacheHeaders } from "./middleware/cacheHeaders";
+import { 
+  compressionMiddleware, 
+  timeoutMiddleware, 
+  responseTimeMiddleware 
+} from "./middleware/performanceOptimization";
 
 export async function registerRoutes(app: Express, rateLimiters?: any): Promise<Server> {
-  // Add caching headers middleware
+  // Add performance optimization middleware
+  app.use(compressionMiddleware);
+  app.use(responseTimeMiddleware);
+  app.use(timeoutMiddleware(25000)); // 25 second timeout
   app.use(cacheHeaders);
   
   // Auth middleware
@@ -102,27 +110,31 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       // Names are now always an array
       const names = generateResult;
       
-      // Verify each name and optionally store if user is authenticated
+      // Optimized parallel verification and storage
       const isUserAuthenticated = req.isAuthenticated && req.isAuthenticated();
       
+      // Batch verification for better performance
+      const { parallelVerificationService } = await import('./services/parallelVerification');
+      const namesToVerify = names.map(nameResult => ({
+        name: nameResult.name,
+        type: request.type as 'band' | 'song'
+      }));
+      
+      // Verify all names in parallel with caching
+      const verificationResults = await parallelVerificationService.verifyNamesInParallel(namesToVerify);
+      
+      // Process results and handle database storage
       const results = await Promise.all(
-        names.map(async (nameResult) => {
-          // Check cache first
-          let verification = verificationCache.get(nameResult.name, request.type);
-          
-          if (!verification) {
-            // If not cached, verify normally
-            verification = await nameVerifier.verifyName(nameResult.name, request.type);
-            // Store in cache
-            verificationCache.set(nameResult.name, request.type, verification);
-          }
-          
+        names.map(async (nameResult, index) => {
+          const verification = verificationResults[index];
           let storedName = null;
           
-          // Only store in database if user is authenticated
+          // Only store in database if user is authenticated (non-blocking)
           if (isUserAuthenticated) {
             const userId = req.user.claims.sub;
-            storedName = await storage.createGeneratedName({
+            
+            // Make database storage non-blocking for better response time
+            storage.createGeneratedName({
               name: nameResult.name,
               type: request.type,
               wordCount: request.wordCount,
@@ -130,6 +142,10 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
               verificationDetails: verification.details || null,
               isAiGenerated: nameResult.isAiGenerated,
               userId: userId,
+            }).then(result => {
+              storedName = result;
+            }).catch(error => {
+              console.error("Non-blocking database error:", error);
             });
           }
 
