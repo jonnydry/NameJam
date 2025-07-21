@@ -103,7 +103,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
         : 'border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20'
     }`}>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3">
         <StatusBadge status={verification.status} />
         <div className="flex items-center justify-end space-x-2">
           <Button
@@ -146,8 +146,8 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       </div>
       
       <div className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-2 min-w-0">
-          <h3 className={`text-responsive-xl sm:text-responsive-2xl font-semibold text-foreground break-all ${
+        <div className="flex items-center justify-center gap-2 mb-1 min-w-0">
+          <h3 className={`text-responsive-lg sm:text-responsive-xl font-semibold text-foreground break-words leading-tight ${
             verification.status === 'taken' ? 'line-through' : ''
           }`}>
             {name}
@@ -156,9 +156,9 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 shrink-0" title="AI Generated" />
           )}
         </div>
-        <p className={`text-responsive-sm ${
+        <p className={`text-xs sm:text-sm ${
           isEasterEgg 
-            ? 'text-pink-600 dark:text-pink-300 font-medium text-responsive-base' 
+            ? 'text-pink-600 dark:text-pink-300 font-medium' 
             : 'text-muted-foreground'
         }`}>
           {verification.details || `No existing ${nameType} found with this name`}

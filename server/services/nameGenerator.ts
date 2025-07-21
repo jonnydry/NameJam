@@ -621,48 +621,59 @@ export class NameGeneratorService {
       return this.buildHumorousThreeWordPattern(sources, type);
     }
     
-    // Generate names with enhanced randomization to prevent repetition
+    // Use coherent patterns for 4+ words to avoid disconnected results
     const words: string[] = [];
     const usedWords = new Set<string>();
-    const usedRoots = new Set<string>(); // Track root words to prevent similar words
+    const usedRoots = new Set<string>();
     
-    for (let i = 0; i < wordCount; i++) {
-      let selectedWord: string;
+    // Helper function to get unique word
+    const getUniqueWord = (wordArray: string[]): string => {
       let attempts = 0;
-      const maxAttempts = 50; // Increased for better duplicate prevention
-      
+      let word: string;
       do {
-        if (i === 0) {
-          selectedWord = sources.adjectives[Math.floor(Math.random() * sources.adjectives.length)];
-        } else if (i === wordCount - 1) {
-          selectedWord = sources.nouns[Math.floor(Math.random() * sources.nouns.length)];
-        } else {
-          // Mix all word types for middle positions for variety
-          const allMiddleWords = [
-            ...sources.adjectives,
-            ...sources.nouns,
-            ...sources.verbs,
-            ...sources.musicalTerms
-          ];
-          selectedWord = allMiddleWords[Math.floor(Math.random() * allMiddleWords.length)];
+        word = wordArray[Math.floor(Math.random() * wordArray.length)];
+        const root = word.toLowerCase().substring(0, Math.max(4, word.length - 3));
+        
+        if (!usedWords.has(word.toLowerCase()) && !usedRoots.has(root)) {
+          usedWords.add(word.toLowerCase());
+          usedRoots.add(root);
+          return word;
         }
         attempts++;
-        
-        // Extract root word (first 4+ characters) to prevent similar words
-        const root = selectedWord.toLowerCase().substring(0, Math.max(4, selectedWord.length - 3));
-        
-        // Check both exact word and root to prevent duplicates like "Silent" and "Silently"
-        if (usedWords.has(selectedWord.toLowerCase()) || usedRoots.has(root)) {
-          continue;
-        } else {
-          break;
-        }
-      } while (attempts < maxAttempts);
+      } while (attempts < 20);
       
-      words.push(selectedWord);
-      usedWords.add(selectedWord.toLowerCase());
-      usedRoots.add(selectedWord.toLowerCase().substring(0, Math.max(4, selectedWord.length - 3)));
-    }
+      usedWords.add(word.toLowerCase());
+      return word;
+    };
+    
+    // Use structured patterns for better coherence
+    const coherentPatterns = [
+      // The [adj] [noun] [noun] pattern
+      () => {
+        if (wordCount === 4) {
+          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.nouns)];
+        } else if (wordCount === 5) {
+          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.musicalTerms)];
+        } else { // 6 words
+          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'the', getUniqueWord(sources.nouns)];
+        }
+      },
+      // [adj] [noun] [connector] [adj/noun] pattern
+      () => {
+        const connectors = ['and', 'of', 'with', 'through'];
+        if (wordCount === 4) {
+          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'and', getUniqueWord(sources.adjectives)];
+        } else if (wordCount === 5) {
+          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'the', getUniqueWord(sources.nouns)];
+        } else { // 6 words
+          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
+        }
+      }
+    ];
+    
+    // Select and execute a coherent pattern
+    const patternIndex = Math.floor(Math.random() * coherentPatterns.length);
+    words.push(...coherentPatterns[patternIndex]());
     
     // Apply grammatical corrections
     const correctedWords = this.ensureGrammaticalConsistency(words);
