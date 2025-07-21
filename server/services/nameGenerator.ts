@@ -559,32 +559,7 @@ export class NameGeneratorService {
   }
 
   private async generateSingleName(type: string, wordCount: number, mood?: string, genre?: string): Promise<string> {
-    // Use ultimate advanced generation for maximum uniqueness (15% chance)
-    if (Math.random() < 0.15) {
-      return this.generateUltimateAdvancedName(type, wordCount, mood, genre);
-    }
-    
-    // Use advanced generation for genre-specific requests
-    if (genre && genre !== 'none' && Math.random() < 0.5) {
-      return this.generateAdvancedGenreName(type, wordCount, genre, mood);
-    }
-    
-    // Use phonetic harmony for certain word counts
-    if (wordCount === 2 && Math.random() < 0.3) {
-      return this.generatePhoneticHarmonyName(type, mood, genre);
-    }
-    
-    // Use cultural references occasionally
-    if (Math.random() < 0.2) {
-      return this.generateCulturallyInformedName(type, wordCount, mood, genre);
-    }
-    
-    // Use multilingual compound generation
-    if (wordCount === 1 && Math.random() < 0.3) {
-      return this.generateMultilingualCompound(type, mood, genre);
-    }
-    
-    // Default generation paths - use simple patterns for all word counts
+    // Use only the clean, coherent generation patterns to avoid grammatical errors
     return this.generateSimpleName(type, wordCount, mood, genre);
   }
 
@@ -670,7 +645,7 @@ export class NameGeneratorService {
       // Musical focused patterns
       () => {
         if (wordCount === 4) {
-          return [getUniqueWord(sources.nouns), 'of', getUniqueWord(sources.adjectives), getUniqueWord(sources.musicalTerms)];
+          return [getUniqueWord(sources.nouns), 'of', 'the', getUniqueWord(sources.adjectives)];
         } else if (wordCount === 5) {
           return [getUniqueWord(sources.adjectives), getUniqueWord(sources.musicalTerms), 'and', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
         } else { // 6 words
@@ -1595,7 +1570,9 @@ export class NameGeneratorService {
       'heaven', 'hell', 'chaos', 'order', 'fate', 'destiny', 'magic', 'mystery',
       'steel', 'iron', 'gold', 'silver', 'blood', 'thunder', 'lightning', 'wind',
       'stone', 'rock', 'ice', 'snow', 'rain', 'sun', 'moon', 'night', 'day',
-      'sound', 'silence', 'fury', 'rage', 'madness', 'joy', 'sorrow', 'pain'
+      'sound', 'silence', 'fury', 'rage', 'madness', 'joy', 'sorrow', 'pain',
+      'marrakech', 'tokyo', 'paris', 'london', 'berlin', 'cairo', 'mumbai', 'sydney',
+      'istanbul', 'moscow', 'seoul', 'dubai', 'bangkok', 'singapore', 'athens', 'rome'
     ];
     
     // Abstract concepts, mass nouns, and proper nouns typically don't need articles
