@@ -131,9 +131,13 @@ export const createHelmetOptions = () => {
         scriptSrc: ["'self'", "'unsafe-inline'"],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: [],
+        frameAncestors: ["'self'", "https://*.replit.dev", "https://*.replit.com"], // Allow Replit preview
       },
     },
     crossOriginEmbedderPolicy: false, // Disable for compatibility
+    frameguard: {
+      action: 'sameorigin' // Allow same-origin framing (Replit preview)
+    }
   });
 };
 
