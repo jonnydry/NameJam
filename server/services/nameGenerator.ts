@@ -594,23 +594,85 @@ export class NameGeneratorService {
     
     // For 4+ words, use the new musical patterns instead of complex longform
     if (wordCount >= 4) {
+      // Use coherent patterns for 4+ words to avoid disconnected results
+      const words: string[] = [];
+      const usedWords = new Set<string>();
+      const usedRoots = new Set<string>();
+      
+      // Helper function to get unique word
+      const getUniqueWord = (wordArray: string[]): string => {
+        let attempts = 0;
+        let word: string;
+        do {
+          word = wordArray[Math.floor(Math.random() * wordArray.length)];
+          const root = word.toLowerCase().substring(0, Math.max(4, word.length - 3));
+          
+          if (!usedWords.has(word.toLowerCase()) && !usedRoots.has(root)) {
+            usedWords.add(word.toLowerCase());
+            usedRoots.add(root);
+            return word;
+          }
+          attempts++;
+        } while (attempts < 20);
+        
+        usedWords.add(word.toLowerCase());
+        return word;
+      };
+      
+      // Use proven musical name patterns for coherence
+      const musicalPatterns = [
+        // Classic "The [adj] [noun]" + extension
+        () => {
+          if (wordCount === 4) {
+            return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.musicalTerms)];
+          } else if (wordCount === 5) {
+            return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'and', getUniqueWord(sources.nouns)];
+          } else { // 6 words
+            return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'my', 'dreams'];
+          }
+        },
+        // Simple adjective noun combinations
+        () => {
+          if (wordCount === 4) {
+            return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
+          } else if (wordCount === 5) {
+            return [getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'and', getUniqueWord(sources.nouns)];
+          } else { // 6 words
+            return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), 'night'];
+          }
+        },
+        // Musical focused patterns
+        () => {
+          if (wordCount === 4) {
+            return [getUniqueWord(sources.nouns), 'of', 'the', getUniqueWord(sources.adjectives)];
+          } else if (wordCount === 5) {
+            return [getUniqueWord(sources.adjectives), getUniqueWord(sources.musicalTerms), 'and', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
+          } else { // 6 words
+            return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'under', 'the', getUniqueWord(sources.adjectives), 'sky'];
+          }
+        }
+      ];
+      
+      // Select and execute a musical pattern
+      const patternIndex = Math.floor(Math.random() * musicalPatterns.length);
+      words.push(...musicalPatterns[patternIndex]());
+      
+      // Apply grammatical corrections and return
+      const correctedWords = this.ensureGrammaticalConsistency(words);
+      return this.applySmartCapitalization(correctedWords);
+    }
     
-    // Use coherent patterns for 4+ words to avoid disconnected results
+    // Fallback for shorter names - simple pattern
     const words: string[] = [];
     const usedWords = new Set<string>();
-    const usedRoots = new Set<string>();
     
-    // Helper function to get unique word
     const getUniqueWord = (wordArray: string[]): string => {
       let attempts = 0;
       let word: string;
       do {
         word = wordArray[Math.floor(Math.random() * wordArray.length)];
-        const root = word.toLowerCase().substring(0, Math.max(4, word.length - 3));
-        
-        if (!usedWords.has(word.toLowerCase()) && !usedRoots.has(root)) {
+        if (!usedWords.has(word.toLowerCase())) {
           usedWords.add(word.toLowerCase());
-          usedRoots.add(root);
           return word;
         }
         attempts++;
@@ -620,50 +682,6 @@ export class NameGeneratorService {
       return word;
     };
     
-    // Use proven musical name patterns for coherence
-    const musicalPatterns = [
-      // Classic "The [adj] [noun]" + extension
-      () => {
-        if (wordCount === 4) {
-          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.musicalTerms)];
-        } else if (wordCount === 5) {
-          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'and', getUniqueWord(sources.nouns)];
-        } else { // 6 words
-          return ['The', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'of', 'my', 'dreams'];
-        }
-      },
-      // Simple adjective noun combinations
-      () => {
-        if (wordCount === 4) {
-          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
-        } else if (wordCount === 5) {
-          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'and', getUniqueWord(sources.nouns)];
-        } else { // 6 words
-          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), 'night'];
-        }
-      },
-      // Musical focused patterns
-      () => {
-        if (wordCount === 4) {
-          return [getUniqueWord(sources.nouns), 'of', 'the', getUniqueWord(sources.adjectives)];
-        } else if (wordCount === 5) {
-          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.musicalTerms), 'and', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
-        } else { // 6 words
-          return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'under', 'the', getUniqueWord(sources.adjectives), 'sky'];
-        }
-      }
-    ];
-    
-    // Select and execute a musical pattern
-    const patternIndex = Math.floor(Math.random() * musicalPatterns.length);
-    words.push(...musicalPatterns[patternIndex]());
-    
-    // Apply grammatical corrections and return
-    const correctedWords = this.ensureGrammaticalConsistency(words);
-    return this.applySmartCapitalization(correctedWords);
-    }
-    
-    // Fallback for shorter names - simple pattern
     for (let i = 0; i < wordCount; i++) {
       if (i === 0) {
         words.push(getUniqueWord(sources.adjectives));
