@@ -638,7 +638,9 @@ export class NameGeneratorService {
           } else if (wordCount === 5) {
             return [getUniqueWord(sources.adjectives), getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'and', getUniqueWord(sources.nouns)];
           } else { // 6 words
-            return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), 'night'];
+            const endings = ['night', 'morning', 'dreams', 'journey', 'world', 'time'];
+            const ending = endings[Math.floor(Math.random() * endings.length)];
+            return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'in', 'the', getUniqueWord(sources.adjectives), ending];
           }
         },
         // Musical focused patterns
@@ -648,7 +650,9 @@ export class NameGeneratorService {
           } else if (wordCount === 5) {
             return [getUniqueWord(sources.adjectives), getUniqueWord(sources.musicalTerms), 'and', getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns)];
           } else { // 6 words
-            return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'under', 'the', getUniqueWord(sources.adjectives), 'sky'];
+            const places = ['sky', 'forest', 'ocean', 'mountains', 'stars', 'horizon'];
+            const place = places[Math.floor(Math.random() * places.length)];
+            return [getUniqueWord(sources.adjectives), getUniqueWord(sources.nouns), 'under', 'the', getUniqueWord(sources.adjectives), place];
           }
         }
       ];
