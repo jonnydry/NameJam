@@ -31,8 +31,8 @@ export class AINameGeneratorService {
     const models = ["grok-3", "grok-4", "grok-3-mini"];
     
     for (const model of models) {
-      // Try each model up to 3 times to avoid repeated words
-      for (let attempt = 0; attempt < 3; attempt++) {
+      // Try each model up to 1 time for faster response
+      for (let attempt = 0; attempt < 1; attempt++) {
         try {
           console.log(`Attempting model: ${model} (attempt ${attempt + 1})`);
           // Add randomization to force variety
@@ -181,7 +181,7 @@ QUALITY STANDARDS:
           return withRetry(async () => {
             const resp = await this.openai!.chat.completions.create(requestParams);
             return resp;
-          }, 3, 2000);
+          }, 1, 1000); // Reduced to 1 retry with 1 second delay for faster response
         });
 
         const generatedName = response.choices[0]?.message?.content?.trim() || "";
