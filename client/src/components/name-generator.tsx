@@ -64,13 +64,20 @@ export function NameGenerator() {
     onSuccess: (data) => {
       setResults(data.results);
       setSearchResult(null); // Clear search result when generating new names
+      setIsGenerating(false); // Reset generating state
       
       toast({
         title: "Names generated successfully!",
         description: `Generated ${data.results.length} unique ${nameType} names${data.cached ? ' (cached)' : ''}.`,
       });
     },
-    onError: createMutationErrorHandler("Generation failed", "Failed to generate names. Please try again."),
+    onError: (error) => {
+      setIsGenerating(false); // Reset generating state on error
+      createMutationErrorHandler("Generation failed", "Failed to generate names. Please try again.")(error);
+    },
+    onSettled: () => {
+      setIsGenerating(false); // Always reset generating state when done
+    },
   });
 
   const searchMutation = useMutation({
@@ -112,11 +119,13 @@ export function NameGenerator() {
 
   // Optimized generate function with better debouncing
   const handleGenerate = useDebouncedCallback(() => {
+    if (generateMutation.isPending) return; // Prevent duplicate calls
     setIsGenerating(true);
     generateMutation.mutate();
   }, 300);
 
   const handleGenerateMore = useDebouncedCallback(() => {
+    if (generateMutation.isPending) return; // Prevent duplicate calls
     setIsGenerating(true);
     generateMutation.mutate();
     // Scroll to loading area
@@ -393,7 +402,7 @@ export function NameGenerator() {
             <Button
               onClick={handleGenerateMore}
               variant="outline"
-              disabled={generateMutation.isPending}
+              disabled={generateMutation.isPending || isGenerating}
               className="inline-flex items-center px-6 py-2 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
             >
               <Lightbulb className="w-4 h-4 mr-2" />
