@@ -382,7 +382,7 @@ export function NameGenerator() {
           <div className="flex flex-col gap-4 max-w-2xl mx-auto">
             {results.map((result, index) => (
               <div
-                key={result.id}
+                key={`result-${index}-${result.name.replace(/\s+/g, '-').toLowerCase()}`}
                 className="animate-slide-up"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
