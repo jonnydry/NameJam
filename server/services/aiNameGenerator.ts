@@ -58,14 +58,21 @@ export class AINameGeneratorService {
           'transportation with abstract concepts'
         ];
         
-        const promptVariations = [
-          `Create a memorable ${type === 'band' ? 'band' : 'song'} name using ${creativityTechniques[Math.floor(Math.random() * creativityTechniques.length)]}. MUST AVOID these words: ${avoidString}`,
-          `Invent a striking ${type === 'band' ? 'band' : 'song'} name that combines concrete and abstract concepts. NEVER use these overused words: ${avoidString}`,
-          `Generate a ${type === 'band' ? 'band' : 'song'} name with interesting word textures and sounds. ABSOLUTELY DO NOT include: ${avoidString}`,
-          `Think of a bold ${type === 'band' ? 'band' : 'song'} name mixing everyday objects with grand concepts. STRICTLY EXCLUDE: ${avoidString}`,
-          `Create a vivid ${type === 'band' ? 'band' : 'song'} name using sensory words and unusual pairings. FORBIDDEN words: ${avoidString}`,
-          `Craft a unique ${type === 'band' ? 'band' : 'song'} name blending industrial terms with natural imagery. BANNED words: ${avoidString}`,
-          `Design a catchy ${type === 'band' ? 'band' : 'song'} name using contradictory or surprising word combinations. PROHIBITED: ${avoidString}`
+        const promptVariations = type === 'band' ? [
+          `Create a realistic band name that sounds like it could be a famous rock/alternative band. Think of names like Arctic Monkeys, Black Keys, Red Hot Chili Peppers, or Foo Fighters. MUST AVOID: ${avoidString}`,
+          `Generate a memorable band name similar to successful bands like Pearl Jam, Stone Temple Pilots, or Kings of Leon. Make it catchy and pronounceable. FORBIDDEN: ${avoidString}`,
+          `Think of a band name that would fit alongside bands like Radiohead, Coldplay, or Imagine Dragons. Keep it simple but distinctive. BANNED: ${avoidString}`,
+          `Create a band name in the style of indie/alternative bands like The Strokes, White Stripes, or Vampire Weekend. PROHIBITED: ${avoidString}`,
+          `Generate a band name that sounds like it belongs on a music festival lineup with bands like Fleet Foxes, Arcade Fire, or The National. AVOID: ${avoidString}`,
+          `Think of a band name similar to successful acts like Florence + The Machine, Two Door Cinema Club, or Foster the People. EXCLUDE: ${avoidString}`,
+          `Create a band name that would work for rock/indie bands like The XX, Tame Impala, or MGMT. Keep it realistic and memorable. NO: ${avoidString}`
+        ] : [
+          `Create a memorable song title that sounds like it could be a hit single. Think of titles like "Bohemian Rhapsody", "Sweet Child O' Mine", or "Mr. Brightside". AVOID: ${avoidString}`,
+          `Generate a song title similar to classic hits like "Hotel California", "Stairway to Heaven", or "Come As You Are". FORBIDDEN: ${avoidString}`,
+          `Think of a song title that would fit alongside hits like "Wonderwall", "Seven Nation Army", or "Use Somebody". BANNED: ${avoidString}`,
+          `Create a song title in the style of popular songs like "Somebody That I Used to Know", "Pumped Up Kicks", or "Take Me to Church". PROHIBITED: ${avoidString}`,
+          `Generate a song title that sounds like it belongs on the radio with songs like "Uptown Funk", "Shape of You", or "Blinding Lights". EXCLUDE: ${avoidString}`,
+          `Think of a song title similar to hits like "Rolling in the Deep", "Bad Romance", or "Can't Stop the Feeling". NO: ${avoidString}`
         ];
         
         let prompt = promptVariations[Math.floor(Math.random() * promptVariations.length)];
@@ -96,13 +103,19 @@ export class AINameGeneratorService {
           prompt += '. Keep it concise but memorable.';
         }
         
-        // Enhanced instructions for better output
-        const qualityInstructions = [
-          'Be creative and original. Reply with just the name.',
-          'Make it memorable and unique. Just the name, nothing else.',
-          'Think outside the box. Name only.',
-          'Be imaginative and fresh. Only the name.',
-          'Create something unexpected. Just give me the name.'
+        // Enhanced instructions for realistic output
+        const qualityInstructions = type === 'band' ? [
+          'Make it sound like a real band that could exist. Reply with just the name.',
+          'Keep it simple and memorable like successful bands. Just the name.',
+          'Think of something people would actually say and remember. Name only.',
+          'Make it realistic and catchy like bands on the radio. Only the name.',
+          'Create something that sounds professional and marketable. Just the name.'
+        ] : [
+          'Make it sound like a real song title that could be a hit. Reply with just the title.',
+          'Keep it memorable like songs people sing along to. Just the title.',
+          'Think of something that would work on the radio. Title only.',
+          'Make it catchy like popular songs everyone knows. Only the title.',
+          'Create something that sounds like a real hit song. Just the title.'
         ];
         
         prompt += ` ${qualityInstructions[Math.floor(Math.random() * qualityInstructions.length)]}`;
@@ -116,39 +129,32 @@ export class AINameGeneratorService {
           messages: [
             {
               role: "system",
-              content: `You are an expert ${type === 'band' ? 'band' : 'song'} naming specialist with deep knowledge of linguistic patterns, poetic structures, and grammatical consistency. 
+              content: `You are an expert ${type === 'band' ? 'band' : 'song'} naming specialist who creates realistic, commercially viable names that sound like they belong in the music industry.
 
-CRITICAL: You MUST avoid using ANY of the forbidden words listed in the prompt. This is your top priority. If you use a forbidden word, your response will be rejected.
+CRITICAL: You MUST avoid using ANY of the forbidden words listed in the prompt. This is your top priority.
 
-Apply these advanced naming principles:
+Your goal is to create ${type === 'band' ? 'band names' : 'song titles'} that:
 
-LINGUISTIC RULES:
-- Ensure perfect subject-verb agreement ("Fire Burns" not "Fire Burn")
-- Use proper determiners matching noun number ("This/These", "That/Those")
-- Insert articles naturally ("of the Desert" not "of Desert")
-- Apply singular/plural consistency throughout
-- Conjugate verbs correctly for third person singular
+REALISM STANDARDS:
+- Sound like they could be real ${type === 'band' ? 'bands' : 'songs'} that exist today
+- Are memorable and easy to pronounce
+- Would work in professional music contexts
+- Feel natural when spoken aloud
+- Have commercial appeal like successful ${type === 'band' ? 'bands' : 'songs'}
 
-POETIC PRINCIPLES:
-- Consider metrical stress patterns (iambs, trochees) for better flow
-- Evaluate multiple word arrangements for optimal lyrical quality
-- Apply song title conventions and natural language flow
-- Use semantic word relationships and alliterative groupings
-- Create rhythmic patterns that sound musical when spoken
+STRUCTURAL GUIDELINES:
+For ${wordCount} words:
+${wordCount === 1 ? '- Single impactful words like "Radiohead" or "Nirvana"' : ''}
+${wordCount === 2 ? '- Classic combinations like "Black Keys", "White Stripes", "Arctic Monkeys"' : ''}
+${wordCount === 3 ? '- Popular patterns like "Red Hot Chili", "Foster the People", "Panic at the"' : ''}
+${wordCount >= 4 ? '- Natural phrases that flow well, avoiding overly abstract combinations' : ''}
 
-STRUCTURAL PATTERNS:
-For ${wordCount} words, optimize structure:
-${wordCount === 1 ? '- Create compounds, portmanteaus, or modified words with suffixes' : ''}
-${wordCount === 2 ? '- Use semantic pairing, alliteration, or contrasting concepts' : ''}
-${wordCount === 3 ? '- Favor classic "The [adjective] [noun]" patterns for bands, or emotional journeys' : ''}
-${wordCount >= 4 ? '- Use connecting words ("of", "into", "through", "beyond") for statement-like flow' : ''}
-
-QUALITY STANDARDS:
-- Eliminate duplicate words within the name
-- Ensure grammatical correctness and natural flow
-- Create unexpected but coherent word combinations
-- Balance concrete imagery with abstract concepts
-- Make it memorable and pronounceable`
+QUALITY REQUIREMENTS:
+- Must sound like real ${type === 'band' ? 'band' : 'song'} names
+- Should be memorable and catchy
+- Avoid overly abstract or nonsensical combinations
+- Keep it grounded and realistic
+- Make it something people would actually use and remember`
             },
             {
               role: "user",
