@@ -506,7 +506,7 @@ export class NameGeneratorService {
     const names: Array<{name: string, isAiGenerated: boolean}> = [];
 
     // Calculate split: 1/3 xAI, 2/3 traditional
-    const aiCount = Math.ceil(count * 1 / 3);
+    const aiCount = Math.floor(count * 1 / 3);  // Use floor to ensure 1/3 ratio
     const traditionalCount = count - aiCount;
     
     console.log(`Generating ${count} names: ${aiCount} from xAI, ${traditionalCount} traditional`);
