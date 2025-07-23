@@ -50,11 +50,18 @@ export class VerificationCache {
   // Clear expired entries
   clearExpired(): void {
     const now = Date.now();
-    for (const [key, value] of this.cache.entries()) {
+    const keysToDelete: string[] = [];
+    
+    this.cache.forEach((value, key) => {
       if (now - value.timestamp > this.ttl) {
-        this.cache.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+    
+    // Delete expired keys
+    keysToDelete.forEach(key => {
+      this.cache.delete(key);
+    });
   }
 
   // Get cache stats
