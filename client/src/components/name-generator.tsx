@@ -117,11 +117,29 @@ export function NameGenerator() {
     onError: createMutationErrorHandler("Verification failed", "Failed to verify name. Please try again."),
   });
 
-  // Optimized generate function with better debouncing
+  // Optimized generate function with better debouncing and smart scrolling
   const handleGenerate = useDebouncedCallback(() => {
     if (generateMutation.isPending) return; // Prevent duplicate calls
     setIsGenerating(true);
     generateMutation.mutate();
+    
+    // Smart scroll to loading area if it's not in view
+    setTimeout(() => {
+      if (loadingRef.current) {
+        const loadingRect = loadingRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        
+        // Check if loading bar is not visible in viewport
+        const isLoadingVisible = loadingRect.top >= 0 && loadingRect.bottom <= viewportHeight;
+        
+        if (!isLoadingVisible) {
+          loadingRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
+      }
+    }, 150); // Small delay to ensure loading state is active
   }, 300);
 
   const handleGenerateMore = useDebouncedCallback(() => {
