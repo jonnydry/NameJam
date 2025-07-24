@@ -144,12 +144,13 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Major Update - January 21, 2025: COMPLETE STATIC VOCABULARY REMOVAL**
+**Latest Major Update - January 24, 2025: COMPLETE STATIC VOCABULARY REMOVAL & SETLIST OPTIMIZATION**
 - **ARCHITECTURAL REVOLUTION COMPLETED**: Completely removed all static vocabulary lists (3,000+ words) and replaced entire generation system with Datamuse API integration
 - **Pure Datamuse Generation**: All non-AI name generation now uses authentic linguistic relationships from 300,000+ word database with contextual word pairing
 - **Enhanced Generation Quality**: Names use real language usage patterns instead of static combinations (e.g., contextual adjectives for "storm" → "violent", "severe", "sudden")
 - **System-Wide Integration**: Updated main generation, setlist creation, and all routing to use only Datamuse API for authentic linguistic data
-- **AI Integration Preserved**: Maintained 25% AI / 75% Datamuse split with improved result parsing and fallback systems
+- **AI Integration Fixed**: Resolved critical bug where AI results displayed as JSON objects; maintained 25% AI / 75% Datamuse split with clean name output
+- **Setlist Generator Enhanced**: Added comprehensive word quality filtering, removed scientific/technical terms, improved grammatical patterns for 3-6 word songs
 - **Performance Optimized**: 100,000 daily API calls with intelligent caching, timeout handling, and graceful degradation to ensure reliability
 
 Changelog:
@@ -261,6 +262,7 @@ Changelog:
 - July 21, 2025. Fixed authentication system for dual environment support: added localhost domain support for development, updated cookie security settings for development vs production, fixed TypeScript issues in user menu component to properly display profile images from authentication providers
 - July 21, 2025. Comprehensive performance optimization implementation: created parallel verification service to batch API calls and reduce response times from 5+ seconds to 1-2 seconds, added performanceCache with NodeJS node-cache for intelligent caching of verification results (1 hour TTL) and name generation patterns (10 minutes TTL), implemented non-blocking database storage for faster response times, added response compression middleware, request timeout handling (25s), and response time monitoring, optimized frontend with improved debouncing (300ms vs 350ms) using dedicated useDebouncedCallback hook, reduced duplicate ending words in 6-word traditional names with varied ending arrays, fixed TypeScript errors in parallel verification service, achieved significant load time improvements and app responsiveness
 - July 21, 2025. Fixed critical Generate Names button bug and improved AI prompting: resolved issue where button became non-functional after first generation by adding proper state management with isGenerating reset callbacks, reduced AI retry attempts from 3 to 1 per model for faster response times (3-5 seconds vs 12-14 seconds), completely rewrote AI prompting system to generate realistic, commercially viable names using successful band/song references (Arctic Monkeys, Pearl Jam, Radiohead style) instead of abstract creativity techniques, enhanced system prompts to focus on practical music industry standards and natural language flow
+- July 24, 2025. Complete static vocabulary removal and Datamuse API integration: removed all 3,000+ static vocabulary words, replaced with Datamuse API for contextual linguistic relationships, fixed AI service to return clean names instead of JSON objects, enhanced setlist generator with quality filtering to remove scientific/technical terms (electrons, radiation, etc.), improved grammatical patterns for more natural song names, added problematic word filtering and better base word selection from Datamuse API
 
 ## User Preferences
 

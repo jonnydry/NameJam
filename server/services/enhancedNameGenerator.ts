@@ -27,10 +27,16 @@ export class EnhancedNameGeneratorService {
     // Build contextual word sources using Datamuse API
     const wordSources = await this.buildContextualWordSources(mood, genre, type);
 
-    for (let i = 0; i < count; i++) {
+    let attempts = 0;
+    const maxAttempts = count * 3; // Allow extra attempts for quality control
+
+    while (names.length < count && attempts < maxAttempts) {
+      attempts++;
       try {
         const name = await this.generateContextualName(type, wordCount, wordSources, mood, genre);
-        if (name && !names.find(n => n.name === name)) {
+        
+        // Quality validation
+        if (name && this.isValidName(name, wordCount) && !names.find(n => n.name === name)) {
           names.push({ 
             name, 
             isAiGenerated: false, 
@@ -41,7 +47,7 @@ export class EnhancedNameGeneratorService {
         console.error('Enhanced generation error:', error);
         // Fallback to simple combination if API fails
         const fallbackName = this.generateFallbackName(wordSources, wordCount);
-        if (fallbackName && !names.find(n => n.name === fallbackName)) {
+        if (fallbackName && this.isValidName(fallbackName, wordCount) && !names.find(n => n.name === fallbackName)) {
           names.push({ 
             name: fallbackName, 
             isAiGenerated: false, 
@@ -89,29 +95,46 @@ export class EnhancedNameGeneratorService {
       const musicWords = await this.datamuseService.findThematicWords('music', 30);
       sources.musicalTerms.push(...musicWords.map(w => w.word));
 
-      // Categorize words by part of speech (basic classification)
+      // Categorize and filter words by part of speech
       const allWords = [...sources.contextualWords, ...sources.associatedWords];
+      const seenWords = new Set<string>();
+      
       for (const word of allWords) {
+        // Skip problematic or duplicate words
+        const lowerWord = word.toLowerCase();
+        if (seenWords.has(lowerWord) || this.isProblematicWord(word)) continue;
+        seenWords.add(lowerWord);
+        
         if (this.isLikelyAdjective(word)) {
           sources.adjectives.push(word);
         } else if (this.isLikelyVerb(word)) {
           sources.verbs.push(word);
-        } else {
+        } else if (word.length >= 3 && word.length <= 12) { // Filter noun length
           sources.nouns.push(word);
         }
       }
 
-      // If we need more variety, get some general creative words
+      // If we need more variety, get better quality words
       if (sources.adjectives.length < 10) {
         console.log(`✨ Adding creative adjectives`);
-        const creativeAdjs = await this.datamuseService.findSimilarWords('creative', 15);
-        sources.adjectives.push(...creativeAdjs.map(w => w.word));
+        // Get adjectives related to music/emotion instead of "creative"
+        const emotionalAdjs = await this.datamuseService.findSimilarWords('wild', 10);
+        const intenseAdjs = await this.datamuseService.findSimilarWords('fierce', 10);
+        sources.adjectives.push(
+          ...emotionalAdjs.map(w => w.word).filter(w => !this.isProblematicWord(w)),
+          ...intenseAdjs.map(w => w.word).filter(w => !this.isProblematicWord(w))
+        );
       }
 
       if (sources.nouns.length < 10) {
         console.log(`🎯 Adding powerful nouns`);
-        const powerfulNouns = await this.datamuseService.findSimilarWords('power', 15);
-        sources.nouns.push(...powerfulNouns.map(w => w.word));
+        // Get nouns related to nature/elements instead of "power"
+        const natureNouns = await this.datamuseService.findSimilarWords('storm', 10);
+        const elementNouns = await this.datamuseService.findSimilarWords('fire', 10);
+        sources.nouns.push(
+          ...natureNouns.map(w => w.word).filter(w => !this.isProblematicWord(w)),
+          ...elementNouns.map(w => w.word).filter(w => !this.isProblematicWord(w))
+        );
       }
 
       console.log(`📊 Word sources built:`, {
@@ -200,28 +223,28 @@ export class EnhancedNameGeneratorService {
   // Generate three words with enhanced patterns
   private async generateThreeWordContextual(sources: EnhancedWordSource, type: string): Promise<string> {
     const patterns = [
-      // Classic "The [adj] [noun]" pattern
+      // Classic "The [adj] [noun]" pattern - most common for bands
       async () => {
         const adj = this.getRandomWord(sources.adjectives) || 'wild';
         const noun = this.getRandomWord(sources.nouns) || 'storm';
         return `The ${this.capitalize(adj)} ${this.capitalize(noun)}`;
       },
       
-      // Contextual noun combinations
+      // Adjective + Noun + Noun pattern
+      async () => {
+        const adj = this.getRandomWord(sources.adjectives) || 'electric';
+        const noun1 = this.getRandomWord(sources.nouns) || 'fire';
+        const noun2 = this.getRandomWord(sources.nouns) || 'dream';
+        return `${this.capitalize(adj)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
+      },
+      
+      // Noun + Verb-ing pattern
       async () => {
         const noun1 = this.getRandomWord(sources.nouns) || 'fire';
-        try {
-          const relatedWords = await this.datamuseService.findAssociatedWords(noun1, 8);
-          if (relatedWords.length > 0) {
-            const related = relatedWords[Math.floor(Math.random() * relatedWords.length)].word;
-            return `${this.capitalize(noun1)} ${this.capitalize(related)}`;
-          }
-        } catch (error) {
-          console.error('Error finding associated words:', error);
-        }
-        
-        const noun2 = this.getRandomWord(sources.nouns) || 'shadow';
-        return `${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
+        const verbs = ['burning', 'rising', 'falling', 'breaking', 'shining'];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const noun2 = this.getRandomWord(sources.nouns) || 'sky';
+        return `${this.capitalize(noun1)} ${this.capitalize(verb)} ${this.capitalize(noun2)}`;
       }
     ];
 
@@ -229,46 +252,96 @@ export class EnhancedNameGeneratorService {
     return await pattern();
   }
 
-  // Generate longer contextual names
+  // Generate longer contextual names with better structure
   private async generateLongFormContextual(sources: EnhancedWordSource, wordCount: number, type: string): Promise<string> {
-    const words: string[] = [];
+    if (wordCount === 4) {
+      return this.generateFourWordPattern(sources, type);
+    }
     
-    // Start with a strong foundation
-    const baseWord = this.getRandomWord([...sources.nouns, ...sources.contextualWords]) || 'fire';
-    words.push(this.capitalize(baseWord));
-
-    // Add contextually related words
-    try {
-      const followingWords = await this.datamuseService.findWordsThatFollow(baseWord, 5);
-      if (followingWords.length > 0) {
-        const follower = followingWords[Math.floor(Math.random() * followingWords.length)].word;
-        words.push(this.capitalize(follower));
-      }
-    } catch (error) {
-      // Fallback to adjective
-      const adj = this.getRandomWord(sources.adjectives) || 'bright';
-      words.push(this.capitalize(adj));
+    if (wordCount === 5) {
+      return this.generateFiveWordPattern(sources, type);
     }
-
-    // Fill remaining positions with contextual words
-    while (words.length < wordCount) {
-      const remaining = wordCount - words.length;
-      
-      if (remaining === 1) {
-        // Last word - make it impactful
-        const finalWord = this.getRandomWord(sources.musicalTerms) || 'song';
-        words.push(this.capitalize(finalWord));
-      } else {
-        // Middle words - use connectors or descriptive words
-        if (Math.random() < 0.3 && remaining > 1) {
-          words.push('of');
-        } else {
-          const word = this.getRandomWord([...sources.adjectives, ...sources.nouns]) || 'wild';
-          words.push(this.capitalize(word));
-        }
-      }
+    
+    if (wordCount === 6) {
+      return this.generateSixWordPattern(sources, type);
     }
-
+    
+    // Fallback for other word counts
+    return this.generateStructuredPhrase(sources, wordCount);
+  }
+  
+  private generateFourWordPattern(sources: EnhancedWordSource, type: string): string {
+    const patterns = [
+      // The [adj] [noun] [noun]
+      () => {
+        const adj = this.getRandomWord(sources.adjectives) || 'electric';
+        const noun1 = this.getRandomWord(sources.nouns) || 'fire';
+        const noun2 = this.getRandomWord(sources.nouns) || 'dream';
+        return `The ${this.capitalize(adj)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
+      },
+      // [Noun] of the [Noun]
+      () => {
+        const noun1 = this.getRandomWord(sources.nouns) || 'storm';
+        const noun2 = this.getRandomWord(sources.nouns) || 'night';
+        return `${this.capitalize(noun1)} of the ${this.capitalize(noun2)}`;
+      },
+      // [Adj] [Noun] [Prep] [Noun]
+      () => {
+        const adj = this.getRandomWord(sources.adjectives) || 'wild';
+        const noun1 = this.getRandomWord(sources.nouns) || 'heart';
+        const noun2 = this.getRandomWord(sources.nouns) || 'fire';
+        const preps = ['in', 'of', 'at'];
+        const prep = preps[Math.floor(Math.random() * preps.length)];
+        return `${this.capitalize(adj)} ${this.capitalize(noun1)} ${prep} ${this.capitalize(noun2)}`;
+      }
+    ];
+    
+    const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+    return pattern();
+  }
+  
+  private generateFiveWordPattern(sources: EnhancedWordSource, type: string): string {
+    const patterns = [
+      // The [Adj] [Noun] of [Noun]
+      () => {
+        const adj = this.getRandomWord(sources.adjectives) || 'burning';
+        const noun1 = this.getRandomWord(sources.nouns) || 'sky';
+        const noun2 = this.getRandomWord(sources.nouns) || 'storm';
+        return `The ${this.capitalize(adj)} ${this.capitalize(noun1)} of ${this.capitalize(noun2)}`;
+      },
+      // [Noun] in the [Adj] [Noun]
+      () => {
+        const noun1 = this.getRandomWord(sources.nouns) || 'light';
+        const adj = this.getRandomWord(sources.adjectives) || 'dark';
+        const noun2 = this.getRandomWord(sources.nouns) || 'night';
+        return `${this.capitalize(noun1)} in the ${this.capitalize(adj)} ${this.capitalize(noun2)}`;
+      }
+    ];
+    
+    const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+    return pattern();
+  }
+  
+  private generateSixWordPattern(sources: EnhancedWordSource, type: string): string {
+    const adj1 = this.getRandomWord(sources.adjectives) || 'wild';
+    const noun1 = this.getRandomWord(sources.nouns) || 'heart';
+    const adj2 = this.getRandomWord(sources.adjectives) || 'burning';
+    const noun2 = this.getRandomWord(sources.nouns) || 'sky';
+    
+    return `The ${this.capitalize(adj1)} ${this.capitalize(noun1)} of ${this.capitalize(adj2)} ${this.capitalize(noun2)}`;
+  }
+  
+  private generateStructuredPhrase(sources: EnhancedWordSource, wordCount: number): string {
+    const words: string[] = [];
+    const allGoodWords = [...sources.adjectives, ...sources.nouns].filter(w => 
+      !this.isProblematicWord(w) && w.length >= 3 && w.length <= 10
+    );
+    
+    for (let i = 0; i < wordCount; i++) {
+      const word = this.getRandomWord(allGoodWords) || 'fire';
+      words.push(this.capitalize(word));
+    }
+    
     return words.join(' ');
   }
 
@@ -279,6 +352,18 @@ export class EnhancedNameGeneratorService {
   }
 
   private capitalize(word: string): string {
+    // Preserve original casing for words like "DJ" or "NYC"
+    if (word.length <= 3 && word === word.toUpperCase()) {
+      return word;
+    }
+    
+    // Handle hyphenated words
+    if (word.includes('-')) {
+      return word.split('-').map(part => 
+        part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+      ).join('-');
+    }
+    
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
   }
 
@@ -290,6 +375,36 @@ export class EnhancedNameGeneratorService {
   private isLikelyVerb(word: string): boolean {
     const verbSuffixes = ['ing', 'ed', 'ize', 'ify', 'ate'];
     return verbSuffixes.some(suffix => word.toLowerCase().endsWith(suffix));
+  }
+
+  private isProblematicWord(word: string): boolean {
+    // Filter out problematic words
+    if (word.length < 2 || word.length > 15) return true;
+    if (/[0-9]/.test(word)) return true; // No numbers
+    if (/[^a-zA-Z-']/.test(word)) return true; // Only letters, hyphens, apostrophes
+    if (word.includes('_')) return true; // No underscores
+    
+    // Filter out technical/medical terms that sound weird
+    const problematicPatterns = [
+      'itis', 'osis', 'ectomy', 'ology', 'graphy',
+      'metric', 'philic', 'phobic', 'scopy', 'etic',
+      'ious', 'eous', 'atic', 'istic'
+    ];
+    
+    // Specific medical/technical/scientific terms to avoid
+    const problematicWords = [
+      'thorax', 'stigmata', 'reddish', 'yellowish', 'greenish',
+      'underside', 'potency', 'generative', 'productive',
+      'imaginative', 'originative', 'fanciful', 'ability',
+      'electrons', 'radiation', 'mev', 'neutral', 'innovatory',
+      'inventive', 'fig', 'increases', 'decreases', 'particle',
+      'wavelength', 'frequency', 'amplitude', 'spectrum',
+      'molecule', 'atom', 'proton', 'neutron', 'quantum'
+    ];
+    
+    const lowerWord = word.toLowerCase();
+    if (problematicWords.includes(lowerWord)) return true;
+    return problematicPatterns.some(pattern => lowerWord.endsWith(pattern));
   }
 
   private generateFallbackName(sources: EnhancedWordSource, wordCount: number): string {
@@ -306,6 +421,38 @@ export class EnhancedNameGeneratorService {
     }
 
     return words.join(' ');
+  }
+
+  // Validate name quality
+  private isValidName(name: string, expectedWordCount: number): boolean {
+    // Check word count
+    const words = name.split(/\s+/);
+    if (words.length !== expectedWordCount) {
+      return false;
+    }
+
+    // Check for weird characters or patterns
+    if (name.includes('.') && !name.includes('...')) {
+      return false; // No single dots in middle of names
+    }
+
+    // Check for duplicate words
+    const uniqueWords = new Set(words.map(w => w.toLowerCase()));
+    if (uniqueWords.size !== words.length) {
+      return false; // No duplicate words
+    }
+
+    // Check for overly long words
+    if (words.some(w => w.length > 15)) {
+      return false; // No excessively long words
+    }
+
+    // Basic grammar check - no single letter words except "I" or "A"
+    if (words.some(w => w.length === 1 && !['I', 'A', 'a'].includes(w))) {
+      return false;
+    }
+
+    return true;
   }
 }
 
