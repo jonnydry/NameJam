@@ -215,21 +215,11 @@ QUALITY REQUIREMENTS:
           if (wordCount && cleanName.split(/\s+/).length === wordCount) {
             console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
             this.trackRecentWords(cleanName);
-            return JSON.stringify({
-              name: cleanName,
-              model: model,
-              source: 'xAI',
-              type: type
-            });
+            return cleanName;
           } else if (!wordCount && cleanName.length > 0 && cleanName.length < 100) {
             console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
             this.trackRecentWords(cleanName);
-            return JSON.stringify({
-              name: cleanName,
-              model: model,
-              source: 'xAI',
-              type: type
-            });
+            return cleanName;
           }
         }
         
@@ -242,14 +232,9 @@ QUALITY REQUIREMENTS:
       }
     }
 
-    // If all models fail, return fallback with JSON format
+    // If all models fail, return fallback
     const fallbackName = this.generateFallbackName(type, genre, mood, wordCount);
-    return JSON.stringify({
-      name: fallbackName,
-      model: 'fallback',
-      source: 'fallback',
-      type: type
-    });
+    return fallbackName;
   }
 
   private generateFallbackName(type: 'band' | 'song', genre?: string, mood?: string, wordCount?: number): string {
