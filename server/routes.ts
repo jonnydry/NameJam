@@ -50,7 +50,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   }
 
   try {
-    nameGenerator = new NameGeneratorService(aiNameGenerator);
+    nameGenerator = new NameGeneratorService();
+    nameGenerator.setAINameGenerator(aiNameGenerator);
     console.log("✓ NameGeneratorService initialized");
   } catch (error) {
     console.error("✗ Failed to initialize NameGeneratorService:", error);
@@ -105,8 +106,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     try {
       const request = generateNameRequestSchema.parse(req.body);
       
-      // Generate names using enhanced Datamuse API approach
-      const names = await enhancedNameGenerator.generateEnhancedNames(request);
+      // Generate names using new routing system (AI + Datamuse)
+      const names = await nameGenerator.generateNames(request);
       
       // Optimized parallel verification and storage
       const isUserAuthenticated = req.isAuthenticated && req.isAuthenticated();
@@ -284,7 +285,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
             genre: genre as any
           };
           
-          const generatedNames = await nameGenerator.generateTraditionalNames(songRequest);
+          const generatedNames = await nameGenerator.generateSetlistNames(songRequest);
           const songNameObj = generatedNames[0];
           const songName = songNameObj.name;
           
@@ -646,29 +647,12 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
       // Generate using enhanced Datamuse-powered method
       const enhancedResults = await enhancedNameGenerator.generateEnhancedNames(request);
-      
-      // Generate using only enhanced Datamuse method
-      const enhancedResults = await enhancedNameGenerator.generateEnhancedNames(request);
 
       res.json({
         request: request,
-        enhanced: {
-          method: "Datamuse API with contextual word relationships",
-          results: enhancedResults
-        },
-        traditional: {
-          method: "Static vocabulary lists with algorithmic patterns",
-          results: traditionalResults
-        },
-        comparison: {
-          message: "Enhanced generation uses real linguistic relationships from Datamuse API",
-          improvements: [
-            "Contextually related word pairs (e.g., 'ocean' → 'deep', 'blue')",
-            "Statistical word associations from real language usage",
-            "Thematic word filtering based on genre/mood context",
-            "Semantic relationships instead of random combinations"
-          ]
-        }
+        results: enhancedResults,
+        method: "Datamuse API with contextual word relationships",
+        info: "All non-AI results now use real linguistic data from Datamuse API"
       });
     } catch (error) {
       console.error("Error in enhanced generation test:", error);
