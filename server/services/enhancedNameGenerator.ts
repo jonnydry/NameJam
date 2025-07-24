@@ -72,70 +72,81 @@ export class EnhancedNameGeneratorService {
     };
 
     try {
-      // Build thematic context from mood and genre
-      const themes = [];
-      if (mood && mood !== 'none') themes.push(mood);
-      if (genre && genre !== 'none') themes.push(genre);
-      if (type) themes.push(type === 'band' ? 'music band' : 'song title');
-
-      // Get contextually relevant words for each theme
-      for (const theme of themes) {
-        console.log(`📖 Fetching thematic words for: ${theme}`);
-        
-        const thematicWords = await this.datamuseService.findThematicWords(theme, 25);
-        sources.contextualWords.push(...thematicWords.map(w => w.word));
-
-        // Get words associated with the theme
-        const associatedWords = await this.datamuseService.findAssociatedWords(theme, 20);
-        sources.associatedWords.push(...associatedWords.map(w => w.word));
-      }
-
-      // Get musical context words
-      console.log(`🎵 Fetching musical context words`);
-      const musicWords = await this.datamuseService.findThematicWords('music', 30);
-      sources.musicalTerms.push(...musicWords.map(w => w.word));
-
-      // Categorize and filter words by part of speech
-      const allWords = [...sources.contextualWords, ...sources.associatedWords];
-      const seenWords = new Set<string>();
+      // Map moods/genres to more poetic seed words
+      const poeticSeeds = this.getPoeticSeedWords(mood, genre);
       
-      for (const word of allWords) {
-        // Skip problematic or duplicate words
-        const lowerWord = word.toLowerCase();
-        if (seenWords.has(lowerWord) || this.isProblematicWord(word)) continue;
-        seenWords.add(lowerWord);
-        
-        if (this.isLikelyAdjective(word)) {
-          sources.adjectives.push(word);
-        } else if (this.isLikelyVerb(word)) {
-          sources.verbs.push(word);
-        } else if (word.length >= 3 && word.length <= 12) { // Filter noun length
-          sources.nouns.push(word);
-        }
+      // Get words using multiple linguistic relationships for richness
+      console.log(`🎨 Building poetic word palette...`);
+      
+      // 1. Get emotionally evocative words
+      for (const seed of poeticSeeds.emotional) {
+        const emotionalWords = await this.datamuseService.findWords({
+          triggers: seed, // Words statistically associated
+          topics: `${mood || 'emotion'} music poetry`,
+          maxResults: 20
+        });
+        // Filter for quality
+        const poeticWords = emotionalWords
+          .filter(w => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word))
+          .map(w => w.word);
+        sources.contextualWords.push(...poeticWords);
       }
-
-      // If we need more variety, get better quality words
-      if (sources.adjectives.length < 10) {
-        console.log(`✨ Adding creative adjectives`);
-        // Get adjectives related to music/emotion instead of "creative"
-        const emotionalAdjs = await this.datamuseService.findSimilarWords('wild', 10);
-        const intenseAdjs = await this.datamuseService.findSimilarWords('fierce', 10);
-        sources.adjectives.push(
-          ...emotionalAdjs.map(w => w.word).filter(w => !this.isProblematicWord(w)),
-          ...intenseAdjs.map(w => w.word).filter(w => !this.isProblematicWord(w))
-        );
+      
+      // 2. Get sensory/imagery words
+      for (const seed of poeticSeeds.sensory) {
+        const sensoryWords = await this.datamuseService.findWords({
+          meansLike: seed,
+          topics: 'nature poetry music',
+          maxResults: 15
+        });
+        // Filter for quality
+        const poeticWords = sensoryWords
+          .filter(w => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word))
+          .map(w => w.word);
+        sources.associatedWords.push(...poeticWords);
       }
-
-      if (sources.nouns.length < 10) {
-        console.log(`🎯 Adding powerful nouns`);
-        // Get nouns related to nature/elements instead of "power"
-        const natureNouns = await this.datamuseService.findSimilarWords('storm', 10);
-        const elementNouns = await this.datamuseService.findSimilarWords('fire', 10);
-        sources.nouns.push(
-          ...natureNouns.map(w => w.word).filter(w => !this.isProblematicWord(w)),
-          ...elementNouns.map(w => w.word).filter(w => !this.isProblematicWord(w))
-        );
+      
+      // 3. Get musical/rhythmic words
+      const musicalSeeds = ['melody', 'rhythm', 'harmony', 'echo', 'resonance'];
+      for (const seed of musicalSeeds) {
+        const musicWords = await this.datamuseService.findWords({
+          triggers: seed,
+          topics: 'music sound',
+          maxResults: 10
+        });
+        sources.musicalTerms.push(...musicWords.map(w => w.word));
       }
+      
+      // 4. Get adjectives using linguistic patterns
+      console.log(`✨ Finding evocative adjectives...`);
+      const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre);
+      for (const seed of adjectiveSeeds) {
+        const adjs = await this.datamuseService.findAdjectivesForNoun(seed, 15);
+        sources.adjectives.push(...adjs.map((w: any) => w.word));
+      }
+      
+      // 5. Get poetic nouns using associations
+      console.log(`🌟 Finding poetic nouns...`);
+      const nounSeeds = this.getNounSeeds(mood, genre);
+      for (const seed of nounSeeds) {
+        const nouns = await this.datamuseService.findWords({
+          triggers: seed,
+          maxResults: 15
+        });
+        // Filter for concrete, evocative nouns
+        const poeticNouns = nouns.filter(w => {
+          const word = w.word;
+          return word.length >= 3 && 
+            word.length <= 10 &&
+            !this.isProblematicWord(word) &&
+            this.isPoeticWord(word) &&
+            !/^[A-Z]/.test(word); // Avoid proper nouns
+        });
+        sources.nouns.push(...poeticNouns.map(w => w.word));
+      }
+      
+      // Clean and deduplicate all sources
+      this.cleanWordSources(sources);
 
       console.log(`📊 Word sources built:`, {
         adjectives: sources.adjectives.length,
@@ -147,14 +158,136 @@ export class EnhancedNameGeneratorService {
 
     } catch (error) {
       console.error('Error building word sources:', error);
-      // Provide minimal fallback words
-      sources.adjectives = ['dark', 'bright', 'wild', 'silent', 'fierce'];
-      sources.nouns = ['storm', 'fire', 'shadow', 'light', 'dream'];
-      sources.verbs = ['run', 'fly', 'burn', 'shine', 'break'];
-      sources.musicalTerms = ['song', 'beat', 'melody', 'rhythm', 'sound'];
+      // Provide poetic fallback words
+      sources.adjectives = ['midnight', 'velvet', 'silver', 'wild', 'burning'];
+      sources.nouns = ['moon', 'thunder', 'shadow', 'ocean', 'dream'];
+      sources.verbs = ['dance', 'whisper', 'ignite', 'soar', 'shatter'];
+      sources.musicalTerms = ['echo', 'melody', 'rhythm', 'harmony', 'silence'];
     }
 
     return sources;
+  }
+  
+  // Get poetic seed words based on mood/genre
+  private getPoeticSeedWords(mood?: string, genre?: string): { emotional: string[], sensory: string[] } {
+    const seeds = {
+      emotional: ['soul', 'heart', 'spirit'],
+      sensory: ['light', 'sound', 'touch']
+    };
+    
+    // Add mood-specific seeds
+    if (mood) {
+      const moodSeeds: Record<string, { emotional: string[], sensory: string[] }> = {
+        dark: { emotional: ['shadow', 'void', 'abyss'], sensory: ['darkness', 'silence', 'cold'] },
+        bright: { emotional: ['joy', 'light', 'hope'], sensory: ['sunshine', 'warmth', 'glow'] },
+        energetic: { emotional: ['fire', 'electric', 'surge'], sensory: ['thunder', 'spark', 'blast'] },
+        melancholy: { emotional: ['sorrow', 'longing', 'rain'], sensory: ['mist', 'twilight', 'echo'] },
+        mysterious: { emotional: ['enigma', 'secret', 'mystic'], sensory: ['fog', 'whisper', 'veil'] },
+        ethereal: { emotional: ['dream', 'celestial', 'spirit'], sensory: ['starlight', 'breath', 'shimmer'] }
+      };
+      
+      if (moodSeeds[mood]) {
+        seeds.emotional.push(...moodSeeds[mood].emotional);
+        seeds.sensory.push(...moodSeeds[mood].sensory);
+      }
+    }
+    
+    // Add genre-specific seeds
+    if (genre) {
+      const genreSeeds: Record<string, string[]> = {
+        rock: ['thunder', 'steel', 'storm', 'rebel'],
+        metal: ['iron', 'chaos', 'inferno', 'rage'],
+        electronic: ['neon', 'pulse', 'digital', 'circuit'],
+        jazz: ['blue', 'smoke', 'velvet', 'midnight'],
+        folk: ['river', 'mountain', 'home', 'story'],
+        indie: ['dream', 'city', 'youth', 'wonder']
+      };
+      
+      if (genreSeeds[genre]) {
+        seeds.emotional.push(...genreSeeds[genre]);
+      }
+    }
+    
+    return seeds;
+  }
+  
+  // Get seed words for finding adjectives
+  private getAdjectiveSeeds(mood?: string, genre?: string): string[] {
+    const baseSeeds = ['moon', 'fire', 'ocean', 'night', 'dream'];
+    
+    if (mood === 'dark') return ['shadow', 'void', 'storm', 'midnight'];
+    if (mood === 'bright') return ['sun', 'crystal', 'gold', 'diamond'];
+    if (mood === 'energetic') return ['electric', 'wild', 'explosive', 'fierce'];
+    
+    if (genre === 'rock') return ['thunder', 'steel', 'raw', 'rebel'];
+    if (genre === 'electronic') return ['neon', 'digital', 'pulse', 'laser'];
+    
+    return baseSeeds;
+  }
+  
+  // Get seed words for finding nouns
+  private getNounSeeds(mood?: string, genre?: string): string[] {
+    const baseSeeds = ['heart', 'soul', 'sky', 'star', 'wave'];
+    
+    if (mood === 'dark') return ['shadow', 'abyss', 'ghost', 'raven'];
+    if (mood === 'bright') return ['light', 'rainbow', 'sunrise', 'crystal'];
+    if (mood === 'mysterious') return ['enigma', 'phantom', 'oracle', 'maze'];
+    
+    if (genre === 'metal') return ['blade', 'iron', 'demon', 'throne'];
+    if (genre === 'folk') return ['river', 'tree', 'home', 'road'];
+    
+    return baseSeeds;
+  }
+  
+  // Check if a word has poetic quality
+  private isPoeticWord(word: string): boolean {
+    const lowerWord = word.toLowerCase();
+    
+    // Avoid overly technical, mundane, or awkward words
+    const unpoetic = [
+      'data', 'system', 'process', 'function', 'status', 'item', 'unit', 'factor',
+      'volume', 'runt', 'reshuffle', 'richards', 'colossus', 'sabu', 'petrels',
+      'casting', 'images', 'books', 'formation', 'personality', 'index',
+      'neutral', 'mev', 'fig', 'dull', 'arkansas', 'charts', 'pink'
+    ];
+    if (unpoetic.includes(lowerWord)) return false;
+    
+    // Avoid words that look like names or places
+    if (/^[A-Z][a-z]+$/.test(word) && word.length > 5) return false;
+    
+    // Prefer words with emotional or sensory associations
+    const poetic = [
+      'moon', 'star', 'fire', 'dream', 'shadow', 'light', 'ocean', 'storm',
+      'night', 'soul', 'heart', 'thunder', 'velvet', 'silver', 'echo',
+      'whisper', 'phantom', 'crystal', 'flame', 'spirit', 'mystic'
+    ];
+    if (poetic.some(p => lowerWord.includes(p))) return true;
+    
+    // Accept words between 3-10 characters, but avoid overly simple ones
+    if (word.length < 3 || word.length > 10) return false;
+    
+    // Avoid words ending in common technical suffixes
+    if (lowerWord.endsWith('ing') && word.length > 8) return false;
+    if (lowerWord.endsWith('ness') || lowerWord.endsWith('ment')) return false;
+    
+    return true;
+  }
+  
+  // Clean and deduplicate word sources
+  private cleanWordSources(sources: EnhancedWordSource): void {
+    const seen = new Set<string>();
+    
+    // Clean each category
+    for (const key of Object.keys(sources) as (keyof EnhancedWordSource)[]) {
+      sources[key] = sources[key].filter(word => {
+        const lower = word.toLowerCase();
+        if (seen.has(lower) || this.isProblematicWord(word) || !this.isPoeticWord(word)) {
+          return false;
+        }
+        seen.add(lower);
+        return true;
+      });
+    }
   }
 
   // Generate contextually-aware names using word relationships
@@ -391,7 +524,7 @@ export class EnhancedNameGeneratorService {
       'ious', 'eous', 'atic', 'istic'
     ];
     
-    // Specific medical/technical/scientific terms to avoid
+    // Specific medical/technical/scientific/business terms to avoid
     const problematicWords = [
       'thorax', 'stigmata', 'reddish', 'yellowish', 'greenish',
       'underside', 'potency', 'generative', 'productive',
@@ -399,7 +532,18 @@ export class EnhancedNameGeneratorService {
       'electrons', 'radiation', 'mev', 'neutral', 'innovatory',
       'inventive', 'fig', 'increases', 'decreases', 'particle',
       'wavelength', 'frequency', 'amplitude', 'spectrum',
-      'molecule', 'atom', 'proton', 'neutron', 'quantum'
+      'molecule', 'atom', 'proton', 'neutron', 'quantum',
+      'magnate', 'powerfulness', 'notional', 'baron', 'tycoon',
+      'exponent', 'index', 'empyrean', 'fictive', 'innovatory',
+      // Medical terms
+      'pulmonary', 'surgery', 'radius', 'medical', 'clinical',
+      'surgical', 'cardiac', 'neural', 'skeletal', 'muscular',
+      // Geographic/political
+      'belgrade', 'feminism', 'minister', 'political', 'democracy',
+      // Sports/mundane
+      'sports', 'surfing', 'surface', 'troopers', 'clay',
+      // Other awkward words
+      'slamming', 'fugue', 'changes'
     ];
     
     const lowerWord = word.toLowerCase();
