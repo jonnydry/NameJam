@@ -12,6 +12,8 @@ interface EnhancedWordSource {
 
 export class EnhancedNameGeneratorService {
   private datamuseService: DatamuseService;
+  private recentWords: Set<string> = new Set();
+  private maxRecentWords: number = 100; // Track last 100 words
 
   constructor() {
     this.datamuseService = datamuseService;
@@ -35,8 +37,9 @@ export class EnhancedNameGeneratorService {
       try {
         const name = await this.generateContextualName(type, wordCount, wordSources, mood, genre);
         
-        // Quality validation
-        if (name && this.isValidName(name, wordCount) && !names.find(n => n.name === name)) {
+        // Quality validation and check for repeated words
+        if (name && this.isValidName(name, wordCount) && !names.find(n => n.name === name) && !this.hasRecentWords(name)) {
+          this.trackWords(name);
           names.push({ 
             name, 
             isAiGenerated: false, 
@@ -47,7 +50,8 @@ export class EnhancedNameGeneratorService {
         console.error('Enhanced generation error:', error);
         // Fallback to simple combination if API fails
         const fallbackName = this.generateFallbackName(wordSources, wordCount);
-        if (fallbackName && this.isValidName(fallbackName, wordCount) && !names.find(n => n.name === fallbackName)) {
+        if (fallbackName && this.isValidName(fallbackName, wordCount) && !names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
+          this.trackWords(fallbackName);
           names.push({ 
             name: fallbackName, 
             isAiGenerated: false, 
@@ -597,6 +601,36 @@ export class EnhancedNameGeneratorService {
     }
 
     return true;
+  }
+  
+  // Track words to prevent repetition across generations
+  private trackWords(name: string): void {
+    const words = name.toLowerCase().split(' ').filter(w => 
+      w.length > 2 && !['the', 'of', 'in', 'at', 'and', 'or', 'but'].includes(w)
+    );
+    
+    for (const word of words) {
+      this.recentWords.add(word);
+    }
+    
+    // Keep the set from growing too large
+    if (this.recentWords.size > this.maxRecentWords) {
+      const wordsArray = Array.from(this.recentWords);
+      // Remove oldest words (first ones added)
+      for (let i = 0; i < 20; i++) {
+        this.recentWords.delete(wordsArray[i]);
+      }
+    }
+  }
+  
+  // Check if name contains recently used words
+  private hasRecentWords(name: string): boolean {
+    const words = name.toLowerCase().split(' ').filter(w => 
+      w.length > 2 && !['the', 'of', 'in', 'at', 'and', 'or', 'but'].includes(w)
+    );
+    
+    // If any significant word was recently used, reject the name
+    return words.some(word => this.recentWords.has(word));
   }
 }
 
