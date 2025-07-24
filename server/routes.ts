@@ -105,11 +105,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     try {
       const request = generateNameRequestSchema.parse(req.body);
       
-      // Generate names
-      const generateResult = await nameGenerator.generateNames(request);
-      
-      // Names are now always an array
-      const names = generateResult;
+      // Generate names using enhanced Datamuse API approach
+      const names = await enhancedNameGenerator.generateEnhancedNames(request);
       
       // Optimized parallel verification and storage
       const isUserAuthenticated = req.isAuthenticated && req.isAuthenticated();
@@ -650,8 +647,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       // Generate using enhanced Datamuse-powered method
       const enhancedResults = await enhancedNameGenerator.generateEnhancedNames(request);
       
-      // Also generate using traditional method for comparison
-      const traditionalResults = await nameGenerator.generateTraditionalNames(request);
+      // Generate using only enhanced Datamuse method
+      const enhancedResults = await enhancedNameGenerator.generateEnhancedNames(request);
 
       res.json({
         request: request,
