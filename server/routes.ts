@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { enhancedNameGenerator } from "./services/enhancedNameGenerator";
 import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGeneratorService } from "./services/bandBioGenerator";
@@ -628,6 +629,57 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     } catch (error) {
       // Silently fail - don't break the app if error logging fails
       res.status(200).json({ success: false });
+    }
+  });
+
+  // Enhanced Datamuse-powered name generation test endpoint
+  app.post("/api/test-enhanced-generation", async (req, res) => {
+    try {
+      const { type = 'band', wordCount = 2, mood, genre, count = 3 } = req.body;
+      
+      console.log(`🧪 Testing enhanced generation: ${count} ${type} names with ${wordCount} words`);
+      
+      const request = {
+        type,
+        wordCount: parseInt(wordCount),
+        count: parseInt(count),
+        mood,
+        genre
+      };
+
+      // Generate using enhanced Datamuse-powered method
+      const enhancedResults = await enhancedNameGenerator.generateEnhancedNames(request);
+      
+      // Also generate using traditional method for comparison
+      const traditionalResults = await nameGenerator.generateTraditionalNames(request);
+
+      res.json({
+        request: request,
+        enhanced: {
+          method: "Datamuse API with contextual word relationships",
+          results: enhancedResults
+        },
+        traditional: {
+          method: "Static vocabulary lists with algorithmic patterns",
+          results: traditionalResults
+        },
+        comparison: {
+          message: "Enhanced generation uses real linguistic relationships from Datamuse API",
+          improvements: [
+            "Contextually related word pairs (e.g., 'ocean' → 'deep', 'blue')",
+            "Statistical word associations from real language usage",
+            "Thematic word filtering based on genre/mood context",
+            "Semantic relationships instead of random combinations"
+          ]
+        }
+      });
+    } catch (error) {
+      console.error("Error in enhanced generation test:", error);
+      res.status(500).json({ 
+        error: "Enhanced generation test failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+        fallback: "Traditional generation is still available"
+      });
     }
   });
 
