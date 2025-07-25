@@ -28,19 +28,12 @@ export class NameGeneratorService {
     // Generate AI names if available and requested
     if (aiCount > 0 && this.aiNameGenerator) {
       try {
-        const aiResult = await this.aiNameGenerator.generateAIName(request.type, request.genre, request.mood);
-        // Parse AI result if it's JSON, otherwise use as string
-        let aiName = aiResult;
-        try {
-          const parsed = JSON.parse(aiResult);
-          aiName = parsed.name || aiResult;
-        } catch {
-          // Use as-is if not JSON
-          aiName = aiResult;
-        }
+        const aiResult = await this.aiNameGenerator.generateAIName(request.type, request.genre, request.mood, request.wordCount);
+        console.log(`AI generation returned: ${aiResult}`);
         
+        // The new implementation already returns just the name string
         const aiResultsArray = [{
-          name: aiName,
+          name: aiResult,
           isAiGenerated: true,
           source: 'ai'
         }];
