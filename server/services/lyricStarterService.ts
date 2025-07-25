@@ -1,10 +1,15 @@
 import OpenAI from "openai";
 import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
+import { DatamuseService } from './datamuseService';
 
 export class LyricStarterService {
   private openai: OpenAI | null = null;
+  private datamuseService: DatamuseService;
 
   constructor() {
+    // Initialize Datamuse service
+    this.datamuseService = new DatamuseService();
+    
     // Initialize OpenAI only if API key is available
     if (process.env.XAI_API_KEY) {
       try {
@@ -25,6 +30,9 @@ export class LyricStarterService {
       return this.generateFallbackLyric(genre);
     }
 
+    // Get Datamuse context for enhanced lyric generation
+    const datamuseContext = await this.getDatamuseContext(genre);
+    
     const models = ["grok-3", "grok-4", "grok-3-mini"];
     
     for (const model of models) {
@@ -36,96 +44,56 @@ export class LyricStarterService {
         const songSections = ['verse', 'chorus', 'bridge', 'pre-chorus', 'outro'];
         const currentSection = songSections[Math.floor(Math.random() * songSections.length)];
         
-        // Poetic devices and structures
-        const poeticTechniques = [
-          'metaphor and vivid imagery',
-          'alliteration and internal rhyme',
-          'narrative storytelling',
-          'emotional confession',
-          'sensory description',
-          'paradox and contrast',
-          'repetition and rhythm',
-          'symbolic imagery'
-        ];
+        // Create JSON prompt structure
+        const jsonPrompt = {
+          task: "generate_lyric_starter",
+          parameters: {
+            genre: genre || "contemporary",
+            songSection: currentSection,
+            datamuseContext: {
+              genreWords: datamuseContext.genreWords,
+              emotionalWords: datamuseContext.emotionalWords,
+              rhymeWords: datamuseContext.rhymeWords,
+              sensoryWords: datamuseContext.sensoryWords
+            },
+            requirements: {
+              wordCount: { min: 5, max: 15 },
+              style: currentSection === 'chorus' ? 'memorable_hook' : 'engaging_opener',
+              format: "single_line"
+            }
+          }
+        };
         
-        const lyricFormulas = [
-          'conversational opening',
-          'question that draws listener in',
-          'vivid scene setting',
-          'emotional declaration',
-          'universal truth observation',
-          'personal memory recall',
-          'call to action',
-          'philosophical musing'
-        ];
-        
-        const selectedTechnique = poeticTechniques[Math.floor(Math.random() * poeticTechniques.length)];
-        const selectedFormula = lyricFormulas[Math.floor(Math.random() * lyricFormulas.length)];
-        
-        // Build genre-aware prompt
-        let genreContext = '';
-        if (genre) {
-          const genreStyles = {
-            rock: 'raw emotion and rebellion',
-            pop: 'catchy hooks and relatable themes',
-            country: 'storytelling and authentic imagery',
-            'hip-hop': 'wordplay and rhythmic flow',
-            indie: 'introspective and artistic expression',
-            folk: 'narrative wisdom and natural imagery',
-            metal: 'intense emotions and powerful imagery',
-            jazz: 'sophisticated wordplay and mood',
-            electronic: 'abstract concepts and modern themes',
-            blues: 'heartfelt emotion and life experience',
-            punk: 'direct message and social commentary',
-            alternative: 'unconventional perspectives',
-            reggae: 'spiritual wisdom and social consciousness',
-            classical: 'timeless themes and elegant expression'
-          };
-          genreContext = genreStyles[genre] || 'creative expression';
-        }
-        
-        const prompt = `Write a single compelling lyric line for a ${currentSection} that could start a ${genre || 'contemporary'} song. 
-Use ${selectedTechnique} with a ${selectedFormula} approach.
-${genre ? `Capture the essence of ${genreContext}.` : ''}
+        const prompt = `You are given a JSON request to generate a lyric starter. Use the Datamuse context words for authentic vocabulary.
 
-Requirements:
-- ONE powerful line only (can be 5-15 words)
-- Must feel like an authentic song lyric
-- Should inspire further writing
-- Natural, singable rhythm
-- ${currentSection === 'chorus' ? 'Memorable and repeatable' : 'Engaging and evocative'}
+Request: ${JSON.stringify(jsonPrompt, null, 2)}
 
-Reply with ONLY the lyric line, nothing else.`;
+Instructions:
+1. Study the genreWords and emotionalWords to capture the authentic ${genre || 'contemporary'} feel
+2. Consider using some of the rhymeWords for potential rhyme schemes
+3. Incorporate sensoryWords for vivid imagery
+4. Create ONE powerful ${currentSection} line that feels authentically ${genre || 'contemporary'}
+5. The line should use vocabulary inspired by the Datamuse context
+
+Response format: {"lyric": "your lyric line here"}
+
+Important: Reply with ONLY the JSON object, nothing else.`;
 
         const requestParams: any = {
           model: model,
           messages: [
             {
               role: "system",
-              content: `You are a master lyricist who has written for legendary artists across all genres. Your lyrics balance:
+              content: `You are a master lyricist who uses JSON-structured requests to create authentic, genre-specific lyrics. 
 
-POETIC CRAFT:
-- Vivid imagery that paints pictures
-- Emotional truth that resonates universally
-- Surprising word combinations
-- Natural conversational flow
-- Subtle rhyme and rhythm
+Your expertise:
+1. Analyzing linguistic context from Datamuse API data
+2. Incorporating authentic genre vocabulary naturally
+3. Creating lyrics that feel genuine to the specified style
+4. Using sensory and emotional words for vivid imagery
+5. Building on rhyme potential from provided word lists
 
-SONG STRUCTURE AWARENESS:
-- Verses tell stories and set scenes
-- Choruses deliver emotional peaks and hooks
-- Bridges offer new perspectives
-- Pre-choruses build tension
-- Outros leave lasting impressions
-
-PROVEN FORMULAS:
-- "I" statements for intimacy
-- "You" statements for connection
-- Questions that make listeners think
-- Sensory details that immerse
-- Concrete images over abstract concepts
-
-Write lyrics that could open a Grammy-winning song.`
+Always respond with a JSON object containing the lyric.`
             },
             {
               role: "user",
@@ -133,7 +101,7 @@ Write lyrics that could open a Grammy-winning song.`
             }
           ],
           temperature: 0.9,
-          max_tokens: 50
+          max_tokens: 100
         };
 
         // Add frequency penalties for Grok 3
@@ -148,21 +116,43 @@ Write lyrics that could open a Grammy-winning song.`
             return resp;
           }, 3, 2000);
         });
-        const generatedLyric = completion.choices[0]?.message?.content?.trim();
+        const generatedResponse = completion.choices[0]?.message?.content?.trim();
         
-        if (generatedLyric && generatedLyric.length > 5 && generatedLyric.length < 200) {
-          // Clean the lyric
-          const cleanLyric = generatedLyric
-            .replace(/^["'""']|["'""']$/g, '')
-            .replace(/^(Here's |Here is |How about |Try |I suggest )/i, '')
-            .trim();
-          
-          console.log(`Successfully generated lyric: "${cleanLyric}" using model: ${model}`);
-          return {
-            lyric: cleanLyric,
-            model: model,
-            songSection: currentSection
-          };
+        if (generatedResponse) {
+          try {
+            // Parse JSON response
+            const parsedResponse = JSON.parse(generatedResponse);
+            const lyric = parsedResponse.lyric;
+            
+            if (lyric && lyric.length > 5 && lyric.length < 200) {
+              // Clean the lyric
+              const cleanLyric = lyric
+                .replace(/^["'""']|["'""']$/g, '')
+                .trim();
+              
+              console.log(`Successfully generated lyric: "${cleanLyric}" using model: ${model} with Datamuse context`);
+              return {
+                lyric: cleanLyric,
+                model: model,
+                songSection: currentSection
+              };
+            }
+          } catch (parseError) {
+            console.log(`Failed to parse JSON response from ${model}:`, parseError);
+            // Try to extract lyric from plain text response as fallback
+            if (generatedResponse.length > 5 && generatedResponse.length < 200) {
+              const cleanLyric = generatedResponse
+                .replace(/^["'""']|["'""']$/g, '')
+                .replace(/^(Here's |Here is |How about |Try |I suggest )/i, '')
+                .trim();
+              
+              return {
+                lyric: cleanLyric,
+                model: model,
+                songSection: currentSection
+              };
+            }
+          }
         }
       } catch (error: any) {
         console.log(`Model ${model} failed:`, error.message);
@@ -208,5 +198,158 @@ Write lyrics that could open a Grammy-winning song.`
       model: 'fallback',
       songSection: section
     };
+  }
+
+  private async getDatamuseContext(genre?: string): Promise<{
+    genreWords: string[];
+    emotionalWords: string[];
+    rhymeWords: string[];
+    sensoryWords: string[];
+  }> {
+    const context = {
+      genreWords: [] as string[],
+      emotionalWords: [] as string[],
+      rhymeWords: [] as string[],
+      sensoryWords: [] as string[]
+    };
+
+    try {
+      // Get genre-specific seed words
+      const genreSeeds = this.getGenreSeedWords(genre);
+      
+      // 1. Get genre-related words using triggers
+      for (const seed of genreSeeds.slice(0, 3)) {
+        const genreResults = await this.datamuseService.findWords({
+          triggers: seed,
+          topics: `${genre || 'music'} lyrics`,
+          maxResults: 20
+        });
+        
+        // Filter for quality lyric words
+        const lyricWords = genreResults
+          .filter(w => this.isGoodLyricWord(w.word))
+          .map(w => w.word)
+          .slice(0, 10);
+        
+        context.genreWords.push(...lyricWords);
+      }
+      
+      // 2. Get emotional/mood words
+      const emotionalSeeds = this.getEmotionalSeeds(genre);
+      for (const seed of emotionalSeeds.slice(0, 2)) {
+        const emotionalResults = await this.datamuseService.findWords({
+          meansLike: seed,
+          topics: 'emotion feeling',
+          maxResults: 15
+        });
+        
+        context.emotionalWords.push(...emotionalResults
+          .filter(w => this.isGoodLyricWord(w.word))
+          .map(w => w.word)
+          .slice(0, 8));
+      }
+      
+      // 3. Get rhyming words for common lyric endings
+      const rhymeSeeds = ['night', 'day', 'heart', 'love', 'time'];
+      const selectedRhyme = rhymeSeeds[Math.floor(Math.random() * rhymeSeeds.length)];
+      const rhymeResults = await this.datamuseService.findWords({
+        rhymesWith: selectedRhyme,
+        maxResults: 20
+      });
+      
+      context.rhymeWords = rhymeResults
+        .filter(w => this.isGoodLyricWord(w.word))
+        .map(w => w.word)
+        .slice(0, 10);
+      
+      // 4. Get sensory/imagery words
+      const sensorySeeds = ['light', 'sound', 'touch', 'color'];
+      const selectedSensory = sensorySeeds[Math.floor(Math.random() * sensorySeeds.length)];
+      const sensoryResults = await this.datamuseService.findWords({
+        triggers: selectedSensory,
+        topics: 'sensory poetry',
+        maxResults: 15
+      });
+      
+      context.sensoryWords = sensoryResults
+        .filter(w => this.isGoodLyricWord(w.word))
+        .map(w => w.word)
+        .slice(0, 8);
+      
+      // Remove duplicates across categories
+      const allWords = new Set([
+        ...context.genreWords,
+        ...context.emotionalWords,
+        ...context.rhymeWords,
+        ...context.sensoryWords
+      ]);
+      
+      console.log(`🎵 Datamuse context built for ${genre || 'contemporary'}: ${allWords.size} unique words`);
+      
+    } catch (error) {
+      console.log('Error fetching Datamuse context:', error);
+      // Return minimal context on error
+    }
+    
+    return context;
+  }
+
+  private getGenreSeedWords(genre?: string): string[] {
+    const genreSeeds: Record<string, string[]> = {
+      rock: ['thunder', 'rebel', 'electric', 'wild', 'freedom'],
+      pop: ['shine', 'sparkle', 'dance', 'bright', 'rainbow'],
+      country: ['road', 'home', 'whiskey', 'truck', 'heart'],
+      'hip-hop': ['flow', 'real', 'street', 'hustle', 'grind'],
+      indie: ['dream', 'wander', 'lost', 'quiet', 'strange'],
+      folk: ['river', 'mountain', 'story', 'simple', 'truth'],
+      metal: ['rage', 'dark', 'power', 'scream', 'chaos'],
+      jazz: ['smooth', 'blue', 'night', 'smoke', 'cool'],
+      electronic: ['pulse', 'neon', 'digital', 'wave', 'sync'],
+      blues: ['pain', 'soul', 'lonely', 'whiskey', 'midnight'],
+      punk: ['riot', 'break', 'angry', 'system', 'fight'],
+      alternative: ['edge', 'different', 'shadow', 'drift', 'echo'],
+      reggae: ['peace', 'love', 'island', 'rhythm', 'sun'],
+      classical: ['grace', 'eternal', 'beauty', 'divine', 'pure']
+    };
+    
+    return genreSeeds[genre || ''] || ['music', 'song', 'melody', 'rhythm', 'sound'];
+  }
+
+  private getEmotionalSeeds(genre?: string): string[] {
+    const emotionalMappings: Record<string, string[]> = {
+      rock: ['passion', 'anger', 'defiance'],
+      pop: ['joy', 'love', 'excitement'],
+      country: ['heartbreak', 'nostalgia', 'pride'],
+      'hip-hop': ['confidence', 'struggle', 'triumph'],
+      indie: ['melancholy', 'wonder', 'introspection'],
+      folk: ['wisdom', 'longing', 'peace'],
+      metal: ['fury', 'darkness', 'intensity'],
+      jazz: ['sophistication', 'loneliness', 'romance'],
+      electronic: ['euphoria', 'transcendence', 'energy'],
+      blues: ['sorrow', 'pain', 'resilience'],
+      punk: ['rebellion', 'frustration', 'urgency'],
+      alternative: ['alienation', 'confusion', 'hope'],
+      reggae: ['harmony', 'spirituality', 'unity'],
+      classical: ['majesty', 'serenity', 'contemplation']
+    };
+    
+    return emotionalMappings[genre || ''] || ['feeling', 'emotion', 'heart'];
+  }
+
+  private isGoodLyricWord(word: string): boolean {
+    // Filter out words that don't work well in lyrics
+    if (word.length < 2 || word.length > 12) return false;
+    if (/[0-9]/.test(word)) return false;
+    if (/^[A-Z]/.test(word) && word !== word.toUpperCase()) return false; // Proper nouns
+    
+    // Avoid technical/scientific terms
+    const technicalTerms = [
+      'data', 'system', 'process', 'function', 'method',
+      'molecule', 'electron', 'protocol', 'algorithm'
+    ];
+    
+    if (technicalTerms.includes(word.toLowerCase())) return false;
+    
+    return true;
   }
 }
