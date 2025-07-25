@@ -54,7 +54,11 @@ export class LyricStarterService {
               genreWords: datamuseContext.genreWords,
               emotionalWords: datamuseContext.emotionalWords,
               rhymeWords: datamuseContext.rhymeWords,
-              sensoryWords: datamuseContext.sensoryWords
+              sensoryWords: datamuseContext.sensoryWords,
+              tempoWords: datamuseContext.tempoWords,
+              culturalWords: datamuseContext.culturalWords,
+              contrastWords: datamuseContext.contrastWords,
+              associatedWords: datamuseContext.associatedWords
             },
             requirements: {
               wordCount: { min: 5, max: 15 },
@@ -70,10 +74,13 @@ Request: ${JSON.stringify(jsonPrompt, null, 2)}
 
 Instructions:
 1. Study the genreWords and emotionalWords to capture the authentic ${genre || 'contemporary'} feel
-2. Consider using some of the rhymeWords for potential rhyme schemes
-3. Incorporate sensoryWords for vivid imagery
-4. Create ONE powerful ${currentSection} line that feels authentically ${genre || 'contemporary'}
-5. The line should use vocabulary inspired by the Datamuse context
+2. Use tempoWords and culturalWords for authentic genre-specific rhythm and cultural references
+3. Consider using some of the rhymeWords for potential rhyme schemes
+4. Incorporate sensoryWords for vivid imagery
+5. Add depth with contrastWords (antonyms) for emotional complexity
+6. Blend in associatedWords (synonyms) for richer vocabulary
+7. Create ONE powerful ${currentSection} line that feels authentically ${genre || 'contemporary'}
+8. The line should naturally incorporate vocabulary from multiple context categories
 
 Response format: {"lyric": "your lyric line here"}
 
@@ -205,56 +212,51 @@ Always respond with a JSON object containing the lyric.`
     emotionalWords: string[];
     rhymeWords: string[];
     sensoryWords: string[];
+    tempoWords: string[];
+    culturalWords: string[];
+    contrastWords: string[];
+    associatedWords: string[];
   }> {
     const context = {
       genreWords: [] as string[],
       emotionalWords: [] as string[],
       rhymeWords: [] as string[],
-      sensoryWords: [] as string[]
+      sensoryWords: [] as string[],
+      tempoWords: [] as string[],
+      culturalWords: [] as string[],
+      contrastWords: [] as string[],
+      associatedWords: [] as string[]
     };
 
     try {
-      // Get genre-specific seed words
+      // Get seed words for all categories
       const genreSeeds = this.getGenreSeedWords(genre);
-      
-      // 1. Get genre-related words using triggers
-      for (const seed of genreSeeds.slice(0, 3)) {
-        const genreResults = await this.datamuseService.findWords({
-          triggers: seed,
-          topics: `${genre || 'music'} lyrics`,
-          maxResults: 20
-        });
-        
-        // Filter for quality lyric words
-        const lyricWords = genreResults
-          .filter(w => this.isGoodLyricWord(w.word))
-          .map(w => w.word)
-          .slice(0, 10);
-        
-        context.genreWords.push(...lyricWords);
-      }
-      
-      // 2. Get emotional/mood words
       const emotionalSeeds = this.getEmotionalSeeds(genre);
-      for (const seed of emotionalSeeds.slice(0, 2)) {
-        const emotionalResults = await this.datamuseService.findWords({
-          meansLike: seed,
-          topics: 'emotion feeling',
-          maxResults: 15
-        });
-        
-        context.emotionalWords.push(...emotionalResults
-          .filter(w => this.isGoodLyricWord(w.word))
-          .map(w => w.word)
-          .slice(0, 8));
-      }
+      const tempoSeeds = this.getTempoSeeds(genre);
+      const culturalSeeds = this.getCulturalSeeds(genre);
       
-      // 3. Get rhyming words for common lyric endings
-      const rhymeSeeds = ['night', 'day', 'heart', 'love', 'time'];
+      // 1. Single call combining genre and emotional context
+      const primaryResults = await this.datamuseService.findWords({
+        triggers: genreSeeds.slice(0, 2).join(','),
+        topics: `${genre || 'music'} emotion lyrics`,
+        maxResults: 40
+      });
+      
+      const filteredPrimary = primaryResults
+        .filter(w => this.isGoodLyricWord(w.word))
+        .map(w => w.word);
+      
+      // Distribute results across genre, emotional, and sensory words
+      context.genreWords = filteredPrimary.slice(0, 12);
+      context.emotionalWords = filteredPrimary.slice(12, 20);
+      context.sensoryWords = filteredPrimary.slice(20, 28);
+      
+      // 2. Get rhyming words (essential for lyrics)
+      const rhymeSeeds = ['night', 'day', 'heart', 'love', 'time', 'life', 'dream'];
       const selectedRhyme = rhymeSeeds[Math.floor(Math.random() * rhymeSeeds.length)];
       const rhymeResults = await this.datamuseService.findWords({
         rhymesWith: selectedRhyme,
-        maxResults: 20
+        maxResults: 15
       });
       
       context.rhymeWords = rhymeResults
@@ -262,29 +264,34 @@ Always respond with a JSON object containing the lyric.`
         .map(w => w.word)
         .slice(0, 10);
       
-      // 4. Get sensory/imagery words
-      const sensorySeeds = ['light', 'sound', 'touch', 'color'];
-      const selectedSensory = sensorySeeds[Math.floor(Math.random() * sensorySeeds.length)];
-      const sensoryResults = await this.datamuseService.findWords({
-        triggers: selectedSensory,
-        topics: 'sensory poetry',
-        maxResults: 15
-      });
+      // 3. Use pre-defined tempo and cultural words (no API call)
+      context.tempoWords = tempoSeeds.slice(0, 5);
+      context.culturalWords = culturalSeeds.slice(0, 5);
       
-      context.sensoryWords = sensoryResults
-        .filter(w => this.isGoodLyricWord(w.word))
-        .map(w => w.word)
-        .slice(0, 8);
+      // 4. Use pre-defined contrast words based on emotion
+      context.contrastWords = this.getContrastFromEmotion(emotionalSeeds[0], genre);
+      
+      // 5. Build associations from existing results
+      context.associatedWords = [
+        ...context.genreWords.slice(8, 10),
+        ...context.emotionalWords.slice(6, 8),
+        ...genreSeeds.slice(2, 4),
+        ...emotionalSeeds.slice(1, 3)
+      ];
       
       // Remove duplicates across categories
       const allWords = new Set([
         ...context.genreWords,
         ...context.emotionalWords,
         ...context.rhymeWords,
-        ...context.sensoryWords
+        ...context.sensoryWords,
+        ...context.tempoWords,
+        ...context.culturalWords,
+        ...context.contrastWords,
+        ...context.associatedWords
       ]);
       
-      console.log(`🎵 Datamuse context built for ${genre || 'contemporary'}: ${allWords.size} unique words`);
+      console.log(`🎵 Enhanced Datamuse context for ${genre || 'contemporary'}: ${allWords.size} unique words`);
       
     } catch (error) {
       console.log('Error fetching Datamuse context:', error);
@@ -351,5 +358,73 @@ Always respond with a JSON object containing the lyric.`
     if (technicalTerms.includes(word.toLowerCase())) return false;
     
     return true;
+  }
+  
+  private getTempoSeeds(genre?: string): string[] {
+    const tempoMap: { [key: string]: string[] } = {
+      rock: ['fast', 'heavy', 'driving', 'pounding', 'explosive'],
+      metal: ['brutal', 'crushing', 'relentless', 'thunderous', 'aggressive'],
+      jazz: ['smooth', 'swinging', 'syncopated', 'mellow', 'groovy'],
+      electronic: ['pulsing', 'hypnotic', 'steady', 'building', 'dropping'],
+      folk: ['gentle', 'flowing', 'walking', 'lilting', 'meandering'],
+      classical: ['adagio', 'allegro', 'andante', 'crescendo', 'delicate'],
+      'hip-hop': ['bouncing', 'head-nodding', 'trap', 'boom-bap', 'flowing'],
+      country: ['two-step', 'honky-tonk', 'shuffling', 'rolling', 'steady'],
+      blues: ['shuffle', 'bent', 'twelve-bar', 'walking', 'dragging'],
+      reggae: ['skanking', 'one-drop', 'upstroke', 'riddim', 'dubby'],
+      punk: ['frantic', 'breakneck', 'thrashing', 'manic', 'slamming'],
+      indie: ['jangly', 'dreamy', 'lo-fi', 'atmospheric', 'understated'],
+      pop: ['catchy', 'bouncy', 'upbeat', 'danceable', 'snappy'],
+      alternative: ['angular', 'dynamic', 'shifting', 'brooding', 'restless']
+    };
+    
+    return tempoMap[genre || 'pop'] || ['steady', 'flowing', 'moving', 'rhythmic'];
+  }
+  
+  private getCulturalSeeds(genre?: string): string[] {
+    const culturalMap: { [key: string]: string[] } = {
+      rock: ['rebellion', 'freedom', 'youth', 'garage', 'stadium'],
+      metal: ['darkness', 'mythology', 'battle', 'nordic', 'underground'],
+      jazz: ['speakeasy', 'bebop', 'harlem', 'nightclub', 'sophisticated'],
+      electronic: ['rave', 'warehouse', 'futuristic', 'neon', 'digital'],
+      folk: ['tradition', 'storytelling', 'campfire', 'woodstock', 'roots'],
+      classical: ['symphony', 'concert-hall', 'virtuoso', 'baroque', 'romantic'],
+      'hip-hop': ['street', 'cipher', 'urban', 'graffiti', 'block-party'],
+      country: ['nashville', 'honky-tonk', 'backroads', 'southern', 'heartland'],
+      blues: ['mississippi', 'crossroads', 'juke-joint', 'chicago', 'delta'],
+      reggae: ['jamaica', 'rastafari', 'kingston', 'dub', 'soundsystem'],
+      punk: ['DIY', 'anarchy', 'underground', 'CBGB', 'mohawk'],
+      indie: ['bedroom', 'DIY', 'college-radio', 'artsy', 'authentic'],
+      pop: ['mainstream', 'radio', 'teen', 'chart', 'commercial'],
+      alternative: ['underground', 'college', 'experimental', 'sub-pop', 'grunge']
+    };
+    
+    return culturalMap[genre || 'pop'] || ['modern', 'contemporary', 'universal', 'global'];
+  }
+  
+  private getContrastFromEmotion(emotion: string, genre?: string): string[] {
+    // Pre-defined contrasts to avoid API calls
+    const contrastMap: { [key: string]: string[] } = {
+      // Rock emotions
+      'passion': ['apathy', 'indifference', 'cold'],
+      'anger': ['peace', 'calm', 'serenity'],
+      'defiance': ['conformity', 'submission', 'acceptance'],
+      // Pop emotions
+      'joy': ['sadness', 'sorrow', 'melancholy'],
+      'love': ['hate', 'loneliness', 'isolation'],
+      'excitement': ['boredom', 'stillness', 'quiet'],
+      // Country emotions
+      'heartbreak': ['healing', 'wholeness', 'joy'],
+      'nostalgia': ['future', 'present', 'now'],
+      'pride': ['humility', 'shame', 'doubt'],
+      // Hip-hop emotions
+      'confidence': ['doubt', 'fear', 'uncertainty'],
+      'struggle': ['ease', 'comfort', 'privilege'],
+      'triumph': ['defeat', 'failure', 'loss'],
+      // Default contrasts
+      'default': ['light', 'dark', 'high', 'low', 'fast', 'slow']
+    };
+    
+    return contrastMap[emotion] || contrastMap['default'];
   }
 }
