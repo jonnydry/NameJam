@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useStash } from '@/hooks/use-stash';
 import { useToast } from '@/hooks/use-toast';
 import { useClipboard } from '@/hooks/use-clipboard';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/utils/format-time';
 import React, { useState } from 'react';
 import {
   DropdownMenu,
