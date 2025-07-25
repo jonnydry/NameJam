@@ -28,7 +28,7 @@ export class WordApiService {
       const response = await fetch(`https://api.datamuse.com/words?${queryString}`);
       if (!response.ok) return [];
       
-      const data = await response.json();
+      const data = await response.json() as any[];
       this.cache.set(cacheKey, data);
       return data;
     } catch (error) {
