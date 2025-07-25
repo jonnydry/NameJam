@@ -144,12 +144,13 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Major Update - January 24, 2025: COMPLETE STATIC VOCABULARY REMOVAL & ANTI-REPETITION SYSTEM**
+**Latest Major Update - January 25, 2025: ENHANCED AI INTEGRATION & 50/50 GENERATION SPLIT**
 - **ARCHITECTURAL REVOLUTION COMPLETED**: Completely removed all static vocabulary lists (3,000+ words) and replaced entire generation system with Datamuse API integration
 - **Pure Datamuse Generation**: All non-AI name generation now uses authentic linguistic relationships from 300,000+ word database with contextual word pairing
 - **Enhanced Generation Quality**: Names use real language usage patterns instead of static combinations (e.g., contextual adjectives for "storm" → "violent", "severe", "sudden")
 - **System-Wide Integration**: Updated main generation, setlist creation, and all routing to use only Datamuse API for authentic linguistic data
-- **AI Integration Fixed**: Resolved critical bug where AI results displayed as JSON objects; maintained 25% AI / 75% Datamuse split with clean name output
+- **AI Integration Enhanced**: Implemented custom JSON prompts for both band and song generation with exact word count enforcement and mood/genre awareness
+- **Generation Split Updated**: Changed from 25% AI / 75% Datamuse to 50% AI / 50% Datamuse split for balanced creative output (2 AI + 2 Datamuse names)
 - **Setlist Generator Enhanced**: Added comprehensive word quality filtering, removed scientific/technical terms, improved grammatical patterns for 3-6 word songs
 - **Anti-Repetition System**: Implemented cross-generation word tracking to prevent repeated words across multiple name generations, tracks last 100 significant words to ensure unique results
 - **Performance Optimized**: 100,000 daily API calls with intelligent caching, timeout handling, and graceful degradation to ensure reliability
