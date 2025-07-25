@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
+import { logger } from '../utils/logger';
 
 export class BandBioGeneratorService {
   private openai: OpenAI | null = null;
@@ -13,7 +14,7 @@ export class BandBioGeneratorService {
           apiKey: process.env.XAI_API_KEY
         });
       } catch (error) {
-        console.log("Failed to initialize OpenAI client:", error);
+        logger.warn("Failed to initialize OpenAI client:", error);
         this.openai = null;
       }
     }
@@ -115,7 +116,7 @@ export class BandBioGeneratorService {
         const bio = response.choices[0]?.message?.content || "";
         
         if (bio && bio.trim() !== "") {
-          console.log(`Successfully generated bio using model: ${model}`);
+          logger.log(`Successfully generated bio using model: ${model}`);
           return JSON.stringify({
             bio: bio.trim(),
             model: model,
