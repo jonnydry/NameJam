@@ -156,7 +156,14 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Major Update - January 25, 2025: ENHANCED AI INTEGRATION & DATAMUSE-POWERED LYRIC GENERATION**
+**Latest Update - January 25, 2025: DYNAMIC LOADING PROGRESS SYSTEM**
+- **Implemented Dynamic Loading Animation**: Replaced fixed-duration loading bars with real-time progress tracking that accurately follows actual API response times
+- **Created useLoadingProgress Hook**: Custom React hook that provides intelligent progress estimation with non-linear curves (fast start, steady middle, slow end)
+- **Enhanced User Experience**: Loading animations now complete exactly when results arrive, eliminating the lag between animation completion and result display
+- **Applied Across All Generators**: Updated Name_Jam, Set_Jam, and Lyric_Jam to use the dynamic loading system with appropriate estimated durations (4s for names, 6s for setlists, 3s for lyrics)
+- **Improved Visual Feedback**: Progress bars cap at 98% until actual completion, providing clear indication that the system is still working
+
+**Major Update - January 25, 2025: ENHANCED AI INTEGRATION & DATAMUSE-POWERED LYRIC GENERATION**
 - **ARCHITECTURAL REVOLUTION COMPLETED**: Completely removed all static vocabulary lists (3,000+ words) and replaced entire generation system with Datamuse API integration
 - **Pure Datamuse Generation**: All non-AI name generation now uses authentic linguistic relationships from 300,000+ word database with contextual word pairing
 - **Enhanced Generation Quality**: Names use real language usage patterns instead of static combinations (e.g., contextual adjectives for "storm" → "violent", "severe", "sudden")

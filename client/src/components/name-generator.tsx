@@ -12,6 +12,7 @@ import { Music, Users, Search, Palette, RefreshCw, Copy, Lightbulb, CheckCircle,
 import { createMutationErrorHandler } from "@/lib/api-error-handler";
 import { useKeyboardShortcuts, KeyboardHint } from "@/hooks/use-keyboard-shortcuts";
 import { useDebouncedCallback } from "@/hooks/use-debounce";
+import { useLoadingProgress } from "@/hooks/use-loading-progress";
 
 interface GenerationResult {
   id: number;
@@ -45,9 +46,25 @@ export function NameGenerator() {
   const { copyToClipboard } = useClipboard();
   const loadingRef = useRef<HTMLDivElement>(null);
   const generateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Dynamic loading progress tracking
+  const generateProgress = useLoadingProgress({ 
+    estimatedDuration: 4000, // Estimate 4 seconds for generation
+    onComplete: () => {
+      // Progress animation complete
+    }
+  });
+  
+  const searchProgress = useLoadingProgress({ 
+    estimatedDuration: 2000, // Estimate 2 seconds for search
+    onComplete: () => {
+      // Progress animation complete
+    }
+  });
 
   const generateMutation = useMutation({
     mutationFn: async () => {
+      generateProgress.startLoading(); // Start progress tracking
       const response = await apiRequest('POST', '/api/generate-names', {
         type: nameType,
         wordCount,
@@ -62,6 +79,7 @@ export function NameGenerator() {
       return data;
     },
     onSuccess: (data) => {
+      generateProgress.completeLoading(); // Complete progress
       setResults(data.results);
       setSearchResult(null); // Clear search result when generating new names
       setIsGenerating(false); // Reset generating state
@@ -72,6 +90,7 @@ export function NameGenerator() {
       });
     },
     onError: (error) => {
+      generateProgress.completeLoading(); // Complete progress even on error
       setIsGenerating(false); // Reset generating state on error
       createMutationErrorHandler("Generation failed", "Failed to generate names. Please try again.")(error);
     },
@@ -82,6 +101,7 @@ export function NameGenerator() {
 
   const searchMutation = useMutation({
     mutationFn: async () => {
+      searchProgress.startLoading(); // Start progress tracking
       const trimmedInput = searchInput.trim();
       if (!trimmedInput) {
         throw new Error('Please enter a name to search');
@@ -100,6 +120,7 @@ export function NameGenerator() {
       return data;
     },
     onSuccess: (data) => {
+      searchProgress.completeLoading(); // Complete progress
       const searchResult: GenerationResult = {
         id: Date.now(), // Temporary ID for display
         name: searchInput.trim(),
@@ -114,7 +135,10 @@ export function NameGenerator() {
         description: `Checked availability of "${searchInput.trim()}".`,
       });
     },
-    onError: createMutationErrorHandler("Verification failed", "Failed to verify name. Please try again."),
+    onError: (error) => {
+      searchProgress.completeLoading(); // Complete progress even on error
+      createMutationErrorHandler("Verification failed", "Failed to verify name. Please try again.")(error);
+    },
   });
 
   // Optimized generate function with better debouncing and smart scrolling
@@ -373,6 +397,8 @@ export function NameGenerator() {
         <div ref={loadingRef} className="bg-card rounded-xl shadow-sm border border-border p-8">
           <LoadingAnimation 
             stage={generateMutation.isPending ? 'generating' : 'verifying'}
+            actualProgress={generateMutation.isPending ? generateProgress.progress : searchProgress.progress}
+            estimatedDuration={generateMutation.isPending ? generateProgress.estimatedDuration : searchProgress.estimatedDuration}
           />
         </div>
       )}
