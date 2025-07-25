@@ -17,8 +17,8 @@ export class NameGeneratorService {
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
     const { count = 4 } = request;
     
-    // Calculate AI vs Datamuse split (25% AI, 75% Datamuse)
-    const aiCount = Math.floor(count / 4); // 1 out of 4 names from AI
+    // Calculate AI vs Datamuse split (50% AI, 50% Datamuse)
+    const aiCount = Math.floor(count / 2); // Half the names from AI
     const datamuseCount = count - aiCount;
 
     console.log(`🎯 Generating ${count} names: ${aiCount} AI + ${datamuseCount} Datamuse`);
@@ -28,15 +28,19 @@ export class NameGeneratorService {
     // Generate AI names if available and requested
     if (aiCount > 0 && this.aiNameGenerator) {
       try {
-        const aiResult = await this.aiNameGenerator.generateAIName(request.type, request.genre, request.mood, request.wordCount);
-        console.log(`AI generation returned: ${aiResult}`);
+        // Generate multiple AI names
+        const aiPromises = [];
+        for (let i = 0; i < aiCount; i++) {
+          aiPromises.push(this.aiNameGenerator.generateAIName(request.type, request.genre, request.mood, request.wordCount));
+        }
         
-        // The new implementation already returns just the name string
-        const aiResultsArray = [{
-          name: aiResult,
+        const aiResults = await Promise.all(aiPromises);
+        const aiResultsArray = aiResults.map(name => ({
+          name,
           isAiGenerated: true,
           source: 'ai'
-        }];
+        }));
+        
         results.push(...aiResultsArray);
         console.log(`✅ Generated ${aiResultsArray.length} AI names`);
       } catch (error) {
