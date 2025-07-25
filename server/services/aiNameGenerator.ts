@@ -39,89 +39,35 @@ export class AINameGeneratorService {
           const randomSeed = Math.random().toString(36).substring(7);
           const timestamp = Date.now() % 10000;
         
-        // Build enhanced prompts with creativity guidance and recent word exclusions
-        const overusedWords = ['shadows', 'shadow', 'echoes', 'echo', 'whispers', 'whisper', 'midnight', 'darkness', 'twilight', 'sorrow', 'eclipse', 'velvet', 'cosmic', 'neon'];
-        const recentWordsToAvoid = this.recentWords.slice(0, 10); // Focus on most recent 10 words
-        const avoidWords = [...new Set([...recentWordsToAvoid, ...overusedWords])]; // Combine and deduplicate
-        const avoidString = avoidWords.slice(0, 15).join(', '); // Show more words to avoid
+        // Build the system and user prompts based on type
+        let systemPrompt: string;
+        let userPrompt: string;
         
-        const creativityTechniques = [
-          'unexpected color-object combinations',
-          'scientific terms with emotional words',
-          'geometric shapes meeting natural elements',
-          'kitchen items as metaphors',
-          'weather phenomena with urban elements',
-          'architectural terms with organic words',
-          'vintage technology with nature',
-          'mathematical concepts with emotions',
-          'textile words with cosmic elements',
-          'transportation with abstract concepts'
-        ];
-        
-        const promptVariations = type === 'band' ? [
-          `Create a realistic band name that sounds like it could be a famous rock/alternative band. Think of names like Arctic Monkeys, Black Keys, Red Hot Chili Peppers, or Foo Fighters. MUST AVOID: ${avoidString}`,
-          `Generate a memorable band name similar to successful bands like Pearl Jam, Stone Temple Pilots, or Kings of Leon. Make it catchy and pronounceable. FORBIDDEN: ${avoidString}`,
-          `Think of a band name that would fit alongside bands like Radiohead, Coldplay, or Imagine Dragons. Keep it simple but distinctive. BANNED: ${avoidString}`,
-          `Create a band name in the style of indie/alternative bands like The Strokes, White Stripes, or Vampire Weekend. PROHIBITED: ${avoidString}`,
-          `Generate a band name that sounds like it belongs on a music festival lineup with bands like Fleet Foxes, Arcade Fire, or The National. AVOID: ${avoidString}`,
-          `Think of a band name similar to successful acts like Florence + The Machine, Two Door Cinema Club, or Foster the People. EXCLUDE: ${avoidString}`,
-          `Create a band name that would work for rock/indie bands like The XX, Tame Impala, or MGMT. Keep it realistic and memorable. NO: ${avoidString}`
-        ] : [
-          `Create a memorable song title that sounds like it could be a hit single. Think of titles like "Bohemian Rhapsody", "Sweet Child O' Mine", or "Mr. Brightside". AVOID: ${avoidString}`,
-          `Generate a song title similar to classic hits like "Hotel California", "Stairway to Heaven", or "Come As You Are". FORBIDDEN: ${avoidString}`,
-          `Think of a song title that would fit alongside hits like "Wonderwall", "Seven Nation Army", or "Use Somebody". BANNED: ${avoidString}`,
-          `Create a song title in the style of popular songs like "Somebody That I Used to Know", "Pumped Up Kicks", or "Take Me to Church". PROHIBITED: ${avoidString}`,
-          `Generate a song title that sounds like it belongs on the radio with songs like "Uptown Funk", "Shape of You", or "Blinding Lights". EXCLUDE: ${avoidString}`,
-          `Think of a song title similar to hits like "Rolling in the Deep", "Bad Romance", or "Can't Stop the Feeling". NO: ${avoidString}`
-        ];
-        
-        let prompt = promptVariations[Math.floor(Math.random() * promptVariations.length)];
-        
-        // Add enhanced context if provided
-        if (genre || mood) {
-          const context = [];
-          if (genre) context.push(genre);
-          if (mood) context.push(mood);
+        if (type === 'band') {
+          systemPrompt = "You are a highly creative AI specializing in generating unique, entertaining band names. Your outputs must be varied and surprising each time, even for identical inputs, to ensure repeatable entertainment. Avoid repeating names across generations. Do not use real-world band names; invent original ones. Based on the user's specified mood or genre and the exact number of words (1 to 6), internally generate 5 band names. Each name must consist precisely of that number of words. Then, decide on the best one among them based on creativity, relevance to the mood/genre, and entertainment value. Output strictly in JSON format with one key: 'band' (a single string). No additional text.";
           
-          const contextDescriptors = [
-            'that captures the essence of',
-            'reflecting the spirit of',
-            'embodying the atmosphere of',
-            'channeling the energy of',
-            'expressing the feeling of',
-            'inspired by the world of',
-            'evoking the mood of'
-          ];
+          // Build mood/genre context
+          const moodOrGenre = [];
+          if (mood) moodOrGenre.push(mood);
+          if (genre) moodOrGenre.push(genre);
+          const context = moodOrGenre.length > 0 ? moodOrGenre.join(' ') : 'any style';
           
-          prompt += ` ${contextDescriptors[Math.floor(Math.random() * contextDescriptors.length)]} ${context.join(' ')} music`;
-        }
-        
-        // Add word count and quality instructions
-        if (wordCount) {
-          prompt += `. IMPORTANT: Use exactly ${wordCount} word${wordCount > 1 ? 's' : ''} - no more, no less.`;
+          userPrompt = `Mood or genre: ${context}\nNumber of words: ${wordCount || 2}`;
         } else {
-          prompt += '. Keep it concise but memorable.';
+          // For songs, use similar structure but adapted for song titles
+          systemPrompt = "You are a highly creative AI specializing in generating unique, entertaining song titles. Your outputs must be varied and surprising each time, even for identical inputs, to ensure repeatable entertainment. Avoid repeating titles across generations. Do not use real-world song titles; invent original ones. Based on the user's specified mood or genre and the exact number of words (1 to 6), internally generate 5 song titles. Each title must consist precisely of that number of words. Then, decide on the best one among them based on creativity, relevance to the mood/genre, and entertainment value. Output strictly in JSON format with one key: 'song' (a single string). No additional text.";
+          
+          // Build mood/genre context
+          const moodOrGenre = [];
+          if (mood) moodOrGenre.push(mood);
+          if (genre) moodOrGenre.push(genre);
+          const context = moodOrGenre.length > 0 ? moodOrGenre.join(' ') : 'any style';
+          
+          userPrompt = `Mood or genre: ${context}\nNumber of words: ${wordCount || 3}`;
         }
         
-        // Enhanced instructions for realistic output
-        const qualityInstructions = type === 'band' ? [
-          'Make it sound like a real band that could exist. Reply with just the name.',
-          'Keep it simple and memorable like successful bands. Just the name.',
-          'Think of something people would actually say and remember. Name only.',
-          'Make it realistic and catchy like bands on the radio. Only the name.',
-          'Create something that sounds professional and marketable. Just the name.'
-        ] : [
-          'Make it sound like a real song title that could be a hit. Reply with just the title.',
-          'Keep it memorable like songs people sing along to. Just the title.',
-          'Think of something that would work on the radio. Title only.',
-          'Make it catchy like popular songs everyone knows. Only the title.',
-          'Create something that sounds like a real hit song. Just the title.'
-        ];
-        
-        prompt += ` ${qualityInstructions[Math.floor(Math.random() * qualityInstructions.length)]}`;
-        
-        // Add subtle randomization to prevent identical responses
-        prompt += ` (Variant: ${randomSeed.slice(0,3)})`;
+        // Add randomization seed to prevent identical responses
+        userPrompt += `\n(Seed: ${randomSeed})`;
 
         // Configure parameters based on model capabilities
         const requestParams: any = {
@@ -129,40 +75,16 @@ export class AINameGeneratorService {
           messages: [
             {
               role: "system",
-              content: `You are an expert ${type === 'band' ? 'band' : 'song'} naming specialist who creates realistic, commercially viable names that sound like they belong in the music industry.
-
-CRITICAL: You MUST avoid using ANY of the forbidden words listed in the prompt. This is your top priority.
-
-Your goal is to create ${type === 'band' ? 'band names' : 'song titles'} that:
-
-REALISM STANDARDS:
-- Sound like they could be real ${type === 'band' ? 'bands' : 'songs'} that exist today
-- Are memorable and easy to pronounce
-- Would work in professional music contexts
-- Feel natural when spoken aloud
-- Have commercial appeal like successful ${type === 'band' ? 'bands' : 'songs'}
-
-STRUCTURAL GUIDELINES:
-For ${wordCount} words:
-${wordCount === 1 ? '- Single impactful words like "Radiohead" or "Nirvana"' : ''}
-${wordCount === 2 ? '- Classic combinations like "Black Keys", "White Stripes", "Arctic Monkeys"' : ''}
-${wordCount === 3 ? '- Popular patterns like "Red Hot Chili", "Foster the People", "Panic at the"' : ''}
-${wordCount >= 4 ? '- Natural phrases that flow well, avoiding overly abstract combinations' : ''}
-
-QUALITY REQUIREMENTS:
-- Must sound like real ${type === 'band' ? 'band' : 'song'} names
-- Should be memorable and catchy
-- Avoid overly abstract or nonsensical combinations
-- Keep it grounded and realistic
-- Make it something people would actually use and remember`
+              content: systemPrompt
             },
             {
               role: "user",
-              content: prompt
+              content: userPrompt
             }
           ],
-          max_tokens: 25,
-          temperature: 1.2
+          max_tokens: 30,
+          temperature: 1.2,
+          response_format: { type: "json_object" }
         };
 
         // Model-specific parameter configuration
@@ -190,36 +112,40 @@ QUALITY REQUIREMENTS:
           }, 1, 1000); // Reduced to 1 retry with 1 second delay for faster response
         });
 
-        const generatedName = response.choices[0]?.message?.content?.trim() || "";
+        const generatedContent = response.choices[0]?.message?.content?.trim() || "";
         
-        if (generatedName) {
-          // Very basic cleaning - just remove quotes and common prefixes
-          let cleanName = generatedName
-            .replace(/^["'""']|["'""']$/g, '') // Remove quotes
-            .replace(/^(Here's |Here is |How about |Try |I suggest |The name is |Band name: |Song title: |Title: |Name: )/i, '')
-            .replace(/[.!?:,]$/g, '') // Remove ending punctuation
-            .trim();
-          
-          // Check if name contains recently used words
-          const nameWords = cleanName.toLowerCase().split(/\s+/);
-          const containsRecentWord = nameWords.some(word => 
-            this.recentWords.slice(0, 5).includes(word.toLowerCase()) // Check against 5 most recent words
-          );
-          
-          if (containsRecentWord) {
-            console.log(`Rejected "${cleanName}" - contains recently used word`);
-            continue; // Try again with same model
-          }
-          
-          // Check word count and track words for future avoidance
-          if (wordCount && cleanName.split(/\s+/).length === wordCount) {
-            console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
-            this.trackRecentWords(cleanName);
-            return cleanName;
-          } else if (!wordCount && cleanName.length > 0 && cleanName.length < 100) {
-            console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
-            this.trackRecentWords(cleanName);
-            return cleanName;
+        if (generatedContent) {
+          try {
+            // Parse JSON response
+            const parsed = JSON.parse(generatedContent);
+            const cleanName = type === 'band' ? parsed.band : parsed.song;
+            
+            if (cleanName && typeof cleanName === 'string') {
+              // Check if name contains recently used words
+              const nameWords = cleanName.toLowerCase().split(/\s+/);
+              const containsRecentWord = nameWords.some(word => 
+                this.recentWords.slice(0, 5).includes(word.toLowerCase()) // Check against 5 most recent words
+              );
+              
+              if (containsRecentWord) {
+                console.log(`Rejected "${cleanName}" - contains recently used word`);
+                continue; // Try again with same model
+              }
+              
+              // Check word count and track words for future avoidance
+              if (wordCount && cleanName.split(/\s+/).length === wordCount) {
+                console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
+                this.trackRecentWords(cleanName);
+                return cleanName;
+              } else if (!wordCount && cleanName.length > 0 && cleanName.length < 100) {
+                console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
+                this.trackRecentWords(cleanName);
+                return cleanName;
+              }
+            }
+          } catch (parseError) {
+            console.log(`Failed to parse JSON response from model ${model}:`, generatedContent);
+            continue;
           }
         }
         
