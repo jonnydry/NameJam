@@ -65,6 +65,18 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Integration**: Lightbulb button in name generator UI with dedicated AI result display showing model attribution
 - **Features**: Full verification and database storage, graceful fallback to algorithmic generation when AI unavailable
 
+### Enhanced AI Lyric Generation Service
+- **Location**: `server/services/lyricStarterService.ts`
+- **Purpose**: Generates lyrical starters enhanced with Datamuse linguistic context for authentic genre vocabulary
+- **Enhancement**: Integrates Datamuse API to provide:
+  - **Genre Words**: Authentic vocabulary related to the selected genre using statistical associations
+  - **Emotional Words**: Mood-appropriate language based on genre characteristics
+  - **Rhyme Words**: Common rhyme patterns for lyrical flow
+  - **Sensory Words**: Vivid imagery vocabulary for poetic expression
+- **JSON Prompt Structure**: Uses reliable JSON-based prompts with Datamuse context for consistent results
+- **Implementation**: Fetches context words from Datamuse → Structures into JSON → AI generates lyrics using enriched vocabulary
+- **Benefits**: More authentic, genre-appropriate lyrics with richer vocabulary than pure AI generation
+
 ### Name Verification Service
 - **Location**: `server/services/nameVerifier.ts`
 - **Purpose**: Provides real name availability checking against music databases with Spotify as the top priority
@@ -144,7 +156,7 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Major Update - January 25, 2025: ENHANCED AI INTEGRATION & 50/50 GENERATION SPLIT**
+**Latest Major Update - January 25, 2025: ENHANCED AI INTEGRATION & DATAMUSE-POWERED LYRIC GENERATION**
 - **ARCHITECTURAL REVOLUTION COMPLETED**: Completely removed all static vocabulary lists (3,000+ words) and replaced entire generation system with Datamuse API integration
 - **Pure Datamuse Generation**: All non-AI name generation now uses authentic linguistic relationships from 300,000+ word database with contextual word pairing
 - **Enhanced Generation Quality**: Names use real language usage patterns instead of static combinations (e.g., contextual adjectives for "storm" → "violent", "severe", "sudden")
@@ -156,6 +168,7 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Performance Optimized**: 100,000 daily API calls with intelligent caching, timeout handling, and graceful degradation to ensure reliability
 - **Genre-Specific Improvements**: Added genre seeds for all 14 genres including pop (bubble, sparkle, sugar, rainbow), enhanced AI prompts with detailed genre instructions (Jazz: smoky clubs, saxophones; Electronic: synthesizers, circuits)
 - **Grammar Correction Engine**: Implemented singular/plural noun agreement with comprehensive singularization rules, preventing grammatical errors like "Souls Breaking Reaper"
+- **Datamuse-Enhanced Lyric Generation**: Implemented hybrid approach for Lyric_Jam feature - calls Datamuse API first to gather genre-specific vocabulary, emotional words, rhymes, and sensory terms, then feeds this enriched context into AI prompts using JSON structure for more authentic and genre-appropriate lyrical starters
 
 Changelog:
 - July 02, 2025. Initial setup
