@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 
 interface LoadingAnimationProps {
   stage: 'generating' | 'verifying';
+  actualProgress?: number; // 0-100, undefined means indeterminate
+  estimatedDuration?: number; // milliseconds
 }
 
-export function LoadingAnimation({ stage }: LoadingAnimationProps) {
+export function LoadingAnimation({ stage, actualProgress, estimatedDuration = 3000 }: LoadingAnimationProps) {
   const [progress, setProgress] = useState(0);
   const [animationTime, setAnimationTime] = useState(0);
   const [barPattern, setBarPattern] = useState<Array<{x: number, baseHeight: number, frequency: number, amplitude: number, delay: number}>>([]);
+  const [startTime] = useState(Date.now());
 
   // Generate unique random bar pattern on mount
   useEffect(() => {
@@ -27,27 +30,44 @@ export function LoadingAnimation({ stage }: LoadingAnimationProps) {
   }, [stage]); // Regenerate pattern when stage changes
 
   useEffect(() => {
-    const duration = stage === 'generating' ? 3000 : 2000;
-    const startTime = Date.now();
-    
-    const updateProgress = () => {
-      const elapsed = Date.now() - startTime;
-      const newProgress = Math.min((elapsed / duration) * 100, 100);
-      setProgress(newProgress);
-      setAnimationTime(elapsed);
-      
-      if (newProgress < 100) {
+    // Use actual progress if provided, otherwise use time-based estimation
+    if (actualProgress !== undefined) {
+      setProgress(actualProgress);
+    } else {
+      // Indeterminate progress - slower, more realistic progression
+      const updateProgress = () => {
+        const elapsed = Date.now() - startTime;
+        setAnimationTime(elapsed);
+        
+        // Non-linear progress curve - starts fast, slows down
+        // This creates a more realistic loading experience
+        let estimatedProgress = 0;
+        if (elapsed < estimatedDuration * 0.2) {
+          // First 20% of time = 50% progress (fast start)
+          estimatedProgress = (elapsed / (estimatedDuration * 0.2)) * 50;
+        } else if (elapsed < estimatedDuration * 0.8) {
+          // Next 60% of time = 40% progress (steady middle)
+          const adjustedElapsed = elapsed - (estimatedDuration * 0.2);
+          estimatedProgress = 50 + (adjustedElapsed / (estimatedDuration * 0.6)) * 40;
+        } else {
+          // Last 20% of time = 10% progress (slow end, never reaches 100%)
+          const adjustedElapsed = elapsed - (estimatedDuration * 0.8);
+          estimatedProgress = 90 + (adjustedElapsed / (estimatedDuration * 0.2)) * 8;
+          // Cap at 98% to show we're still loading
+          estimatedProgress = Math.min(estimatedProgress, 98);
+        }
+        
+        setProgress(estimatedProgress);
         requestAnimationFrame(updateProgress);
-      }
-    };
-    
-    requestAnimationFrame(updateProgress);
-    
-    return () => {
-      setProgress(0);
-      setAnimationTime(0);
-    };
-  }, [stage]);
+      };
+      
+      const animationFrame = requestAnimationFrame(updateProgress);
+      
+      return () => {
+        cancelAnimationFrame(animationFrame);
+      };
+    }
+  }, [actualProgress, estimatedDuration, startTime]);
 
   return (
     <div className="flex flex-col items-center space-y-4">

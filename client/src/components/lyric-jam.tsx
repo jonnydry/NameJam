@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { useStash } from "@/context/stash-context";
 import { handleApiError } from "@/lib/api-error-handler";
 import { LoadingAnimation } from "./loading-animation";
+import { useLoadingProgress } from "@/hooks/use-loading-progress";
 
 interface LyricResponse {
   id: number;
@@ -25,6 +26,14 @@ export function LyricJam() {
   const { addToStash } = useStash();
   const loadingRef = useRef<HTMLDivElement>(null);
   const generateButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // Dynamic loading progress tracking
+  const lyricProgress = useLoadingProgress({ 
+    estimatedDuration: 3000, // 3 seconds for lyric generation
+    onComplete: () => {
+      // Progress animation complete
+    }
+  });
 
   const genres = [
     "rock", "pop", "country", "hip-hop", "indie", "folk", 
@@ -53,6 +62,7 @@ export function LyricJam() {
 
   const generateLyric = async () => {
     setIsLoading(true);
+    lyricProgress.startLoading(); // Start progress tracking
     
     // Scroll to loading animation
     setTimeout(() => {
@@ -72,11 +82,12 @@ export function LyricJam() {
 
       const data = await response.json();
       
-      // Add delay to let users read loading messages
-      await new Promise(resolve => setTimeout(resolve, 2800));
+      // Complete loading progress (removed artificial delay)
+      lyricProgress.completeLoading();
       
       setCurrentLyric(data);
     } catch (error) {
+      lyricProgress.completeLoading(); // Complete progress even on error
       handleApiError(error, {
         title: "Error",
         description: "Failed to generate lyric. Please try again."
@@ -180,7 +191,11 @@ export function LyricJam() {
 
             {isLoading && (
               <div ref={loadingRef} className="py-8">
-                <LoadingAnimation stage="generating" />
+                <LoadingAnimation 
+                  stage="generating" 
+                  actualProgress={lyricProgress.progress}
+                  estimatedDuration={lyricProgress.estimatedDuration}
+                />
                 <div className="text-center space-y-2 mt-4">
                   <div className="text-lg text-foreground font-medium">{getRandomLoadingMessage()}</div>
                   <div className="text-sm text-muted-foreground">Channeling the lyrical spirits</div>

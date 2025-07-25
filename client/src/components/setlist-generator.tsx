@@ -10,6 +10,7 @@ import { useStash } from '@/hooks/use-stash';
 import { useToast } from '@/hooks/use-toast';
 import { handleApiError } from '@/lib/api-error-handler';
 import { apiRequest } from '@/lib/queryClient';
+import { useLoadingProgress } from '@/hooks/use-loading-progress';
 import type { SetListResponse, SetListSong } from '@shared/schema';
 
 interface SetListGeneratorProps {
@@ -27,13 +28,22 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   const [loadingBandName, setLoadingBandName] = useState(false);
   const [animatingHearts, setAnimatingHearts] = useState<Map<string, 'add' | 'remove'>>(new Map());
   
-  const { toggleStashItem, isInStash } = useStash();
+  const { toggleStashItem, isInStash, addToStash } = useStash();
   const { toast } = useToast();
+  
+  // Dynamic loading progress tracking
+  const setListProgress = useLoadingProgress({ 
+    estimatedDuration: 6000, // 6 seconds for set list generation
+    onComplete: () => {
+      // Progress animation complete
+    }
+  });
 
   const handleGenerateSetList = async () => {
     setLoading(true);
     setError(null);
     setGeneratedBandName(null); // Reset band name when generating new setlist
+    setListProgress.startLoading(); // Start progress tracking
     
     try {
       const response = await apiRequest('POST', '/api/generate-setlist', {
@@ -48,9 +58,11 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
 
       const data: SetListResponse = await response.json();
       setSetList(data);
+      setListProgress.completeLoading(); // Complete progress
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to generate set list';
       setError(errorMsg);
+      setListProgress.completeLoading(); // Complete progress even on error
       handleApiError(err, {
         title: "Generation failed",
         description: errorMsg,
@@ -357,7 +369,11 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
 
       {loading && (
         <div className="flex justify-center py-8">
-          <LoadingAnimation stage="generating" />
+          <LoadingAnimation 
+            stage="generating"
+            actualProgress={setListProgress.progress}
+            estimatedDuration={setListProgress.estimatedDuration}
+          />
         </div>
       )}
 
