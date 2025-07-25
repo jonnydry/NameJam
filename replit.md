@@ -154,6 +154,8 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Setlist Generator Enhanced**: Added comprehensive word quality filtering, removed scientific/technical terms, improved grammatical patterns for 3-6 word songs
 - **Anti-Repetition System**: Implemented cross-generation word tracking to prevent repeated words across multiple name generations, tracks last 100 significant words to ensure unique results
 - **Performance Optimized**: 100,000 daily API calls with intelligent caching, timeout handling, and graceful degradation to ensure reliability
+- **Genre-Specific Improvements**: Added genre seeds for all 14 genres including pop (bubble, sparkle, sugar, rainbow), enhanced AI prompts with detailed genre instructions (Jazz: smoky clubs, saxophones; Electronic: synthesizers, circuits)
+- **Grammar Correction Engine**: Implemented singular/plural noun agreement with comprehensive singularization rules, preventing grammatical errors like "Souls Breaking Reaper"
 
 Changelog:
 - July 02, 2025. Initial setup
@@ -266,6 +268,7 @@ Changelog:
 - July 21, 2025. Fixed critical Generate Names button bug and improved AI prompting: resolved issue where button became non-functional after first generation by adding proper state management with isGenerating reset callbacks, reduced AI retry attempts from 3 to 1 per model for faster response times (3-5 seconds vs 12-14 seconds), completely rewrote AI prompting system to generate realistic, commercially viable names using successful band/song references (Arctic Monkeys, Pearl Jam, Radiohead style) instead of abstract creativity techniques, enhanced system prompts to focus on practical music industry standards and natural language flow
 - July 24, 2025. Complete static vocabulary removal and Datamuse API integration: removed all 3,000+ static vocabulary words, replaced with Datamuse API for contextual linguistic relationships, fixed AI service to return clean names instead of JSON objects, enhanced setlist generator with quality filtering to remove scientific/technical terms (electrons, radiation, etc.), improved grammatical patterns for more natural song names, added problematic word filtering and better base word selection from Datamuse API
 - July 25, 2025. Enhanced XAI API prompt system: implemented user-requested JSON-based prompt structure for both band and song name generation with explicit mood/genre integration and exact word count enforcement, updated AI service to parse JSON responses correctly, achieved perfect integration with new prompt format generating contextually appropriate names like "Obsidian Crypt Whisper" for dark rock bands and "Fading Echoes Paint Shadows" for melancholy indie songs
+- July 25, 2025. Fixed critical generation issues: resolved duplicate word bug in AI names by switching from parallel to sequential generation, added comprehensive genre support for all music styles with specific seed words (pop: bubble/sparkle/sugar, jazz: blue/smoke/velvet), implemented grammar correction engine with singular/plural noun agreement to prevent errors like "Souls Breaking Reaper"
 
 ## User Preferences
 

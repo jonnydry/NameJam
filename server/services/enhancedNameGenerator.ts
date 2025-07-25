@@ -206,7 +206,15 @@ export class EnhancedNameGeneratorService {
         electronic: ['neon', 'pulse', 'digital', 'circuit'],
         jazz: ['blue', 'smoke', 'velvet', 'midnight'],
         folk: ['river', 'mountain', 'home', 'story'],
-        indie: ['dream', 'city', 'youth', 'wonder']
+        indie: ['dream', 'city', 'youth', 'wonder'],
+        pop: ['bubble', 'sparkle', 'sugar', 'rainbow', 'shine', 'glitter'],
+        country: ['dust', 'road', 'whiskey', 'boots'],
+        blues: ['muddy', 'crossroads', 'train', 'bottle'],
+        reggae: ['island', 'roots', 'sun', 'peace'],
+        punk: ['riot', 'anarchy', 'crash', 'rebel'],
+        hip_hop: ['street', 'flow', 'beat', 'rhyme'],
+        classical: ['symphony', 'sonata', 'aria', 'opus'],
+        alternative: ['strange', 'echo', 'mirror', 'twisted']
       };
       
       if (genreSeeds[genre]) {
@@ -377,13 +385,21 @@ export class EnhancedNameGeneratorService {
         return `${this.capitalize(adj)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
       },
       
-      // Noun + Verb-ing pattern
+      // Noun + Verb-ing pattern with grammar correction
       async () => {
         const noun1 = this.getRandomWord(sources.nouns) || 'fire';
         const verbs = ['burning', 'rising', 'falling', 'breaking', 'shining'];
         const verb = verbs[Math.floor(Math.random() * verbs.length)];
         const noun2 = this.getRandomWord(sources.nouns) || 'sky';
-        return `${this.capitalize(noun1)} ${this.capitalize(verb)} ${this.capitalize(noun2)}`;
+        
+        // Ensure grammatical agreement - if noun1 is plural, singularize it
+        const isPlural = noun1.toLowerCase().endsWith('s') && !noun1.toLowerCase().endsWith('ss');
+        const correctedNoun1 = isPlural ? this.singularize(noun1) : noun1;
+        
+        // Ensure noun2 is plural if needed for balance
+        const correctedNoun2 = isPlural && !noun2.toLowerCase().endsWith('s') ? noun2 + 's' : noun2;
+        
+        return `${this.capitalize(correctedNoun1)} ${this.capitalize(verb)} ${this.capitalize(correctedNoun2)}`;
       }
     ];
 
@@ -488,6 +504,50 @@ export class EnhancedNameGeneratorService {
   private getRandomWord(wordArray: string[]): string | null {
     if (wordArray.length === 0) return null;
     return wordArray[Math.floor(Math.random() * wordArray.length)];
+  }
+
+  // Function to singularize common plural nouns
+  private singularize(word: string): string {
+    const lowerWord = word.toLowerCase();
+    
+    // Common irregular plurals
+    const irregulars: Record<string, string> = {
+      'children': 'child',
+      'men': 'man',
+      'women': 'woman',
+      'feet': 'foot',
+      'teeth': 'tooth',
+      'mice': 'mouse',
+      'geese': 'goose',
+      'people': 'person',
+      'leaves': 'leaf',
+      'lives': 'life',
+      'wolves': 'wolf',
+      'knives': 'knife',
+      'wives': 'wife',
+      'thieves': 'thief'
+    };
+    
+    if (irregulars[lowerWord]) {
+      return irregulars[lowerWord];
+    }
+    
+    // Regular plural rules
+    if (lowerWord.endsWith('ies') && lowerWord.length > 4) {
+      return lowerWord.slice(0, -3) + 'y';
+    }
+    if (lowerWord.endsWith('ves') && lowerWord.length > 4) {
+      return lowerWord.slice(0, -3) + 'f';
+    }
+    if (lowerWord.endsWith('es') && (lowerWord.endsWith('ses') || lowerWord.endsWith('xes') || 
+        lowerWord.endsWith('zes') || lowerWord.endsWith('ches') || lowerWord.endsWith('shes'))) {
+      return lowerWord.slice(0, -2);
+    }
+    if (lowerWord.endsWith('s') && !lowerWord.endsWith('ss') && lowerWord.length > 2) {
+      return lowerWord.slice(0, -1);
+    }
+    
+    return word;
   }
 
   private capitalize(word: string): string {
