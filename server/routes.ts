@@ -13,8 +13,9 @@ import { users, errorLogs } from "@shared/schema";
 
 import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
-import { verificationCache } from "./services/verificationCache";
+
 import { validationRules, handleValidationErrors } from "./security";
+import { performanceCache } from "./services/performanceCache";
 
 import { cacheHeaders } from "./middleware/cacheHeaders";
 import { 
@@ -211,7 +212,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       }
 
       // Check cache first
-      const cached = verificationCache.get(name, type);
+      const cached = performanceCache.getCachedVerification(name, type);
       if (cached) {
         console.log(`Cache hit for ${type}: ${name}`);
         return res.json({ verification: cached });
@@ -221,7 +222,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       const verification = await nameVerifier.verifyName(name, type);
       
       // Store in cache
-      verificationCache.set(name, type, verification);
+      performanceCache.setCachedVerification(name, type, verification);
       
       res.json({ verification });
     } catch (error) {
