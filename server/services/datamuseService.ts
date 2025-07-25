@@ -80,7 +80,7 @@ export class DatamuseService {
       const url = `${this.baseUrl}/words?${params.toString()}`;
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased to 15 seconds
 
       const response = await fetch(url, {
         signal: controller.signal,
