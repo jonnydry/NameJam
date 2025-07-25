@@ -82,12 +82,13 @@ export class EnhancedNameGeneratorService {
       // Get words using multiple linguistic relationships for richness
       console.log(`🎨 Building poetic word palette...`);
       
-      // 1. Get emotionally evocative words
-      for (const seed of poeticSeeds.emotional) {
+      // 1. Get emotionally evocative words (process only first 2 seeds to reduce API calls)
+      const emotionalSeeds = poeticSeeds.emotional.slice(0, 2);
+      for (const seed of emotionalSeeds) {
         const emotionalWords = await this.datamuseService.findWords({
           triggers: seed, // Words statistically associated
           topics: `${mood || 'emotion'} music poetry`,
-          maxResults: 20
+          maxResults: 15 // Reduced from 20
         });
         // Filter for quality
         const poeticWords = emotionalWords
@@ -96,12 +97,13 @@ export class EnhancedNameGeneratorService {
         sources.contextualWords.push(...poeticWords);
       }
       
-      // 2. Get sensory/imagery words
-      for (const seed of poeticSeeds.sensory) {
+      // 2. Get sensory/imagery words (process only first 2 seeds)
+      const sensorySeeds = poeticSeeds.sensory.slice(0, 2);
+      for (const seed of sensorySeeds) {
         const sensoryWords = await this.datamuseService.findWords({
           meansLike: seed,
           topics: 'nature poetry music',
-          maxResults: 15
+          maxResults: 10 // Reduced from 15
         });
         // Filter for quality
         const poeticWords = sensoryWords
@@ -110,32 +112,32 @@ export class EnhancedNameGeneratorService {
         sources.associatedWords.push(...poeticWords);
       }
       
-      // 3. Get musical/rhythmic words
-      const musicalSeeds = ['melody', 'rhythm', 'harmony', 'echo', 'resonance'];
+      // 3. Get musical/rhythmic words (reduce to 2 seeds)
+      const musicalSeeds = ['melody', 'rhythm'];
       for (const seed of musicalSeeds) {
         const musicWords = await this.datamuseService.findWords({
           triggers: seed,
           topics: 'music sound',
-          maxResults: 10
+          maxResults: 8 // Reduced from 10
         });
         sources.musicalTerms.push(...musicWords.map(w => w.word));
       }
       
-      // 4. Get adjectives using linguistic patterns
+      // 4. Get adjectives using linguistic patterns (limit to 3 seeds)
       console.log(`✨ Finding evocative adjectives...`);
-      const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre);
+      const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre).slice(0, 3);
       for (const seed of adjectiveSeeds) {
-        const adjs = await this.datamuseService.findAdjectivesForNoun(seed, 15);
+        const adjs = await this.datamuseService.findAdjectivesForNoun(seed, 10); // Reduced from 15
         sources.adjectives.push(...adjs.map((w: any) => w.word));
       }
       
-      // 5. Get poetic nouns using associations
+      // 5. Get poetic nouns using associations (limit to 3 seeds)
       console.log(`🌟 Finding poetic nouns...`);
-      const nounSeeds = this.getNounSeeds(mood, genre);
+      const nounSeeds = this.getNounSeeds(mood, genre).slice(0, 3);
       for (const seed of nounSeeds) {
         const nouns = await this.datamuseService.findWords({
           triggers: seed,
-          maxResults: 15
+          maxResults: 10 // Reduced from 15
         });
         // Filter for concrete, evocative nouns
         const poeticNouns = nouns.filter(w => {
