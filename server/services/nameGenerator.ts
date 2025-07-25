@@ -28,13 +28,13 @@ export class NameGeneratorService {
     // Generate AI names if available and requested
     if (aiCount > 0 && this.aiNameGenerator) {
       try {
-        // Generate multiple AI names
-        const aiPromises = [];
+        // Generate multiple AI names sequentially to ensure anti-repetition works
+        const aiResults = [];
         for (let i = 0; i < aiCount; i++) {
-          aiPromises.push(this.aiNameGenerator.generateAIName(request.type, request.genre, request.mood, request.wordCount));
+          const name = await this.aiNameGenerator.generateAIName(request.type, request.genre, request.mood, request.wordCount);
+          aiResults.push(name);
         }
         
-        const aiResults = await Promise.all(aiPromises);
         const aiResultsArray = aiResults.map(name => ({
           name,
           isAiGenerated: true,
