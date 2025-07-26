@@ -6,31 +6,28 @@ import { FermataLogo } from "@/components/fermata-logo";
 export default function About() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header with back link */}
-      <header className="bg-card border-b border-border py-4">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Name_Jam
-          </Link>
-        </div>
-      </header>
-
       {/* Main Content */}
-      <main className="flex-1 px-4 py-12">
-        <div className="max-w-4xl mx-auto">
+      <main className="flex-1 px-4 py-8 md:py-12">
+        <div className="max-w-4xl mx-auto bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-8 md:p-12">
+          {/* Back link moved inside gradient container */}
+          <div className="mb-8">
+            <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Name_Jam
+            </Link>
+          </div>
           {/* Logo and Title Section */}
           <div className="text-center mb-8">
             <div className="flex flex-col items-center">
               <div className="mb-4">
-                <FermataLogo size="lg" />
+                <FermataLogo size="xl" />
               </div>
-              <h1 className="text-3xl font-bold mb-2 uppercase tracking-wide font-mono">About Name_Jam</h1>
+              <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono">About Name_Jam</h1>
             </div>
           </div>
 
           {/* Content Card */}
-          <Card className="w-full">
+          <Card className="w-full bg-card/80 backdrop-blur-sm border-border/50">
             <CardHeader>
               <CardTitle className="text-xl font-semibold">About This Project</CardTitle>
             </CardHeader>
@@ -43,7 +40,7 @@ export default function About() {
               
               {/* Placeholder sections */}
               <div className="grid gap-6 mt-8">
-                <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
+                <div className="p-4 border border-solid border-border/30 rounded-lg bg-card/60 backdrop-blur-sm">
                   <h3 className="font-medium mb-2">Project Overview</h3>
                   <div className="text-sm text-muted-foreground">
                     <p><strong>NAME_JAM</strong> : Name your next musical project.</p>
@@ -52,7 +49,7 @@ export default function About() {
                   </div>
                 </div>
                 
-                <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
+                <div className="p-4 border border-solid border-border/30 rounded-lg bg-card/60 backdrop-blur-sm">
                   <h3 className="font-medium mb-3">Key Features</h3>
                   <ul className="text-sm text-muted-foreground space-y-2">
                     <li>• <strong>Datamuse-Powered Generation:</strong> Revolutionary replacement of static vocabulary with Datamuse API providing authentic linguistic relationships from 300,000+ word database for contextual word pairing</li>
@@ -71,7 +68,7 @@ export default function About() {
                   </ul>
                 </div>
                 
-                <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
+                <div className="p-4 border border-solid border-border/30 rounded-lg bg-card/60 backdrop-blur-sm">
                   <h3 className="font-medium mb-3">Technology Stack</h3>
                   <div className="text-sm text-muted-foreground space-y-3">
                     <div>
@@ -129,7 +126,7 @@ export default function About() {
                   </div>
                 </div>
                 
-                <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
+                <div className="p-4 border border-solid border-border/30 rounded-lg bg-card/60 backdrop-blur-sm">
                   <h3 className="font-medium mb-2">Credits & Acknowledgments</h3>
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• Replit</li>
@@ -148,11 +145,9 @@ export default function About() {
       </main>
 
       {/* Simple Footer */}
-      <footer className="bg-card border-t border-border py-6">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">© 2025 Name_Jam. Powered by web-sourced creativity.</p>
-          </div>
+      <footer className="py-6">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">© 2025 Name_Jam. Powered by web-sourced creativity.</p>
         </div>
       </footer>
     </div>
