@@ -374,12 +374,12 @@
     /* This positions the underscore at the center while title starts left */
     display: inline-block;
     position: relative;
-    margin-left: -1.6ch;
+    margin-left: -1.75ch;
   }
   
   /* Also maintain alignment during hover effect */
   .title-text.title-align:hover {
-    margin-left: -1.6ch;
+    margin-left: -1.75ch;
   }
 
 
