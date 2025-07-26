@@ -71,7 +71,7 @@ export default function Home() {
         "flex-1 px-4 py-8 md:py-12 transition-all duration-300",
         isStashOpen && "md:ml-96"
       )}>
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-xl mx-auto">
           {/* Logo and Title Section */}
           <div className="text-center mb-6 md:mb-8 mt-8 md:mt-0">
             <div className="flex flex-col items-center">

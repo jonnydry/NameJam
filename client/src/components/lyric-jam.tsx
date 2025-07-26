@@ -204,7 +204,7 @@ export function LyricJam() {
             )}
 
             {currentLyric && !isLoading && (
-              <Card className="border-2 max-w-xl mx-auto">
+              <Card className="border-2">
                 <CardHeader className="space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-2 flex-1 min-w-0">
