@@ -55,19 +55,19 @@ export default function About() {
                 <div className="p-4 border border-solid border-muted-foreground/20 rounded-lg bg-card/50">
                   <h3 className="font-medium mb-3">Key Features</h3>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• <strong>Massive Vocabulary Engine:</strong> Generate names using 3,069+ words across 32 specialized domains including science fiction, fantasy, culinary, architecture, psychology, physics, chemistry, biology, and sensory terms</li>
-                    <li>• <strong>AI-Powered Creativity:</strong> XAI Grok 3/4 integration for enhanced creative generation with advanced anti-repetition system and model attribution</li>
-                    <li>• <strong>Advanced Customization:</strong> Choose 1-6 word combinations, 12 mood themes, 14 musical genres with focused contextual filtering</li>
-                    <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, plus Last.fm, MusicBrainz, and famous names database</li>
-                    <li>• <strong>Professional Set Lists:</strong> Generate organized performance sets (8/16 songs) with automatic verification and AI-powered band name suggestions</li>
-                    <li>• <strong>Lyric_Jam Feature:</strong> Generate creative lyrical lines for songwriting inspiration with genre awareness and song structure integration (verse/chorus/bridge/pre-chorus/outro)</li>
-                    <li>• <strong>Enhanced Stash System:</strong> Save names, setlists, lyrics, and band bios with 5-star ratings, category sorting, and comprehensive export options (text/JSON/print)</li>
-                    <li>• <strong>Linguistic Intelligence:</strong> Advanced grammatical consistency, poetic flow optimization, smart capitalization, and duplicate word prevention</li>
-                    <li>• <strong>AI Band Bio Generator:</strong> Create hilarious, edgy R-rated band biographies with sophisticated humor and anti-formulaic storytelling</li>
-                    <li>• <strong>Easter Egg System:</strong> Special responses for app testing with famous artist trolling and "Name Jam" detection</li>
-                    <li>• <strong>Mobile Optimization:</strong> Responsive text scaling with CSS clamp() function, mobile-friendly dropdown interactions, and dynamic padding</li>
-                    <li>• <strong>Anti-Repetition Technology:</strong> Advanced word tracking system prevents consecutive repeated words in AI generation</li>
-                    <li>• <strong>Modern Typography:</strong> Futuristic monospace design with JetBrains Mono font, typing animations, rainbow hover effects, and uppercase tab branding</li>
+                    <li>• <strong>Datamuse-Powered Generation:</strong> Revolutionary replacement of static vocabulary with Datamuse API providing authentic linguistic relationships from 300,000+ word database for contextual word pairing</li>
+                    <li>• <strong>Hybrid AI Integration:</strong> XAI Grok 3/4 models with custom JSON prompts for 50% AI + 50% Datamuse generation split, complete with anti-repetition filtering and model attribution</li>
+                    <li>• <strong>Advanced Customization:</strong> Choose 1-6 word combinations, 12 mood themes, 14 musical genres with precise linguistic filtering and contextual word selection</li>
+                    <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, enhanced with popularity scores, genres, and direct search links</li>
+                    <li>• <strong>Professional Set Lists:</strong> Generate organized performance sets (8/16 songs) with intelligent word count variation and comprehensive Spotify verification</li>
+                    <li>• <strong>Enhanced Lyric Generation:</strong> Datamuse-enriched lyrical starters using genre-specific vocabulary, emotional words, rhymes, and sensory terms for authentic results</li>
+                    <li>• <strong>Advanced Stash System:</strong> Save names, setlists, lyrics, and band bios with 5-star ratings, category filtering, and comprehensive export options (text/JSON/print)</li>
+                    <li>• <strong>Pure Linguistic Intelligence:</strong> Datamuse API eliminates static vocabulary for authentic language patterns with grammatical consistency and natural flow</li>
+                    <li>• <strong>AI Band Bio Generator:</strong> Create hilarious, edgy R-rated band biographies with sophisticated humor and anti-formulaic storytelling using production logger system</li>
+                    <li>• <strong>Performance Optimization:</strong> Major codebase cleanup removing 49 packages (~36MB), unified caching system, custom date utilities, and production-ready logging</li>
+                    <li>• <strong>Dynamic Loading System:</strong> Real-time progress tracking with intelligent estimation curves that match actual API response times</li>
+                    <li>• <strong>Anti-Repetition Technology:</strong> Cross-generation word tracking preventing repeated words across multiple generations with 100-word memory system</li>
+                    <li>• <strong>Modern Typography:</strong> Optimized monospace design with JetBrains Mono font, typing animations, and responsive text scaling using CSS clamp() functions</li>
                   </ul>
                 </div>
                 
@@ -77,51 +77,53 @@ export default function About() {
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Frontend</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• React 18 with TypeScript for complete type safety</li>
-                        <li>• Tailwind CSS with shadcn/ui components and JetBrains Mono typography</li>
+                        <li>• React 18 with TypeScript for complete type safety and modern development</li>
+                        <li>• Tailwind CSS with shadcn/ui components, optimized CSS clamp() responsive scaling</li>
+                        <li>• JetBrains Mono typography with custom formatting utilities</li>
                         <li>• Wouter for lightweight client-side routing</li>
-                        <li>• TanStack React Query v5 for advanced server state management</li>
-                        <li>• Vite with optimized build process and hot reload</li>
-                        <li>• Framer Motion for smooth animations and transitions</li>
-                        <li>• React Context for global stash state management</li>
+                        <li>• TanStack React Query v5 with intelligent caching and error handling</li>
+                        <li>• Vite with optimized build process, hot reload, and Service Worker caching</li>
+                        <li>• React Context for global stash state with local storage persistence</li>
+                        <li>• Custom hooks for clipboard operations, loading progress, and debounced callbacks</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Backend</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• Node.js 20 with Express.js and ES modules</li>
-                        <li>• PostgreSQL with Drizzle ORM for type-safe database operations</li>
-                        <li>• Neon Database serverless PostgreSQL with edge compatibility</li>
-                        <li>• Advanced session management with PostgreSQL storage</li>
-                        <li>• Comprehensive error handling and graceful API degradation</li>
-                        <li>• TSX for TypeScript execution and development</li>
+                        <li>• Node.js 20 with Express.js, ES modules, and production-optimized logging</li>
+                        <li>• PostgreSQL with Drizzle ORM for type-safe database operations and migrations</li>
+                        <li>• Neon Database serverless PostgreSQL with edge compatibility and WebSocket support</li>
+                        <li>• Unified performance caching system with NodeCache for intelligent data storage</li>
+                        <li>• Comprehensive security with rate limiting, CORS, Helmet headers, and input sanitization</li>
+                        <li>• TSX for TypeScript execution, parallel verification services, and timeout handling</li>
+                        <li>• Authentication system with mixed approach supporting guest users and signed-in features</li>
                       </ul>
                     </div>
                     <div>
-                      <h4 className="font-medium text-foreground mb-1">AI & Verification APIs</h4>
+                      <h4 className="font-medium text-foreground mb-1">AI & External APIs</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• XAI Grok 3, Grok 4, and Grok 3-mini for creative AI generation with anti-repetition filtering</li>
-                        <li>• Spotify Web API (priority) for authoritative music verification with popularity scoring</li>
-                        <li>• Last.fm API for additional music database coverage and artist data</li>
-                        <li>• MusicBrainz API for comprehensive artist and track metadata</li>
-                        <li>• Famous Names Database with 60+ well-known artists for easter egg responses</li>
-                        <li>• Intelligent fallback system with 3-attempt retry mechanisms per model</li>
-                        <li>• Advanced word tracking to prevent consecutive repetition in AI results</li>
+                        <li>• XAI Grok 3, Grok 4, and Grok 3-mini with custom JSON prompts and intelligent parameter configuration</li>
+                        <li>• Datamuse API integration for authentic linguistic relationships and contextual word pairing (300,000+ words)</li>
+                        <li>• Spotify Web API (priority) for authoritative music verification with popularity scores and genre data</li>
+                        <li>• Last.fm API and MusicBrainz API for comprehensive music database coverage</li>
+                        <li>• Famous Names Database with 60+ well-known artists for easter easter egg trolling</li>
+                        <li>• Advanced rate limiting with intelligent retry mechanisms and graceful degradation</li>
+                        <li>• Cross-generation anti-repetition system tracking 100+ recent words for unique results</li>
                       </ul>
                     </div>
                     <div>
-                      <h4 className="font-medium text-foreground mb-1">Core Features</h4>
+                      <h4 className="font-medium text-foreground mb-1">Core Architecture</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• 874+ adjectives, 1,262+ nouns, 517+ verbs, 418+ musical terms across 32 domains</li>
-                        <li>• Advanced linguistic patterns with grammatical consistency and poetic flow evaluation</li>
-                        <li>• Real-time name verification with Spotify-priority checking and popularity scoring</li>
-                        <li>• Enhanced stash system with 5-star ratings, category filtering, and export options for names, setlists, lyrics, and band bios</li>
-                        <li>• AI band bio generation with edgy R-rated humor and anti-formulaic prompts</li>
-                        <li>• Lyric generation for songwriting inspiration with genre awareness and song structure context</li>
-                        <li>• Anti-repetition technology tracking 30 recent words to prevent duplicates</li>
-                        <li>• Local storage persistence with comprehensive export capabilities</li>
-                        <li>• Responsive design with dark theme optimization, monospace typography, and mobile text scaling</li>
-                        <li>• Fixed dropdown animations and improved mobile interactions</li>
+                        <li>• Revolutionary Datamuse API integration replacing all static vocabulary with authentic linguistic data</li>
+                        <li>• Advanced grammatical consistency engine with singular/plural agreement and natural flow optimization</li>
+                        <li>• Real-time name verification with Spotify-priority checking, popularity scoring, and direct search links</li>
+                        <li>• Comprehensive stash system supporting names, setlists, lyrics, and band bios with 5-star ratings</li>
+                        <li>• Enhanced lyric generation using Datamuse context for genre-specific vocabulary and rhyme patterns</li>
+                        <li>• Production-ready codebase with major cleanup removing 49 packages and 36MB bundle reduction</li>
+                        <li>• Unified caching system with NodeCache replacing duplicate verification systems</li>
+                        <li>• Custom lightweight utilities replacing heavy libraries (date-fns → 1KB custom formatter)</li>
+                        <li>• Dynamic loading progress system with real-time API response tracking</li>
+                        <li>• Complete TypeScript error resolution and production logging optimization</li>
                       </ul>
                     </div>
                   </div>
