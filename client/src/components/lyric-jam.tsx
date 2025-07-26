@@ -128,7 +128,7 @@ export function LyricJam() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto space-y-6">
       <Card className="bg-gradient-to-r from-blue-500/10 to-green-500/10 border-blue-500/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -204,7 +204,7 @@ export function LyricJam() {
             )}
 
             {currentLyric && !isLoading && (
-              <Card className="border-2">
+              <Card className="border-2 max-w-xl mx-auto">
                 <CardHeader className="space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-2 flex-1 min-w-0">
