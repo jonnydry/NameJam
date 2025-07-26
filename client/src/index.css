@@ -187,12 +187,13 @@
   
   /* Terminal-style cursor */
   .title-text::after {
-    content: '█';
+    content: '|';
     position: absolute;
-    right: -0.15em;
+    right: -0.2em;
     color: #00b8ff;
-    font-size: 0.8em;
-    opacity: 0.8;
+    font-size: 1em;
+    font-weight: 700;
+    opacity: 1;
     animation: terminal-blink 0.8s step-end infinite, fade-out 0.5s 1.5s forwards;
   }
   
@@ -203,8 +204,8 @@
   }
   
   @keyframes terminal-blink {
-    0%, 50% { opacity: 0.8; }
-    51%, 100% { opacity: 0.2; }
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
   }
   
   @keyframes fade-out {
