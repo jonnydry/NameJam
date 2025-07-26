@@ -178,14 +178,7 @@
     }
   }
   
-  /* Typing prompt (the ">" character) */
-  .typing-prompt {
-    color: #00b8ff;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(0, 184, 255, 0.5);
-    margin-right: 0.3em;
-    display: inline-block;
-  }
+
 
   /* Title gradient without typing animation */
   .title-gradient {
@@ -237,14 +230,7 @@
     filter: drop-shadow(0 0 15px rgba(0, 184, 255, 0.6)) brightness(1.1);
   }
   
-  @keyframes shimmer {
-    0% {
-      background-position: -100% 50%;
-    }
-    100% {
-      background-position: 200% 50%;
-    }
-  }
+
   
   /* Heart burst animation */
   @keyframes heart-burst {
@@ -376,37 +362,7 @@
     }
   }
 
-  .typing-wrapper::after {
-    content: '_';
-    position: absolute;
-    right: -0.1em;
-    top: 0;
-    font-weight: 700;
-    color: var(--primary);
-    animation: 
-      blink-caret 0.6s step-end infinite,
-      fade-caret 0.5s 3.7s forwards;
-  }
 
-  /* Removed old typing keyframe - now using reveal-text */
-
-  @keyframes blink-caret {
-    0%, 100% { 
-      opacity: 1;
-      transform: scaleY(1);
-    }
-    50% { 
-      opacity: 0.3;
-      transform: scaleY(0.8);
-    }
-  }
-
-  @keyframes fade-caret {
-    to { 
-      opacity: 0;
-      transform: translateX(5px);
-    }
-  }
 
   /* Title alignment to center underscore with logo */
   .title-align {
@@ -426,35 +382,9 @@
     margin-left: -0.75ch;
   }
 
-  /* Add a subtle glow effect during typing */
-  .typing-animation.bg-gradient-to-r {
-    filter: drop-shadow(0 0 20px rgba(0, 184, 255, 0.3));
-  }
 
-  /* Parent container for animation coordination */
-  .typing-container {
-    position: relative;
-    display: inline-block;
-  }
 
-  /* Add visual "typing sound" indicators */
-  .typing-container::before {
-    content: '>';
-    position: absolute;
-    left: -2em;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--primary);
-    opacity: 0;
-    font-weight: 700;
-    animation: prompt-appear 0.3s 0.3s forwards;
-  }
 
-  @keyframes prompt-appear {
-    to {
-      opacity: 0.6;
-    }
-  }
 
   /* Removed old character-by-character animation - simplified approach */
   
@@ -473,13 +403,7 @@
     }
   }
 
-  /* Typing prompt styling */
-  .typing-prompt {
-    color: #00b8ff;
-    opacity: 0;
-    margin-right: 0.5em;
-    animation: title-fade-in 0.3s 0.3s forwards;
-  }
+
 
   /* Subtitle fade in after typing completes */
   .subtitle-fade {
