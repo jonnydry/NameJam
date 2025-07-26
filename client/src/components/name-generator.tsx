@@ -203,7 +203,7 @@ export function NameGenerator() {
   }, [handleGenerate]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-xl mx-auto">
       {/* Controls Panel */}
       <div className="bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 rounded-xl shadow-sm border p-6">
         {/* Type Toggle */}
@@ -423,7 +423,7 @@ export function NameGenerator() {
       {/* Generated Results */}
       {results.length > 0 && !generateMutation.isPending && (
         <div className="space-y-4" aria-live="polite" aria-atomic="true">
-          <div className="flex flex-col gap-4 max-w-xl mx-auto">
+          <div className="flex flex-col gap-4">
             {results.map((result, index) => (
               <div
                 key={`result-${index}-${result.name.replace(/\s+/g, '-').toLowerCase()}`}
