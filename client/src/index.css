@@ -164,21 +164,31 @@
     cursor: pointer;
     white-space: nowrap;
     width: 8.5ch;
-    opacity: 1;
-    animation: title-typing 1.5s steps(8) forwards;
+    overflow: hidden;
+    animation: title-typing 1.2s steps(8) 0.3s both;
   }
   
   /* Typing animation that runs once */
   @keyframes title-typing {
-    0% {
+    from {
       width: 0;
       opacity: 0;
     }
-    20% {
+    to {
+      width: 8.5ch;
       opacity: 1;
     }
-    100% {
-      width: 8.5ch;
+  }
+  
+  /* Typing prompt (the ">" character) */
+  .typing-prompt {
+    color: #00b8ff;
+    opacity: 0;
+    animation: prompt-fade-in 0.3s forwards;
+  }
+  
+  @keyframes prompt-fade-in {
+    to {
       opacity: 1;
     }
   }
@@ -220,22 +230,9 @@
     51%, 100% { opacity: 0.3; }
   }
   
-  /* Hover effect with subtle shimmer - only changes the gradient */
+  /* Hover effect with subtle glow - no animation restart */
   .title-text:hover {
-    background: linear-gradient(
-      90deg,
-      #0084ff 0%,
-      #00b8ff 20%,
-      #00d4ff 50%,
-      #00b8ff 80%,
-      #0084ff 100%
-    );
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-size: 200% 100%;
-    animation: shimmer 3s ease-in-out infinite;
-    filter: drop-shadow(0 0 12px rgba(0, 184, 255, 0.4));
+    filter: drop-shadow(0 0 15px rgba(0, 184, 255, 0.6)) brightness(1.1);
   }
   
   @keyframes shimmer {
