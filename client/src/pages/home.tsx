@@ -46,7 +46,6 @@ export default function Home() {
       <div className="fixed top-4 right-4 z-50">
         <UserMenu />
       </div>
-
       {/* Main Content */}
       <main className="flex-1 px-4 py-8 md:py-12">
         <div className="max-w-7xl mx-auto">
@@ -64,7 +63,7 @@ export default function Home() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-base md:text-responsive-lg text-muted-foreground font-medium subtitle-fade px-2">Generate unique band names, song titles, set lists, and lyrics</p>
+            <p className="md:text-responsive-lg text-muted-foreground subtitle-fade px-2 font-normal">Generate unique band names, song titles, set lists, and lyrics</p>
           </div>
 
           {/* Two Column Layout with Tabs */}
@@ -105,7 +104,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-
       {/* Footer */}
       <footer className="bg-card border-t border-border py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
