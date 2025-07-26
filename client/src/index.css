@@ -369,17 +369,16 @@
     /* >NAME_JAM has 9 characters total */
     /* Characters: >(0) N(1) A(2) M(3) E(4) _(5) J(6) A(7) M(8) */
     /* The underscore is at position 5, which is at 5.5ch from the start */
-    /* To center it under the logo, we shift left by: */
-    /* Total width: 9.5ch, center is at 4.75ch, underscore is at 5.5ch */
-    /* So we need to shift left by (5.5ch - 4.75ch) = 0.75ch */
+    /* To align underscore with bottom of lightbulb, we need more shift */
+    /* Adjusting for visual alignment with logo bottom */
     display: inline-block;
     position: relative;
-    margin-left: -0.75ch;
+    margin-left: -0.2ch;
   }
   
   /* Also maintain alignment during hover effect */
   .title-text.title-align:hover {
-    margin-left: -0.75ch;
+    margin-left: -0.2ch;
   }
 
 
