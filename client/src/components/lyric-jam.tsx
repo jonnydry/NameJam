@@ -128,7 +128,7 @@ export function LyricJam() {
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="max-w-xl md:max-w-2xl mx-auto space-y-6">
       <Card className="bg-gradient-to-r from-blue-500/10 to-green-500/10 border-blue-500/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

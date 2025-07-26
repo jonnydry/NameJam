@@ -353,7 +353,7 @@ export function NameGenerator() {
           <p className="text-sm text-muted-foreground">Enter a name you've thought of to verify its availability</p>
         </div>
         
-        <div className="flex space-x-3 max-w-lg mx-auto">
+        <div className="flex space-x-3 max-w-lg md:max-w-xl mx-auto">
           <Input
             type="text"
             placeholder={`Enter a ${nameType} name...`}
