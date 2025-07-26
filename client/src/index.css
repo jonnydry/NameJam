@@ -231,6 +231,8 @@
   
   /* Hover effect with subtle shimmer */
   .title-text:hover {
+    width: auto !important;
+    opacity: 1 !important;
     background: linear-gradient(
       90deg,
       #0084ff 0%,
@@ -243,7 +245,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-size: 200% 100%;
-    animation: shimmer 3s ease-in-out infinite;
+    animation: shimmer 3s ease-in-out infinite !important;
     transform: scale(1.02);
     filter: drop-shadow(0 0 12px rgba(0, 184, 255, 0.4));
   }
