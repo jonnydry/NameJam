@@ -229,32 +229,31 @@
     }
   }
   
-  /* Hover effect without animation restart */
+  /* Hover effect with subtle shimmer */
   .title-text:hover {
     background: linear-gradient(
       90deg,
-      #ff00ff,
-      #00ffff,
-      #ffff00,
-      #00ff00,
-      #ff00ff,
-      #00ffff,
-      #ffff00
+      #0084ff 0%,
+      #00b8ff 20%,
+      #00d4ff 50%,
+      #00b8ff 80%,
+      #0084ff 100%
     );
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-size: 300% 100%;
-    transform: scale(1.05);
-    filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.5));
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 12px rgba(0, 184, 255, 0.4));
   }
   
-  @keyframes gradient-shift {
+  @keyframes shimmer {
     0% {
-      background-position: 0% 50%;
+      background-position: -100% 50%;
     }
     100% {
-      background-position: 300% 50%;
+      background-position: 200% 50%;
     }
   }
   
