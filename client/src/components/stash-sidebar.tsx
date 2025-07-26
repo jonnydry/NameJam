@@ -471,20 +471,28 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
                     <CardContent className="p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-sm font-medium break-all">{item.name}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {item.type === 'band' ? <Users className="h-3 w-3" /> : 
-                               item.type === 'setlist' ? <ListMusic className="h-3 w-3" /> :
-                               item.type === 'bandLore' ? <BookOpen className="h-3 w-3" /> :
-                               item.type === 'lyricJam' ? <Sparkles className="h-3 w-3" /> :
-                               <Music className="h-3 w-3" />}
-                            </Badge>
-                            {item.isAiGenerated && (
+                          <div className="flex items-start gap-2 mb-1">
+                            <div className="flex-1">
+                              {item.type === 'lyricJam' ? (
+                                <p className="text-sm italic text-foreground/90 leading-relaxed">"{item.name}"</p>
+                              ) : (
+                                <span className="text-sm font-medium">{item.name}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
                               <Badge variant="secondary" className="text-xs">
-                                <Brain className="h-3 w-3 text-purple-500" />
+                                {item.type === 'band' ? <Users className="h-3 w-3" /> : 
+                                 item.type === 'setlist' ? <ListMusic className="h-3 w-3" /> :
+                                 item.type === 'bandLore' ? <BookOpen className="h-3 w-3" /> :
+                                 item.type === 'lyricJam' ? <Sparkles className="h-3 w-3" /> :
+                                 <Music className="h-3 w-3" />}
                               </Badge>
-                            )}
+                              {item.isAiGenerated && (
+                                <Badge variant="secondary" className="text-xs">
+                                  <Brain className="h-3 w-3 text-purple-500" />
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           
                           {/* Setlist Preview */}
@@ -532,7 +540,16 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
                             </div>
                           )}
                           
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                          {/* Lyric Metadata */}
+                          {item.type === 'lyricJam' && item.metadata?.songSection && (
+                            <div className="mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {item.metadata.songSection}
+                              </Badge>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
                               {formatDistanceToNow(new Date(item.savedAt))}
