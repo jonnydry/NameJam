@@ -19,8 +19,7 @@ export function Landing() {
               {/* Title with special alignment */}
               <div className="relative">
                 <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center relative">
-                  <span className="typing-prompt">&gt;</span>
-                  <span className="title-text">Name_Jam</span>
+                  <span className="title-text title-align">&gt;Name_Jam</span>
                 </h1>
               </div>
             </div>
