@@ -203,7 +203,7 @@ export function NameGenerator() {
   }, [handleGenerate]);
 
   return (
-    <div className="space-y-6 max-w-xl mx-auto">
+    <div className="space-y-6">
       {/* Controls Panel */}
       <div className="bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 rounded-xl shadow-sm border p-6">
         {/* Type Toggle */}
