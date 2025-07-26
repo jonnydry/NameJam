@@ -161,15 +161,26 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-size: 200% 100%;
-    transition: all 0.3s ease;
     cursor: pointer;
-    opacity: 0;
-    overflow: hidden;
     white-space: nowrap;
-    width: 0;
-    animation: 
-      title-fade-in 0.5s 0.3s forwards, 
-      typing-reveal 1.2s steps(8) 0.3s forwards;
+    width: 8.5ch;
+    opacity: 1;
+    animation: title-typing 1.5s steps(8) forwards;
+  }
+  
+  /* Typing animation that runs once */
+  @keyframes title-typing {
+    0% {
+      width: 0;
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      width: 8.5ch;
+      opacity: 1;
+    }
   }
 
   /* Title gradient without typing animation */
@@ -189,18 +200,18 @@
   .title-text::after {
     content: '';
     position: absolute;
-    right: -0.1em;
+    right: -0.75em;
     width: 0.6em;
     height: 1.2em;
     background-color: #00b8ff;
     opacity: 0.7;
     box-shadow: 0 0 0 2px #00b8ff, 0 0 8px rgba(0, 184, 255, 0.5);
-    animation: terminal-blink 0.8s step-end infinite, fade-out 0.5s 1.5s forwards;
+    animation: terminal-blink 0.8s step-end infinite, cursor-fade 0.5s 1.5s forwards;
   }
   
-  @keyframes typing-reveal {
+  @keyframes cursor-fade {
     to {
-      width: 8.5ch;
+      opacity: 0;
     }
   }
   
@@ -209,30 +220,8 @@
     51%, 100% { opacity: 0.3; }
   }
   
-  @keyframes fade-out {
-    to { opacity: 0; }
-  }
-  
-  @keyframes title-fade-in {
-    to {
-      opacity: 1;
-    }
-  }
-  
-  @keyframes typing-effect {
-    from {
-      width: 0;
-      overflow: hidden;
-    }
-    to {
-      width: 100%;
-    }
-  }
-  
-  /* Hover effect with subtle shimmer */
+  /* Hover effect with subtle shimmer - only changes the gradient */
   .title-text:hover {
-    width: auto !important;
-    opacity: 1 !important;
     background: linear-gradient(
       90deg,
       #0084ff 0%,
@@ -245,8 +234,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-size: 200% 100%;
-    animation: shimmer 3s ease-in-out infinite !important;
-    transform: scale(1.02);
+    animation: shimmer 3s ease-in-out infinite;
     filter: drop-shadow(0 0 12px rgba(0, 184, 255, 0.4));
   }
   
