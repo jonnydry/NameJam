@@ -22,7 +22,7 @@ export default function About() {
               <div className="mb-4">
                 <FermataLogo size="xl" />
               </div>
-              <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono">About Name_Jam</h1>
+              <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono">&gt;ABOUT_NAME_JAM</h1>
             </div>
           </div>
 
