@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Menu } from "lucide-react";
+import { Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
@@ -57,7 +57,7 @@ export default function Home() {
         onClick={() => setIsStashOpen(!isStashOpen)}
         className="fixed top-4 left-4 z-40 flex items-center gap-2"
       >
-        <Menu className="h-4 w-4" />
+        <Archive className="h-4 w-4" />
         <span className="hidden sm:inline">Stash</span>
       </Button>
       

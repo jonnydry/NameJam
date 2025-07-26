@@ -156,7 +156,15 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 25, 2025: MAJOR CODEBASE CLEANUP & OPTIMIZATION**
+**Latest Update - January 25, 2025: STASH SIDEBAR REDESIGN & UPDATES**
+- **Collapsible Left Sidebar**: Redesigned stash from always-visible right sidebar to collapsible left sidebar that's hidden by default
+- **Toggle Button**: Added Archive icon button in top-left corner to open/close stash
+- **Close Button**: Added X button inside sidebar header for easy closing from within
+- **Smooth Animations**: Implemented 300ms slide-in/out transitions for seamless interaction
+- **Responsive Design**: Mobile overlay mode on screens smaller than 768px with background dimming
+- **TypeScript Fixes**: Fixed all data structure access issues for setlistData, bandLoreData, and metadata properties
+
+**January 25, 2025: MAJOR CODEBASE CLEANUP & OPTIMIZATION**
 - **Phase 1 - Dependency Cleanup**: Removed 8 unused NPM packages (dompurify, jsdom, next-themes, framer-motion, react-icons, tw-animate-css, memorystore, @types/jsdom) saving 49 total packages, deleted 2 unused service files (advancedLinguistics.ts, wordApiService.ts), removed 7 unused UI components (calendar, drawer, chart, resizable, sidebar, performance-monitor, use-mobile)
 - **Phase 2 - Redundancy Removal**: Consolidated duplicate caching systems to single performanceCache (removed verificationCache.ts), deleted 3 unused services (encryptionService.ts, genreAnalyzer.ts, verificationCache.ts), updated routes.ts to use unified caching system
 - **Phase 3 - Performance Optimization**: Replaced date-fns library (36MB) with custom formatDistanceToNow utility (<1KB), created production logger that disables console logs in production mode, fixed all TypeScript errors by adding missing type definitions (@types/cors, @types/crypto-js)
