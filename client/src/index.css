@@ -183,8 +183,12 @@
   /* Typing prompt (the ">" character) */
   .typing-prompt {
     color: #00b8ff;
+    font-weight: bold;
     opacity: 0;
-    animation: prompt-fade-in 0.3s forwards;
+    animation: prompt-fade-in 0.2s forwards;
+    text-shadow: 0 0 10px rgba(0, 184, 255, 0.5);
+    z-index: 10;
+    font-size: inherit;
   }
   
   @keyframes prompt-fade-in {
