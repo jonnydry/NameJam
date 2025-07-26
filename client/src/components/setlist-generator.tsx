@@ -264,7 +264,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-xl mx-auto">
       <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -378,7 +378,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
       )}
 
       {setList && !loading && (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-xl mx-auto">
           <Card className="bg-gradient-to-r from-neutral-800 to-neutral-700 border-neutral-600">
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">

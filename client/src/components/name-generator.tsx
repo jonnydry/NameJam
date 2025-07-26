@@ -353,7 +353,7 @@ export function NameGenerator() {
           <p className="text-sm text-muted-foreground">Enter a name you've thought of to verify its availability</p>
         </div>
         
-        <div className="flex space-x-3 max-w-md mx-auto">
+        <div className="flex space-x-3 max-w-lg mx-auto">
           <Input
             type="text"
             placeholder={`Enter a ${nameType} name...`}
@@ -423,7 +423,7 @@ export function NameGenerator() {
       {/* Generated Results */}
       {results.length > 0 && !generateMutation.isPending && (
         <div className="space-y-4" aria-live="polite" aria-atomic="true">
-          <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+          <div className="flex flex-col gap-4 max-w-xl mx-auto">
             {results.map((result, index) => (
               <div
                 key={`result-${index}-${result.name.replace(/\s+/g, '-').toLowerCase()}`}
