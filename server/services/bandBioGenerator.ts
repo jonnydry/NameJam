@@ -305,8 +305,8 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
   }
   
   private selectRandomMembers(members: string[][], count: number): string[][] {
-    const selected = [];
-    const indices = new Set();
+    const selected: string[][] = [];
+    const indices = new Set<number>();
     while (indices.size < count && indices.size < members.length) {
       indices.add(Math.floor(Math.random() * members.length));
     }
@@ -324,7 +324,7 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
   }
   
   private getBandType(memberCount: number): string {
-    const types = {
+    const types: Record<number, string> = {
       1: 'solo project',
       2: 'duo',
       3: 'trio',
@@ -411,7 +411,7 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
           const prompt = `You are a music industry expert tasked with naming a band based on their complete setlist. Analyze the following song titles and create a unique, memorable band name that reflects their artistic identity.
 
 SETLIST SONGS:
-${songNames.map((song, index) => `${index + 1}. "${song}"`).join('\n')}
+${songNames.map((song: string, index: number) => `${index + 1}. "${song}"`).join('\n')}
 
 BAND CONTEXT:
 ${mood ? `Musical Mood: ${mood}` : 'Musical Mood: Not specified'}
@@ -456,7 +456,7 @@ Respond with ONLY a JSON object in this exact format:
             // Update prompt for plain text response
             requestParams.messages[1].content = `You are a creative music expert. Based on these setlist songs, generate ONE unique band name that captures their essence:
 
-SONGS: ${songNames.map(song => `"${song}"`).join(', ')}
+SONGS: ${songNames.map((song: string) => `"${song}"`).join(', ')}
 ${mood ? `MOOD: ${mood}` : ''}
 ${genre ? `GENRE: ${genre}` : ''}
 
@@ -577,7 +577,7 @@ Respond with ONLY the band name, nothing else.`;
       
       Make it creative, entertaining, and slightly humorous. Include interesting formation story and breakthrough moment.`;
 
-      const response = await this.openai.chat.completions.create({
+      const response = await this.openai!.chat.completions.create({
         model: "grok-3-mini",
         messages: [
           {
