@@ -521,7 +521,9 @@ export function Stash() {
                        `${item.type} • ${item.wordCount} word${item.wordCount !== 1 ? 's' : ''}`}
                     </Badge>
                     {item.isAiGenerated && item.type !== 'bandLore' && item.type !== 'lyricJam' && (
-                      <Brain className="w-4 h-4 text-purple-500" title="AI Generated" />
+                      <span title="AI Generated">
+                        <Brain className="w-4 h-4 text-purple-500" />
+                      </span>
                     )}
                   </div>
                   
