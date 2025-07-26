@@ -185,15 +185,15 @@
     cursor: pointer;
   }
   
-  /* Terminal-style cursor */
+  /* Terminal-style block cursor */
   .title-text::after {
-    content: '|';
+    content: '';
     position: absolute;
-    right: -0.2em;
-    color: #00b8ff;
-    font-size: 1em;
-    font-weight: 700;
-    opacity: 1;
+    right: -0.1em;
+    width: 0.6em;
+    height: 1.2em;
+    background-color: #00b8ff;
+    opacity: 0.7;
     animation: terminal-blink 0.8s step-end infinite, fade-out 0.5s 1.5s forwards;
   }
   
@@ -204,8 +204,8 @@
   }
   
   @keyframes terminal-blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
+    0%, 50% { opacity: 0.7; }
+    51%, 100% { opacity: 0.3; }
   }
   
   @keyframes fade-out {
