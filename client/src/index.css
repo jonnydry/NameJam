@@ -163,20 +163,18 @@
     background-size: 200% 100%;
     cursor: pointer;
     white-space: nowrap;
-    width: 8.5ch;
+    width: 0;
     overflow: hidden;
-    animation: title-typing 1.2s steps(8) 0.3s both;
+    animation: title-typing 1.2s steps(8) 0.5s both;
   }
   
   /* Typing animation that runs once */
   @keyframes title-typing {
     from {
       width: 0;
-      opacity: 0;
     }
     to {
       width: 8.5ch;
-      opacity: 1;
     }
   }
   
@@ -185,10 +183,9 @@
     color: #00b8ff;
     font-weight: bold;
     opacity: 0;
-    animation: prompt-fade-in 0.2s forwards;
+    animation: prompt-fade-in 0.3s forwards;
     text-shadow: 0 0 10px rgba(0, 184, 255, 0.5);
-    z-index: 10;
-    font-size: inherit;
+    margin-right: 0.2em;
   }
   
   @keyframes prompt-fade-in {
@@ -214,13 +211,21 @@
   .title-text::after {
     content: '';
     position: absolute;
-    right: -0.75em;
+    right: -0.2em;
+    top: 50%;
+    transform: translateY(-50%);
     width: 0.6em;
-    height: 1.2em;
+    height: 1.1em;
     background-color: #00b8ff;
-    opacity: 0.7;
+    opacity: 0;
     box-shadow: 0 0 0 2px #00b8ff, 0 0 8px rgba(0, 184, 255, 0.5);
-    animation: terminal-blink 0.8s step-end infinite, cursor-fade 0.5s 1.5s forwards;
+    animation: cursor-appear 0.1s 1.7s forwards, terminal-blink 0.8s 1.7s step-end infinite, cursor-fade 0.5s 2.5s forwards;
+  }
+  
+  @keyframes cursor-appear {
+    to {
+      opacity: 0.7;
+    }
   }
   
   @keyframes cursor-fade {
