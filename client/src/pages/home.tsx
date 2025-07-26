@@ -2,17 +2,21 @@ import { NameGenerator } from "@/components/name-generator";
 import { SetListGenerator } from "@/components/setlist-generator";
 import { LyricJam } from "@/components/lyric-jam";
 import { FermataLogo } from "@/components/fermata-logo";
-import { Stash } from "@/components/stash";
+import { StashSidebar } from "@/components/stash-sidebar";
 import { UserMenu } from "@/components/user-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { Menu } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const [copiedName, setCopiedName] = useState<string | null>(null);
+  const [isStashOpen, setIsStashOpen] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
 
@@ -42,15 +46,34 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Stash Sidebar */}
+      <StashSidebar isOpen={isStashOpen} onToggle={() => setIsStashOpen(!isStashOpen)} />
+      
+      {/* Toggle Button */}
+      <Button
+        id="stash-toggle-btn"
+        variant="outline"
+        size="sm"
+        onClick={() => setIsStashOpen(!isStashOpen)}
+        className="fixed top-4 left-4 z-40 flex items-center gap-2"
+      >
+        <Menu className="h-4 w-4" />
+        <span className="hidden sm:inline">Stash</span>
+      </Button>
+      
       {/* Floating User Menu */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-40">
         <UserMenu />
       </div>
+      
       {/* Main Content */}
-      <main className="flex-1 px-4 py-8 md:py-12">
-        <div className="max-w-7xl mx-auto">
-          {/* Logo and Title Section - Restored Original Design */}
-          <div className="text-center mb-6 md:mb-8">
+      <main className={cn(
+        "flex-1 px-4 py-8 md:py-12 transition-all duration-300",
+        isStashOpen && "md:ml-96"
+      )}>
+        <div className="max-w-6xl mx-auto">
+          {/* Logo and Title Section */}
+          <div className="text-center mb-6 md:mb-8 mt-8 md:mt-0">
             <div className="flex flex-col items-center">
               {/* Logo */}
               <div className="mb-3 md:mb-4">
@@ -66,11 +89,9 @@ export default function Home() {
             <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground subtitle-fade px-2 font-normal">Generate unique band names, song titles, set lists, and lyrical inspiration</p>
           </div>
 
-          {/* Two Column Layout with Tabs */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-            {/* Generator Section - Takes 2/3 on large screens */}
-            <div className="lg:col-span-2">
-              <Tabs defaultValue="names" className="w-full">
+          {/* Tabs Section */}
+          <div className="w-full">
+            <Tabs defaultValue="names" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 tabs-list-enhanced mb-4 md:mb-6">
                   <TabsTrigger value="names" className="tabs-trigger-enhanced">
                     <span className="hidden sm:inline">NAME_JAM</span>
@@ -95,12 +116,6 @@ export default function Home() {
                   <LyricJam />
                 </TabsContent>
               </Tabs>
-            </div>
-            
-            {/* Stash - Takes 1/3 on large screens */}
-            <div className="lg:col-span-1">
-              <Stash />
-            </div>
           </div>
         </div>
       </main>
