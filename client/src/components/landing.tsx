@@ -23,7 +23,7 @@ export function Landing() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-sm md:text-responsive-base text-muted-foreground font-medium subtitle-fade px-2 mb-8">
+            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8">
               Generate unique band names, song titles, set lists, and lyrical inspiration
             </p>
           </div>
