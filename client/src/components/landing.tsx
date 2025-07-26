@@ -31,29 +31,29 @@ export function Landing() {
 
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-              <h3 className="font-semibold mb-2">Band & Song Names</h3>
-              <p className="text-sm text-muted-foreground">Generate creative names with 3,000+ words across 32 domains</p>
+            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
+              <h3 className="font-semibold mb-2">Datamuse-Powered Names</h3>
+              <p className="text-sm text-muted-foreground">Revolutionary linguistic engine with 300,000+ authentic word relationships</p>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-              <h3 className="font-semibold mb-2">Set Lists</h3>
-              <p className="text-sm text-muted-foreground">Create organized performance lists with verification</p>
+            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
+              <h3 className="font-semibold mb-2">Professional Set Lists</h3>
+              <p className="text-sm text-muted-foreground">Organized performance lists with Spotify verification and AI band names</p>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-              <h3 className="font-semibold mb-2">Lyric Sparks</h3>
-              <p className="text-sm text-muted-foreground">Generate inspiring lyrical lines for songwriting</p>
+            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
+              <h3 className="font-semibold mb-2">Enhanced Lyrics</h3>
+              <p className="text-sm text-muted-foreground">Genre-specific lyrical starters enriched with contextual vocabulary</p>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-              <h3 className="font-semibold mb-2">AI-Powered</h3>
-              <p className="text-sm text-muted-foreground">Enhanced creativity with Grok AI integration</p>
+            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
+              <h3 className="font-semibold mb-2">Hybrid AI System</h3>
+              <p className="text-sm text-muted-foreground">50/50 XAI Grok + Datamuse split with anti-repetition technology</p>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-              <h3 className="font-semibold mb-2">Stash & Rate</h3>
-              <p className="text-sm text-muted-foreground">Save favorites with 5-star ratings and export options</p>
+            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
+              <h3 className="font-semibold mb-2">Advanced Stash</h3>
+              <p className="text-sm text-muted-foreground">Save names, lyrics, bios, and setlists with 5-star ratings</p>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/50">
-              <h3 className="font-semibold mb-2">Spotify Verified</h3>
-              <p className="text-sm text-muted-foreground">Real-time availability checking with music databases</p>
+            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
+              <h3 className="font-semibold mb-2">Spotify Priority</h3>
+              <p className="text-sm text-muted-foreground">Real-time availability with popularity scores and direct search links</p>
             </div>
           </div>
 
@@ -79,7 +79,7 @@ export function Landing() {
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">
-              Sign in to save your favorites, access AI features, and create personalized stashes
+              Sign in for AI band biographies, enhanced stash features, and personalized creative tools
             </p>
           </div>
         </div>
