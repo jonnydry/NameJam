@@ -1,4 +1,4 @@
-import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, Brain, BookOpen, Filter, EyeOff, Eye, Star, Sparkles, Menu, X } from 'lucide-react';
+import { Trash2, Copy, Heart, Calendar, Music, Users, Download, Printer, FileText, ListMusic, ChevronDown, ChevronRight, ChevronLeft, Brain, BookOpen, Filter, EyeOff, Eye, Star, Sparkles, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -364,9 +364,9 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
                 variant="ghost"
                 size="sm"
                 onClick={onToggle}
-                className="h-8 w-8 p-0"
+                className="h-10 w-10 p-0 md:h-8 md:w-8"
               >
-                <X className="h-4 w-4" />
+                <ChevronLeft className="h-5 w-5 md:h-4 md:w-4" />
               </Button>
             </div>
 
@@ -570,27 +570,27 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
                                 description: `"${item.name}" copied to clipboard`,
                               });
                             }}
-                            className="h-8 w-8 p-0"
+                            className="h-10 w-10 p-0 md:h-8 md:w-8"
                           >
-                            <Copy className="h-3 w-3" />
+                            <Copy className="h-4 w-4 md:h-3 md:w-3" />
                           </Button>
                           {item.type === 'band' && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleBioRequest(item.name, item.genre, item.mood)}
-                              className="h-8 w-8 p-0"
+                              className="h-10 w-10 p-0 md:h-8 md:w-8"
                             >
-                              <BookOpen className="h-3 w-3" />
+                              <BookOpen className="h-4 w-4 md:h-3 md:w-3" />
                             </Button>
                           )}
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRemove(item.id, item.name)}
-                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            className="h-10 w-10 p-0 md:h-8 md:w-8 text-destructive hover:text-destructive"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4 md:h-3 md:w-3" />
                           </Button>
                         </div>
                       </div>

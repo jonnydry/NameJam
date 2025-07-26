@@ -156,13 +156,16 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 25, 2025: STASH SIDEBAR REDESIGN & UPDATES**
+**Latest Update - January 25, 2025: STASH SIDEBAR REDESIGN & MOBILE OPTIMIZATION**
 - **Collapsible Left Sidebar**: Redesigned stash from always-visible right sidebar to collapsible left sidebar that's hidden by default
 - **Toggle Button**: Added Archive icon button in top-left corner to open/close stash
-- **Close Button**: Added X button inside sidebar header for easy closing from within
+- **Close Button**: Changed from X to left-pointing arrow (ChevronLeft) for better visual clarity
 - **Smooth Animations**: Implemented 300ms slide-in/out transitions for seamless interaction
 - **Responsive Design**: Mobile overlay mode on screens smaller than 768px with background dimming
 - **TypeScript Fixes**: Fixed all data structure access issues for setlistData, bandLoreData, and metadata properties
+- **Mobile Touch Targets**: Increased all interactive buttons to 40x40px on mobile (h-10 w-10) for better touch accessibility
+- **Enhanced Mobile Icons**: Made all icons larger on mobile devices (h-5 w-5) for improved visibility
+- **Improved Lyric Formatting**: Added italic styling and quotes for lyrics in stash for better visual distinction
 
 **January 25, 2025: MAJOR CODEBASE CLEANUP & OPTIMIZATION**
 - **Phase 1 - Dependency Cleanup**: Removed 8 unused NPM packages (dompurify, jsdom, next-themes, framer-motion, react-icons, tw-animate-css, memorystore, @types/jsdom) saving 49 total packages, deleted 2 unused service files (advancedLinguistics.ts, wordApiService.ts), removed 7 unused UI components (calendar, drawer, chart, resizable, sidebar, performance-monitor, use-mobile)

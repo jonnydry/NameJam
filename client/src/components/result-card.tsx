@@ -110,7 +110,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             variant="ghost"
             size="sm"
             onClick={handleAddToStash}
-            className={`p-2 focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+            className={`p-2 md:p-2 focus:ring-2 focus:ring-offset-2 focus:ring-primary h-10 w-10 md:h-9 md:w-9 ${
               isInStash(name, nameType) 
                 ? 'text-red-500 hover:text-red-600' 
                 : 'text-muted-foreground hover:text-red-500'
@@ -119,27 +119,27 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             aria-label={isInStash(name, nameType) ? `Remove "${name}" from stash` : `Add "${name}" to stash`}
           >
             <span className={`inline-block ${isAnimating ? (animationType === 'add' ? 'heart-burst' : 'heart-shrink') : ''}`}>
-              <Heart className={`w-4 h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} aria-hidden="true" />
+              <Heart className={`w-5 h-5 md:w-4 md:h-4 ${isInStash(name, nameType) ? 'fill-current' : ''}`} aria-hidden="true" />
             </span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onCopy(name)}
-            className="text-muted-foreground hover:text-primary transition-colors p-2"
+            className="text-muted-foreground hover:text-primary transition-colors p-2 h-10 w-10 md:h-9 md:w-9"
             title="Copy to clipboard"
           >
-            <Copy className="w-4 h-4" aria-hidden="true" />
+            <Copy className="w-5 h-5 md:w-4 md:h-4" aria-hidden="true" />
           </Button>
           {nameType === 'band' && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowBioModal(true)}
-              className="text-muted-foreground hover:text-primary transition-colors p-2"
+              className="text-muted-foreground hover:text-primary transition-colors p-2 h-10 w-10 md:h-9 md:w-9"
               title="Generate band bio"
             >
-              <BookOpen className="w-4 h-4" aria-hidden="true" />
+              <BookOpen className="w-5 h-5 md:w-4 md:h-4" aria-hidden="true" />
             </Button>
           )}
         </div>
@@ -153,7 +153,9 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             {name}
           </h3>
           {result.isAiGenerated && (
-            <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 shrink-0" title="AI Generated" />
+            <span title="AI Generated">
+              <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 shrink-0" />
+            </span>
           )}
         </div>
         <p className={`text-xs sm:text-sm ${
