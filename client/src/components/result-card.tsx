@@ -137,12 +137,12 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       isEasterEgg 
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
         : result.isAiGenerated
-          ? `bg-gradient-to-br from-purple-500/10 to-purple-400/5 border-purple-500/20 
-             hover:from-purple-500/20 hover:to-purple-400/10 hover:shadow-lg hover:shadow-purple-500/10 
-             hover:border-purple-400/40 ${isHighlighted ? 'from-purple-500/20 to-purple-400/10 shadow-lg shadow-purple-500/10 border-purple-400/40' : ''}`
-          : `bg-gradient-to-br from-blue-500/10 to-blue-400/5 border-blue-500/20 
-             hover:from-blue-500/20 hover:to-blue-400/10 hover:shadow-lg hover:shadow-blue-500/10 
-             hover:border-blue-400/40 ${isHighlighted ? 'from-blue-500/20 to-blue-400/10 shadow-lg shadow-blue-500/10 border-blue-400/40' : ''}`
+          ? `bg-gradient-to-r from-black/90 to-gray-900/90 border-purple-500/20 
+             hover:border-purple-400/40 hover:shadow-lg hover:shadow-purple-500/10 
+             ${isHighlighted ? 'border-purple-400/40 shadow-lg shadow-purple-500/10' : ''}`
+          : `bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 
+             hover:border-blue-400/40 hover:shadow-lg hover:shadow-blue-500/10 
+             ${isHighlighted ? 'border-blue-400/40 shadow-lg shadow-blue-500/10' : ''}`
     }`}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3">
         <StatusBadge status={verification.status} />
