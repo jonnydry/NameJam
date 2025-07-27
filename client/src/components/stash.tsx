@@ -20,8 +20,8 @@ export function Stash() {
   const { stash, removeFromStash, clearStash, updateRating } = useStash();
   const { toast } = useToast();
   const { copyToClipboard } = useClipboard();
-  const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
-  const [categoryFilter, setCategoryFilter] = useState<'all' | 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam'>('all');
+
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'band' | 'song' | 'bandLore' | 'lyricJam'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'alphabetical'>('newest');
   const [isMinimized, setIsMinimized] = useState(false);
   const [showBioModal, setShowBioModal] = useState(false);
@@ -114,7 +114,6 @@ export function Stash() {
     
     const bandNames = stash.filter(item => item.type === 'band');
     const songNames = stash.filter(item => item.type === 'song');
-    const setlists = stash.filter(item => item.type === 'setlist');
     const bandLore = stash.filter(item => item.type === 'bandLore');
     
     if (bandNames.length > 0) {
@@ -126,12 +125,6 @@ export function Stash() {
     if (songNames.length > 0) {
       content += `SONG NAMES (${songNames.length}):\n`;
       content += songNames.map((item, index) => `${index + 1}. ${item.name}${item.rating ? ` (${item.rating}/5 stars)` : ''}`).join('\n');
-      content += '\n\n';
-    }
-    
-    if (setlists.length > 0) {
-      content += `SETLISTS (${setlists.length}):\n`;
-      content += setlists.map((item, index) => `${index + 1}. ${item.name} (${item.wordCount} songs)${item.rating ? ` (${item.rating}/5 stars)` : ''}`).join('\n');
       content += '\n\n';
     }
     
@@ -188,7 +181,6 @@ export function Stash() {
       totalNames: stash.length,
       bandNames: stash.filter(item => item.type === 'band').length,
       songNames: stash.filter(item => item.type === 'song').length,
-      setlists: stash.filter(item => item.type === 'setlist').length,
       bandLore: stash.filter(item => item.type === 'bandLore').length,
       lyricJams: stash.filter(item => item.type === 'lyricJam').length,
       items: stash.map(item => ({
@@ -201,10 +193,6 @@ export function Stash() {
           bio: item.bandLoreData.bio,
           model: item.bandLoreData.model,
           bandName: item.bandLoreData.bandName
-        } : {}),
-        ...(item.type === 'setlist' && item.setlistData ? {
-          totalSongs: item.setlistData.totalSongs,
-          bandName: item.setlistData.bandName
         } : {})
       }))
     };
@@ -225,23 +213,12 @@ export function Stash() {
     });
   };
 
-  const toggleSetlistExpansion = (setlistId: string) => {
-    setExpandedSetlists(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(setlistId)) {
-        newSet.delete(setlistId);
-      } else {
-        newSet.add(setlistId);
-      }
-      return newSet;
-    });
-  };
+
 
   const handlePrint = () => {
     const timestamp = new Date().toLocaleDateString();
     const bandNames = stash.filter(item => item.type === 'band');
     const songNames = stash.filter(item => item.type === 'song');
-    const setlists = stash.filter(item => item.type === 'setlist');
     const bandLore = stash.filter(item => item.type === 'bandLore');
     const lyricJams = stash.filter(item => item.type === 'lyricJam');
     
@@ -270,7 +247,6 @@ export function Stash() {
             <strong>Summary:</strong> ${stash.length} total items saved
             ${bandNames.length > 0 ? `• ${bandNames.length} band names` : ''}
             ${songNames.length > 0 ? `• ${songNames.length} song names` : ''}
-            ${setlists.length > 0 ? `• ${setlists.length} setlists` : ''}
             ${bandLore.length > 0 ? `• ${bandLore.length} band lore` : ''}
             ${lyricJams.length > 0 ? `• ${lyricJams.length} lyric sparks` : ''}
           </div>
@@ -389,7 +365,6 @@ export function Stash() {
                 {categoryFilter === 'all' ? 'All Categories' : 
                  categoryFilter === 'band' ? 'Band Names' :
                  categoryFilter === 'song' ? 'Song Names' :
-                 categoryFilter === 'setlist' ? 'Setlists' :
                  categoryFilter === 'bandLore' ? 'Band Lore' :
                  'Lyric Sparks'}
               </Button>
@@ -407,10 +382,6 @@ export function Stash() {
               <DropdownMenuItem onClick={() => setCategoryFilter('song')}>
                 <Music className="w-4 h-4 mr-2" />
                 Song Names
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setCategoryFilter('setlist')}>
-                <ListMusic className="w-4 h-4 mr-2" />
-                Setlists
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setCategoryFilter('bandLore')}>
                 <BookOpen className="w-4 h-4 mr-2" />
@@ -505,8 +476,6 @@ export function Stash() {
                   <div className="flex items-center space-x-2 mb-2">
                     {item.type === 'band' ? (
                       <Users className="w-4 h-4 text-primary" />
-                    ) : item.type === 'setlist' ? (
-                      <ListMusic className="w-4 h-4 text-primary" />
                     ) : item.type === 'bandLore' ? (
                       <Brain className="w-4 h-4 text-purple-500" />
                     ) : item.type === 'lyricJam' ? (
@@ -515,8 +484,7 @@ export function Stash() {
                       <Music className="w-4 h-4 text-primary" />
                     )}
                     <Badge variant="outline" className="text-xs">
-                      {item.type === 'setlist' ? `setlist • ${item.wordCount} songs` : 
-                       item.type === 'bandLore' ? `band lore • ${item.wordCount} words` :
+                      {item.type === 'bandLore' ? `band lore • ${item.wordCount} words` :
                        item.type === 'lyricJam' ? `lyric spark • ${item.wordCount} words` :
                        `${item.type} • ${item.wordCount} word${item.wordCount !== 1 ? 's' : ''}`}
                     </Badge>
@@ -527,73 +495,7 @@ export function Stash() {
                     )}
                   </div>
                   
-                  {item.type === 'setlist' ? (
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleSetlistExpansion(item.id)}
-                          className="h-auto p-0 hover:bg-transparent"
-                        >
-                          {expandedSetlists.has(item.id) ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <h3 className="font-medium text-responsive-base break-words cursor-pointer" 
-                            onClick={() => toggleSetlistExpansion(item.id)}>
-                          {item.name}
-                        </h3>
-                      </div>
-                      
-                      {item.setlistData?.bandName && (
-                        <div className="text-sm text-muted-foreground mb-2">
-                          Band: <span className="font-medium">{item.setlistData.bandName}</span>
-                        </div>
-                      )}
-                      
-                      {expandedSetlists.has(item.id) && item.setlistData && (
-                        <div className="mt-3 space-y-3 border-l-2 border-muted pl-4">
-                          {/* Set One */}
-                          <div>
-                            <h4 className="font-medium text-sm mb-2">Set One ({item.setlistData.setOne.length} songs)</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {item.setlistData.setOne.map((song, idx) => (
-                                <li key={idx} className="flex items-center gap-2">
-                                  <span className="w-6 text-right">{idx + 1}.</span>
-                                  <span>{song.name}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          
-                          {/* Set Two */}
-                          <div>
-                            <h4 className="font-medium text-sm mb-2">Set Two ({item.setlistData.setTwo.length} songs)</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {item.setlistData.setTwo.map((song, idx) => (
-                                <li key={idx} className="flex items-center gap-2">
-                                  <span className="w-6 text-right">{idx + 1}.</span>
-                                  <span>{song.name}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          
-                          {/* Encore */}
-                          <div>
-                            <h4 className="font-medium text-sm mb-2">Encore</h4>
-                            <div className="text-sm text-muted-foreground flex items-center gap-2">
-                              <span className="w-6 text-right">♦</span>
-                              <span>{item.setlistData.finale.name}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : item.type === 'bandLore' && item.bandLoreData ? (
+                  {item.type === 'bandLore' && item.bandLoreData ? (
                     <div>
                       <h3 className="font-medium text-responsive-base mb-1 break-words">
                         {item.name}

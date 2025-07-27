@@ -11,7 +11,7 @@ import { LyricStarterService } from "./services/lyricStarterService";
 import { db } from "./db";
 import { users, errorLogs } from "@shared/schema";
 
-import { generateNameRequestSchema, setListRequest } from "@shared/schema";
+import { generateNameRequestSchema } from "@shared/schema";
 import { z } from "zod";
 
 import { validationRules, handleValidationErrors } from "./security";
