@@ -33,42 +33,90 @@ export class ConceptNetService {
     }
 
     try {
-      const url = `${this.baseUrl}/query?start=/c/en/${word.toLowerCase()}&limit=${limit}`;
-      const response = await fetch(url, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'NameJam/1.0'
-        }
-      });
+      // Use multiple query strategies for better results
+      const queries = [
+        // Forward query (what this word relates to)
+        `${this.baseUrl}/query?start=/c/en/${word.toLowerCase()}&limit=${limit}`,
+        // Reverse query (what relates to this word)
+        `${this.baseUrl}/query?end=/c/en/${word.toLowerCase()}&limit=${Math.floor(limit / 2)}`,
+        // Related terms query
+        `${this.baseUrl}/related/c/en/${word.toLowerCase()}?filter=/c/en&limit=${Math.floor(limit / 2)}`
+      ];
 
-      if (!response.ok) {
-        throw new Error(`ConceptNet API error: ${response.status}`);
+      const allConcepts: ConceptNetWord[] = [];
+
+      // Execute queries in parallel for better performance
+      const responses = await Promise.allSettled(
+        queries.map(url => 
+          fetch(url, {
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'NameJam/1.0'
+            }
+          }).then(res => res.ok ? res.json() : null)
+        )
+      );
+
+      // Process forward and reverse queries
+      for (let i = 0; i < 2; i++) {
+        const result = responses[i];
+        if (result.status === 'fulfilled' && result.value?.edges) {
+          const concepts = result.value.edges
+            .filter((edge: ConceptNetEdge) => {
+              const isForward = i === 0;
+              const targetNode = isForward ? edge.end : edge.start;
+              return targetNode.language === 'en' && 
+                     edge.weight >= 0.5 && // Lower threshold for more results
+                     targetNode.label !== word.toLowerCase();
+            })
+            .map((edge: ConceptNetEdge) => {
+              const isForward = i === 0;
+              const targetNode = isForward ? edge.end : edge.start;
+              return {
+                word: targetNode.label,
+                weight: edge.weight,
+                relation: edge.rel.label
+              };
+            });
+          allConcepts.push(...concepts);
+        }
       }
 
-      const data: ConceptNetResponse = await response.json();
-      
-      // Process edges to extract related concepts
-      const concepts = data.edges
-        .filter(edge => 
-          edge.end.language === 'en' && 
-          edge.weight >= 1.0 && // Only strong associations
-          edge.end.label !== word.toLowerCase() // Avoid self-references
-        )
-        .map(edge => ({
-          word: edge.end.label,
-          weight: edge.weight,
-          relation: edge.rel.label
+      // Process related terms query
+      if (responses[2].status === 'fulfilled' && responses[2].value?.related) {
+        const relatedTerms = responses[2].value.related
+          .filter((term: any) => term['@id'].startsWith('/c/en/'))
+          .map((term: any) => ({
+            word: term['@id'].split('/').pop(),
+            weight: term.weight || 1.0,
+            relation: 'Related'
+          }));
+        allConcepts.push(...relatedTerms);
+      }
+
+      // Clean and filter concepts
+      const cleanedConcepts = allConcepts
+        .map(concept => ({
+          ...concept,
+          word: concept.word.replace(/_/g, ' ').trim() // Convert underscores to spaces
         }))
         .filter(concept => 
           concept.word.length > 2 && 
-          !concept.word.includes('_') && // Avoid multi-word concepts
-          /^[a-zA-Z]+$/.test(concept.word) // Only alphabetic words
-        );
+          concept.word.length < 20 && // Reasonable length
+          !concept.word.includes('/') && // No URIs
+          /^[a-zA-Z\s]+$/.test(concept.word) // Allow spaces for compound words
+        )
+        .map(concept => ({
+          ...concept,
+          word: concept.word.split(' ')[0] // Take first word of multi-word concepts
+        }))
+        .filter(concept => concept.word.length > 2);
 
       // Sort by weight and deduplicate
       const uniqueConcepts = Array.from(
-        new Map(concepts.map(c => [c.word, c])).values()
-      ).sort((a, b) => b.weight - a.weight);
+        new Map(cleanedConcepts.map(c => [c.word.toLowerCase(), c])).values()
+      ).sort((a, b) => b.weight - a.weight)
+      .slice(0, limit);
 
       // Cache the result
       this.cache.set(cacheKey, uniqueConcepts);

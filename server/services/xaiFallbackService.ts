@@ -10,12 +10,35 @@ interface FallbackOptions {
 export class XAIFallbackService {
   private openai: OpenAI;
   private models = ['grok-3', 'grok-4', 'grok-3-mini'];
+  private cache = new Map<string, { data: any, timestamp: number }>();
+  private cacheExpiry = 1000 * 60 * 30; // 30 minute cache
   
   constructor() {
     this.openai = new OpenAI({
       baseURL: "https://api.x.ai/v1",
       apiKey: process.env.XAI_API_KEY
     });
+  }
+
+  private getCacheKey(type: string, options: any): string {
+    return `${type}_${JSON.stringify(options)}`;
+  }
+
+  private getFromCache(key: string): any | null {
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
+      return cached.data;
+    }
+    return null;
+  }
+
+  private setCache(key: string, data: any): void {
+    this.cache.set(key, { data, timestamp: Date.now() });
+    // Clean old cache entries
+    if (this.cache.size > 100) {
+      const oldestKey = Array.from(this.cache.keys())[0];
+      this.cache.delete(oldestKey);
+    }
   }
 
   /**
@@ -27,22 +50,60 @@ export class XAIFallbackService {
     type: 'adjectives' | 'nouns' | 'related';
     count: number;
   }): Promise<any[]> {
-    const prompt = `Generate ${options.count} ${options.type} ${
-      options.word ? `related to "${options.word}"` : ''
-    }${options.theme ? ` with theme "${options.theme}"` : ''}.
-Return as JSON array of objects with format: [{"word": "example", "score": 100}]
-Words should be single words only, creative and contextually appropriate.`;
+    // Check cache first
+    const cacheKey = this.getCacheKey('datamuse', options);
+    const cached = this.getFromCache(cacheKey);
+    if (cached) {
+      secureLog.debug('Using cached Datamuse fallback data');
+      return cached;
+    }
+
+    // Create context-aware prompts for different query types
+    const contextPrompts = {
+      adjectives: `Generate ${options.count} descriptive adjectives${
+        options.word ? ` that would naturally describe "${options.word}"` : ''
+      }${options.theme ? ` in the context of ${options.theme} music` : ''}.
+Focus on evocative, poetic words suitable for band/song names.
+Include both common and unique adjectives.`,
+      
+      nouns: `Generate ${options.count} evocative nouns${
+        options.word ? ` semantically related to "${options.word}"` : ''
+      }${options.theme ? ` in the context of ${options.theme} music` : ''}.
+Include concrete objects, abstract concepts, and places.
+Focus on words with strong imagery.`,
+      
+      related: `Generate ${options.count} words conceptually associated with "${options.word}"${
+        options.theme ? ` in the context of ${options.theme} music` : ''
+      }.
+Include various parts of speech and semantic relationships.
+Focus on creative, unexpected connections.`
+    };
+
+    const prompt = contextPrompts[options.type] + `
+Return as JSON object with "words" array: {"words": [{"word": "example", "score": 100}]}
+Words should be single words only, no compounds or phrases.`;
 
     try {
-      for (const model of this.models) {
+      // Try each model with different temperature settings
+      const temperatures = [0.9, 0.8, 1.0];
+      
+      for (let i = 0; i < this.models.length; i++) {
+        const model = this.models[i];
+        const temperature = temperatures[i % temperatures.length];
+        
         try {
           const response = await this.openai.chat.completions.create({
             model,
             messages: [
-              { role: 'system', content: 'You are a linguistic expert generating contextual word associations.' },
+              { 
+                role: 'system', 
+                content: `You are a linguistic expert specializing in creative word associations for music naming.
+Your suggestions should be poetic, evocative, and suitable for band or song names.
+Understand subtle semantic relationships and cultural connotations.` 
+              },
               { role: 'user', content: prompt }
             ],
-            temperature: 0.9,
+            temperature,
             max_tokens: 500,
             response_format: { type: 'json_object' }
           });
@@ -53,14 +114,23 @@ Words should be single words only, creative and contextually appropriate.`;
             const words = parsed.words || parsed.results || parsed.data || parsed;
             
             if (Array.isArray(words)) {
-              return words.map((item: any, index: number) => ({
+              const results = words.map((item: any, index: number) => ({
                 word: typeof item === 'string' ? item : item.word,
-                score: 100 - index * 5 // Simulated score
-              }));
+                score: item.score || (100 - index * 5) // Use provided score or simulate
+              })).filter((item: any) => 
+                item.word && 
+                item.word.length > 2 && 
+                item.word.length < 20 &&
+                /^[a-zA-Z]+$/.test(item.word)
+              );
+              
+              // Cache successful results
+              this.setCache(cacheKey, results);
+              return results;
             }
           }
         } catch (error) {
-          secureLog.debug(`XAI Datamuse fallback failed with ${model}:`, error);
+          secureLog.debug(`XAI Datamuse fallback failed with ${model} at temp ${temperature}:`, error);
         }
       }
     } catch (error) {
@@ -79,12 +149,37 @@ Words should be single words only, creative and contextually appropriate.`;
     type: 'artists' | 'tracks';
     count: number;
   }): Promise<any[]> {
-    const prompt = `Generate ${options.count} ${options.type === 'artists' ? 'band/artist names' : 'song titles'} ${
-      options.genre ? `in the ${options.genre} genre` : ''
-    }${options.mood ? ` with ${options.mood} mood` : ''}.
-Return as JSON array: ${options.type === 'artists' 
-  ? '[{"name": "Artist Name", "genres": ["genre1"], "popularity": 70}]'
-  : '[{"name": "Song Title", "artists": [{"name": "Artist"}], "popularity": 80}]'}`;
+    // Check cache first
+    const cacheKey = this.getCacheKey('spotify', options);
+    const cached = this.getFromCache(cacheKey);
+    if (cached) {
+      secureLog.debug('Using cached Spotify fallback data');
+      return cached;
+    }
+
+    // Enhanced context-aware prompts
+    const genreContext = options.genre ? `in the ${options.genre} genre` : '';
+    const moodContext = options.mood ? `with ${options.mood} mood/vibe` : '';
+    
+    const systemPrompts = {
+      artists: `You are a music industry expert with deep knowledge of band/artist naming conventions.
+Generate realistic artist names that feel authentic to the ${options.genre || 'general'} music scene.
+Consider cultural relevance and genre-specific naming patterns.`,
+      
+      tracks: `You are a songwriter and music producer who understands song naming conventions.
+Generate song titles that capture the essence of ${options.genre || 'various'} music.
+Consider lyrical themes, emotional resonance, and genre-typical title structures.`
+    };
+
+    const prompt = `Generate ${options.count} ${options.type === 'artists' ? 'unique band/artist names' : 'compelling song titles'} ${genreContext} ${moodContext}.
+${options.type === 'artists' ? 
+  'Include both established-sounding and fresh, innovative names.' : 
+  'Include both poetic/abstract titles and more direct, narrative ones.'}
+
+Return as JSON object with "${options.type}" array:
+${options.type === 'artists' 
+  ? '{"artists": [{"name": "Artist Name", "genres": ["genre1", "genre2"], "popularity": 70}]}'
+  : '{"tracks": [{"name": "Song Title", "artists": [{"name": "Artist"}], "popularity": 80}]}'}`;
 
     try {
       for (const model of this.models) {
@@ -92,21 +187,42 @@ Return as JSON array: ${options.type === 'artists'
           const response = await this.openai.chat.completions.create({
             model,
             messages: [
-              { role: 'system', content: 'You are a music expert generating realistic artist and track names.' },
+              { role: 'system', content: systemPrompts[options.type] },
               { role: 'user', content: prompt }
             ],
-            temperature: 0.9,
-            max_tokens: 500,
+            temperature: options.type === 'artists' ? 0.85 : 0.9, // Slightly lower for artist names
+            max_tokens: 600,
             response_format: { type: 'json_object' }
           });
 
           const content = response.choices[0]?.message?.content;
           if (content) {
             const parsed = JSON.parse(content);
-            const items = parsed.artists || parsed.tracks || parsed.results || parsed.data || parsed;
+            const items = parsed[options.type] || parsed.results || parsed.data || [];
             
             if (Array.isArray(items)) {
-              return items.slice(0, options.count);
+              // Enhance with proper formatting
+              const results = items.slice(0, options.count).map((item: any, index: number) => {
+                if (options.type === 'artists') {
+                  return {
+                    id: `fallback-artist-${Date.now()}-${index}`,
+                    name: item.name || item,
+                    genres: item.genres || [options.genre || 'alternative'].filter(Boolean),
+                    popularity: item.popularity || Math.floor(Math.random() * 30) + 50
+                  };
+                } else {
+                  return {
+                    id: `fallback-track-${Date.now()}-${index}`,
+                    name: item.name || item,
+                    artists: item.artists || [{ name: 'Various Artists' }],
+                    popularity: item.popularity || Math.floor(Math.random() * 30) + 40
+                  };
+                }
+              });
+              
+              // Cache successful results
+              this.setCache(cacheKey, results);
+              return results;
             }
           }
         } catch (error) {
