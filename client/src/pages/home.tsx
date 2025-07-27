@@ -49,31 +49,36 @@ export default function Home() {
       {/* Stash Sidebar */}
       <StashSidebar isOpen={isStashOpen} onToggle={() => setIsStashOpen(!isStashOpen)} />
       
-      {/* Toggle Button */}
-      <Button
-        id="stash-toggle-btn"
-        variant="outline"
-        size="sm"
-        onClick={() => setIsStashOpen(!isStashOpen)}
-        className="fixed top-4 left-2 sm:left-4 z-40 flex items-center gap-2 h-10 px-2 sm:px-3 md:h-9"
-      >
-        <Archive className="h-5 w-5 md:h-4 md:w-4" />
-        <span className="hidden sm:inline">Stash</span>
-      </Button>
-      
-      {/* Floating User Menu */}
-      <div className="fixed top-4 right-4 z-40">
-        <UserMenu />
-      </div>
+      {/* Header with Stash and User Menu */}
+      <header className="relative w-full px-2 sm:px-4 py-4 z-40">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between">
+            {/* Stash Button */}
+            <Button
+              id="stash-toggle-btn"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsStashOpen(!isStashOpen)}
+              className="flex items-center gap-2 h-10 px-2 sm:px-3 md:h-9"
+            >
+              <Archive className="h-5 w-5 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Stash</span>
+            </Button>
+            
+            {/* User Menu */}
+            <UserMenu />
+          </div>
+        </div>
+      </header>
       
       {/* Main Content */}
       <main className={cn(
-        "flex-1 px-4 py-8 md:py-12 transition-all duration-300",
+        "flex-1 px-4 pb-8 md:pb-12 transition-all duration-300",
         isStashOpen && "md:ml-96"
       )}>
         <div className="max-w-xl md:max-w-2xl mx-auto">
           {/* Logo and Title Section */}
-          <div className="text-center mb-6 md:mb-8 mt-8 md:mt-0">
+          <div className="text-center mb-6 md:mb-8">
             <div className="flex flex-col items-center">
               {/* Logo */}
               <div className="mb-3 md:mb-4">
