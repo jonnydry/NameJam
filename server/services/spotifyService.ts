@@ -1,4 +1,6 @@
 import { spotifyRateLimiter, withRetry } from '../utils/rateLimiter';
+import { xaiFallbackService } from './xaiFallbackService';
+import { secureLog } from '../utils/secureLogger';
 
 interface SpotifyTokenResponse {
   access_token: string;
@@ -110,8 +112,25 @@ export class SpotifyService {
         const data: SpotifySearchResult = await response.json();
         return data.artists?.items || [];
       }, 3, 1000);
-    }).catch(error => {
-      console.error('Spotify artist search failed:', error);
+    }).catch(async error => {
+      secureLog.error('Spotify artist search failed, using XAI fallback:', error);
+      
+      // Use XAI fallback when Spotify fails
+      try {
+        const fallbackArtists = await xaiFallbackService.generateSpotifyFallback({
+          genre: query.toLowerCase(),
+          type: 'artists',
+          count: limit
+        });
+        
+        if (fallbackArtists.length > 0) {
+          secureLog.info(`XAI fallback provided ${fallbackArtists.length} artists for Spotify request`);
+          return fallbackArtists;
+        }
+      } catch (fallbackError) {
+        secureLog.error('XAI fallback also failed:', fallbackError);
+      }
+      
       return [];
     });
   }
@@ -143,8 +162,25 @@ export class SpotifyService {
         const data: SpotifySearchResult = await response.json();
         return data.tracks?.items || [];
       }, 3, 1000);
-    }).catch(error => {
-      console.error('Spotify track search failed:', error);
+    }).catch(async error => {
+      secureLog.error('Spotify track search failed, using XAI fallback:', error);
+      
+      // Use XAI fallback when Spotify fails
+      try {
+        const fallbackTracks = await xaiFallbackService.generateSpotifyFallback({
+          genre: query.toLowerCase(),
+          type: 'tracks',
+          count: limit
+        });
+        
+        if (fallbackTracks.length > 0) {
+          secureLog.info(`XAI fallback provided ${fallbackTracks.length} tracks for Spotify request`);
+          return fallbackTracks;
+        }
+      } catch (fallbackError) {
+        secureLog.error('XAI fallback also failed:', fallbackError);
+      }
+      
       return [];
     });
   }

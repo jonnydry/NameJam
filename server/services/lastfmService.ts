@@ -86,9 +86,25 @@ export class LastFmService {
       return vocabulary;
 
     } catch (error) {
-      secureLog.error(`Error fetching genre vocabulary for "${genre}":`, error);
+      secureLog.error(`Error fetching genre vocabulary for "${genre}", using XAI fallback:`, error);
       
-      // Return fallback vocabulary
+      // Use XAI fallback when Last.fm fails
+      try {
+        const { xaiFallbackService } = await import('./xaiFallbackService');
+        const fallbackVocabulary = await xaiFallbackService.generateLastFmFallback(genre);
+        
+        if (fallbackVocabulary.descriptiveWords.length > 0) {
+          secureLog.info(`XAI fallback provided vocabulary for genre "${genre}"`);
+          return {
+            ...fallbackVocabulary,
+            relatedGenres: []
+          };
+        }
+      } catch (fallbackError) {
+        secureLog.error('XAI fallback also failed:', fallbackError);
+      }
+      
+      // Return minimal fallback vocabulary
       return {
         genreTerms: [genre],
         relatedGenres: [],
