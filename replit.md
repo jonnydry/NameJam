@@ -167,7 +167,16 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 30, 2025: MAJOR ARCHITECTURAL SIMPLIFICATION - SET_JAM REMOVED**
+**Latest Update - January 30, 2025: LANDING PAGE CAROUSEL IMPLEMENTATION**
+- **Implemented feature carousel**: Replaced asymmetrical 5-card grid layout with elegant one-at-a-time carousel display
+- **Auto-advance functionality**: Carousel automatically advances every 5 seconds to showcase all features
+- **Interactive navigation**: Added left/right arrow buttons and indicator dots for manual navigation
+- **Smart pause system**: Auto-advance pauses for 10 seconds when users interact with carousel controls
+- **Maintained visual consistency**: Preserved color-coded icons (blue, green, yellow, orange, red) and gradient backgrounds
+- **Responsive design**: Carousel works seamlessly across all device sizes with smooth transitions
+- **Result**: More symmetrical and professional landing page presentation that highlights each feature individually
+
+**Previous Update - January 30, 2025: MAJOR ARCHITECTURAL SIMPLIFICATION - SET_JAM REMOVED**
 - **Complete Feature Removal**: Removed entire SET_JAM/setlist generation functionality from the application to simplify codebase and focus on core name generation features
 - **Backend Cleanup**: Deleted `/api/generate-setlist` endpoint, removed all setlist-related services and generation logic
 - **Frontend Cleanup**: Removed SetlistGenerator component, removed SET_JAM tab from navigation, updated stash to handle only band/song/bandLore/lyricJam types
