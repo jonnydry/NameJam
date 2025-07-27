@@ -1,9 +1,84 @@
 import { Button } from "@/components/ui/button";
 import { FermataLogo } from "@/components/fermata-logo";
 import { Link } from "wouter";
-import { LogIn, Zap, ListMusic, NotebookPen, Brain, Archive, Music } from "lucide-react";
+import { LogIn, Zap, ListMusic, NotebookPen, Brain, Archive, Music, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export function Landing() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  
+  const features = [
+    {
+      icon: Zap,
+      bgColor: "bg-blue-500/10",
+      textColor: "text-blue-500",
+      shadowColor: "hover:shadow-blue-500/10",
+      title: "Quadruple API Intelligence",
+      description: "Datamuse linguistics + Spotify data + Last.fm genres + ConceptNet semantics for unmatched authenticity"
+    },
+    {
+      icon: NotebookPen,
+      bgColor: "bg-green-500/10",
+      textColor: "text-green-500",
+      shadowColor: "hover:shadow-green-500/10",
+      title: "Lyric Sparks",
+      description: "AI-powered opening lines with authentic genre vocabulary from real artist data"
+    },
+    {
+      icon: Brain,
+      bgColor: "bg-yellow-500/10",
+      textColor: "text-yellow-500",
+      shadowColor: "hover:shadow-yellow-500/10",
+      title: "Genre-Perfect AI",
+      description: "Learns from 15+ real artist examples per genre to create names that truly fit your style"
+    },
+    {
+      icon: Archive,
+      bgColor: "bg-orange-500/10",
+      textColor: "text-orange-500",
+      shadowColor: "hover:shadow-orange-500/10",
+      title: "Organized Stash",
+      description: "Rate, sort, and export your favorites - names, lyrics, and edgy band bios"
+    },
+    {
+      icon: Music,
+      bgColor: "bg-red-500/10",
+      textColor: "text-red-500",
+      shadowColor: "hover:shadow-red-500/10",
+      title: "Instant Verification",
+      description: "Check availability across Spotify, YouTube & Google with one click - know what's taken instantly"
+    }
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % features.length);
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 10000); // Resume auto-advance after 10 seconds
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + features.length) % features.length);
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 10000); // Resume auto-advance after 10 seconds
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 10000); // Resume auto-advance after 10 seconds
+  };
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (!isPaused) {
+      const timer = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % features.length);
+      }, 5000); // Change slide every 5 seconds
+      return () => clearInterval(timer);
+    }
+  }, [isPaused, features.length]);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Main Content */}
@@ -26,62 +101,60 @@ export function Landing() {
             <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8">Create unique band or song names and generate lyrics to prompt your own writing. Name your Jam!</p>
           </div>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 max-w-3xl mx-auto">
-            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-blue-500/10 text-blue-500">
-                  <Zap className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Quadruple API Intelligence</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Datamuse linguistics + Spotify data + Last.fm genres + ConceptNet semantics for unmatched authenticity</p>
-                </div>
+          {/* Features Carousel */}
+          <div className="relative mb-12 max-w-3xl mx-auto">
+            {/* Carousel Container */}
+            <div className="overflow-hidden">
+              <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+                {features.map((feature, index) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div key={index} className="w-full flex-shrink-0">
+                      <div className={`mx-4 text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg ${feature.shadowColor}`}>
+                        <div className="flex items-start gap-4">
+                          <div className={`p-3 rounded-lg ${feature.bgColor} ${feature.textColor}`}>
+                            <Icon className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg mb-2 font-mono text-foreground">{feature.title}</h3>
+                            <p className="text-base text-muted-foreground/90 leading-relaxed">{feature.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-green-500/10 text-green-500">
-                  <NotebookPen className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Lyric Sparks</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">AI-powered opening lines with authentic genre vocabulary from real artist data</p>
-                </div>
-              </div>
-            </div>
-            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/10">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-yellow-500/10 text-yellow-500">
-                  <Brain className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Genre-Perfect AI</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Learns from 15+ real artist examples per genre to create names that truly fit your style</p>
-                </div>
-              </div>
-            </div>
-            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-orange-500/10 text-orange-500">
-                  <Archive className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Organized Stash</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Rate, sort, and export your favorites - names, lyrics, and edgy band bios</p>
-                </div>
-              </div>
-            </div>
-            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-red-500/10">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-red-500/10 text-red-500">
-                  <Music className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Instant Verification</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Check availability across Spotify, YouTube & Google with one click - know what's taken instantly</p>
-                </div>
-              </div>
+
+            {/* Navigation Buttons */}
+            <button
+              onClick={prevSlide}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 p-2 rounded-full bg-background/80 border border-border hover:bg-background transition-all duration-200 shadow-lg"
+              aria-label="Previous feature"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 p-2 rounded-full bg-background/80 border border-border hover:bg-background transition-all duration-200 shadow-lg"
+              aria-label="Next feature"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+
+            {/* Indicators */}
+            <div className="flex justify-center gap-2 mt-6">
+              {features.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentSlide ? 'bg-primary w-8' : 'bg-muted-foreground/30'
+                  }`}
+                  aria-label={`Go to feature ${index + 1}`}
+                />
+              ))}
             </div>
           </div>
 
