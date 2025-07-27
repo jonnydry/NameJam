@@ -1,6 +1,7 @@
 import { datamuseService, DatamuseService } from './datamuseService';
 import { lastfmService } from './lastfmService';
 import { SpotifyService } from './spotifyService';
+import { conceptNetService } from './conceptNetService';
 import type { GenerateNameRequest } from '@shared/schema';
 import { secureLog } from '../utils/secureLogger';
 
@@ -14,6 +15,7 @@ interface EnhancedWordSource {
   genreTerms: string[];
   lastfmWords: string[];
   spotifyWords: string[];
+  conceptNetWords: string[];
 }
 
 export class EnhancedNameGeneratorService {
@@ -86,7 +88,8 @@ export class EnhancedNameGeneratorService {
       associatedWords: [],
       genreTerms: [],
       lastfmWords: [],
-      spotifyWords: []
+      spotifyWords: [],
+      conceptNetWords: []
     };
 
     try {
@@ -139,7 +142,34 @@ export class EnhancedNameGeneratorService {
         secureLog.error('Spotify integration failed, continuing with other sources:', error);
       }
 
-      // STEP 3: Get words using multiple linguistic relationships for richness  
+      // STEP 3: ConceptNet Integration for Conceptual Associations
+      sources.conceptNetWords = [];
+      try {
+        if (genre) {
+          secureLog.debug(`🧠 Fetching ConceptNet associations for genre: ${genre}`);
+          const genreAssociations = await conceptNetService.getGenreAssociations(genre);
+          sources.conceptNetWords.push(...genreAssociations.filter(w => this.isPoeticWord(w)));
+          secureLog.debug(`✅ ConceptNet genre integration: ${genreAssociations.length} concepts found`);
+        }
+        
+        if (mood) {
+          secureLog.debug(`🧠 Fetching ConceptNet emotional associations for: ${mood}`);
+          const emotionalAssociations = await conceptNetService.getEmotionalAssociations(mood);
+          sources.conceptNetWords.push(...emotionalAssociations.filter(w => this.isPoeticWord(w)));
+          secureLog.debug(`✅ ConceptNet mood integration: ${emotionalAssociations.length} concepts found`);
+        }
+        
+        // Get cultural connections for some seed words
+        if (poeticSeeds.emotional.length > 0) {
+          const culturalWord = poeticSeeds.emotional[0];
+          const culturalConnections = await conceptNetService.getCulturalConnections(culturalWord);
+          sources.conceptNetWords.push(...culturalConnections.filter(w => this.isPoeticWord(w)));
+        }
+      } catch (error) {
+        secureLog.error('ConceptNet integration failed, continuing with other sources:', error);
+      }
+
+      // STEP 4: Get words using multiple linguistic relationships for richness  
       secureLog.debug(`🎨 Building poetic word palette...`);
       
       // 3. Get emotionally evocative words (process only first 2 seeds to reduce API calls)
@@ -455,11 +485,11 @@ export class EnhancedNameGeneratorService {
     return allWords[Math.floor(Math.random() * allWords.length)];
   }
 
-  // Generate two words using semantic relationships + Last.fm/Spotify genre intelligence
+  // Generate two words using semantic relationships + Last.fm/Spotify/ConceptNet intelligence
   private async generateTwoWordContextual(sources: EnhancedWordSource, type: string, genre?: string): Promise<string> {
-    // Prioritize Last.fm and Spotify genre-specific vocabulary if available
-    const genreAdjectives = [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords].filter(w => this.isAdjectiveLike(w));
-    const genreNouns = [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords].filter(w => this.isNounLike(w));
+    // Prioritize Last.fm, Spotify, and ConceptNet genre-specific vocabulary if available
+    const genreAdjectives = [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords, ...sources.conceptNetWords].filter(w => this.isAdjectiveLike(w));
+    const genreNouns = [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords, ...sources.conceptNetWords].filter(w => this.isNounLike(w));
     
     const adjectives = genreAdjectives.length > 0 ? 
       [...genreAdjectives, ...sources.adjectives.slice(0, 5)] :
@@ -515,16 +545,16 @@ export class EnhancedNameGeneratorService {
     return `${this.capitalize(adj)} ${this.capitalize(baseNoun)}`;
   }
 
-  // Generate three words with enhanced patterns + Last.fm/Spotify genre context
+  // Generate three words with enhanced patterns + Last.fm/Spotify/ConceptNet context
   private async generateThreeWordContextual(sources: EnhancedWordSource, type: string, genre?: string): Promise<string> {
-    // Create enhanced word pools with Last.fm and Spotify data priority
+    // Create enhanced word pools with Last.fm, Spotify, and ConceptNet data priority
     const enhancedAdjectives = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords, ...sources.conceptNetWords], 
       sources.adjectives, 
       w => this.isAdjectiveLike(w)
     );
     const enhancedNouns = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords, ...sources.conceptNetWords], 
       sources.nouns, 
       w => this.isNounLike(w)
     );

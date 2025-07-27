@@ -33,10 +33,10 @@ export class NameGeneratorService {
         if (request.genre) {
           // Get real examples from enhanced name generator's API sources
           const wordSources = await enhancedNameGenerator.buildContextualWordSources(request.mood, request.genre);
-          // Combine artist names from Spotify and Last.fm for context
-          contextExamples = [...wordSources.spotifyWords, ...wordSources.lastfmWords]
+          // Combine artist names from Spotify, Last.fm, and ConceptNet for context
+          contextExamples = [...wordSources.spotifyWords, ...wordSources.lastfmWords, ...wordSources.conceptNetWords]
             .filter(w => w.length > 2 && !w.includes(' ')) // Filter for quality
-            .slice(0, 10); // Limit to 10 examples
+            .slice(0, 15); // Increased to 15 examples for richer context
         }
         
         // Generate multiple AI names sequentially to ensure anti-repetition works
