@@ -206,16 +206,17 @@ export class EnhancedNameGeneratorService {
       // Parallelize Datamuse API calls for even better performance
       const datamusePromises = [];
       
-      // 3. Get emotionally evocative words (process only first 2 seeds to reduce API calls)
+      // 3. Get emotionally evocative words using synonyms instead of triggers
       const emotionalSeeds = poeticSeeds.emotional.slice(0, 2);
       datamusePromises.push(...emotionalSeeds.map(seed =>
         this.datamuseService.findWords({
-          triggers: seed,
-          topics: `${mood || 'emotion'} music poetry`,
-          maxResults: 15
+          meansLike: seed,  // Use semantic similarity instead of statistical triggers
+          topics: 'music poetry emotion',
+          maxResults: 20
         }).then(emotionalWords => {
           const poeticWords = emotionalWords
-            .filter(w => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word))
+            .filter(w => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word) && w.word.length >= 4 && w.word.length <= 10)
+            .slice(0, 8) // Take only top results
             .map(w => w.word);
           sources.contextualWords.push(...poeticWords);
         }).catch(error => secureLog.error('Datamuse emotional words failed:', error))
@@ -236,45 +237,55 @@ export class EnhancedNameGeneratorService {
         }).catch(error => secureLog.error('Datamuse sensory words failed:', error))
       ));
       
-      // 5. Get musical/rhythmic words (reduce to 2 seeds)
+      // 5. Get musical/rhythmic words with quality filtering
       const musicalSeeds = ['melody', 'rhythm'];
       datamusePromises.push(...musicalSeeds.map(seed =>
         this.datamuseService.findWords({
-          triggers: seed,
-          topics: 'music sound',
-          maxResults: 8
+          meansLike: seed,  // Use semantic similarity
+          topics: 'music sound poetry',
+          maxResults: 20
         }).then(musicWords => {
-          sources.musicalTerms.push(...musicWords.map(w => w.word));
+          const qualityMusicWords = musicWords
+            .filter(w => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word) && w.word.length >= 4 && w.word.length <= 10)
+            .slice(0, 5)
+            .map(w => w.word);
+          sources.musicalTerms.push(...qualityMusicWords);
         }).catch(error => secureLog.error('Datamuse musical words failed:', error))
       ));
       
-      // 6. Get adjectives using linguistic patterns (increase to 5 seeds for variety)
+      // 6. Get high-quality adjectives with better filtering
       secureLog.debug(`✨ Finding evocative adjectives...`);
-      const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre).slice(0, 5);
+      const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre).slice(0, 3);
       datamusePromises.push(...adjectiveSeeds.map(seed =>
-        this.datamuseService.findAdjectivesForNoun(seed, 15)
+        this.datamuseService.findAdjectivesForNoun(seed, 30)
           .then(adjs => {
-            sources.adjectives.push(...adjs.map((w: any) => w.word));
+            const qualityAdjs = adjs
+              .filter((w: any) => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word) && w.word.length >= 4 && w.word.length <= 10)
+              .slice(0, 10) // Take only the best results
+              .map((w: any) => w.word);
+            sources.adjectives.push(...qualityAdjs);
           })
           .catch(error => secureLog.error('Datamuse adjectives failed:', error))
       ));
       
-      // 7. Get poetic nouns using associations (increase to 5 seeds for variety)
+      // 7. Get poetic nouns with strict quality filtering
       secureLog.debug(`🌟 Finding poetic nouns...`);
-      const nounSeeds = this.getNounSeeds(mood, genre).slice(0, 5);
+      const nounSeeds = this.getNounSeeds(mood, genre).slice(0, 3);
       datamusePromises.push(...nounSeeds.map(seed =>
         this.datamuseService.findWords({
-          triggers: seed,
-          maxResults: 10
+          meansLike: seed,  // Use semantic similarity instead of triggers
+          topics: 'music poetry nature emotion',
+          maxResults: 30
         }).then(nouns => {
           const poeticNouns = nouns.filter(w => {
             const word = w.word;
-            return word.length >= 3 && 
+            return word.length >= 4 && 
               word.length <= 10 &&
               !this.isProblematicWord(word) &&
               this.isPoeticWord(word) &&
               !/^[A-Z]/.test(word);
-          });
+          })
+          .slice(0, 10); // Take only the best results
           sources.nouns.push(...poeticNouns.map(w => w.word));
         }).catch(error => secureLog.error('Datamuse nouns failed:', error))
       ));
@@ -475,7 +486,14 @@ export class EnhancedNameGeneratorService {
       'smith', 'jones', 'brown', 'taylor', 'wilson', 'davis',
       // Exclude technical/business terms
       'admin', 'user', 'client', 'server', 'database', 'network',
-      'protocol', 'interface', 'module', 'component', 'service'
+      'protocol', 'interface', 'module', 'component', 'service',
+      // More recent bad words
+      'telescope', 'magnitude', 'dwarf', 'gown', 'channel', 'ships',
+      'state', 'brick', 'ridges', 'fairies', 'flies', 'eaters',
+      'goddess', 'phase', 'stand', 'school', 'soil', 'shape', 'club',
+      'children', 'reaver', 'currents', 'shift', 'line', 'dress',
+      'engine', 'rock', 'rise', 'loved', 'touched', 'waves', 'channels',
+      'trek', 'place', 'westward', 'disco'
     ];
     if (unpoetic.includes(lowerWord)) return false;
     
@@ -1375,8 +1393,12 @@ export class EnhancedNameGeneratorService {
       // Avoid self-referential music words
       'music', 'band', 'group', 'song', 'tune',
       // Weird/unusual words from recent results
-      'reaper', 'currents', 'shift', 'line', 'dress',
-      'engine', 'rock', 'rise', 'loved', 'touched'
+      'reaper', 'reaver', 'currents', 'shift', 'line', 'dress',
+      'engine', 'rock', 'rise', 'loved', 'touched',
+      'telescope', 'magnitude', 'dwarf', 'gown', 'channel',
+      'ships', 'state', 'brick', 'ridges', 'fairies',
+      'flies', 'eaters', 'goddess', 'phase', 'stand',
+      'school', 'soil', 'shape', 'club', 'children'
     ];
     
     const lowerWord = word.toLowerCase();

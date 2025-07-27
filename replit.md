@@ -167,7 +167,16 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 29, 2025: ENHANCED NAME GENERATION QUALITY**
+**Latest Update - January 30, 2025: MAJOR DATAMUSE API REDESIGN FOR QUALITY**
+- **Semantic Search Implementation**: Switched all Datamuse API calls from `triggers` (statistical associations) to `meansLike` (semantic similarity), eliminating nonsensical word combinations like "telescope", "magnitude", "reaver"
+- **Quality-First Filtering**: Added strict quality filters to all Datamuse results - minimum 4 characters, maximum 10 characters, must pass isPoeticWord check, only top 5-10 results used
+- **Expanded Problematic Word List**: Added 30+ new excluded words including "telescope", "magnitude", "dwarf", "gown", "channel", "ships", "state", "brick", "ridges", "fairies" based on poor quality results
+- **Enhanced isPoeticWord Function**: Strengthened with expanded unpoetic word list, better validation rules, and preference for high-quality poetic vocabulary
+- **Generation Loop Improvements**: Increased max attempts from 6 to 20 and added guaranteed fallback loop to ensure users always receive the requested number of names
+- **Fallback Word Pool Enhancement**: Expanded minimum word pools with high-quality poetic words to ensure good results even when APIs fail
+- **Result**: Dramatically improved name quality with more coherent, musical combinations and consistent 2+2 result delivery
+
+**Previous Update - January 29, 2025: ENHANCED NAME GENERATION QUALITY**
 - **AI Word Count Fixed**: Updated system prompts to handle 1-10 words (was limited to 1-6), enabling AI to generate longer names for "4+" option
 - **Structured Fallback Generation**: Completely rewrote non-AI fallback generation with proper grammatical patterns:
   - 3 words: Classic patterns like "The Electric Storm"
