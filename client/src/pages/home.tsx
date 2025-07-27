@@ -55,7 +55,7 @@ export default function Home() {
         variant="outline"
         size="sm"
         onClick={() => setIsStashOpen(!isStashOpen)}
-        className="fixed top-4 left-4 z-40 flex items-center gap-2 h-10 px-3 md:h-9"
+        className="fixed top-4 left-2 sm:left-4 z-40 flex items-center gap-2 h-10 px-2 sm:px-3 md:h-9"
       >
         <Archive className="h-5 w-5 md:h-4 md:w-4" />
         <span className="hidden sm:inline">Stash</span>
