@@ -290,29 +290,39 @@ export class EnhancedNameGeneratorService {
         }).catch(error => secureLog.error('Datamuse nouns failed:', error))
       ));
       
+      // 8. Get energetic verbs for dynamic name generation
+      secureLog.debug(`⚡ Finding dynamic verbs...`);
+      const verbSeeds = this.getVerbSeeds(mood, genre).slice(0, 2);
+      datamusePromises.push(...verbSeeds.map(seed =>
+        this.datamuseService.findWords({
+          meansLike: seed,
+          topics: 'action movement music',
+          maxResults: 20
+        }).then(verbs => {
+          const dynamicVerbs = verbs.filter(w => {
+            const word = w.word;
+            return word.length >= 3 && 
+              word.length <= 10 &&
+              !this.isProblematicWord(word) &&
+              this.isPoeticWord(word) &&
+              this.isActionWord(word);
+          })
+          .slice(0, 8); // Take only the best results
+          sources.verbs.push(...dynamicVerbs.map(w => w.word));
+        }).catch(error => secureLog.error('Datamuse verbs failed:', error))
+      ));
+      
       // Wait for all Datamuse API calls to complete
       await Promise.allSettled(datamusePromises);
       
       // Clean and deduplicate all sources
       this.cleanWordSources(sources);
 
-      secureLog.debug(`📊 Word sources built:`, {
-        adjectives: sources.adjectives.length,
-        nouns: sources.nouns.length,
-        verbs: sources.verbs.length,
-        musicalTerms: sources.musicalTerms.length,
-        genreTerms: sources.genreTerms.length,
-        lastfmWords: sources.lastfmWords.length,
-        spotifyWords: sources.spotifyWords.length,
-        conceptNetWords: sources.conceptNetWords.length,
-        total: sources.adjectives.length + sources.nouns.length + sources.verbs.length + sources.musicalTerms.length + sources.genreTerms.length + sources.lastfmWords.length + sources.spotifyWords.length + sources.conceptNetWords.length
-      });
-
     } catch (error) {
       secureLog.error('Error building word sources:', error);
     }
     
-    // Always ensure we have a minimum word pool with high-quality words
+    // Always ensure we have a minimum word pool with high-quality words (BEFORE logging)
     if (sources.adjectives.length < 20) {
       const fallbackAdjectives = [
         'midnight', 'velvet', 'silver', 'wild', 'burning', 'frozen', 'electric',
@@ -343,6 +353,18 @@ export class EnhancedNameGeneratorService {
       const fallbackMusicalTerms = ['echo', 'melody', 'rhythm', 'harmony', 'silence', 'symphony', 'chorus'];
       sources.musicalTerms.push(...fallbackMusicalTerms.filter(w => !sources.musicalTerms.includes(w)));
     }
+
+    secureLog.debug(`📊 Word sources built:`, {
+      adjectives: sources.adjectives.length,
+      nouns: sources.nouns.length,
+      verbs: sources.verbs.length,
+      musicalTerms: sources.musicalTerms.length,
+      genreTerms: sources.genreTerms.length,
+      lastfmWords: sources.lastfmWords.length,
+      spotifyWords: sources.spotifyWords.length,
+      conceptNetWords: sources.conceptNetWords.length,
+      total: sources.adjectives.length + sources.nouns.length + sources.verbs.length + sources.musicalTerms.length + sources.genreTerms.length + sources.lastfmWords.length + sources.spotifyWords.length + sources.conceptNetWords.length
+    });
 
     return sources;
   }
@@ -465,6 +487,67 @@ export class EnhancedNameGeneratorService {
     
     return baseSeeds;
   }
+
+  // Get seed words for finding verbs
+  private getVerbSeeds(mood?: string, genre?: string): string[] {
+    const baseSeeds = ['move', 'flow', 'rise', 'fall', 'break'];
+    
+    // Mood-specific verb seeds
+    if (mood === 'dark') return ['shatter', 'destroy', 'consume', 'haunt', 'devour', 'crush'];
+    if (mood === 'bright') return ['shine', 'dance', 'soar', 'celebrate', 'illuminate', 'sparkle'];
+    if (mood === 'energetic') return ['explode', 'charge', 'sprint', 'ignite', 'burst', 'accelerate'];
+    if (mood === 'melancholy') return ['weep', 'fade', 'drift', 'mourn', 'lament', 'yearn'];
+    if (mood === 'mysterious') return ['whisper', 'lurk', 'conceal', 'emerge', 'vanish', 'transform'];
+    if (mood === 'ethereal') return ['float', 'glide', 'transcend', 'ascend', 'shimmer', 'drift'];
+    if (mood === 'aggressive') return ['attack', 'strike', 'demolish', 'rampage', 'assault', 'conquer'];
+    if (mood === 'peaceful') return ['rest', 'calm', 'soothe', 'embrace', 'nurture', 'heal'];
+    
+    // Genre-specific verb seeds
+    if (genre === 'rock') return ['rock', 'roll', 'shake', 'blast', 'thunder', 'rebel'];
+    if (genre === 'metal') return ['rage', 'scream', 'burn', 'shred', 'crush', 'demolish'];
+    if (genre === 'electronic') return ['pulse', 'sync', 'modulate', 'synthesize', 'process', 'compute'];
+    if (genre === 'jazz') return ['swing', 'improvise', 'groove', 'slide', 'bend', 'flow'];
+    if (genre === 'folk') return ['wander', 'tell', 'remember', 'gather', 'share', 'grow'];
+    if (genre === 'indie') return ['create', 'explore', 'discover', 'express', 'craft', 'experiment'];
+    if (genre === 'pop') return ['sing', 'dance', 'celebrate', 'party', 'play', 'perform'];
+    if (genre === 'country') return ['ride', 'roam', 'work', 'love', 'fight', 'survive'];
+    if (genre === 'blues') return ['cry', 'suffer', 'struggle', 'endure', 'overcome', 'persevere'];
+    if (genre === 'reggae') return ['vibe', 'unite', 'resist', 'chant', 'meditate', 'celebrate'];
+    if (genre === 'punk') return ['rebel', 'fight', 'resist', 'break', 'smash', 'revolt'];
+    if (genre === 'hip_hop') return ['flow', 'drop', 'spit', 'freestyle', 'battle', 'represent'];
+    if (genre === 'classical') return ['conduct', 'compose', 'harmonize', 'orchestrate', 'perform', 'crescendo'];
+    if (genre === 'alternative') return ['question', 'challenge', 'bend', 'twist', 'subvert', 'reimagine'];
+    
+    return baseSeeds;
+  }
+
+  // Check if a word represents an action or movement
+  private isActionWord(word: string): boolean {
+    // Check if word represents an action or movement
+    const actionPatterns = [
+      /ing$/, // ends with -ing (running, dancing)
+      /ed$/, // past tense (moved, shattered)
+      /^(break|burn|fall|rise|dance|sing|flow|move|run|jump|fly|swim|walk)/, // common action verbs
+    ];
+    
+    const commonActions = [
+      'break', 'burn', 'fall', 'rise', 'dance', 'sing', 'flow', 'move', 'run', 'jump', 'fly', 'swim', 'walk',
+      'fight', 'love', 'hate', 'create', 'destroy', 'build', 'tear', 'push', 'pull', 'throw', 'catch',
+      'whisper', 'scream', 'shout', 'laugh', 'cry', 'smile', 'frown', 'think', 'dream', 'hope', 'fear',
+      'shine', 'glow', 'spark', 'flash', 'flicker', 'fade', 'vanish', 'appear', 'emerge', 'surface',
+      'soar', 'dive', 'crash', 'explode', 'implode', 'expand', 'contract', 'vibrate', 'resonate', 'echo'
+    ];
+    
+    const lowercaseWord = word.toLowerCase();
+    
+    // Check common action words
+    if (commonActions.includes(lowercaseWord)) {
+      return true;
+    }
+    
+    // Check action patterns
+    return actionPatterns.some(pattern => pattern.test(lowercaseWord));
+  }
   
   // Check if a word has poetic quality
   private isPoeticWord(word: string): boolean {
@@ -547,16 +630,29 @@ export class EnhancedNameGeneratorService {
       'military', 'disease', 'ridge', 'arms', 'tunes', 'songs'
     ]);
     
-    // Clean each category
+    // Clean each category with different rules for different types
     for (const key of Object.keys(sources) as (keyof EnhancedWordSource)[]) {
-      sources[key] = sources[key].filter(word => {
-        const lower = word.toLowerCase();
-        if (seen.has(lower) || overusedWords.has(lower) || this.isProblematicWord(word) || !this.isPoeticWord(word)) {
-          return false;
-        }
-        seen.add(lower);
-        return true;
-      });
+      if (key === 'genreTerms') {
+        // Genre terms get minimal filtering - only remove duplicates and basic cleanup
+        sources[key] = sources[key].filter(word => {
+          const lower = word.toLowerCase();
+          if (seen.has(lower) || word.length < 2 || word.length > 20) {
+            return false;
+          }
+          seen.add(lower);
+          return true;
+        });
+      } else {
+        // Apply full filtering to other word categories
+        sources[key] = sources[key].filter(word => {
+          const lower = word.toLowerCase();
+          if (seen.has(lower) || overusedWords.has(lower) || this.isProblematicWord(word) || !this.isPoeticWord(word)) {
+            return false;
+          }
+          seen.add(lower);
+          return true;
+        });
+      }
       
       // Shuffle the arrays for better variety
       sources[key] = sources[key].sort(() => Math.random() - 0.5);
