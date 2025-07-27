@@ -81,6 +81,7 @@ export const setListSong = z.object({
   id: z.number(),
   name: z.string(),
   verification: verificationResult,
+  isAiGenerated: z.boolean().optional(),
 });
 
 export type SetListSong = z.infer<typeof setListSong>;

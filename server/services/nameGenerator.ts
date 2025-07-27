@@ -98,15 +98,86 @@ export class NameGeneratorService {
     }));
   }
 
-  // Method for setlist generation - uses only Datamuse API
+  // Enhanced setlist generation with AI and full feature integration
   async generateSetlistNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
-    console.log(`🎵 Generating setlist songs using Datamuse API`);
+    console.log(`🎵 Generating enhanced setlist songs with AI + Datamuse + ConceptNet integration`);
     
     try {
-      return await enhancedNameGenerator.generateEnhancedNames(request);
+      // Use the same enhanced generation as main names but with song focus
+      const enhancedRequest = {
+        ...request,
+        type: 'song' as const,
+        count: request.count || 1
+      };
+      
+      // For setlists, use 30% AI, 70% traditional for more variety while maintaining quality
+      const totalCount = enhancedRequest.count;
+      const aiCount = Math.floor(totalCount * 0.3); // 30% AI
+      const datamuseCount = totalCount - aiCount;
+      
+      console.log(`🎯 Setlist generation: ${aiCount} AI + ${datamuseCount} Datamuse songs`);
+      
+      const results: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
+      
+      // Generate AI songs if available and requested
+      if (aiCount > 0 && this.aiNameGenerator) {
+        try {
+          // Get enhanced context from all sources (Spotify, Last.fm, ConceptNet)
+          let contextExamples: string[] = [];
+          if (enhancedRequest.genre) {
+            const wordSources = await enhancedNameGenerator.buildContextualWordSources(enhancedRequest.mood, enhancedRequest.genre);
+            contextExamples = [...wordSources.spotifyWords, ...wordSources.lastfmWords, ...wordSources.conceptNetWords]
+              .filter(w => w.length > 2 && !w.includes(' '))
+              .slice(0, 15);
+          }
+          
+          // Generate AI songs with setlist-specific context
+          const aiResults = [];
+          for (let i = 0; i < aiCount; i++) {
+            const name = await this.aiNameGenerator.generateAIName(
+              enhancedRequest.type, 
+              enhancedRequest.genre, 
+              enhancedRequest.mood, 
+              enhancedRequest.wordCount, 
+              contextExamples
+            );
+            aiResults.push(name);
+          }
+          
+          const aiResultsArray = aiResults.map(name => ({
+            name,
+            isAiGenerated: true,
+            source: 'ai'
+          }));
+          
+          results.push(...aiResultsArray);
+          console.log(`✅ Generated ${aiResultsArray.length} AI setlist songs`);
+        } catch (error) {
+          console.error("AI setlist generation failed, using enhanced Datamuse fallback:", error);
+          // Enhanced fallback with ConceptNet and Datamuse
+          const fallbackResults = await enhancedNameGenerator.generateEnhancedNames({
+            ...enhancedRequest,
+            count: aiCount
+          });
+          results.push(...fallbackResults);
+        }
+      }
+      
+      // Generate enhanced Datamuse songs for the remainder
+      if (datamuseCount > 0) {
+        const datamuseResults = await enhancedNameGenerator.generateEnhancedNames({
+          ...enhancedRequest,
+          count: datamuseCount
+        });
+        results.push(...datamuseResults);
+        console.log(`✅ Generated ${datamuseResults.length} enhanced Datamuse setlist songs`);
+      }
+      
+      return results.slice(0, totalCount); // Ensure exact count
+      
     } catch (error) {
-      console.error("Setlist generation failed:", error);
-      return this.generateSimpleFallback(request.type, request.count || 8);
+      console.error("Enhanced setlist generation failed:", error);
+      return this.generateSimpleFallback(request.type, request.count || 1);
     }
   }
 }
