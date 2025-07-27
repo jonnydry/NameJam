@@ -16,6 +16,8 @@ import { z } from "zod";
 
 import { validationRules, handleValidationErrors } from "./security";
 import { performanceCache } from "./services/performanceCache";
+import { secureLog, sanitizeApiResponse } from "./utils/secureLogger";
+import type { Request, Response, NextFunction } from "express";
 
 import { cacheHeaders } from "./middleware/cacheHeaders";
 import { 
@@ -34,7 +36,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   // Auth middleware
   await setupAuth(app);
 
-  console.log("Initializing services...");
+  secureLog.info("Initializing services...");
   
   let nameGenerator: NameGeneratorService;
   let nameVerifier: NameVerifierService;
@@ -44,66 +46,66 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   try {
     aiNameGenerator = new AINameGeneratorService();
-    console.log("✓ AINameGeneratorService initialized");
+    secureLog.info("✓ AINameGeneratorService initialized");
   } catch (error) {
-    console.error("✗ Failed to initialize AINameGeneratorService:", error);
+    secureLog.error("✗ Failed to initialize AINameGeneratorService:", error);
     throw error;
   }
 
   try {
     nameGenerator = new NameGeneratorService();
     nameGenerator.setAINameGenerator(aiNameGenerator);
-    console.log("✓ NameGeneratorService initialized");
+    secureLog.info("✓ NameGeneratorService initialized");
   } catch (error) {
-    console.error("✗ Failed to initialize NameGeneratorService:", error);
+    secureLog.error("✗ Failed to initialize NameGeneratorService:", error);
     throw error;
   }
 
   try {
     nameVerifier = new NameVerifierService();
-    console.log("✓ NameVerifierService initialized");
+    secureLog.info("✓ NameVerifierService initialized");
   } catch (error) {
-    console.error("✗ Failed to initialize NameVerifierService:", error);
+    secureLog.error("✗ Failed to initialize NameVerifierService:", error);
     throw error;
   }
 
   try {
     bandBioGenerator = new BandBioGeneratorService();
-    console.log("✓ BandBioGeneratorService initialized");
+    secureLog.info("✓ BandBioGeneratorService initialized");
   } catch (error) {
-    console.error("✗ Failed to initialize BandBioGeneratorService:", error);
+    secureLog.error("✗ Failed to initialize BandBioGeneratorService:", error);
     throw error;
   }
 
   try {
     lyricStarterService = new LyricStarterService();
-    console.log("✓ LyricStarterService initialized");
+    secureLog.info("✓ LyricStarterService initialized");
   } catch (error) {
-    console.error("✗ Failed to initialize LyricStarterService:", error);
+    secureLog.error("✗ Failed to initialize LyricStarterService:", error);
     throw error;
   }
 
   // Auth routes (with rate limiting)
   app.get('/api/auth/user', 
-    rateLimiters?.auth || ((req, res, next) => next()), 
+    rateLimiters?.auth || ((req: Request, res: Response, next: NextFunction) => next()), 
     isAuthenticated, 
-    async (req: any, res) => {
+    async (req: Request & { user?: any }, res: Response) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
-      console.error("Error fetching user:", error);
+      secureLog.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
   // Generate names endpoint (public with optional auth for saving)
   app.post("/api/generate-names", 
-    rateLimiters?.generation || ((req, res, next) => next()), 
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
     validationRules.generateNames, 
     handleValidationErrors, 
-    async (req: any, res) => {
+    async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
     try {
       const request = generateNameRequestSchema.parse(req.body);
       
@@ -145,7 +147,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
             }).then(result => {
               storedName = result;
             }).catch(error => {
-              console.error("Non-blocking database error:", error);
+              secureLog.error("Non-blocking database error:", error);
             });
           }
 
@@ -162,7 +164,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
       res.json({ results });
     } catch (error) {
-      console.error("Error generating names:", error);
+      secureLog.error("Error generating names:", error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ error: "Invalid request parameters", details: error.errors });
       } else {
@@ -176,7 +178,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   });
 
   // Get recent generated names (protected)
-  app.get("/api/recent-names", isAuthenticated, async (req: any, res) => {
+  app.get("/api/recent-names", isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
     try {
       const userId = req.user.claims.sub;
       const type = req.query.type as string;
@@ -191,7 +193,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
       res.json({ names });
     } catch (error) {
-      console.error("Error fetching recent names:", error);
+      secureLog.error("Error fetching recent names:", error);
       res.status(500).json({ 
         error: "Failed to fetch recent names",
         suggestion: "The database service may be temporarily unavailable. Please refresh the page." 
@@ -203,7 +205,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   app.post("/api/verify-name", 
     validationRules.verifyName, 
     handleValidationErrors, 
-    async (req, res) => {
+    async (req: Request, res: Response) => {
     try {
       const { name, type } = req.body;
       
@@ -214,7 +216,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       // Check cache first
       const cached = performanceCache.getCachedVerification(name, type);
       if (cached) {
-        console.log(`Cache hit for ${type}: ${name}`);
+        secureLog.debug(`Cache hit for ${type}: ${name}`);
         return res.json({ verification: cached });
       }
 
@@ -226,7 +228,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       
       res.json({ verification });
     } catch (error) {
-      console.error("Error verifying name:", error);
+      secureLog.error("Error verifying name:", error);
       res.status(500).json({ 
         error: "Failed to verify name",
         suggestion: "The verification service may be temporarily unavailable. Please try again later." 
@@ -236,10 +238,10 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   // Generate set list with timeout (public with optional auth for saving)
   app.post("/api/generate-setlist", 
-    rateLimiters?.generation || ((req, res, next) => next()), 
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
     validationRules.generateSetlist, 
     handleValidationErrors, 
-    async (req: any, res) => {
+    async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
     const timeoutMs = 20000; // 20 second timeout
     
     const generateSetListWithTimeout = async () => {
@@ -342,7 +344,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       
       res.json(response);
     } catch (error) {
-      console.error("Error generating set list:", error);
+      secureLog.error("Error generating set list:", error);
       
       if (error.message === 'Timeout') {
         return res.status(408).json({ 
@@ -356,8 +358,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   // Generate band name from setlist endpoint (public)
   app.post("/api/generate-band-from-setlist", 
-    rateLimiters?.generation || ((req, res, next) => next()), 
-    async (req: any, res) => {
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    async (req: Request, res: Response) => {
     try {
       const { songNames, mood, genre } = req.body;
       
@@ -437,7 +439,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
         source: parsedResponse.source
       });
     } catch (error) {
-      console.error("Error generating band name from setlist:", error);
+      secureLog.error("Error generating band name from setlist:", error);
       res.status(500).json({ 
         error: "Failed to generate band name",
         suggestion: "The AI service may be temporarily unavailable. Please try again later."
@@ -447,11 +449,11 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   // Generate AI name endpoint (protected with rate limiting and validation)
   app.post("/api/generate-ai-name", 
-    rateLimiters?.generation || ((req, res, next) => next()), 
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
     isAuthenticated, 
     validationRules.generateNames, 
     handleValidationErrors, 
-    async (req: any, res) => {
+    async (req: Request & { user?: any }, res: Response) => {
     try {
       const { type, genre, mood } = req.body;
       
@@ -504,7 +506,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
         source: parsedResponse.source
       });
     } catch (error) {
-      console.error("Error generating AI name:", error);
+      secureLog.error("Error generating AI name:", error);
       res.status(500).json({ 
         error: "Failed to generate AI name",
         suggestion: "The AI service may be temporarily unavailable. Please try again later."
@@ -514,11 +516,11 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   // Generate band bio endpoint (protected with rate limiting and validation)
   app.post("/api/generate-band-bio", 
-    rateLimiters?.generation || ((req, res, next) => next()), 
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
     isAuthenticated, 
     validationRules.generateBandBio, 
     handleValidationErrors, 
-    async (req: any, res) => {
+    async (req: Request & { user?: any }, res: Response) => {
     try {
       const { bandName, genre, mood } = req.body;
       
@@ -541,7 +543,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
         };
       }
       
-      console.log("Bio generated for", bandName, ":", parsedResponse.bio);
+      secureLog.debug("Bio generated for", bandName, ":", parsedResponse.bio);
       
       res.json({ 
         bandName,
@@ -551,7 +553,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
         generatedAt: new Date().toISOString()
       });
     } catch (error) {
-      console.error("Error generating band bio:", error);
+      secureLog.error("Error generating band bio:", error);
       res.status(500).json({ 
         error: "Failed to generate band biography",
         suggestion: "The AI service may be temporarily unavailable. Please try again later."
@@ -561,10 +563,10 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   // Generate lyric starter endpoint (public with optional auth for saving)  
   app.post("/api/generate-lyric-starter", 
-    rateLimiters?.generation || ((req, res, next) => next()), 
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
     validationRules.generateLyricStarter, 
     handleValidationErrors, 
-    async (req: any, res) => {
+    async (req: Request, res: Response) => {
     try {
       const { genre } = req.body;
       
@@ -579,7 +581,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
         generatedAt: new Date().toISOString()
       });
     } catch (error) {
-      console.error("Error generating lyric spark:", error);
+      secureLog.error("Error generating lyric spark:", error);
       res.status(500).json({ 
         error: "Failed to generate lyric spark",
         suggestion: "The AI service may be temporarily unavailable. Please try again later."
@@ -588,7 +590,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   });
 
   // Health check endpoint for deployment monitoring
-  app.get("/api/health", async (req, res) => {
+  app.get("/api/health", async (req: Request, res: Response) => {
     try {
       // Check database connectivity
       await db.select().from(users).limit(1);
@@ -610,7 +612,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   });
 
   // Error logging endpoint
-  app.post("/api/log-error", async (req, res) => {
+  app.post("/api/log-error", async (req: Request & { user?: any }, res: Response) => {
     try {
       const { message, stack, componentStack, userAgent, url } = req.body;
       const userId = req.user?.claims?.sub || null;
@@ -632,11 +634,11 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   });
 
   // Enhanced Datamuse-powered name generation test endpoint
-  app.post("/api/test-enhanced-generation", async (req, res) => {
+  app.post("/api/test-enhanced-generation", async (req: Request, res: Response) => {
     try {
       const { type = 'band', wordCount = 2, mood, genre, count = 3 } = req.body;
       
-      console.log(`🧪 Testing enhanced generation: ${count} ${type} names with ${wordCount} words`);
+      secureLog.debug(`🧪 Testing enhanced generation: ${count} ${type} names with ${wordCount} words`);
       
       const request = {
         type,
@@ -656,7 +658,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
         info: "All non-AI results now use real linguistic data from Datamuse API"
       });
     } catch (error) {
-      console.error("Error in enhanced generation test:", error);
+      secureLog.error("Error in enhanced generation test:", error);
       res.status(500).json({ 
         error: "Enhanced generation test failed",
         details: error instanceof Error ? error.message : "Unknown error",

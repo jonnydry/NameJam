@@ -2,6 +2,18 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupSecurity } from "./security";
+import { validateEnvironment, getEnvSummary } from "./utils/envValidation";
+import { secureLog } from "./utils/secureLogger";
+
+// Validate environment variables at startup
+try {
+  validateEnvironment();
+  secureLog.info('🔒 Security: Environment validation passed');
+  secureLog.info('📊 Environment Summary:', getEnvSummary());
+} catch (error) {
+  secureLog.error('❌ Critical Security Error - Environment validation failed:', error);
+  process.exit(1);
+}
 
 const app = express();
 

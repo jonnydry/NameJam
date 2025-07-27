@@ -129,14 +129,28 @@ export const createHelmetOptions = () => {
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
+        connectSrc: [
+          "'self'", 
+          "https://api.x.ai", // XAI API
+          "https://api.spotify.com", // Spotify API
+          "https://api.datamuse.com", // Datamuse API
+          "https://ws.audioscrobbler.com", // Last.fm API
+          "https://musicbrainz.org", // MusicBrainz API
+        ],
         objectSrc: ["'none'"],
-        upgradeInsecureRequests: [],
-        frameAncestors: ["'self'", "https://*.replit.dev", "https://*.replit.com"], // Allow Replit preview
+        mediaSrc: ["'none'"],
+        frameAncestors: ["'self'", "https://*.replit.dev", "https://*.replit.com"],
+        upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
       },
     },
-    crossOriginEmbedderPolicy: false, // Disable for compatibility
+    crossOriginEmbedderPolicy: false,
     frameguard: {
-      action: 'sameorigin' // Allow same-origin framing (Replit preview)
+      action: 'sameorigin'
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
     }
   });
 };
@@ -338,8 +352,13 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
   
   // HSTS for HTTPS (will be handled by Replit in production)
   if (process.env.NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
+  
+  // Additional security headers
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  res.setHeader('X-Download-Options', 'noopen');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
   
   next();
 };
