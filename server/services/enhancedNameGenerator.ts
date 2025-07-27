@@ -117,22 +117,36 @@ export class EnhancedNameGeneratorService {
       const apiPromises = [];
       
       // Parallel API calls for all external services
+      secureLog.debug(`🔍 Checking external API conditions: genre="${genre}", mood="${mood}"`);
       if (genre || mood) {
+        secureLog.debug(`🌐 Entering external API calls section`);
         // Last.fm API promise
         if (genre) {
+          secureLog.debug(`🎵 Starting Last.fm API call for genre: ${genre}`);
           apiPromises.push(
             lastfmService.getGenreVocabulary(genre)
               .then(genreVocab => {
+                secureLog.debug(`📥 Last.fm response received:`, {
+                  genreTerms: genreVocab.genreTerms,
+                  descriptiveWords: genreVocab.descriptiveWords,
+                  relatedGenres: genreVocab.relatedGenres,
+                  confidence: genreVocab.confidence
+                });
+                
                 sources.genreTerms.push(...genreVocab.genreTerms);
                 sources.lastfmWords.push(...genreVocab.descriptiveWords);
                 sources.contextualWords.push(...genreVocab.relatedGenres);
+                
                 secureLog.debug(`✅ Last.fm integration successful:`, {
                   genreTerms: genreVocab.genreTerms.length,
                   descriptiveWords: genreVocab.descriptiveWords.length,
                   confidence: genreVocab.confidence
                 });
               })
-              .catch(error => secureLog.error('Last.fm integration failed:', error))
+              .catch(error => {
+                secureLog.error('❌ Last.fm integration failed:', error);
+                secureLog.debug('Last.fm error details:', { genre, error: error.message, stack: error.stack });
+              })
           );
         }
         
@@ -165,13 +179,25 @@ export class EnhancedNameGeneratorService {
         
         // ConceptNet API promises
         if (genre) {
+          secureLog.debug(`🧠 Starting ConceptNet API call for genre: ${genre}`);
           apiPromises.push(
             conceptNetService.getGenreAssociations(genre)
               .then(genreAssociations => {
-                sources.conceptNetWords.push(...genreAssociations.filter(w => this.isPoeticWord(w)));
-                secureLog.debug(`✅ ConceptNet genre integration: ${genreAssociations.length} concepts found`);
+                secureLog.debug(`📥 ConceptNet response received for genre:`, { 
+                  genre, 
+                  rawResults: genreAssociations.length,
+                  sampleResults: genreAssociations.slice(0, 5)
+                });
+                
+                const filteredWords = genreAssociations.filter(w => this.isPoeticWord(w));
+                sources.conceptNetWords.push(...filteredWords);
+                
+                secureLog.debug(`✅ ConceptNet genre integration: ${genreAssociations.length} concepts found, ${filteredWords.length} after filtering`);
               })
-              .catch(error => secureLog.error('ConceptNet genre integration failed:', error))
+              .catch(error => {
+                secureLog.error('❌ ConceptNet genre integration failed:', error);
+                secureLog.debug('ConceptNet error details:', { genre, error: error.message });
+              })
           );
         }
         
@@ -197,8 +223,29 @@ export class EnhancedNameGeneratorService {
         }
       }
       
-      // Wait for all parallel API calls to complete
-      await Promise.allSettled(apiPromises);
+      // Wait for all parallel API calls to complete with timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('External API timeout')), 3000); // 3 second timeout
+      });
+      
+      if (apiPromises.length > 0) {
+        try {
+          await Promise.race([
+            Promise.allSettled(apiPromises),
+            timeoutPromise
+          ]);
+          secureLog.debug(`🔄 External API calls completed`);
+        } catch (error) {
+          secureLog.warn(`⏰ External API calls timed out after 3 seconds, continuing with Datamuse-only generation`);
+        }
+      }
+      
+      // Add fallback genreTerms if none were fetched from external APIs
+      if (genre && sources.genreTerms.length === 0) {
+        const fallbackGenreTerms = this.getFallbackGenreTerms(genre);
+        sources.genreTerms.push(...fallbackGenreTerms);
+        secureLog.debug(`🔄 Added fallback genre terms for ${genre}:`, fallbackGenreTerms);
+      }
 
       // STEP 4: Get words using multiple linguistic relationships for richness  
       secureLog.debug(`🎨 Building poetic word palette...`);
@@ -549,6 +596,28 @@ export class EnhancedNameGeneratorService {
     return actionPatterns.some(pattern => pattern.test(lowercaseWord));
   }
   
+  // Get fallback genre terms when external APIs fail
+  private getFallbackGenreTerms(genre: string): string[] {
+    const genreTermsMap: Record<string, string[]> = {
+      'rock': ['rock', 'stone', 'metal', 'steel', 'thunder', 'lightning', 'electric', 'power'],
+      'metal': ['metal', 'iron', 'steel', 'blade', 'fire', 'darkness', 'thunder', 'rage'],
+      'electronic': ['electronic', 'digital', 'synth', 'techno', 'cyber', 'neon', 'pulse', 'beat'],
+      'jazz': ['jazz', 'blue', 'smooth', 'cool', 'swing', 'brass', 'saxophone', 'rhythm'],
+      'folk': ['folk', 'acoustic', 'wooden', 'earth', 'roots', 'traditional', 'home', 'journey'],
+      'indie': ['indie', 'alternative', 'underground', 'independent', 'creative', 'artistic', 'original', 'unique'],
+      'pop': ['pop', 'mainstream', 'catchy', 'bright', 'fun', 'commercial', 'radio', 'chart'],
+      'country': ['country', 'western', 'rural', 'southern', 'acoustic', 'traditional', 'americana', 'heartland'],
+      'blues': ['blues', 'soul', 'rhythm', 'feeling', 'emotion', 'traditional', 'roots', 'authentic'],
+      'reggae': ['reggae', 'jamaica', 'roots', 'conscious', 'spiritual', 'peaceful', 'island', 'rhythm'],
+      'punk': ['punk', 'raw', 'aggressive', 'rebellious', 'underground', 'alternative', 'angry', 'loud'],
+      'hip_hop': ['hip', 'hop', 'rap', 'urban', 'street', 'rhythm', 'beat', 'flow'],
+      'classical': ['classical', 'orchestral', 'symphonic', 'elegant', 'refined', 'traditional', 'formal', 'artistic'],
+      'alternative': ['alternative', 'indie', 'experimental', 'different', 'unique', 'creative', 'artistic', 'original']
+    };
+    
+    return genreTermsMap[genre] || [genre, 'music', 'sound', 'rhythm', 'melody', 'harmony'];
+  }
+
   // Check if a word has poetic quality
   private isPoeticWord(word: string): boolean {
     const lowerWord = word.toLowerCase();
