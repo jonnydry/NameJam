@@ -52,7 +52,10 @@ export class EnhancedNameGeneratorService {
         }
       } catch (error) {
         secureLog.error('Enhanced generation error:', error);
-        // Fallback to simple combination if API fails
+      }
+      
+      // Always attempt fallback if we still need more names
+      if (names.length < count) {
         const fallbackName = this.generateFallbackName(wordSources, wordCount);
         if (fallbackName && this.isValidName(fallbackName, wordCount) && !names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
           this.trackWords(fallbackName);
@@ -84,6 +87,9 @@ export class EnhancedNameGeneratorService {
     try {
       // Map moods/genres to more poetic seed words
       const poeticSeeds = this.getPoeticSeedWords(mood, genre);
+      
+      // Ensure we get enough diverse words for generation
+      const minWordTarget = 20;
       
       // STEP 1: Enhanced Last.fm Integration for Genre Intelligence
       if (genre) {
@@ -476,25 +482,37 @@ export class EnhancedNameGeneratorService {
   }
   
   private generateFourWordPattern(sources: EnhancedWordSource, type: string): string {
+    // Create enhanced word pools with Last.fm genre priority
+    const enhancedAdjectives = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.adjectives, 
+      w => this.isAdjectiveLike(w)
+    );
+    const enhancedNouns = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.nouns, 
+      w => this.isNounLike(w)
+    );
+
     const patterns = [
       // The [adj] [noun] [noun]
       () => {
-        const adj = this.getRandomWord(sources.adjectives) || 'electric';
-        const noun1 = this.getRandomWord(sources.nouns) || 'fire';
-        const noun2 = this.getRandomWord(sources.nouns) || 'dream';
+        const adj = this.getRandomWord(enhancedAdjectives) || 'electric';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'fire';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'dream';
         return `The ${this.capitalize(adj)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
       },
       // [Noun] of the [Noun]
       () => {
-        const noun1 = this.getRandomWord(sources.nouns) || 'storm';
-        const noun2 = this.getRandomWord(sources.nouns) || 'night';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'storm';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'night';
         return `${this.capitalize(noun1)} of the ${this.capitalize(noun2)}`;
       },
       // [Adj] [Noun] [Prep] [Noun]
       () => {
-        const adj = this.getRandomWord(sources.adjectives) || 'wild';
-        const noun1 = this.getRandomWord(sources.nouns) || 'heart';
-        const noun2 = this.getRandomWord(sources.nouns) || 'fire';
+        const adj = this.getRandomWord(enhancedAdjectives) || 'wild';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'heart';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'fire';
         const preps = ['in', 'of', 'at'];
         const prep = preps[Math.floor(Math.random() * preps.length)];
         return `${this.capitalize(adj)} ${this.capitalize(noun1)} ${prep} ${this.capitalize(noun2)}`;
@@ -506,19 +524,32 @@ export class EnhancedNameGeneratorService {
   }
   
   private generateFiveWordPattern(sources: EnhancedWordSource, type: string): string {
+    // Create enhanced word pools with Last.fm genre priority
+    const enhancedAdjectives = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.adjectives, 
+      w => this.isAdjectiveLike(w)
+    );
+    const enhancedNouns = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.nouns, 
+      w => this.isNounLike(w)
+    );
+    const enhancedVerbs = [...sources.verbs, ...sources.musicalTerms.filter(w => w.endsWith('ing'))];
+
     const patterns = [
       // The [Adj] [Noun] of [Noun]
       () => {
-        const adj = this.getRandomWord(sources.adjectives) || 'burning';
-        const noun1 = this.getRandomWord(sources.nouns) || 'sky';
-        const noun2 = this.getRandomWord(sources.nouns) || 'storm';
+        const adj = this.getRandomWord(enhancedAdjectives) || 'burning';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'sky';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'storm';
         return `The ${this.capitalize(adj)} ${this.capitalize(noun1)} of ${this.capitalize(noun2)}`;
       },
       // [Noun] in the [Adj] [Noun]
       () => {
-        const noun1 = this.getRandomWord(sources.nouns) || 'light';
-        const adj = this.getRandomWord(sources.adjectives) || 'dark';
-        const noun2 = this.getRandomWord(sources.nouns) || 'night';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'light';
+        const adj = this.getRandomWord(enhancedAdjectives) || 'dark';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'night';
         return `${this.capitalize(noun1)} in the ${this.capitalize(adj)} ${this.capitalize(noun2)}`;
       }
     ];
@@ -528,10 +559,22 @@ export class EnhancedNameGeneratorService {
   }
   
   private generateSixWordPattern(sources: EnhancedWordSource, type: string): string {
-    const adj1 = this.getRandomWord(sources.adjectives) || 'wild';
-    const noun1 = this.getRandomWord(sources.nouns) || 'heart';
-    const adj2 = this.getRandomWord(sources.adjectives) || 'burning';
-    const noun2 = this.getRandomWord(sources.nouns) || 'sky';
+    // Create enhanced word pools with Last.fm genre priority
+    const enhancedAdjectives = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.adjectives, 
+      w => this.isAdjectiveLike(w)
+    );
+    const enhancedNouns = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.nouns, 
+      w => this.isNounLike(w)
+    );
+
+    const adj1 = this.getRandomWord(enhancedAdjectives) || 'wild';
+    const noun1 = this.getRandomWord(enhancedNouns) || 'heart';
+    const adj2 = this.getRandomWord(enhancedAdjectives) || 'burning';
+    const noun2 = this.getRandomWord(enhancedNouns) || 'sky';
     
     return `The ${this.capitalize(adj1)} ${this.capitalize(noun1)} of ${this.capitalize(adj2)} ${this.capitalize(noun2)}`;
   }
