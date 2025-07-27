@@ -225,6 +225,15 @@ export class DatamuseService {
   clearCache(): void {
     this.cache.clear();
   }
+  
+  // Clear cache periodically for fresh results
+  startCacheClearingInterval(): void {
+    // Clear cache every 5 minutes to ensure variety
+    setInterval(() => {
+      this.clearCache();
+      secureLog.debug('Datamuse cache cleared for fresh results');
+    }, 5 * 60 * 1000);
+  }
 }
 
 export const datamuseService = new DatamuseService();
