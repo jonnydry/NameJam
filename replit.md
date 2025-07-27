@@ -167,7 +167,12 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 29, 2025: COMPREHENSIVE QUALITY ENHANCEMENTS & BUG RESOLUTION**
+**Latest Update - January 29, 2025: STASH BUTTON POSITIONING FIX**
+- **Fixed Viewport Overlap**: Resolved issue where stash button overlapped page border on compressed/narrow viewports
+- **Responsive Positioning**: Changed button positioning from fixed `left-4` to responsive `left-2 sm:left-4` providing 8px margin on mobile and 16px on larger screens
+- **Adaptive Padding**: Adjusted horizontal padding from `px-3` to `px-2 sm:px-3` to prevent overflow on narrow screens while maintaining visual consistency
+
+**Previous Update - January 29, 2025: COMPREHENSIVE QUALITY ENHANCEMENTS & BUG RESOLUTION**
 - **CRITICAL 4+ WORD GENERATION BUG FULLY RESOLVED**: Fixed validation logic mismatch that caused 0 Datamuse results, system now consistently produces 4 results for all word count requests
 - **AI GENERATION PERFECTED**: Enhanced duplicate word detection within individual AI names (prevents "Velvet Ice beyond Ice"), implemented comprehensive band name filtering (60+ famous artist names), achieved 100% word count accuracy
 - **BAND NAME CONTAMINATION ELIMINATED**: Added extensive filtering for famous band names ("Led", "Creedence", "Beatles", etc.) applied across all generation methods including enhanced word pools and quality filtering
