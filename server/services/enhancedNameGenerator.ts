@@ -738,30 +738,40 @@ export class EnhancedNameGeneratorService {
     if (enhancedNouns.length === 0) enhancedNouns.push('storm', 'fire', 'dream');
 
     const patterns = [
-      // [Adj] [Noun] [Adj] [Noun] - exactly 4 words, no articles
+      // [Noun] in the [Noun] - Natural prepositional phrase
       () => {
-        const adj1 = this.getRandomWord(enhancedAdjectives) || 'wild';
         const noun1 = this.getRandomWord(enhancedNouns) || 'fire';
-        const adj2 = this.getRandomWord(enhancedAdjectives) || 'dark';
         const noun2 = this.getRandomWord(enhancedNouns) || 'storm';
-        return `${this.capitalize(adj1)} ${this.capitalize(noun1)} ${this.capitalize(adj2)} ${this.capitalize(noun2)}`;
+        return `${this.capitalize(noun1)} in the ${this.capitalize(noun2)}`;
       },
-      // [Noun] [Verb] [Adj] [Noun] - exactly 4 words
+      // [Adj] [Noun] of [Noun] - Possessive metaphor
       () => {
-        const noun1 = this.getRandomWord(enhancedNouns) || 'storm';
-        const verbs = ['burns', 'breaks', 'falls', 'rises', 'shines'];
+        const adj = this.getRandomWord(enhancedAdjectives) || 'dark';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'heart';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'thunder';
+        return `${this.capitalize(adj)} ${this.capitalize(noun1)} of ${this.capitalize(noun2)}`;
+      },
+      // [Noun] through the [Noun] - Journey metaphor
+      () => {
+        const noun1 = this.getRandomWord(enhancedNouns) || 'light';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'darkness';
+        return `${this.capitalize(noun1)} through the ${this.capitalize(noun2)}`;
+      },
+      // [Noun] [Verb]s the [Noun] - Action phrase
+      () => {
+        const noun1 = this.getRandomWord(enhancedNouns) || 'silence';
+        const verbs = ['breaks', 'meets', 'finds', 'becomes', 'touches'];
         const verb = verbs[Math.floor(Math.random() * verbs.length)];
-        const adj = this.getRandomWord(enhancedAdjectives) || 'endless';
-        const noun2 = this.getRandomWord(enhancedNouns) || 'night';
-        return `${this.capitalize(noun1)} ${verb} ${adj} ${noun2}`;
+        const noun2 = this.getRandomWord(enhancedNouns) || 'dawn';
+        return `${this.capitalize(noun1)} ${verb} the ${this.capitalize(noun2)}`;
       },
-      // [Adj] [Adj] [Noun] [Noun] - exactly 4 words
+      // Beyond the [Adj] [Noun] - Transcendent phrase
       () => {
-        const adj1 = this.getRandomWord(enhancedAdjectives) || 'burning';
-        const adj2 = this.getRandomWord(enhancedAdjectives) || 'silver';
-        const noun1 = this.getRandomWord(enhancedNouns) || 'fire';
-        const noun2 = this.getRandomWord(enhancedNouns) || 'dream';
-        return `${this.capitalize(adj1)} ${this.capitalize(adj2)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
+        const preps = ['Beyond', 'Before', 'Within', 'Beneath'];
+        const prep = preps[Math.floor(Math.random() * preps.length)];
+        const adj = this.getRandomWord(enhancedAdjectives) || 'endless';
+        const noun = this.getRandomWord(enhancedNouns) || 'horizon';
+        return `${prep} the ${this.capitalize(adj)} ${this.capitalize(noun)}`;
       }
     ];
     
@@ -1103,16 +1113,61 @@ export class EnhancedNameGeneratorService {
       return patternWords.join(' ');
     }
 
-    // Final fallback: simple word list but with basic structure
-    const words: string[] = [];
-    for (let i = 0; i < wordCount; i++) {
-      const word = i % 2 === 0 ? 
-        (this.getRandomWord(cleanAdjectives) || 'wild') :
-        (this.getRandomWord(cleanNouns) || 'fire');
-      words.push(this.capitalize(word));
+    // Final fallback: create coherent phrases with proper connectors
+    if (wordCount >= 4) {
+      // For longer phrases, use connectors to create natural flow
+      const connectors = ['through', 'in', 'of', 'and', 'beyond', 'beneath', 'across', 'into'];
+      const articles = ['the', 'a', 'an'];
+      
+      let phrase = '';
+      const noun1 = this.getRandomWord(cleanNouns) || 'dream';
+      const verb = ['breaking', 'flowing', 'dancing', 'singing', 'burning'][Math.floor(Math.random() * 5)];
+      const connector = connectors[Math.floor(Math.random() * connectors.length)];
+      const article = articles[Math.floor(Math.random() * articles.length)];
+      const adj = this.getRandomWord(cleanAdjectives) || 'endless';
+      const noun2 = this.getRandomWord(cleanNouns) || 'horizon';
+      
+      // Build coherent phrase based on word count
+      if (wordCount === 4) {
+        phrase = `${this.capitalize(noun1)} ${connector} the ${this.capitalize(noun2)}`;
+      } else if (wordCount === 5) {
+        phrase = `${this.capitalize(noun1)} ${verb} ${connector} the ${this.capitalize(noun2)}`;
+      } else if (wordCount === 6) {
+        phrase = `The ${adj} ${noun1} ${verb} ${connector} ${noun2}`;
+      } else if (wordCount === 7) {
+        const adj2 = this.getRandomWord(cleanAdjectives) || 'golden';
+        phrase = `The ${adj} ${noun1} ${verb} ${connector} ${adj2} ${noun2}`;
+      } else if (wordCount === 8) {
+        const noun3 = this.getRandomWord(cleanNouns) || 'dawn';
+        phrase = `The ${adj} ${noun1} ${verb} ${connector} the ${noun2} of ${noun3}`;
+      } else {
+        // For 9-10 words, create a complete narrative
+        const adj2 = this.getRandomWord(cleanAdjectives) || 'ancient';
+        const noun3 = this.getRandomWord(cleanNouns) || 'song';
+        const verb2 = ['seeking', 'finding', 'carrying'][Math.floor(Math.random() * 3)];
+        phrase = `The ${adj} ${noun1} ${verb} ${connector} the ${adj2} ${noun2} ${verb2} ${noun3}`;
+      }
+      
+      // Ensure we have the exact word count
+      const resultWords = phrase.split(/\s+/);
+      if (resultWords.length === wordCount) {
+        return phrase;
+      }
     }
     
-    return words.join(' ');
+    // Very short fallback for 1-3 words
+    if (wordCount === 1) {
+      return this.capitalize(this.getRandomWord(cleanNouns) || 'Storm');
+    } else if (wordCount === 2) {
+      const adj = this.getRandomWord(cleanAdjectives) || 'Wild';
+      const noun = this.getRandomWord(cleanNouns) || 'Fire';
+      return `${this.capitalize(adj)} ${this.capitalize(noun)}`;
+    } else {
+      const adj = this.getRandomWord(cleanAdjectives) || 'Electric';
+      const noun1 = this.getRandomWord(cleanNouns) || 'Blue';
+      const noun2 = this.getRandomWord(cleanNouns) || 'Storm';
+      return `${this.capitalize(adj)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
+    }
   }
 
   // Check if word is a known band name
