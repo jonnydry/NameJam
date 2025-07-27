@@ -1,5 +1,7 @@
 import { datamuseService, DatamuseService } from './datamuseService';
+import { lastfmService } from './lastfmService';
 import type { GenerateNameRequest } from '@shared/schema';
+import { secureLog } from '../utils/secureLogger';
 
 interface EnhancedWordSource {
   adjectives: string[];
@@ -8,6 +10,8 @@ interface EnhancedWordSource {
   musicalTerms: string[];
   contextualWords: string[];
   associatedWords: string[];
+  genreTerms: string[];
+  lastfmWords: string[];
 }
 
 export class EnhancedNameGeneratorService {
@@ -24,7 +28,7 @@ export class EnhancedNameGeneratorService {
     const { type, wordCount, count, mood, genre } = request;
     const names: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
 
-    console.log(`🚀 Enhanced generation: ${count} ${type} names with ${wordCount} words`);
+    secureLog.debug(`🚀 Enhanced generation: ${count} ${type} names with ${wordCount} words`);
 
     // Build contextual word sources using Datamuse API
     const wordSources = await this.buildContextualWordSources(mood, genre, type);
@@ -47,7 +51,7 @@ export class EnhancedNameGeneratorService {
           });
         }
       } catch (error) {
-        console.error('Enhanced generation error:', error);
+        secureLog.error('Enhanced generation error:', error);
         // Fallback to simple combination if API fails
         const fallbackName = this.generateFallbackName(wordSources, wordCount);
         if (fallbackName && this.isValidName(fallbackName, wordCount) && !names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
@@ -64,7 +68,7 @@ export class EnhancedNameGeneratorService {
     return names.slice(0, count);
   }
 
-  // Build word sources using Datamuse's contextual relationships
+  // Build word sources using Datamuse's contextual relationships + Last.fm genre intelligence
   private async buildContextualWordSources(mood?: string, genre?: string, type?: string): Promise<EnhancedWordSource> {
     const sources: EnhancedWordSource = {
       adjectives: [],
@@ -72,17 +76,38 @@ export class EnhancedNameGeneratorService {
       verbs: [],
       musicalTerms: [],
       contextualWords: [],
-      associatedWords: []
+      associatedWords: [],
+      genreTerms: [],
+      lastfmWords: []
     };
 
     try {
       // Map moods/genres to more poetic seed words
       const poeticSeeds = this.getPoeticSeedWords(mood, genre);
       
-      // Get words using multiple linguistic relationships for richness
-      console.log(`🎨 Building poetic word palette...`);
+      // STEP 1: Enhanced Last.fm Integration for Genre Intelligence
+      if (genre) {
+        secureLog.debug(`🎵 Fetching Last.fm vocabulary for genre: ${genre}`);
+        try {
+          const genreVocab = await lastfmService.getGenreVocabulary(genre);
+          sources.genreTerms.push(...genreVocab.genreTerms);
+          sources.lastfmWords.push(...genreVocab.descriptiveWords);
+          sources.contextualWords.push(...genreVocab.relatedGenres);
+          
+          secureLog.debug(`✅ Last.fm integration successful:`, {
+            genreTerms: genreVocab.genreTerms.length,
+            descriptiveWords: genreVocab.descriptiveWords.length,
+            confidence: genreVocab.confidence
+          });
+        } catch (error) {
+          secureLog.error('Last.fm integration failed, continuing with Datamuse only:', error);
+        }
+      }
+
+      // STEP 2: Get words using multiple linguistic relationships for richness  
+      secureLog.debug(`🎨 Building poetic word palette...`);
       
-      // 1. Get emotionally evocative words (process only first 2 seeds to reduce API calls)
+      // 3. Get emotionally evocative words (process only first 2 seeds to reduce API calls)
       const emotionalSeeds = poeticSeeds.emotional.slice(0, 2);
       for (const seed of emotionalSeeds) {
         const emotionalWords = await this.datamuseService.findWords({
@@ -97,7 +122,7 @@ export class EnhancedNameGeneratorService {
         sources.contextualWords.push(...poeticWords);
       }
       
-      // 2. Get sensory/imagery words (process only first 2 seeds)
+      // 4. Get sensory/imagery words (process only first 2 seeds)
       const sensorySeeds = poeticSeeds.sensory.slice(0, 2);
       for (const seed of sensorySeeds) {
         const sensoryWords = await this.datamuseService.findWords({
@@ -112,7 +137,7 @@ export class EnhancedNameGeneratorService {
         sources.associatedWords.push(...poeticWords);
       }
       
-      // 3. Get musical/rhythmic words (reduce to 2 seeds)
+      // 5. Get musical/rhythmic words (reduce to 2 seeds)
       const musicalSeeds = ['melody', 'rhythm'];
       for (const seed of musicalSeeds) {
         const musicWords = await this.datamuseService.findWords({
@@ -123,16 +148,16 @@ export class EnhancedNameGeneratorService {
         sources.musicalTerms.push(...musicWords.map(w => w.word));
       }
       
-      // 4. Get adjectives using linguistic patterns (limit to 3 seeds)
-      console.log(`✨ Finding evocative adjectives...`);
+      // 6. Get adjectives using linguistic patterns (limit to 3 seeds)
+      secureLog.debug(`✨ Finding evocative adjectives...`);
       const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre).slice(0, 3);
       for (const seed of adjectiveSeeds) {
         const adjs = await this.datamuseService.findAdjectivesForNoun(seed, 10); // Reduced from 15
         sources.adjectives.push(...adjs.map((w: any) => w.word));
       }
       
-      // 5. Get poetic nouns using associations (limit to 3 seeds)
-      console.log(`🌟 Finding poetic nouns...`);
+      // 7. Get poetic nouns using associations (limit to 3 seeds)
+      secureLog.debug(`🌟 Finding poetic nouns...`);
       const nounSeeds = this.getNounSeeds(mood, genre).slice(0, 3);
       for (const seed of nounSeeds) {
         const nouns = await this.datamuseService.findWords({
@@ -154,21 +179,25 @@ export class EnhancedNameGeneratorService {
       // Clean and deduplicate all sources
       this.cleanWordSources(sources);
 
-      console.log(`📊 Word sources built:`, {
+      secureLog.debug(`📊 Word sources built:`, {
         adjectives: sources.adjectives.length,
         nouns: sources.nouns.length,
         verbs: sources.verbs.length,
         musicalTerms: sources.musicalTerms.length,
-        total: sources.adjectives.length + sources.nouns.length + sources.verbs.length + sources.musicalTerms.length
+        genreTerms: sources.genreTerms.length,
+        lastfmWords: sources.lastfmWords.length,
+        total: sources.adjectives.length + sources.nouns.length + sources.verbs.length + sources.musicalTerms.length + sources.genreTerms.length + sources.lastfmWords.length
       });
 
     } catch (error) {
-      console.error('Error building word sources:', error);
+      secureLog.error('Error building word sources:', error);
       // Provide poetic fallback words
       sources.adjectives = ['midnight', 'velvet', 'silver', 'wild', 'burning'];
       sources.nouns = ['moon', 'thunder', 'shadow', 'ocean', 'dream'];
       sources.verbs = ['dance', 'whisper', 'ignite', 'soar', 'shatter'];
       sources.musicalTerms = ['echo', 'melody', 'rhythm', 'harmony', 'silence'];
+      sources.genreTerms = [];
+      sources.lastfmWords = [];
     }
 
     return sources;
@@ -342,16 +371,25 @@ export class EnhancedNameGeneratorService {
     return allWords[Math.floor(Math.random() * allWords.length)];
   }
 
-  // Generate two words using semantic relationships
+  // Generate two words using semantic relationships + Last.fm genre intelligence
   private async generateTwoWordContextual(sources: EnhancedWordSource, type: string): Promise<string> {
-    const adjectives = sources.adjectives.length > 0 ? sources.adjectives : ['wild'];
-    const nouns = sources.nouns.length > 0 ? sources.nouns : ['fire'];
+    // Prioritize Last.fm genre-specific vocabulary if available
+    const genreAdjectives = [...sources.lastfmWords, ...sources.genreTerms].filter(w => this.isAdjectiveLike(w));
+    const genreNouns = [...sources.lastfmWords, ...sources.genreTerms].filter(w => this.isNounLike(w));
+    
+    const adjectives = genreAdjectives.length > 0 ? 
+      [...genreAdjectives, ...sources.adjectives.slice(0, 5)] :
+      sources.adjectives.length > 0 ? sources.adjectives : ['wild'];
+    
+    const nouns = genreNouns.length > 0 ? 
+      [...genreNouns, ...sources.nouns.slice(0, 5)] :
+      sources.nouns.length > 0 ? sources.nouns : ['fire'];
 
     // Try to find adjectives that commonly go with our nouns
     const baseNoun = nouns[Math.floor(Math.random() * nouns.length)];
     
     try {
-      console.log(`🔍 Finding adjectives for: ${baseNoun}`);
+      secureLog.debug(`🔍 Finding adjectives for: ${baseNoun}`);
       const relatedAdjectives = await this.datamuseService.findAdjectivesForNoun(baseNoun, 10);
       
       if (relatedAdjectives.length > 0) {
@@ -359,7 +397,7 @@ export class EnhancedNameGeneratorService {
         return `${this.capitalize(contextualAdj)} ${this.capitalize(baseNoun)}`;
       }
     } catch (error) {
-      console.error('Error finding related adjectives:', error);
+      secureLog.error('Error finding related adjectives:', error);
     }
 
     // Fallback to random combination
@@ -367,30 +405,42 @@ export class EnhancedNameGeneratorService {
     return `${this.capitalize(adj)} ${this.capitalize(baseNoun)}`;
   }
 
-  // Generate three words with enhanced patterns
+  // Generate three words with enhanced patterns + Last.fm genre context
   private async generateThreeWordContextual(sources: EnhancedWordSource, type: string): Promise<string> {
+    // Create enhanced word pools with Last.fm data priority
+    const enhancedAdjectives = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.adjectives, 
+      w => this.isAdjectiveLike(w)
+    );
+    const enhancedNouns = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.nouns, 
+      w => this.isNounLike(w)
+    );
+
     const patterns = [
       // Classic "The [adj] [noun]" pattern - most common for bands
       async () => {
-        const adj = this.getRandomWord(sources.adjectives) || 'wild';
-        const noun = this.getRandomWord(sources.nouns) || 'storm';
+        const adj = this.getRandomWord(enhancedAdjectives) || 'wild';
+        const noun = this.getRandomWord(enhancedNouns) || 'storm';
         return `The ${this.capitalize(adj)} ${this.capitalize(noun)}`;
       },
       
-      // Adjective + Noun + Noun pattern
+      // Adjective + Noun + Noun pattern with genre context
       async () => {
-        const adj = this.getRandomWord(sources.adjectives) || 'electric';
-        const noun1 = this.getRandomWord(sources.nouns) || 'fire';
-        const noun2 = this.getRandomWord(sources.nouns) || 'dream';
+        const adj = this.getRandomWord(enhancedAdjectives) || 'electric';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'fire';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'dream';
         return `${this.capitalize(adj)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
       },
       
-      // Noun + Verb-ing pattern with grammar correction
+      // Noun + Verb-ing pattern with grammar correction and genre context
       async () => {
-        const noun1 = this.getRandomWord(sources.nouns) || 'fire';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'fire';
         const verbs = ['burning', 'rising', 'falling', 'breaking', 'shining'];
         const verb = verbs[Math.floor(Math.random() * verbs.length)];
-        const noun2 = this.getRandomWord(sources.nouns) || 'sky';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'sky';
         
         // Ensure grammatical agreement - if noun1 is plural, singularize it
         const isPlural = noun1.toLowerCase().endsWith('s') && !noun1.toLowerCase().endsWith('ss');
@@ -693,6 +743,51 @@ export class EnhancedNameGeneratorService {
     
     // If any significant word was recently used, reject the name
     return words.some(word => this.recentWords.has(word));
+  }
+
+  // Helper methods for Last.fm integration
+
+  /**
+   * Create enhanced word pool prioritizing Last.fm genre data
+   */
+  private createEnhancedWordPool(genreWords: string[], fallbackWords: string[], filter?: (w: string) => boolean): string[] {
+    const filtered = filter ? genreWords.filter(filter) : genreWords;
+    // Combine with 30% of fallback words for variety
+    const fallbackSelection = fallbackWords.slice(0, Math.floor(fallbackWords.length * 0.3));
+    return [...filtered, ...fallbackSelection];
+  }
+
+  /**
+   * Simple heuristic to check if word is adjective-like
+   */
+  private isAdjectiveLike(word: string): boolean {
+    const adjectiveEndings = ['ful', 'less', 'ous', 'ive', 'ing', 'ed', 'al', 'ic', 'y', 'en'];
+    const adjectiveWords = ['dark', 'bright', 'heavy', 'light', 'hard', 'soft', 'loud', 'quiet', 'deep', 'high', 'low', 'fast', 'slow'];
+    
+    return adjectiveEndings.some(ending => word.toLowerCase().endsWith(ending)) ||
+           adjectiveWords.includes(word.toLowerCase()) ||
+           word.length <= 8; // Short words are often adjectives
+  }
+
+  /**
+   * Simple heuristic to check if word is noun-like
+   */
+  private isNounLike(word: string): boolean {
+    const nounEndings = ['tion', 'sion', 'ment', 'ness', 'ity', 'ty', 'er', 'or', 'ist', 'ism'];
+    const musicNouns = ['band', 'sound', 'music', 'song', 'beat', 'rhythm', 'melody', 'harmony', 'chord', 'note'];
+    
+    return nounEndings.some(ending => word.toLowerCase().endsWith(ending)) ||
+           musicNouns.includes(word.toLowerCase()) ||
+           (word.length > 3 && !this.isAdjectiveLike(word)); // Longer non-adjective words are often nouns
+  }
+
+  private capitalize(word: string): string {
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }
+
+  private getRandomWord(words: string[]): string | null {
+    if (words.length === 0) return null;
+    return words[Math.floor(Math.random() * words.length)];
   }
 }
 
