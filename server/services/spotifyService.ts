@@ -149,6 +149,176 @@ export class SpotifyService {
     });
   }
 
+  // Get genre-specific artists for vocabulary inspiration
+  async getGenreArtists(genre: string, limit: number = 50): Promise<SpotifyArtist[]> {
+    const token = await this.getAccessToken();
+    if (!token) {
+      return [];
+    }
+
+    return spotifyRateLimiter.execute(async () => {
+      return withRetry(async () => {
+        // Search for artists by genre
+        const encodedGenre = encodeURIComponent(`genre:"${genre}"`);
+        const response = await fetch(
+          `https://api.spotify.com/v1/search?q=${encodedGenre}&type=artist&limit=${limit}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+
+        if (!response.ok) {
+          // Fallback to searching by genre name
+          const fallbackResponse = await fetch(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(genre)}&type=artist&limit=${limit}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          
+          if (!fallbackResponse.ok) {
+            throw new Error(`Spotify genre search failed: ${fallbackResponse.status}`);
+          }
+          
+          const fallbackData: SpotifySearchResult = await fallbackResponse.json();
+          return fallbackData.artists?.items || [];
+        }
+
+        const data: SpotifySearchResult = await response.json();
+        return data.artists?.items || [];
+      }, 3, 1000);
+    }).catch(error => {
+      console.error('Spotify genre artist search failed:', error);
+      return [];
+    });
+  }
+
+  // Get mood-based tracks using audio features
+  async getMoodTracks(mood: string, limit: number = 50): Promise<SpotifyTrack[]> {
+    const token = await this.getAccessToken();
+    if (!token) {
+      return [];
+    }
+
+    // Map moods to Spotify audio feature ranges
+    const moodFeatures: Record<string, string> = {
+      'dark': 'min_valence=0.0&max_valence=0.3&min_energy=0.0&max_energy=0.5',
+      'bright': 'min_valence=0.7&max_valence=1.0&min_energy=0.6&max_energy=1.0',
+      'energetic': 'min_energy=0.8&max_energy=1.0&min_tempo=120',
+      'peaceful': 'min_valence=0.4&max_valence=0.7&max_energy=0.4&max_tempo=100',
+      'melancholy': 'min_valence=0.0&max_valence=0.4&min_energy=0.2&max_energy=0.6',
+      'aggressive': 'min_energy=0.8&max_energy=1.0&min_loudness=-10',
+      'ethereal': 'min_acousticness=0.6&min_instrumentalness=0.5',
+      'mysterious': 'min_instrumentalness=0.3&min_valence=0.2&max_valence=0.6'
+    };
+
+    const features = moodFeatures[mood] || '';
+    
+    return spotifyRateLimiter.execute(async () => {
+      return withRetry(async () => {
+        // Use recommendations endpoint for mood-based search
+        const seedGenres = this.getMoodGenres(mood).slice(0, 5).join(',');
+        const response = await fetch(
+          `https://api.spotify.com/v1/recommendations?seed_genres=${seedGenres}&${features}&limit=${limit}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+
+        if (!response.ok) {
+          // Fallback to search
+          const fallbackQuery = this.getMoodKeywords(mood).join(' OR ');
+          const fallbackResponse = await fetch(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(fallbackQuery)}&type=track&limit=${limit}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          
+          if (!fallbackResponse.ok) {
+            throw new Error(`Spotify mood search failed: ${fallbackResponse.status}`);
+          }
+          
+          const fallbackData: SpotifySearchResult = await fallbackResponse.json();
+          return fallbackData.tracks?.items || [];
+        }
+
+        const data: any = await response.json();
+        return data.tracks || [];
+      }, 3, 1000);
+    }).catch(error => {
+      console.error('Spotify mood track search failed:', error);
+      return [];
+    });
+  }
+
+  // Helper method to get genre seeds for moods
+  private getMoodGenres(mood: string): string[] {
+    const moodGenreMap: Record<string, string[]> = {
+      'dark': ['metal', 'gothic', 'industrial', 'black-metal'],
+      'bright': ['pop', 'dance', 'power-pop', 'synth-pop'],
+      'energetic': ['edm', 'punk', 'drum-and-bass', 'hardcore'],
+      'peaceful': ['ambient', 'new-age', 'acoustic', 'folk'],
+      'melancholy': ['blues', 'sad', 'singer-songwriter', 'emo'],
+      'aggressive': ['death-metal', 'hardcore', 'metalcore', 'grindcore'],
+      'ethereal': ['ambient', 'dream-pop', 'shoegaze', 'trip-hop'],
+      'mysterious': ['dark-ambient', 'experimental', 'idm', 'minimal-techno'],
+      'nostalgic': ['indie', 'indie-pop', 'lo-fi', 'synthwave'],
+      'futuristic': ['electronic', 'techno', 'idm', 'dubstep'],
+      'romantic': ['soul', 'r-n-b', 'jazz', 'bossa-nova'],
+      'epic': ['symphonic-metal', 'power-metal', 'orchestral', 'soundtrack']
+    };
+    
+    return moodGenreMap[mood] || ['pop', 'rock', 'indie'];
+  }
+
+  // Helper method to get mood keywords
+  private getMoodKeywords(mood: string): string[] {
+    const moodKeywords: Record<string, string[]> = {
+      'dark': ['shadow', 'darkness', 'night', 'black'],
+      'bright': ['sunshine', 'happy', 'joy', 'light'],
+      'energetic': ['energy', 'power', 'electric', 'fire'],
+      'peaceful': ['calm', 'peace', 'serene', 'quiet'],
+      'melancholy': ['sad', 'sorrow', 'lonely', 'tears'],
+      'aggressive': ['anger', 'rage', 'fury', 'violent'],
+      'ethereal': ['dream', 'float', 'celestial', 'heaven'],
+      'mysterious': ['mystery', 'enigma', 'secret', 'unknown']
+    };
+    
+    return moodKeywords[mood] || [mood];
+  }
+
+  // Extract vocabulary patterns from artist/track names
+  extractVocabularyPatterns(artists: SpotifyArtist[], tracks: SpotifyTrack[]): string[] {
+    const vocabulary: Set<string> = new Set();
+    
+    // Extract words from artist names
+    artists.forEach(artist => {
+      const words = artist.name.split(/[\s\-&,]+/)
+        .filter(word => word.length > 2 && !/^the$/i.test(word))
+        .map(word => word.toLowerCase());
+      words.forEach(word => vocabulary.add(word));
+    });
+    
+    // Extract words from track names
+    tracks.forEach(track => {
+      const words = track.name.split(/[\s\-&,\(\)]+/)
+        .filter(word => word.length > 2 && !/^the$/i.test(word))
+        .map(word => word.toLowerCase());
+      words.forEach(word => vocabulary.add(word));
+    });
+    
+    return Array.from(vocabulary);
+  }
+
   async verifyBandName(name: string): Promise<{
     exists: boolean;
     matches: Array<{

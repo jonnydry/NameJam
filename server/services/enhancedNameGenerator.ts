@@ -1,5 +1,6 @@
 import { datamuseService, DatamuseService } from './datamuseService';
 import { lastfmService } from './lastfmService';
+import { SpotifyService } from './spotifyService';
 import type { GenerateNameRequest } from '@shared/schema';
 import { secureLog } from '../utils/secureLogger';
 
@@ -12,15 +13,18 @@ interface EnhancedWordSource {
   associatedWords: string[];
   genreTerms: string[];
   lastfmWords: string[];
+  spotifyWords: string[];
 }
 
 export class EnhancedNameGeneratorService {
   private datamuseService: DatamuseService;
+  private spotifyService: SpotifyService;
   private recentWords: Set<string> = new Set();
   private maxRecentWords: number = 100; // Track last 100 words
 
   constructor() {
     this.datamuseService = datamuseService;
+    this.spotifyService = new SpotifyService();
   }
 
   // Enhanced generation using Datamuse API for contextual relationships
@@ -81,7 +85,8 @@ export class EnhancedNameGeneratorService {
       contextualWords: [],
       associatedWords: [],
       genreTerms: [],
-      lastfmWords: []
+      lastfmWords: [],
+      spotifyWords: []
     };
 
     try {
@@ -110,7 +115,31 @@ export class EnhancedNameGeneratorService {
         }
       }
 
-      // STEP 2: Get words using multiple linguistic relationships for richness  
+      // STEP 2: Spotify Integration for Genre/Mood Vocabulary
+      sources.spotifyWords = [];
+      try {
+        if (genre) {
+          secureLog.debug(`🎵 Fetching Spotify genre-specific artists for: ${genre}`);
+          const genreArtists = await this.spotifyService.getGenreArtists(genre, 30);
+          const genreTracks = await this.spotifyService.searchTracks(genre, 20);
+          const spotifyVocab = this.spotifyService.extractVocabularyPatterns(genreArtists, genreTracks);
+          sources.spotifyWords.push(...spotifyVocab.filter(w => this.isPoeticWord(w)));
+          secureLog.debug(`✅ Spotify genre integration: ${spotifyVocab.length} words extracted`);
+        }
+        
+        if (mood) {
+          secureLog.debug(`🎵 Fetching Spotify mood-based tracks for: ${mood}`);
+          const moodTracks = await this.spotifyService.getMoodTracks(mood, 30);
+          const moodArtists = await this.spotifyService.searchArtists(mood, 20);
+          const spotifyMoodVocab = this.spotifyService.extractVocabularyPatterns(moodArtists, moodTracks);
+          sources.spotifyWords.push(...spotifyMoodVocab.filter(w => this.isPoeticWord(w)));
+          secureLog.debug(`✅ Spotify mood integration: ${spotifyMoodVocab.length} words extracted`);
+        }
+      } catch (error) {
+        secureLog.error('Spotify integration failed, continuing with other sources:', error);
+      }
+
+      // STEP 3: Get words using multiple linguistic relationships for richness  
       secureLog.debug(`🎨 Building poetic word palette...`);
       
       // 3. Get emotionally evocative words (process only first 2 seeds to reduce API calls)
@@ -192,7 +221,8 @@ export class EnhancedNameGeneratorService {
         musicalTerms: sources.musicalTerms.length,
         genreTerms: sources.genreTerms.length,
         lastfmWords: sources.lastfmWords.length,
-        total: sources.adjectives.length + sources.nouns.length + sources.verbs.length + sources.musicalTerms.length + sources.genreTerms.length + sources.lastfmWords.length
+        spotifyWords: sources.spotifyWords.length,
+        total: sources.adjectives.length + sources.nouns.length + sources.verbs.length + sources.musicalTerms.length + sources.genreTerms.length + sources.lastfmWords.length + sources.spotifyWords.length
       });
 
     } catch (error) {
@@ -204,6 +234,7 @@ export class EnhancedNameGeneratorService {
       sources.musicalTerms = ['echo', 'melody', 'rhythm', 'harmony', 'silence'];
       sources.genreTerms = [];
       sources.lastfmWords = [];
+      sources.spotifyWords = [];
     }
 
     return sources;
@@ -384,11 +415,11 @@ export class EnhancedNameGeneratorService {
     return allWords[Math.floor(Math.random() * allWords.length)];
   }
 
-  // Generate two words using semantic relationships + Last.fm genre intelligence
+  // Generate two words using semantic relationships + Last.fm/Spotify genre intelligence
   private async generateTwoWordContextual(sources: EnhancedWordSource, type: string): Promise<string> {
-    // Prioritize Last.fm genre-specific vocabulary if available
-    const genreAdjectives = [...sources.lastfmWords, ...sources.genreTerms].filter(w => this.isAdjectiveLike(w));
-    const genreNouns = [...sources.lastfmWords, ...sources.genreTerms].filter(w => this.isNounLike(w));
+    // Prioritize Last.fm and Spotify genre-specific vocabulary if available
+    const genreAdjectives = [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords].filter(w => this.isAdjectiveLike(w));
+    const genreNouns = [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords].filter(w => this.isNounLike(w));
     
     const adjectives = genreAdjectives.length > 0 ? 
       [...genreAdjectives, ...sources.adjectives.slice(0, 5)] :
@@ -418,16 +449,16 @@ export class EnhancedNameGeneratorService {
     return `${this.capitalize(adj)} ${this.capitalize(baseNoun)}`;
   }
 
-  // Generate three words with enhanced patterns + Last.fm genre context
+  // Generate three words with enhanced patterns + Last.fm/Spotify genre context
   private async generateThreeWordContextual(sources: EnhancedWordSource, type: string): Promise<string> {
-    // Create enhanced word pools with Last.fm data priority
+    // Create enhanced word pools with Last.fm and Spotify data priority
     const enhancedAdjectives = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.adjectives, 
       w => this.isAdjectiveLike(w)
     );
     const enhancedNouns = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.nouns, 
       w => this.isNounLike(w)
     );
@@ -495,14 +526,14 @@ export class EnhancedNameGeneratorService {
   
   // Four words with poetic structure
   private generateFourWordPoetic(sources: EnhancedWordSource, type: string): string {
-    // Create enhanced word pools with Last.fm genre priority
+    // Create enhanced word pools with Last.fm and Spotify genre priority
     const enhancedAdjectives = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.adjectives, 
       w => this.isAdjectiveLike(w)
     );
     const enhancedNouns = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.nouns, 
       w => this.isNounLike(w)
     );
@@ -538,14 +569,14 @@ export class EnhancedNameGeneratorService {
   
   // Five words with narrative flow
   private generateFiveWordNarrative(sources: EnhancedWordSource, type: string): string {
-    // Create enhanced word pools with Last.fm genre priority
+    // Create enhanced word pools with Last.fm and Spotify genre priority
     const enhancedAdjectives = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.adjectives, 
       w => this.isAdjectiveLike(w)
     );
     const enhancedNouns = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.nouns, 
       w => this.isNounLike(w)
     );
@@ -574,14 +605,14 @@ export class EnhancedNameGeneratorService {
   
   // Six words forming a complete statement
   private generateSixWordStatement(sources: EnhancedWordSource, type: string): string {
-    // Create enhanced word pools with Last.fm genre priority
+    // Create enhanced word pools with Last.fm and Spotify genre priority
     const enhancedAdjectives = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.adjectives, 
       w => this.isAdjectiveLike(w)
     );
     const enhancedNouns = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.nouns, 
       w => this.isNounLike(w)
     );
@@ -622,14 +653,14 @@ export class EnhancedNameGeneratorService {
   
   // Seven words forming a mini-story
   private generateSevenWordStory(sources: EnhancedWordSource, type: string): string {
-    // Create enhanced word pools
+    // Create enhanced word pools with Last.fm and Spotify genre priority
     const enhancedAdjectives = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.adjectives, 
       w => this.isAdjectiveLike(w)
     );
     const enhancedNouns = this.createEnhancedWordPool(
-      [...sources.lastfmWords, ...sources.genreTerms], 
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
       sources.nouns, 
       w => this.isNounLike(w)
     );
