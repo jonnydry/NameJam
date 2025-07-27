@@ -40,7 +40,11 @@ export function getSession() {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost'
     },
+    rolling: true, // Reset expiration on activity
+    name: 'namejam.session', // Custom session name
   });
 }
 
