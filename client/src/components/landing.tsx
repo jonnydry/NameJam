@@ -23,7 +23,7 @@ export function Landing() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8">Create unique band or song names, generate a lyric to prompt your own writing, or write an imaginary setlist. Name your Jam!</p>
+            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8">Create unique band or song names and generate lyrics to prompt your own writing. Name your Jam!</p>
           </div>
 
           {/* Features Grid */}
@@ -36,17 +36,6 @@ export function Landing() {
                 <div className="flex-1">
                   <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Quadruple API Intelligence</h3>
                   <p className="text-base text-muted-foreground/90 leading-relaxed">Datamuse linguistics + Spotify data + Last.fm genres + ConceptNet semantics for unmatched authenticity</p>
-                </div>
-              </div>
-            </div>
-            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-purple-500/10 text-purple-500">
-                  <ListMusic className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Smart Set Lists</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Auto-organized 8 or 16-song performances with real-time verification and AI band naming</p>
                 </div>
               </div>
             </div>
@@ -79,7 +68,7 @@ export function Landing() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Organized Stash</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Rate, sort, and export your favorites - names, setlists, lyrics, and edgy band bios</p>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Rate, sort, and export your favorites - names, lyrics, and edgy band bios</p>
                 </div>
               </div>
             </div>
