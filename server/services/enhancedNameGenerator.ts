@@ -360,7 +360,14 @@ export class EnhancedNameGeneratorService {
       return await this.generateThreeWordContextual(sources, type);
     }
 
-    // 4+ words - use narrative patterns
+    // 4+ words - use narrative patterns with dynamic length
+    if (wordCount >= 4) {
+      // For "4+" option, randomly select between 4-7 words
+      const dynamicWordCount = Math.floor(Math.random() * 4) + 4; // 4-7 words
+      return await this.generateLongFormContextual(sources, dynamicWordCount, type);
+    }
+    
+    // Fallback for any other word count
     return await this.generateLongFormContextual(sources, wordCount, type);
   }
 
@@ -463,25 +470,31 @@ export class EnhancedNameGeneratorService {
     return await pattern();
   }
 
-  // Generate longer contextual names with better structure
+  // Generate longer contextual names with better structure and lyric-like flow
   private async generateLongFormContextual(sources: EnhancedWordSource, wordCount: number, type: string): Promise<string> {
+    // Apply lyric-generation inspired patterns for coherent flow
     if (wordCount === 4) {
-      return this.generateFourWordPattern(sources, type);
+      return this.generateFourWordPoetic(sources, type);
     }
     
     if (wordCount === 5) {
-      return this.generateFiveWordPattern(sources, type);
+      return this.generateFiveWordNarrative(sources, type);
     }
     
     if (wordCount === 6) {
-      return this.generateSixWordPattern(sources, type);
+      return this.generateSixWordStatement(sources, type);
+    }
+    
+    if (wordCount === 7) {
+      return this.generateSevenWordStory(sources, type);
     }
     
     // Fallback for other word counts
     return this.generateStructuredPhrase(sources, wordCount);
   }
   
-  private generateFourWordPattern(sources: EnhancedWordSource, type: string): string {
+  // Four words with poetic structure
+  private generateFourWordPoetic(sources: EnhancedWordSource, type: string): string {
     // Create enhanced word pools with Last.fm genre priority
     const enhancedAdjectives = this.createEnhancedWordPool(
       [...sources.lastfmWords, ...sources.genreTerms], 
@@ -523,7 +536,8 @@ export class EnhancedNameGeneratorService {
     return pattern();
   }
   
-  private generateFiveWordPattern(sources: EnhancedWordSource, type: string): string {
+  // Five words with narrative flow
+  private generateFiveWordNarrative(sources: EnhancedWordSource, type: string): string {
     // Create enhanced word pools with Last.fm genre priority
     const enhancedAdjectives = this.createEnhancedWordPool(
       [...sources.lastfmWords, ...sources.genreTerms], 
@@ -558,7 +572,8 @@ export class EnhancedNameGeneratorService {
     return pattern();
   }
   
-  private generateSixWordPattern(sources: EnhancedWordSource, type: string): string {
+  // Six words forming a complete statement
+  private generateSixWordStatement(sources: EnhancedWordSource, type: string): string {
     // Create enhanced word pools with Last.fm genre priority
     const enhancedAdjectives = this.createEnhancedWordPool(
       [...sources.lastfmWords, ...sources.genreTerms], 
@@ -571,14 +586,92 @@ export class EnhancedNameGeneratorService {
       w => this.isNounLike(w)
     );
 
-    const adj1 = this.getRandomWord(enhancedAdjectives) || 'wild';
-    const noun1 = this.getRandomWord(enhancedNouns) || 'heart';
-    const adj2 = this.getRandomWord(enhancedAdjectives) || 'burning';
-    const noun2 = this.getRandomWord(enhancedNouns) || 'sky';
+    // Apply lyric-like narrative patterns
+    const patterns = [
+      // Subject-verb-object patterns
+      () => {
+        const subject = this.getRandomWord(enhancedNouns) || 'stars';
+        const verb = ['dance', 'sing', 'whisper', 'burn', 'shine', 'fall'][Math.floor(Math.random() * 6)];
+        const prep = ['beneath', 'above', 'within', 'through', 'beyond'][Math.floor(Math.random() * 5)];
+        const adj = this.getRandomWord(enhancedAdjectives) || 'eternal';
+        const object = this.getRandomWord(enhancedNouns) || 'sky';
+        return `${this.capitalize(subject)} ${verb} ${prep} the ${adj} ${object}`;
+      },
+      // Temporal narrative patterns
+      () => {
+        const temporal = ['When', 'While', 'Before', 'After', 'Until'][Math.floor(Math.random() * 5)];
+        const adj = this.getRandomWord(enhancedAdjectives) || 'golden';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'dawn';
+        const verb = ['meets', 'finds', 'becomes', 'touches'][Math.floor(Math.random() * 4)];
+        const noun2 = this.getRandomWord(enhancedNouns) || 'night';
+        return `${temporal} ${adj} ${noun1} ${verb} the ${noun2}`;
+      },
+      // Poetic statement patterns
+      () => {
+        const adj1 = this.getRandomWord(enhancedAdjectives) || 'wild';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'heart';
+        const verb = ['carries', 'holds', 'knows', 'remembers'][Math.floor(Math.random() * 4)];
+        const adj2 = this.getRandomWord(enhancedAdjectives) || 'secret';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'dreams';
+        return `The ${adj1} ${noun1} ${verb} ${adj2} ${noun2}`;
+      }
+    ];
     
-    return `The ${this.capitalize(adj1)} ${this.capitalize(noun1)} of ${this.capitalize(adj2)} ${this.capitalize(noun2)}`;
+    return patterns[Math.floor(Math.random() * patterns.length)]();
   }
   
+  // Seven words forming a mini-story
+  private generateSevenWordStory(sources: EnhancedWordSource, type: string): string {
+    // Create enhanced word pools
+    const enhancedAdjectives = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.adjectives, 
+      w => this.isAdjectiveLike(w)
+    );
+    const enhancedNouns = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms], 
+      sources.nouns, 
+      w => this.isNounLike(w)
+    );
+    
+    // Story-like patterns inspired by lyric generation
+    const patterns = [
+      // Complete narrative arc
+      () => {
+        const character = this.getRandomWord(enhancedNouns) || 'wanderer';
+        const verb1 = ['found', 'lost', 'saw', 'heard'][Math.floor(Math.random() * 4)];
+        const adj = this.getRandomWord(enhancedAdjectives) || 'ancient';
+        const object = this.getRandomWord(enhancedNouns) || 'truth';
+        const location = this.getRandomWord(enhancedNouns) || 'ruins';
+        return `The ${character} ${verb1} an ${adj} ${object} in ${location}`;
+      },
+      // Journey pattern
+      () => {
+        const traveler = this.getRandomWord(enhancedNouns) || 'dreamer';
+        const verb = ['journeys', 'travels', 'wanders', 'searches'][Math.floor(Math.random() * 4)];
+        const prep = ['through', 'beyond', 'across', 'beneath'][Math.floor(Math.random() * 4)];
+        const adj1 = this.getRandomWord(enhancedAdjectives) || 'endless';
+        const place = this.getRandomWord(enhancedNouns) || 'desert';
+        const seeking = ['seeking', 'finding', 'chasing'][Math.floor(Math.random() * 3)];
+        const goal = this.getRandomWord(enhancedNouns) || 'peace';
+        return `${this.capitalize(traveler)} ${verb} ${prep} ${adj1} ${place} ${seeking} ${goal}`;
+      },
+      // Transformation pattern
+      () => {
+        const subject = this.getRandomWord(enhancedNouns) || 'silence';
+        const verb = ['becomes', 'transforms', 'awakens', 'evolves'][Math.floor(Math.random() * 4)];
+        const transition = ['into', 'as', 'like'][Math.floor(Math.random() * 3)];
+        const adj = this.getRandomWord(enhancedAdjectives) || 'infinite';
+        const result = this.getRandomWord(enhancedNouns) || 'song';
+        const time = ['at', 'by', 'through'][Math.floor(Math.random() * 3)];
+        const moment = this.getRandomWord(enhancedNouns) || 'dawn';
+        return `${this.capitalize(subject)} ${verb} ${transition} ${adj} ${result} ${time} ${moment}`;
+      }
+    ];
+    
+    return patterns[Math.floor(Math.random() * patterns.length)]();
+  }
+
   private generateStructuredPhrase(sources: EnhancedWordSource, wordCount: number): string {
     const words: string[] = [];
     const allGoodWords = [...sources.adjectives, ...sources.nouns].filter(w => 

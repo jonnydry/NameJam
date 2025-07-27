@@ -255,9 +255,7 @@ export function NameGenerator() {
               <SelectItem value="1">1 word</SelectItem>
               <SelectItem value="2">2 words</SelectItem>
               <SelectItem value="3">3 words</SelectItem>
-              <SelectItem value="4">4 words</SelectItem>
-              <SelectItem value="5">5 words</SelectItem>
-              <SelectItem value="6">6 words</SelectItem>
+              <SelectItem value="4">4+ words</SelectItem>
             </SelectContent>
           </Select>
         </div>
