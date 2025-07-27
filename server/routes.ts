@@ -258,68 +258,88 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       const setTwoSize = totalSongs === 8 ? 4 : 8;
       const allSongsNeeded = totalSongs + 1; // +1 for finale
       
-      // Generate songs using full generation system with varied word counts
-      const songs = [];
+      // Generate all songs at once to properly distribute AI vs traditional
+      const songRequest = {
+        type: 'song' as const,
+        count: allSongsNeeded,
+        wordCount: undefined, // Will vary per song
+        mood: mood && mood !== 'none' ? mood : undefined,
+        genre: genre && genre !== 'none' ? genre : undefined
+      };
+      
+      const generatedNames = await nameGenerator.generateSetlistNames(songRequest);
       
       // Use varied word counts for more interesting setlists
       const wordCountOptions = [1, 2, 3, 4, 5, 6];
       const weights = [0.1, 0.2, 0.3, 0.25, 0.1, 0.05]; // Favor 2-4 words
       
-      for (let i = 0; i < allSongsNeeded; i++) {
-        // Select word count based on weighted distribution
-        const rand = Math.random();
-        let cumulative = 0;
-        let selectedWordCount = 3; // default fallback
-        
-        for (let j = 0; j < weights.length; j++) {
-          cumulative += weights[j];
-          if (rand <= cumulative) {
-            selectedWordCount = wordCountOptions[j];
-            break;
+      // Process generated names with varied word counts and verify them
+      const songs = await Promise.all(
+        generatedNames.map(async (songNameObj, i) => {
+          try {
+            // If the name doesn't match our desired word count, regenerate it
+            const rand = Math.random();
+            let cumulative = 0;
+            let selectedWordCount = 3; // default fallback
+            
+            for (let j = 0; j < weights.length; j++) {
+              cumulative += weights[j];
+              if (rand <= cumulative) {
+                selectedWordCount = wordCountOptions[j];
+                break;
+              }
+            }
+            
+            let finalName = songNameObj.name;
+            let isAiGenerated = songNameObj.isAiGenerated;
+            
+            // If word count doesn't match, regenerate with specific word count
+            const actualWordCount = finalName.split(' ').length;
+            if (actualWordCount !== selectedWordCount) {
+              const regenRequest = {
+                type: 'song' as const,
+                count: 1,
+                wordCount: selectedWordCount,
+                mood: mood && mood !== 'none' ? mood : undefined,
+                genre: genre && genre !== 'none' ? genre : undefined
+              };
+              
+              const regenNames = await enhancedNameGenerator.generateEnhancedNames(regenRequest);
+              if (regenNames.length > 0) {
+                finalName = regenNames[0].name;
+                isAiGenerated = regenNames[0].isAiGenerated;
+              }
+            }
+            
+            // Use full verification including Spotify
+            const verification = await nameVerifier.verifyName(finalName, 'song');
+            
+            return {
+              id: i + 1,
+              name: finalName,
+              verification,
+              isAiGenerated: isAiGenerated || false
+            };
+          } catch (err) {
+            // Generate a simple fallback name using basic word combination
+            const fallbackWords = ['Electric', 'Midnight', 'Echo', 'Dream', 'Fire', 'Storm', 'Crystal', 'Shadow'];
+            const fallbackNouns = ['Heart', 'Soul', 'Light', 'Sky', 'Rain', 'Moon', 'Star', 'Wave'];
+            const randomWord = fallbackWords[Math.floor(Math.random() * fallbackWords.length)];
+            const randomNoun = fallbackNouns[Math.floor(Math.random() * fallbackNouns.length)];
+            
+            const fallbackName = `${randomWord} ${randomNoun}`;
+            // Use full verification for fallback names too
+            const verification = await nameVerifier.verifyName(fallbackName, 'song');
+            
+            return {
+              id: i + 1,
+              name: fallbackName,
+              verification,
+              isAiGenerated: false
+            };
           }
-        }
-        
-        try {
-          const songRequest = {
-            type: 'song' as const,
-            count: 1,
-            wordCount: selectedWordCount,
-            mood: mood as any,
-            genre: genre as any
-          };
-          
-          const generatedNames = await nameGenerator.generateSetlistNames(songRequest);
-          const songNameObj = generatedNames[0];
-          const songName = songNameObj.name;
-          
-          // Use full verification including Spotify
-          const verification = await nameVerifier.verifyName(songName, 'song');
-          
-          songs.push({
-            id: i + 1,
-            name: songName,
-            verification,
-            isAiGenerated: songNameObj.isAiGenerated || false
-          });
-        } catch (err) {
-          // Generate a simple fallback name using basic word combination
-          const fallbackWords = ['Electric', 'Midnight', 'Echo', 'Dream', 'Fire', 'Storm', 'Crystal', 'Shadow'];
-          const fallbackNouns = ['Heart', 'Soul', 'Light', 'Sky', 'Rain', 'Moon', 'Star', 'Wave'];
-          const randomWord = fallbackWords[Math.floor(Math.random() * fallbackWords.length)];
-          const randomNoun = fallbackNouns[Math.floor(Math.random() * fallbackNouns.length)];
-          
-          const fallbackName = `${randomWord} ${randomNoun}`;
-          // Use full verification for fallback names too
-          const verification = await nameVerifier.verifyName(fallbackName, 'song');
-          
-          songs.push({
-            id: i + 1,
-            name: fallbackName,
-            verification,
-            isAiGenerated: false
-          });
-        }
-      }
+        })
+      );
       
       // Split into sets
       const setOne = songs.slice(0, setOneSize);
