@@ -156,7 +156,15 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 27, 2025: COMPREHENSIVE SECURITY AUDIT & ENHANCEMENTS**
+**Latest Update - January 29, 2025: AI CONTEXT ENHANCEMENT & QUALITY IMPROVEMENTS**
+- **AI Context Integration**: Enhanced AI name generation to receive real artist/track names from Spotify and Last.fm APIs as context examples, providing the AI with authentic genre-specific vocabulary patterns
+- **Genre-Appropriate Filtering**: Implemented comprehensive word filtering to prevent inappropriate combinations (e.g., avoiding "cyber" for reggae, "digital" for jazz) ensuring genre authenticity
+- **Enhanced Word Selection**: Added `isGenreAppropriate` method that filters out words inappropriate for specific genres, improving contextual relevance
+- **API Context Passing**: Modified name generator service to extract real artist names from Spotify/Last.fm and pass up to 10 examples to AI for better genre understanding
+- **Improved Adjective Selection**: Enhanced two-word generation to filter Datamuse adjectives based on genre context, eliminating inappropriate combinations like "Punch Champagne" for reggae
+- **Quality Control**: Added multi-layer filtering: first by genre appropriateness, then by poetic quality, ensuring more authentic and contextually relevant results
+
+**Previous Update - January 27, 2025: COMPREHENSIVE SECURITY AUDIT & ENHANCEMENTS**
 - **Environment Variable Validation**: Added startup validation for all critical environment variables (DATABASE_URL, SESSION_SECRET, XAI_API_KEY, REPL_ID, REPLIT_DOMAINS) with secure logging of configuration status
 - **Secure Logging System**: Implemented comprehensive secure logging that automatically sanitizes sensitive data (API keys, tokens, emails, passwords) from logs using pattern-based filtering and PII protection
 - **Enhanced TypeScript Safety**: Fixed 29+ TypeScript errors in routes.ts improving type safety and reducing potential security vulnerabilities through proper request/response typing

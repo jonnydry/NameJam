@@ -76,7 +76,7 @@ export class EnhancedNameGeneratorService {
   }
 
   // Build word sources using Datamuse's contextual relationships + Last.fm genre intelligence
-  private async buildContextualWordSources(mood?: string, genre?: string, type?: string): Promise<EnhancedWordSource> {
+  async buildContextualWordSources(mood?: string, genre?: string, type?: string): Promise<EnhancedWordSource> {
     const sources: EnhancedWordSource = {
       adjectives: [],
       nouns: [],
@@ -424,11 +424,11 @@ export class EnhancedNameGeneratorService {
     }
 
     if (wordCount === 2) {
-      return await this.generateTwoWordContextual(sources, type);
+      return await this.generateTwoWordContextual(sources, type, genre);
     }
 
     if (wordCount === 3) {
-      return await this.generateThreeWordContextual(sources, type);
+      return await this.generateThreeWordContextual(sources, type, genre);
     }
 
     // 4+ words - use narrative patterns with dynamic length
@@ -456,7 +456,7 @@ export class EnhancedNameGeneratorService {
   }
 
   // Generate two words using semantic relationships + Last.fm/Spotify genre intelligence
-  private async generateTwoWordContextual(sources: EnhancedWordSource, type: string): Promise<string> {
+  private async generateTwoWordContextual(sources: EnhancedWordSource, type: string, genre?: string): Promise<string> {
     // Prioritize Last.fm and Spotify genre-specific vocabulary if available
     const genreAdjectives = [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords].filter(w => this.isAdjectiveLike(w));
     const genreNouns = [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords].filter(w => this.isNounLike(w));
@@ -477,20 +477,46 @@ export class EnhancedNameGeneratorService {
       const relatedAdjectives = await this.datamuseService.findAdjectivesForNoun(baseNoun, 10);
       
       if (relatedAdjectives.length > 0) {
-        const contextualAdj = relatedAdjectives[Math.floor(Math.random() * relatedAdjectives.length)].word;
-        return `${this.capitalize(contextualAdj)} ${this.capitalize(baseNoun)}`;
+        // Filter related adjectives for genre appropriateness
+        const filteredAdjectives = relatedAdjectives.filter(adj => {
+          const word = adj.word.toLowerCase();
+          // For reggae, avoid overly technical or unrelated words
+          if (genre === 'reggae' && ['punch', 'trade', 'financial', 'corporate'].includes(word)) {
+            return false;
+          }
+          // For jazz, prefer smooth/cool words
+          if (genre === 'jazz' && ['digital', 'cyber', 'neon'].includes(word)) {
+            return false;
+          }
+          return this.isPoeticWord(word) && !this.isProblematicWord(word);
+        });
+        
+        if (filteredAdjectives.length > 0) {
+          const contextualAdj = filteredAdjectives[Math.floor(Math.random() * filteredAdjectives.length)].word;
+          return `${this.capitalize(contextualAdj)} ${this.capitalize(baseNoun)}`;
+        }
       }
     } catch (error) {
       secureLog.error('Error finding related adjectives:', error);
     }
 
-    // Fallback to random combination
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    // Fallback to genre-specific combination
+    const genreAppropriateAdjs = adjectives.filter(adj => {
+      if (genre && this.isGenreAppropriate(adj, genre)) {
+        return true;
+      }
+      return !this.isProblematicWord(adj);
+    });
+    
+    const adj = genreAppropriateAdjs.length > 0 ? 
+      genreAppropriateAdjs[Math.floor(Math.random() * genreAppropriateAdjs.length)] :
+      adjectives[Math.floor(Math.random() * adjectives.length)];
+    
     return `${this.capitalize(adj)} ${this.capitalize(baseNoun)}`;
   }
 
   // Generate three words with enhanced patterns + Last.fm/Spotify genre context
-  private async generateThreeWordContextual(sources: EnhancedWordSource, type: string): Promise<string> {
+  private async generateThreeWordContextual(sources: EnhancedWordSource, type: string, genre?: string): Promise<string> {
     // Create enhanced word pools with Last.fm and Spotify data priority
     const enhancedAdjectives = this.createEnhancedWordPool(
       [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
@@ -1070,6 +1096,27 @@ export class EnhancedNameGeneratorService {
     
     // If any significant word was recently used, reject the name
     return words.some(word => this.recentWords.has(word));
+  }
+  
+  // Check if a word is appropriate for a given genre
+  private isGenreAppropriate(word: string, genre: string): boolean {
+    const lowerWord = word.toLowerCase();
+    
+    const genreInappropriateWords: Record<string, string[]> = {
+      reggae: ['corporate', 'digital', 'cyber', 'quantum', 'synthetic', 'artificial', 'virtual', 'binary'],
+      jazz: ['cyber', 'quantum', 'neon', 'digital', 'synthetic', 'virtual', 'binary', 'pixel'],
+      folk: ['cyber', 'quantum', 'neon', 'digital', 'synthetic', 'artificial', 'virtual', 'binary'],
+      classical: ['funk', 'groovy', 'cyber', 'neon', 'street', 'hood', 'swag'],
+      country: ['cyber', 'quantum', 'neon', 'digital', 'synthetic', 'urban', 'metro'],
+      blues: ['cyber', 'quantum', 'neon', 'digital', 'synthetic', 'virtual', 'binary'],
+    };
+    
+    // Check if word is inappropriate for the genre
+    if (genreInappropriateWords[genre]) {
+      return !genreInappropriateWords[genre].includes(lowerWord);
+    }
+    
+    return true;
   }
 
   // Helper methods for Last.fm integration
