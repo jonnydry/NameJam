@@ -165,12 +165,35 @@ export class NameGeneratorService {
       
       // Generate enhanced Datamuse songs for the remainder
       if (datamuseCount > 0) {
-        const datamuseResults = await enhancedNameGenerator.generateEnhancedNames({
-          ...enhancedRequest,
-          count: datamuseCount
-        });
-        results.push(...datamuseResults);
-        console.log(`✅ Generated ${datamuseResults.length} enhanced Datamuse setlist songs`);
+        // Generate songs with varied word counts for more interesting setlists
+        const wordCountOptions = [1, 2, 3, 4, 5, 6];
+        const weights = [0.1, 0.2, 0.3, 0.25, 0.1, 0.05]; // Favor 2-4 words
+        
+        for (let i = 0; i < datamuseCount; i++) {
+          // Select a random word count based on weights
+          const rand = Math.random();
+          let cumulative = 0;
+          let selectedWordCount = 3; // default fallback
+          
+          for (let j = 0; j < weights.length; j++) {
+            cumulative += weights[j];
+            if (rand <= cumulative) {
+              selectedWordCount = wordCountOptions[j];
+              break;
+            }
+          }
+          
+          const songResults = await enhancedNameGenerator.generateEnhancedNames({
+            ...enhancedRequest,
+            wordCount: selectedWordCount,
+            count: 1
+          });
+          
+          if (songResults.length > 0) {
+            results.push(songResults[0]);
+          }
+        }
+        console.log(`✅ Generated ${results.length - aiCount} enhanced Datamuse setlist songs`);
       }
       
       return results.slice(0, totalCount); // Ensure exact count

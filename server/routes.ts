@@ -269,56 +269,18 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       
       const generatedNames = await nameGenerator.generateSetlistNames(songRequest);
       
-      // Use varied word counts for more interesting setlists
-      const wordCountOptions = [1, 2, 3, 4, 5, 6];
-      const weights = [0.1, 0.2, 0.3, 0.25, 0.1, 0.05]; // Favor 2-4 words
-      
-      // Process generated names with varied word counts and verify them
+      // Process generated names and verify them
       const songs = await Promise.all(
         generatedNames.map(async (songNameObj, i) => {
           try {
-            // If the name doesn't match our desired word count, regenerate it
-            const rand = Math.random();
-            let cumulative = 0;
-            let selectedWordCount = 3; // default fallback
-            
-            for (let j = 0; j < weights.length; j++) {
-              cumulative += weights[j];
-              if (rand <= cumulative) {
-                selectedWordCount = wordCountOptions[j];
-                break;
-              }
-            }
-            
-            let finalName = songNameObj.name;
-            let isAiGenerated = songNameObj.isAiGenerated;
-            
-            // If word count doesn't match, regenerate with specific word count
-            const actualWordCount = finalName.split(' ').length;
-            if (actualWordCount !== selectedWordCount) {
-              const regenRequest = {
-                type: 'song' as const,
-                count: 1,
-                wordCount: selectedWordCount,
-                mood: mood && mood !== 'none' ? mood : undefined,
-                genre: genre && genre !== 'none' ? genre : undefined
-              };
-              
-              const regenNames = await enhancedNameGenerator.generateEnhancedNames(regenRequest);
-              if (regenNames.length > 0) {
-                finalName = regenNames[0].name;
-                isAiGenerated = regenNames[0].isAiGenerated;
-              }
-            }
-            
             // Use full verification including Spotify
-            const verification = await nameVerifier.verifyName(finalName, 'song');
+            const verification = await nameVerifier.verifyName(songNameObj.name, 'song');
             
             return {
               id: i + 1,
-              name: finalName,
+              name: songNameObj.name,
               verification,
-              isAiGenerated: isAiGenerated || false
+              isAiGenerated: songNameObj.isAiGenerated || false
             };
           } catch (err) {
             // Generate a simple fallback name using basic word combination
