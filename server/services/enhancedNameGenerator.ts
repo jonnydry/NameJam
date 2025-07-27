@@ -45,16 +45,19 @@ export class EnhancedNameGeneratorService {
     while (names.length < count && attempts < maxAttempts) {
       attempts++;
       try {
-        const name = await this.generateContextualName(type, wordCount, wordSources, mood, genre);
+        const result = await this.generateContextualNameWithCount(type, wordCount, wordSources, mood, genre);
         
         // Quality validation and check for repeated words
-        if (name && this.isValidName(name, wordCount) && !names.find(n => n.name === name) && !this.hasRecentWords(name)) {
-          this.trackWords(name);
+        if (result && result.name && this.isValidName(result.name, result.actualWordCount) && !names.find(n => n.name === result.name) && !this.hasRecentWords(result.name)) {
+          this.trackWords(result.name);
           names.push({ 
-            name, 
+            name: result.name, 
             isAiGenerated: false, 
             source: 'datamuse-enhanced' 
           });
+          secureLog.debug(`✅ Generated valid name: "${result.name}" (${result.actualWordCount} words)`);
+        } else {
+          secureLog.debug(`❌ Rejected name: "${result?.name}" - validation failed`);
         }
       } catch (error) {
         secureLog.error('Enhanced generation error:', error);
@@ -62,14 +65,16 @@ export class EnhancedNameGeneratorService {
       
       // Always attempt fallback if we still need more names
       if (names.length < count) {
-        const fallbackName = this.generateFallbackName(wordSources, wordCount);
-        if (fallbackName && this.isValidName(fallbackName, wordCount) && !names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
+        const fallbackWordCount = wordCount >= 4 ? Math.floor(Math.random() * 7) + 4 : wordCount;
+        const fallbackName = this.generateFallbackName(wordSources, fallbackWordCount);
+        if (fallbackName && this.isValidName(fallbackName, fallbackWordCount) && !names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
           this.trackWords(fallbackName);
           names.push({ 
             name: fallbackName, 
             isAiGenerated: false, 
             source: 'fallback' 
           });
+          secureLog.debug(`✅ Generated fallback name: "${fallbackName}" (${fallbackWordCount} words)`);
         }
       }
     }
@@ -505,6 +510,43 @@ export class EnhancedNameGeneratorService {
     
     // Fallback for any other word count
     return await this.generateLongFormContextual(sources, wordCount, type);
+  }
+
+  // Generate contextually-aware names with actual word count tracking
+  private async generateContextualNameWithCount(
+    type: string, 
+    wordCount: number, 
+    sources: EnhancedWordSource,
+    mood?: string,
+    genre?: string
+  ): Promise<{name: string, actualWordCount: number}> {
+    
+    if (wordCount === 1) {
+      const name = this.generateSingleContextualWord(sources);
+      return { name, actualWordCount: 1 };
+    }
+
+    if (wordCount === 2) {
+      const name = await this.generateTwoWordContextual(sources, type, genre);
+      return { name, actualWordCount: 2 };
+    }
+
+    if (wordCount === 3) {
+      const name = await this.generateThreeWordContextual(sources, type, genre);
+      return { name, actualWordCount: 3 };
+    }
+
+    // 4+ words - use narrative patterns with dynamic length
+    if (wordCount >= 4) {
+      // For "4+" option, randomly select between 4-10 words
+      const dynamicWordCount = Math.floor(Math.random() * 7) + 4; // 4-10 words
+      const name = await this.generateLongFormContextual(sources, dynamicWordCount, type);
+      return { name, actualWordCount: dynamicWordCount };
+    }
+    
+    // Fallback for any other word count
+    const name = await this.generateLongFormContextual(sources, wordCount, type);
+    return { name, actualWordCount: wordCount };
   }
 
   // Generate single impactful word
@@ -955,17 +997,109 @@ export class EnhancedNameGeneratorService {
   }
 
   private generateStructuredPhrase(sources: EnhancedWordSource, wordCount: number): string {
-    const words: string[] = [];
-    const allGoodWords = [...sources.adjectives, ...sources.nouns].filter(w => 
-      !this.isProblematicWord(w) && w.length >= 3 && w.length <= 10
+    // Create clean word sources with better filtering
+    const cleanAdjectives = sources.adjectives.filter(w => 
+      !this.isProblematicWord(w) && 
+      !this.isBandName(w) && 
+      w.length >= 3 && w.length <= 10 &&
+      this.isAdjectiveLike(w)
     );
     
+    const cleanNouns = sources.nouns.filter(w => 
+      !this.isProblematicWord(w) && 
+      !this.isBandName(w) && 
+      w.length >= 3 && w.length <= 12 &&
+      this.isNounLike(w)
+    );
+
+    // Apply basic grammatical patterns instead of random concatenation
+    if (wordCount <= 3) {
+      // Short phrases: [Adj] [Noun] or [Adj] [Noun] [Noun]
+      const adj = this.getRandomWord(cleanAdjectives) || 'wild';
+      const noun1 = this.getRandomWord(cleanNouns) || 'storm';
+      const noun2 = wordCount === 3 ? this.getRandomWord(cleanNouns) || 'fire' : '';
+      
+      return wordCount === 2 ? 
+        `${this.capitalize(adj)} ${this.capitalize(noun1)}` :
+        `${this.capitalize(adj)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
+    }
+
+    // Longer phrases: use simple patterns
+    const patterns = [
+      // The [Adj] [Noun] of [Noun]
+      () => {
+        const adj = this.getRandomWord(cleanAdjectives) || 'dark';
+        const noun1 = this.getRandomWord(cleanNouns) || 'heart';
+        const noun2 = this.getRandomWord(cleanNouns) || 'storm';
+        return `The ${adj} ${noun1} of ${noun2}`;
+      },
+      // [Noun] in the [Adj] [Noun]
+      () => {
+        const noun1 = this.getRandomWord(cleanNouns) || 'light';
+        const adj = this.getRandomWord(cleanAdjectives) || 'endless';
+        const noun2 = this.getRandomWord(cleanNouns) || 'night';
+        return `${this.capitalize(noun1)} in the ${adj} ${noun2}`;
+      },
+      // [Adj] [Noun] and [Adj] [Noun]
+      () => {
+        const adj1 = this.getRandomWord(cleanAdjectives) || 'burning';
+        const noun1 = this.getRandomWord(cleanNouns) || 'sky';
+        const adj2 = this.getRandomWord(cleanAdjectives) || 'frozen';
+        const noun2 = this.getRandomWord(cleanNouns) || 'earth';
+        return `${this.capitalize(adj1)} ${this.capitalize(noun1)} and ${this.capitalize(adj2)} ${this.capitalize(noun2)}`;
+      }
+    ];
+
+    if (wordCount >= 4 && patterns.length > 0) {
+      const pattern = patterns[Math.floor(Math.random() * patterns.length)]();
+      const patternWords = pattern.split(/\s+/);
+      
+      // If pattern matches desired word count, use it
+      if (patternWords.length === wordCount) {
+        return pattern;
+      }
+      
+      // Otherwise, adjust by adding or removing words
+      if (patternWords.length < wordCount) {
+        const extraWords = wordCount - patternWords.length;
+        for (let i = 0; i < extraWords; i++) {
+          const word = this.getRandomWord(cleanNouns) || 'dream';
+          patternWords.push(this.capitalize(word));
+        }
+      } else {
+        patternWords.length = wordCount; // Truncate if too long
+      }
+      
+      return patternWords.join(' ');
+    }
+
+    // Final fallback: simple word list but with basic structure
+    const words: string[] = [];
     for (let i = 0; i < wordCount; i++) {
-      const word = this.getRandomWord(allGoodWords) || 'fire';
+      const word = i % 2 === 0 ? 
+        (this.getRandomWord(cleanAdjectives) || 'wild') :
+        (this.getRandomWord(cleanNouns) || 'fire');
       words.push(this.capitalize(word));
     }
     
     return words.join(' ');
+  }
+
+  // Check if word is a known band name
+  private isBandName(word: string): boolean {
+    const bandNames = [
+      'metallica', 'beatles', 'stones', 'queen', 'nirvana', 'radiohead',
+      'floyd', 'zeppelin', 'sabbath', 'maiden', 'priest', 'acdc',
+      'guns', 'roses', 'pearl', 'jam', 'soundgarden', 'alice', 'chains',
+      'creedence', 'clearwater', 'revival', 'fleetwood', 'mac',
+      'rolling', 'black', 'pink', 'red', 'hot', 'chili', 'peppers',
+      'foo', 'fighters', 'linkin', 'park', 'green', 'day', 'blink',
+      'nickelback', 'coldplay', 'maroon', 'onerepublic', 'imagine',
+      'dragons', 'arctic', 'monkeys', 'killers', 'strokes', 'white',
+      'weeknd', 'eilish', 'swift', 'beyonce', 'rihanna', 'adele'
+    ];
+    
+    return bandNames.includes(word.toLowerCase());
   }
 
   // Helper methods
@@ -978,6 +1112,11 @@ export class EnhancedNameGeneratorService {
     
     // Shuffle array for better randomization
     const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+    
+    // If we have very few words, use all of them instead of just half
+    if (shuffled.length <= 6) {
+      return shuffled[Math.floor(Math.random() * shuffled.length)];
+    }
     
     // Pick from first half to avoid always picking from same pool
     const halfLength = Math.floor(shuffled.length / 2) || 1;
@@ -1079,6 +1218,15 @@ export class EnhancedNameGeneratorService {
       'molecule', 'atom', 'proton', 'neutron', 'quantum',
       'magnate', 'powerfulness', 'notional', 'baron', 'tycoon',
       'exponent', 'index', 'empyrean', 'fictive', 'innovatory',
+      // Additional scientific/chemical/physics terms
+      'nucleation', 'fractions', 'trigon', 'oblations', 'meteorology',
+      'thermodynamics', 'crystallization', 'precipitation', 'dissolution',
+      'oxidation', 'reduction', 'catalysis', 'enzyme', 'polymer',
+      'isomer', 'isotope', 'electron', 'photon', 'neutron',
+      'centrifuge', 'chromatography', 'spectroscopy', 'titration',
+      'distillation', 'sublimation', 'evaporation', 'condensation',
+      'pharmaceutical', 'biochemical', 'metabolic', 'enzymatic',
+      'synthesis', 'analysis', 'hypothesis', 'methodology', 'algorithm',
       // Medical terms
       'pulmonary', 'surgery', 'radius', 'medical', 'clinical',
       'surgical', 'cardiac', 'neural', 'skeletal', 'muscular',
@@ -1114,14 +1262,16 @@ export class EnhancedNameGeneratorService {
 
   private generateFallbackName(sources: EnhancedWordSource, wordCount: number): string {
     const words: string[] = [];
-    const allWords = [...sources.adjectives, ...sources.nouns, ...sources.verbs, ...sources.musicalTerms];
+    // Filter out problematic words from all sources
+    const allWords = [...sources.adjectives, ...sources.nouns, ...sources.verbs, ...sources.musicalTerms]
+      .filter(w => !this.isProblematicWord(w) && w.length >= 3 && w.length <= 12);
     
     if (allWords.length === 0) {
-      return 'Phoenix Storm';
+      return wordCount === 1 ? 'Phoenix' : 'Phoenix Storm';
     }
 
     for (let i = 0; i < wordCount; i++) {
-      const word = allWords[Math.floor(Math.random() * allWords.length)];
+      const word = this.getRandomWord(allWords) || 'fire';
       words.push(this.capitalize(word));
     }
 
