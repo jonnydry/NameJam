@@ -167,7 +167,8 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 29, 2025: XAI API FALLBACK SYSTEM IMPLEMENTATION**
+**Latest Update - January 29, 2025: SETLIST GENERATOR BUG FIX & XAI FALLBACK SYSTEM**
+- **Fixed Setlist Generator**: Resolved critical bug where setlist generator was only producing 5-6 songs instead of requested 8 or 16. Issue was caused by undefined wordCount parameters preventing Datamuse generation. Added multiple fallback mechanisms and word count variation logic to ensure exact song count is always generated
 - **Universal XAI Fallback**: Implemented comprehensive XAI API fallback system for all external APIs (Datamuse, Spotify, Last.fm, ConceptNet) to ensure continuous functionality during API outages, rate limits, or timeouts
 - **Intelligent Context Generation**: XAI fallback generates contextually appropriate replacements for each API - word associations for Datamuse, artist/track names for Spotify, genre vocabulary for Last.fm, and conceptual relationships for ConceptNet
 - **Seamless Integration**: Fallback system maintains identical data structures so the app continues working without interruption, automatically switching to XAI when primary APIs fail

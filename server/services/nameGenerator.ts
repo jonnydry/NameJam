@@ -133,12 +133,28 @@ export class NameGeneratorService {
           
           // Generate AI songs with setlist-specific context
           const aiResults = [];
+          const wordCountOptions = [1, 2, 3, 4, 5, 6];
+          const weights = [0.1, 0.2, 0.3, 0.25, 0.1, 0.05]; // Favor 2-4 words
+          
           for (let i = 0; i < aiCount; i++) {
+            // Select a random word count
+            const rand = Math.random();
+            let cumulative = 0;
+            let selectedWordCount = 3; // default
+            
+            for (let j = 0; j < weights.length; j++) {
+              cumulative += weights[j];
+              if (rand <= cumulative) {
+                selectedWordCount = wordCountOptions[j];
+                break;
+              }
+            }
+            
             const name = await this.aiNameGenerator.generateAIName(
               enhancedRequest.type, 
               enhancedRequest.genre, 
               enhancedRequest.mood, 
-              enhancedRequest.wordCount, 
+              selectedWordCount, 
               contextExamples
             );
             aiResults.push(name);
@@ -169,7 +185,13 @@ export class NameGeneratorService {
         const wordCountOptions = [1, 2, 3, 4, 5, 6];
         const weights = [0.1, 0.2, 0.3, 0.25, 0.1, 0.05]; // Favor 2-4 words
         
-        for (let i = 0; i < datamuseCount; i++) {
+        let generatedDatamuseSongs = 0;
+        let attempts = 0;
+        const maxAttempts = datamuseCount * 3; // Allow extra attempts
+        
+        while (generatedDatamuseSongs < datamuseCount && attempts < maxAttempts) {
+          attempts++;
+          
           // Select a random word count based on weights
           const rand = Math.random();
           let cumulative = 0;
@@ -191,9 +213,26 @@ export class NameGeneratorService {
           
           if (songResults.length > 0) {
             results.push(songResults[0]);
+            generatedDatamuseSongs++;
           }
         }
+        
+        // If we still don't have enough songs, use simple fallback
+        if (generatedDatamuseSongs < datamuseCount) {
+          const remaining = datamuseCount - generatedDatamuseSongs;
+          const fallbackSongs = this.generateSimpleFallback('song', remaining);
+          results.push(...fallbackSongs);
+        }
+        
         console.log(`✅ Generated ${results.length - aiCount} enhanced Datamuse setlist songs`);
+      }
+      
+      // Final check: ensure we have exactly the number of songs requested
+      if (results.length < totalCount) {
+        const stillNeeded = totalCount - results.length;
+        console.log(`⚠️ Still need ${stillNeeded} more songs, adding fallback...`);
+        const extraFallback = this.generateSimpleFallback('song', stillNeeded);
+        results.push(...extraFallback);
       }
       
       return results.slice(0, totalCount); // Ensure exact count

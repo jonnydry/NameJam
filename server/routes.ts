@@ -262,7 +262,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       const songRequest = {
         type: 'song' as const,
         count: allSongsNeeded,
-        wordCount: undefined, // Will vary per song
+        // Don't specify wordCount - let the generator vary it
         mood: mood && mood !== 'none' ? mood : undefined,
         genre: genre && genre !== 'none' ? genre : undefined
       };
