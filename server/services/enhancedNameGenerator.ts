@@ -434,32 +434,62 @@ export class EnhancedNameGeneratorService {
   private isPoeticWord(word: string): boolean {
     const lowerWord = word.toLowerCase();
     
-    // Avoid overly technical, mundane, or awkward words
+    // Much stricter filtering - exclude weird/unusual words
     const unpoetic = [
       'data', 'system', 'process', 'function', 'status', 'item', 'unit', 'factor',
       'volume', 'runt', 'reshuffle', 'richards', 'colossus', 'sabu', 'petrels',
       'casting', 'images', 'books', 'formation', 'personality', 'index',
-      'neutral', 'mev', 'fig', 'dull', 'arkansas', 'charts', 'pink'
+      'neutral', 'mev', 'fig', 'dull', 'arkansas', 'charts', 'pink',
+      // Add more problematic words from recent results
+      'loyalist', 'liger', 'revue', 'chao', 'sung', 'gps', 'mandolin',
+      'harmonica', 'lobster', 'billy', 'cocker', 'doolittle', 'rodriguez',
+      'blueslides', 'thorogood', 'perfume', 'remaster', 'rode', 'twenty',
+      'atomic', 'it\'s', 'its', 'drive', 'three', 'score', 'raw',
+      // Exclude proper names and unusual words
+      'john', 'paul', 'george', 'mary', 'james', 'michael', 'david',
+      'smith', 'jones', 'brown', 'taylor', 'wilson', 'davis',
+      // Exclude technical/business terms
+      'admin', 'user', 'client', 'server', 'database', 'network',
+      'protocol', 'interface', 'module', 'component', 'service'
     ];
     if (unpoetic.includes(lowerWord)) return false;
     
-    // Avoid words that look like names or places
-    if (/^[A-Z][a-z]+$/.test(word) && word.length > 5) return false;
+    // Reject words that look like proper names or places
+    if (/^[A-Z][a-z]+$/.test(word)) return false; // Any capitalized word
     
-    // Prefer words with emotional or sensory associations
-    const poetic = [
-      'moon', 'star', 'fire', 'dream', 'shadow', 'light', 'ocean', 'storm',
-      'night', 'soul', 'heart', 'thunder', 'velvet', 'silver', 'echo',
-      'whisper', 'phantom', 'crystal', 'flame', 'spirit', 'mystic'
+    // Reject numbers and number words
+    if (/\d/.test(word) || ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'twenty', 'thirty', 'forty', 'fifty'].includes(lowerWord)) return false;
+    
+    // High quality poetic words we want to encourage
+    const highQualityWords = [
+      // Nature/Elements
+      'fire', 'water', 'earth', 'wind', 'storm', 'rain', 'snow', 'ice',
+      'thunder', 'lightning', 'ocean', 'river', 'mountain', 'forest',
+      'desert', 'sky', 'cloud', 'sun', 'moon', 'star', 'dawn', 'dusk',
+      // Emotions/Abstract
+      'dream', 'shadow', 'light', 'dark', 'soul', 'heart', 'spirit',
+      'love', 'fear', 'hope', 'faith', 'rage', 'peace', 'chaos', 'silence',
+      // Descriptive
+      'wild', 'free', 'lost', 'broken', 'golden', 'silver', 'crystal',
+      'velvet', 'electric', 'mystic', 'ancient', 'eternal', 'infinite',
+      // Musical/Poetic
+      'echo', 'whisper', 'scream', 'song', 'dance', 'rhythm', 'melody',
+      'symphony', 'harmony', 'discord', 'resonance', 'vibration'
     ];
-    if (poetic.some(p => lowerWord.includes(p))) return true;
     
-    // Accept words between 3-10 characters, but avoid overly simple ones
+    // Strongly prefer high quality words
+    if (highQualityWords.includes(lowerWord)) return true;
+    
+    // Accept words between 3-10 characters
     if (word.length < 3 || word.length > 10) return false;
     
-    // Avoid words ending in common technical suffixes
-    if (lowerWord.endsWith('ing') && word.length > 8) return false;
-    if (lowerWord.endsWith('ness') || lowerWord.endsWith('ment')) return false;
+    // Avoid words with weird patterns
+    if (/(.)\1{2,}/.test(lowerWord)) return false; // Repeated characters
+    if (/[^aeiou]{5,}/.test(lowerWord)) return false; // Too many consonants
+    if (/[aeiou]{4,}/.test(lowerWord)) return false; // Too many vowels
+    
+    // Basic word quality check - must have vowels
+    if (!/[aeiou]/i.test(word)) return false;
     
     return true;
   }
@@ -1376,40 +1406,78 @@ export class EnhancedNameGeneratorService {
       return patterns[Math.floor(Math.random() * patterns.length)]();
     }
     
-    // For 6+ words, create flowing narrative structures
-    if (wordCount >= 6) {
-      const connectors = ['through', 'beyond', 'into', 'across', 'beneath', 'within', 'before', 'after'];
-      const articles = ['the', 'a', 'this', 'that'];
-      
-      const words: string[] = [];
-      
-      // Start with article or noun
-      if (Math.random() < 0.5) {
-        words.push(this.capitalize(this.getRandomWord(articles) || 'the'));
-        words.push(this.capitalize(this.getRandomWord(cleanAdjectives) || 'Silent'));
-        words.push(this.capitalize(this.getRandomWord(cleanNouns) || 'Storm'));
-      } else {
-        words.push(this.capitalize(this.getRandomWord(cleanNouns) || 'Thunder'));
-        words.push(this.capitalize(this.getRandomWord(cleanVerbs) || 'Breaking'));
-      }
-      
-      // Add connector phrase
-      words.push(this.getRandomWord(connectors) || 'through');
-      words.push(this.getRandomWord(articles) || 'the');
-      
-      // Fill remaining words
-      while (words.length < wordCount - 1) {
-        if (words.length === wordCount - 2) {
-          words.push(this.capitalize(this.getRandomWord(cleanAdjectives) || 'Golden'));
-        } else {
-          words.push(this.capitalize(this.getRandomWord(cleanNouns) || 'Dreams'));
+    // For 6+ words, create coherent narrative structures
+    if (wordCount === 6) {
+      const patterns = [
+        () => {
+          const adj1 = this.getRandomWord(cleanAdjectives) || 'wild';
+          const noun1 = this.getRandomWord(cleanNouns) || 'fire';
+          const verb = ['breaks', 'meets', 'finds', 'becomes'][Math.floor(Math.random() * 4)];
+          const adj2 = this.getRandomWord(cleanAdjectives) || 'endless';
+          const noun2 = this.getRandomWord(cleanNouns) || 'night';
+          return `The ${adj1} ${noun1} ${verb} the ${adj2} ${noun2}`;
+        },
+        () => {
+          const noun1 = this.getRandomWord(cleanNouns) || 'stars';
+          const verb = ['dancing', 'singing', 'burning'][Math.floor(Math.random() * 3)];
+          const prep = ['beneath', 'beyond', 'within'][Math.floor(Math.random() * 3)];
+          const adj = this.getRandomWord(cleanAdjectives) || 'silver';
+          const noun2 = this.getRandomWord(cleanNouns) || 'moon';
+          return `${this.capitalize(noun1)} ${verb} ${prep} the ${adj} ${noun2}`;
         }
-      }
-      
-      // End with a strong noun
-      words.push(this.capitalize(this.getRandomWord(cleanNouns) || 'Heart'));
-      
-      return words.join(' ');
+      ];
+      return patterns[Math.floor(Math.random() * patterns.length)]();
+    }
+    
+    if (wordCount === 7) {
+      const noun1 = this.getRandomWord(cleanNouns) || 'dreamer';
+      const verb = ['found', 'lost', 'sought'][Math.floor(Math.random() * 3)];
+      const adj1 = this.getRandomWord(cleanAdjectives) || 'ancient';
+      const noun2 = this.getRandomWord(cleanNouns) || 'truth';
+      const prep = ['in', 'beneath', 'beyond'][Math.floor(Math.random() * 3)];
+      const adj2 = this.getRandomWord(cleanAdjectives) || 'forgotten';
+      const noun3 = this.getRandomWord(cleanNouns) || 'ruins';
+      return `The ${noun1} ${verb} ${adj1} ${noun2} ${prep} ${adj2} ${noun3}`;
+    }
+    
+    if (wordCount === 8) {
+      const adj1 = this.getRandomWord(cleanAdjectives) || 'wild';
+      const noun1 = this.getRandomWord(cleanNouns) || 'wind';
+      const verb1 = ['carries', 'brings', 'whispers'][Math.floor(Math.random() * 3)];
+      const noun2 = this.getRandomWord(cleanNouns) || 'tales';
+      const prep = ['from', 'across', 'through'][Math.floor(Math.random() * 3)];
+      const adj2 = this.getRandomWord(cleanAdjectives) || 'distant';
+      const adj3 = this.getRandomWord(cleanAdjectives) || 'forgotten';
+      const noun3 = this.getRandomWord(cleanNouns) || 'lands';
+      return `The ${adj1} ${noun1} ${verb1} ${noun2} ${prep} ${adj2} ${adj3} ${noun3}`;
+    }
+    
+    if (wordCount === 9) {
+      const noun1 = this.getRandomWord(cleanNouns) || 'traveler';
+      const verb1 = ['walked', 'wandered', 'journeyed'][Math.floor(Math.random() * 3)];
+      const prep1 = ['through', 'across', 'beyond'][Math.floor(Math.random() * 3)];
+      const adj1 = this.getRandomWord(cleanAdjectives) || 'endless';
+      const noun2 = this.getRandomWord(cleanNouns) || 'desert';
+      const verb2 = ['seeking', 'finding', 'following'][Math.floor(Math.random() * 3)];
+      const adj2 = this.getRandomWord(cleanAdjectives) || 'lost';
+      const noun3 = this.getRandomWord(cleanNouns) || 'echoes';
+      const noun4 = this.getRandomWord(cleanNouns) || 'home';
+      return `${this.capitalize(noun1)} ${verb1} ${prep1} ${adj1} ${noun2} ${verb2} ${adj2} ${noun3} of ${noun4}`;
+    }
+    
+    if (wordCount === 10) {
+      const article1 = ['The', 'A'][Math.floor(Math.random() * 2)];
+      const adj1 = this.getRandomWord(cleanAdjectives) || 'lonely';
+      const noun1 = this.getRandomWord(cleanNouns) || 'warrior';
+      const conj = ['and', 'with'][Math.floor(Math.random() * 2)];
+      const article2 = ['the', 'a'][Math.floor(Math.random() * 2)];
+      const adj2 = this.getRandomWord(cleanAdjectives) || 'broken';
+      const noun2 = this.getRandomWord(cleanNouns) || 'sword';
+      const verb = ['stood', 'fought', 'fell'][Math.floor(Math.random() * 3)];
+      const prep = ['beneath', 'before'][Math.floor(Math.random() * 2)];
+      const adj3 = this.getRandomWord(cleanAdjectives) || 'crimson';
+      const noun3 = this.getRandomWord(cleanNouns) || 'sky';
+      return `${article1} ${adj1} ${noun1} ${conj} ${article2} ${adj2} ${noun2} ${verb} ${prep} ${adj3} ${noun3}`;
     }
     
     // Ultimate fallback
