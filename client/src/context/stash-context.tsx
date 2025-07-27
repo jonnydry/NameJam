@@ -7,9 +7,9 @@ interface StashContextType {
   stash: StashItem[];
   addToStash: (item: Omit<StashItem, 'id' | 'savedAt'>) => boolean;
   removeFromStash: (id: string) => void;
-  removeFromStashByName: (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam') => void;
+  removeFromStashByName: (name: string, type: 'band' | 'song' | 'bandLore' | 'lyricJam') => void;
   clearStash: () => void;
-  isInStash: (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam') => boolean;
+  isInStash: (name: string, type: 'band' | 'song' | 'bandLore' | 'lyricJam') => boolean;
   stashCount: number;
   toggleStashItem: (item: Omit<StashItem, 'id' | 'savedAt'>) => { action: 'added' | 'removed'; success: boolean };
   updateRating: (id: string, rating: number) => void;
