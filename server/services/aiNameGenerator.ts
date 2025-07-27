@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
+import { secureLog } from '../utils/secureLogger';
 
 export class AINameGeneratorService {
   private openai: OpenAI | null = null;
@@ -15,7 +16,7 @@ export class AINameGeneratorService {
           apiKey: process.env.XAI_API_KEY
         });
       } catch (error) {
-        console.log("Failed to initialize OpenAI client:", error);
+        secureLog.error("Failed to initialize OpenAI client:", error);
         this.openai = null;
       }
     }
@@ -34,7 +35,7 @@ export class AINameGeneratorService {
       // Try each model up to 1 time for faster response
       for (let attempt = 0; attempt < 1; attempt++) {
         try {
-          console.log(`Attempting model: ${model} (attempt ${attempt + 1})`);
+          secureLog.debug(`Attempting model: ${model} (attempt ${attempt + 1})`);
           // Add randomization to force variety
           const randomSeed = Math.random().toString(36).substring(7);
           const timestamp = Date.now() % 10000;
@@ -172,31 +173,30 @@ export class AINameGeneratorService {
               );
               
               if (containsRecentWord) {
-                console.log(`Rejected "${cleanName}" - contains recently used word`);
+                secureLog.debug(`Rejected "${cleanName}" - contains recently used word`);
                 continue; // Try again with same model
               }
               
               // Check word count and track words for future avoidance
               if (wordCount && cleanName.split(/\s+/).length === wordCount) {
-                console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
+                secureLog.info(`Successfully generated name "${cleanName}" using model: ${model}`);
                 this.trackRecentWords(cleanName);
                 return cleanName;
               } else if (!wordCount && cleanName.length > 0 && cleanName.length < 100) {
-                console.log(`Successfully generated name "${cleanName}" using model: ${model}`);
+                secureLog.info(`Successfully generated name "${cleanName}" using model: ${model}`);
                 this.trackRecentWords(cleanName);
                 return cleanName;
               }
             }
           } catch (parseError) {
-            console.log(`Failed to parse JSON response from model ${model}:`, generatedContent);
+            secureLog.error(`Failed to parse JSON response from model ${model}:`, generatedContent);
             continue;
           }
         }
         
         } catch (error: any) {
-          console.log(`Model ${model} failed with error:`, error.message);
-          console.log(`Error details:`, error.response?.data || error.code || 'No additional details');
-          console.log(`Request params used:`, JSON.stringify(requestParams, null, 2));
+          secureLog.error(`Model ${model} failed with error:`, error.message);
+          secureLog.debug(`Error details:`, error.response?.data || error.code || 'No additional details');
           // Continue to next attempt
         }
       }
@@ -287,8 +287,8 @@ export class AINameGeneratorService {
     this.recentWords = this.recentWords.slice(0, this.maxRecentWords);
     
     // Remove duplicates while preserving order
-    this.recentWords = [...new Set(this.recentWords)];
+    this.recentWords = Array.from(new Set(this.recentWords));
     
-    console.log(`Recent words tracked: ${this.recentWords.slice(0, 10).join(', ')}`);
+    secureLog.debug(`Recent words tracked: ${this.recentWords.slice(0, 10).join(', ')}`);
   }
 }
