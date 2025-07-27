@@ -274,7 +274,7 @@ export class EnhancedNameGeneratorService {
         folk: ['river', 'mountain', 'home', 'story'],
         indie: ['dream', 'city', 'youth', 'wonder'],
         pop: ['bubble', 'sparkle', 'sugar', 'rainbow', 'shine', 'glitter'],
-        country: ['dust', 'road', 'whiskey', 'boots'],
+        country: ['dust', 'road', 'whiskey', 'boots', 'truck', 'ranch', 'barn', 'field', 'fence', 'saddle', 'creek', 'honky-tonk', 'backroad', 'dixie', 'heartland', 'holler'],
         blues: ['muddy', 'crossroads', 'train', 'bottle'],
         reggae: ['island', 'roots', 'sun', 'peace'],
         punk: ['riot', 'anarchy', 'crash', 'rebel'],
@@ -301,6 +301,7 @@ export class EnhancedNameGeneratorService {
     
     if (genre === 'rock') return ['thunder', 'steel', 'raw', 'rebel'];
     if (genre === 'electronic') return ['neon', 'digital', 'pulse', 'laser'];
+    if (genre === 'country') return ['truck', 'barn', 'field', 'whiskey', 'ranch', 'dirt'];
     
     return baseSeeds;
   }
@@ -315,6 +316,7 @@ export class EnhancedNameGeneratorService {
     
     if (genre === 'metal') return ['blade', 'iron', 'demon', 'throne'];
     if (genre === 'folk') return ['river', 'tree', 'home', 'road'];
+    if (genre === 'country') return ['truck', 'road', 'farm', 'cowboy', 'boots', 'saddle'];
     
     return baseSeeds;
   }
@@ -393,8 +395,8 @@ export class EnhancedNameGeneratorService {
 
     // 4+ words - use narrative patterns with dynamic length
     if (wordCount >= 4) {
-      // For "4+" option, randomly select between 4-7 words
-      const dynamicWordCount = Math.floor(Math.random() * 4) + 4; // 4-7 words
+      // For "4+" option, randomly select between 4-10 words
+      const dynamicWordCount = Math.floor(Math.random() * 7) + 4; // 4-10 words
       return await this.generateLongFormContextual(sources, dynamicWordCount, type);
     }
     
@@ -518,6 +520,18 @@ export class EnhancedNameGeneratorService {
     
     if (wordCount === 7) {
       return this.generateSevenWordStory(sources, type);
+    }
+    
+    if (wordCount === 8) {
+      return this.generateEightWordEpic(sources, type);
+    }
+    
+    if (wordCount === 9) {
+      return this.generateNineWordJourney(sources, type);
+    }
+    
+    if (wordCount === 10) {
+      return this.generateTenWordSaga(sources, type);
     }
     
     // Fallback for other word counts
@@ -697,6 +711,114 @@ export class EnhancedNameGeneratorService {
         const time = ['at', 'by', 'through'][Math.floor(Math.random() * 3)];
         const moment = this.getRandomWord(enhancedNouns) || 'dawn';
         return `${this.capitalize(subject)} ${verb} ${transition} ${adj} ${result} ${time} ${moment}`;
+      }
+    ];
+    
+    return patterns[Math.floor(Math.random() * patterns.length)]();
+  }
+
+  // Eight words forming an epic tale
+  private generateEightWordEpic(sources: EnhancedWordSource, type: string): string {
+    const enhancedAdjectives = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
+      sources.adjectives, 
+      w => this.isAdjectiveLike(w)
+    );
+    const enhancedNouns = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
+      sources.nouns, 
+      w => this.isNounLike(w)
+    );
+    
+    const patterns = [
+      // Epic journey pattern
+      () => {
+        const hero = this.getRandomWord(enhancedNouns) || 'rider';
+        const verb1 = ['crossed', 'conquered', 'found', 'lost'][Math.floor(Math.random() * 4)];
+        const adj1 = this.getRandomWord(enhancedAdjectives) || 'endless';
+        const place1 = this.getRandomWord(enhancedNouns) || 'plains';
+        const verb2 = ['seeking', 'carrying', 'chasing', 'following'][Math.floor(Math.random() * 4)];
+        const adj2 = this.getRandomWord(enhancedAdjectives) || 'golden';
+        const goal = this.getRandomWord(enhancedNouns) || 'dreams';
+        const finale = ['home', 'dawn', 'destiny'][Math.floor(Math.random() * 3)];
+        return `${this.capitalize(hero)} ${verb1} the ${adj1} ${place1} ${verb2} ${adj2} ${goal} ${finale}`;
+      },
+      // Complete story arc
+      () => {
+        const time = ['When', 'Before', 'After'][Math.floor(Math.random() * 3)];
+        const adj1 = this.getRandomWord(enhancedAdjectives) || 'wild';
+        const subject = this.getRandomWord(enhancedNouns) || 'wind';
+        const verb = ['met', 'found', 'touched'][Math.floor(Math.random() * 3)];
+        const adj2 = this.getRandomWord(enhancedAdjectives) || 'broken';
+        const object = this.getRandomWord(enhancedNouns) || 'heart';
+        const location = this.getRandomWord(enhancedNouns) || 'crossroads';
+        const result = this.getRandomWord(enhancedNouns) || 'song';
+        return `${time} the ${adj1} ${subject} ${verb} the ${adj2} ${object} at ${location} ${result}`;
+      }
+    ];
+    
+    return patterns[Math.floor(Math.random() * patterns.length)]();
+  }
+
+  // Nine words forming a journey
+  private generateNineWordJourney(sources: EnhancedWordSource, type: string): string {
+    const enhancedAdjectives = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
+      sources.adjectives, 
+      w => this.isAdjectiveLike(w)
+    );
+    const enhancedNouns = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
+      sources.nouns, 
+      w => this.isNounLike(w)
+    );
+    
+    // Complex narrative patterns
+    const patterns = [
+      () => {
+        const subj = this.getRandomWord(enhancedNouns) || 'traveler';
+        const verb1 = ['rode', 'walked', 'wandered'][Math.floor(Math.random() * 3)];
+        const prep1 = ['through', 'across', 'beyond'][Math.floor(Math.random() * 3)];
+        const adj1 = this.getRandomWord(enhancedAdjectives) || 'dusty';
+        const place1 = this.getRandomWord(enhancedNouns) || 'roads';
+        const verb2 = ['carrying', 'singing', 'remembering'][Math.floor(Math.random() * 3)];
+        const adj2 = this.getRandomWord(enhancedAdjectives) || 'old';
+        const obj = this.getRandomWord(enhancedNouns) || 'stories';
+        const dest = this.getRandomWord(enhancedNouns) || 'home';
+        return `${this.capitalize(subj)} ${verb1} ${prep1} ${adj1} ${place1} ${verb2} ${adj2} ${obj} to ${dest}`;
+      }
+    ];
+    
+    return patterns[Math.floor(Math.random() * patterns.length)]();
+  }
+
+  // Ten words forming a saga
+  private generateTenWordSaga(sources: EnhancedWordSource, type: string): string {
+    const enhancedAdjectives = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
+      sources.adjectives, 
+      w => this.isAdjectiveLike(w)
+    );
+    const enhancedNouns = this.createEnhancedWordPool(
+      [...sources.lastfmWords, ...sources.genreTerms, ...sources.spotifyWords], 
+      sources.nouns, 
+      w => this.isNounLike(w)
+    );
+    
+    // Full narrative patterns
+    const patterns = [
+      () => {
+        const char1 = this.getRandomWord(enhancedNouns) || 'cowboy';
+        const char2 = this.getRandomWord(enhancedNouns) || 'angel';
+        const verb1 = ['met', 'found', 'loved'][Math.floor(Math.random() * 3)];
+        const prep = ['beneath', 'under', 'by'][Math.floor(Math.random() * 3)];
+        const adj1 = this.getRandomWord(enhancedAdjectives) || 'lonesome';
+        const place = this.getRandomWord(enhancedNouns) || 'stars';
+        const verb2 = ['singing', 'dancing', 'dreaming'][Math.floor(Math.random() * 3)];
+        const prep2 = ['until', 'before', 'after'][Math.floor(Math.random() * 3)];
+        const adj2 = this.getRandomWord(enhancedAdjectives) || 'morning';
+        const time = this.getRandomWord(enhancedNouns) || 'light';
+        return `The ${char1} and the ${char2} ${verb1} ${prep} ${adj1} ${place} ${verb2} ${prep2} ${adj2} ${time}`;
       }
     ];
     
@@ -948,14 +1070,7 @@ export class EnhancedNameGeneratorService {
            (word.length > 3 && !this.isAdjectiveLike(word)); // Longer non-adjective words are often nouns
   }
 
-  private capitalize(word: string): string {
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  }
 
-  private getRandomWord(words: string[]): string | null {
-    if (words.length === 0) return null;
-    return words[Math.floor(Math.random() * words.length)];
-  }
 }
 
 export const enhancedNameGenerator = new EnhancedNameGeneratorService();
