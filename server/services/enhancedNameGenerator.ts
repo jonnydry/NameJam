@@ -1276,21 +1276,89 @@ export class EnhancedNameGeneratorService {
   }
 
   private generateFallbackName(sources: EnhancedWordSource, wordCount: number): string {
-    const words: string[] = [];
-    // Filter out problematic words from all sources
-    const allWords = [...sources.adjectives, ...sources.nouns, ...sources.verbs, ...sources.musicalTerms]
-      .filter(w => !this.isProblematicWord(w) && w.length >= 3 && w.length <= 12);
+    // Use proper grammatical patterns for fallback generation
+    const { adjectives, nouns, verbs, musicalTerms } = sources;
     
-    if (allWords.length === 0) {
-      return wordCount === 1 ? 'Phoenix' : 'Phoenix Storm';
+    // Filter out problematic words
+    const cleanAdjectives = adjectives.filter(w => !this.isProblematicWord(w) && w.length >= 3 && w.length <= 12);
+    const cleanNouns = nouns.filter(w => !this.isProblematicWord(w) && w.length >= 3 && w.length <= 12);
+    const cleanVerbs = verbs.filter(w => !this.isProblematicWord(w) && w.length >= 3 && w.length <= 12);
+    
+    if (wordCount === 1) {
+      return this.capitalize(this.getRandomWord(cleanNouns) || 'Phoenix');
     }
-
-    for (let i = 0; i < wordCount; i++) {
-      const word = this.getRandomWord(allWords) || 'fire';
-      words.push(this.capitalize(word));
+    
+    if (wordCount === 2) {
+      const adj = this.capitalize(this.getRandomWord(cleanAdjectives) || 'Electric');
+      const noun = this.capitalize(this.getRandomWord(cleanNouns) || 'Storm');
+      return `${adj} ${noun}`;
     }
-
-    return words.join(' ');
+    
+    if (wordCount === 3) {
+      const patterns = [
+        () => `The ${this.capitalize(this.getRandomWord(cleanAdjectives) || 'Electric')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Storm')}`,
+        () => `${this.capitalize(this.getRandomWord(cleanAdjectives) || 'Silent')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Fire')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Heart')}`,
+        () => `${this.capitalize(this.getRandomWord(cleanNouns) || 'Thunder')} ${this.capitalize(this.getRandomWord(cleanVerbs) || 'Breaking')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Dreams')}`
+      ];
+      return patterns[Math.floor(Math.random() * patterns.length)]();
+    }
+    
+    if (wordCount === 4) {
+      const patterns = [
+        () => `${this.capitalize(this.getRandomWord(cleanAdjectives) || 'Final')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Heart')} Through The ${this.capitalize(this.getRandomWord(cleanNouns) || 'Storm')}`,
+        () => `The ${this.capitalize(this.getRandomWord(cleanAdjectives) || 'Electric')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Sky')} Of ${this.capitalize(this.getRandomWord(cleanNouns) || 'Dreams')}`,
+        () => `${this.capitalize(this.getRandomWord(cleanNouns) || 'Thunder')} And ${this.capitalize(this.getRandomWord(cleanNouns) || 'Lightning')} ${this.capitalize(this.getRandomWord(cleanVerbs) || 'Breaking')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Free')}`
+      ];
+      return patterns[Math.floor(Math.random() * patterns.length)]();
+    }
+    
+    if (wordCount === 5) {
+      const patterns = [
+        () => `${this.capitalize(this.getRandomWord(cleanAdjectives) || 'Silent')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Voices')} From The ${this.capitalize(this.getRandomWord(cleanAdjectives) || 'Distant')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Shore')}`,
+        () => `When ${this.capitalize(this.getRandomWord(cleanNouns) || 'Thunder')} ${this.capitalize(this.getRandomWord(cleanVerbs) || 'Meets')} The ${this.capitalize(this.getRandomWord(cleanAdjectives) || 'Electric')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Sky')}`,
+        () => `The ${this.capitalize(this.getRandomWord(cleanNouns) || 'Journey')} Through ${this.capitalize(this.getRandomWord(cleanAdjectives) || 'Endless')} ${this.capitalize(this.getRandomWord(cleanAdjectives) || 'Golden')} ${this.capitalize(this.getRandomWord(cleanNouns) || 'Dreams')}`
+      ];
+      return patterns[Math.floor(Math.random() * patterns.length)]();
+    }
+    
+    // For 6+ words, create flowing narrative structures
+    if (wordCount >= 6) {
+      const connectors = ['through', 'beyond', 'into', 'across', 'beneath', 'within', 'before', 'after'];
+      const articles = ['the', 'a', 'this', 'that'];
+      
+      const words: string[] = [];
+      
+      // Start with article or noun
+      if (Math.random() < 0.5) {
+        words.push(this.capitalize(this.getRandomWord(articles) || 'the'));
+        words.push(this.capitalize(this.getRandomWord(cleanAdjectives) || 'Silent'));
+        words.push(this.capitalize(this.getRandomWord(cleanNouns) || 'Storm'));
+      } else {
+        words.push(this.capitalize(this.getRandomWord(cleanNouns) || 'Thunder'));
+        words.push(this.capitalize(this.getRandomWord(cleanVerbs) || 'Breaking'));
+      }
+      
+      // Add connector phrase
+      words.push(this.getRandomWord(connectors) || 'through');
+      words.push(this.getRandomWord(articles) || 'the');
+      
+      // Fill remaining words
+      while (words.length < wordCount - 1) {
+        if (words.length === wordCount - 2) {
+          words.push(this.capitalize(this.getRandomWord(cleanAdjectives) || 'Golden'));
+        } else {
+          words.push(this.capitalize(this.getRandomWord(cleanNouns) || 'Dreams'));
+        }
+      }
+      
+      // End with a strong noun
+      words.push(this.capitalize(this.getRandomWord(cleanNouns) || 'Heart'));
+      
+      return words.join(' ');
+    }
+    
+    // Ultimate fallback
+    return 'Phoenix Rising Storm';
   }
 
   // Validate name quality
