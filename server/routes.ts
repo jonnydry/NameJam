@@ -14,6 +14,13 @@ import { users, errorLogs } from "@shared/schema";
 import { generateNameRequestSchema } from "@shared/schema";
 import { z } from "zod";
 
+// Define setListRequest schema
+const setListRequest = z.object({
+  songCount: z.string(),
+  mood: z.string().optional(),
+  genre: z.string().optional()
+});
+
 import { validationRules, handleValidationErrors } from "./security";
 import { performanceCache } from "./services/performanceCache";
 import { secureLog, sanitizeApiResponse } from "./utils/secureLogger";
@@ -135,20 +142,20 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
           if (isUserAuthenticated) {
             const userId = req.user.claims.sub;
             
-            // Make database storage non-blocking for better response time
-            storage.createGeneratedName({
-              name: nameResult.name,
-              type: request.type,
-              wordCount: request.wordCount,
-              verificationStatus: verification.status,
-              verificationDetails: verification.details || null,
-              isAiGenerated: nameResult.isAiGenerated,
-              userId: userId,
-            }).then(result => {
-              storedName = result;
-            }).catch(error => {
-              secureLog.error("Non-blocking database error:", error);
-            });
+            try {
+              // Make database storage blocking for proper ID retrieval
+              storedName = await storage.createGeneratedName({
+                name: nameResult.name,
+                type: request.type,
+                wordCount: request.wordCount,
+                verificationStatus: verification.status,
+                verificationDetails: verification.details || null,
+                isAiGenerated: nameResult.isAiGenerated,
+                userId: userId,
+              });
+            } catch (error) {
+              secureLog.error("Database storage error:", error);
+            }
           }
 
           return {
@@ -261,13 +268,13 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       // Generate all songs at once to properly distribute AI vs traditional
       const songRequest = {
         type: 'song' as const,
+        wordCount: 2, // Default word count for setlist songs
         count: allSongsNeeded,
-        // Don't specify wordCount - let the generator vary it
         mood: mood && mood !== 'none' ? mood : undefined,
         genre: genre && genre !== 'none' ? genre : undefined
       };
       
-      const generatedNames = await nameGenerator.generateSetlistNames(songRequest);
+      const generatedNames = await nameGenerator.generateSetlistNames(songRequest as any);
       
       // Process generated names and verify them
       const songs = await Promise.all(
@@ -330,7 +337,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     } catch (error) {
       secureLog.error("Error generating set list:", error);
       
-      if (error.message === 'Timeout') {
+      if (error instanceof Error && error.message === 'Timeout') {
         return res.status(408).json({ 
           error: "Set list generation timed out. Please try again with a smaller set." 
         });
@@ -404,8 +411,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
           'alternative': ['Theory', 'Paradox', 'Syndrome', 'Effect']
         };
         
-        const moodWords = mood && moods[mood] ? moods[mood] : ['Echo', 'Dream', 'Shadow', 'Fire'];
-        const genreWords = genre && genres[genre] ? genres[genre] : ['Collective', 'Project', 'Band', 'Society'];
+        const moodWords = mood && moods[mood as keyof typeof moods] ? moods[mood as keyof typeof moods] : ['Echo', 'Dream', 'Shadow', 'Fire'];
+        const genreWords = genre && genres[genre as keyof typeof genres] ? genres[genre as keyof typeof genres] : ['Collective', 'Project', 'Band', 'Society'];
         
         const prefix = moodWords[Math.floor(Math.random() * moodWords.length)];
         const suffix = genreWords[Math.floor(Math.random() * genreWords.length)];
