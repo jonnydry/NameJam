@@ -167,7 +167,13 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 29, 2025: CONCEPTNET INTEGRATION & ENHANCED CONTEXT**
+**Latest Update - January 29, 2025: VISUAL CONSISTENCY & GRADIENT UNIFICATION**
+- **Unified Card Gradients**: Updated all result cards to use consistent dark-to-light gradient style (`from-black/90 to-gray-900/90`) matching the main generator card and "Check Your Own Name" card for perfect visual harmony
+- **Enhanced Visual Hierarchy**: AI-generated cards now feature purple borders while traditional results have blue borders, all with the same dark gradient background for consistency
+- **Improved Hover States**: Maintained distinct hover effects with purple/blue shadows while keeping the unified dark gradient base across all card types
+- **Preserved Special Styles**: Easter egg cards retain their unique pink gradient while regular cards now have consistent professional dark styling
+
+**Previous Update - January 29, 2025: CONCEPTNET INTEGRATION & ENHANCED CONTEXT**
 - **ConceptNet API Integration**: Added semantic knowledge graph integration to enhance both AI and non-AI name generation with conceptual associations and common-sense relationships
 - **Quadruple API Integration**: Now using Datamuse (linguistic), Spotify (music data), Last.fm (genre intelligence), and ConceptNet (semantic knowledge) for comprehensive vocabulary enhancement
 - **Enhanced AI Context**: AI now receives up to 15 contextual examples from all four APIs, including conceptual associations from ConceptNet for richer understanding
