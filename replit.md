@@ -167,7 +167,15 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 30, 2025: MAJOR DATAMUSE API REDESIGN FOR QUALITY**
+**Latest Update - January 30, 2025: MAJOR ARCHITECTURAL SIMPLIFICATION - SET_JAM REMOVED**
+- **Complete Feature Removal**: Removed entire SET_JAM/setlist generation functionality from the application to simplify codebase and focus on core name generation features
+- **Backend Cleanup**: Deleted `/api/generate-setlist` endpoint, removed all setlist-related services and generation logic
+- **Frontend Cleanup**: Removed SetlistGenerator component, removed SET_JAM tab from navigation, updated stash to handle only band/song/bandLore/lyricJam types
+- **Schema Updates**: Removed setlist type from StashItem schema, cleaned up all TypeScript interfaces and types
+- **UI Simplification**: Updated navigation to show only NAME_JAM and LYRIC_JAM tabs, simplified export functions to exclude setlist references
+- **Result**: Cleaner, more focused application architecture with improved maintainability and reduced complexity
+
+**Previous Update - January 30, 2025: MAJOR DATAMUSE API REDESIGN FOR QUALITY**
 - **Semantic Search Implementation**: Switched all Datamuse API calls from `triggers` (statistical associations) to `meansLike` (semantic similarity), eliminating nonsensical word combinations like "telescope", "magnitude", "reaver"
 - **Quality-First Filtering**: Added strict quality filters to all Datamuse results - minimum 4 characters, maximum 10 characters, must pass isPoeticWord check, only top 5-10 results used
 - **Expanded Problematic Word List**: Added 30+ new excluded words including "telescope", "magnitude", "dwarf", "gown", "channel", "ships", "state", "brick", "ridges", "fairies" based on poor quality results

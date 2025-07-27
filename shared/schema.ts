@@ -76,21 +76,11 @@ export const verificationResult = z.object({
 
 export type VerificationResult = z.infer<typeof verificationResult>;
 
-// Set List schemas (moved up to be available for stashItem)
-export const setListSong = z.object({
-  id: z.number(),
-  name: z.string(),
-  verification: verificationResult,
-  isAiGenerated: z.boolean().optional(),
-});
-
-export type SetListSong = z.infer<typeof setListSong>;
-
-// Stash item schema for saved names, setlists, band lore, and lyric jams
+// Stash item schema for saved names, band lore, and lyric jams
 export const stashItem = z.object({
   id: z.string(),
   name: z.string(),
-  type: z.enum(['band', 'song', 'setlist', 'bandLore', 'lyricJam']),
+  type: z.enum(['band', 'song', 'bandLore', 'lyricJam']),
   wordCount: z.number(),
   savedAt: z.string(), // ISO date string
   rating: z.number().min(1).max(5).optional(), // 1-5 star rating
@@ -98,16 +88,7 @@ export const stashItem = z.object({
   isAiGenerated: z.boolean().optional(),
   genre: z.string().optional(), // For band/song/lyricJam items
   mood: z.string().optional(), // For band/song items
-  // Additional fields for setlist items
-  setlistData: z.object({
-    setOne: z.array(setListSong),
-    setTwo: z.array(setListSong),
-    finale: setListSong,
-    totalSongs: z.number(),
-    mood: z.string().optional(),
-    genre: z.string().optional(),
-    bandName: z.string().optional(),
-  }).optional(),
+
   // Additional fields for band lore items
   bandLoreData: z.object({
     bio: z.string(),
@@ -126,22 +107,7 @@ export const stashItem = z.object({
 
 export type StashItem = z.infer<typeof stashItem>;
 
-export const setListRequest = z.object({
-  songCount: z.enum(['8', '16']),
-  mood: z.string().optional(),
-  genre: z.string().optional(),
-});
 
-export type SetListRequest = z.infer<typeof setListRequest>;
-
-export const setListResponse = z.object({
-  setOne: z.array(setListSong),
-  setTwo: z.array(setListSong),
-  finale: setListSong,
-  totalSongs: z.number(),
-});
-
-export type SetListResponse = z.infer<typeof setListResponse>;
 
 // Error logs table for simple error tracking
 export const errorLogs = pgTable("error_logs", {

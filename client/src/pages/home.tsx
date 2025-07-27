@@ -1,5 +1,4 @@
 import { NameGenerator } from "@/components/name-generator";
-import { SetListGenerator } from "@/components/setlist-generator";
 import { LyricJam } from "@/components/lyric-jam";
 import { FermataLogo } from "@/components/fermata-logo";
 import { StashSidebar } from "@/components/stash-sidebar";
@@ -91,20 +90,16 @@ export default function Home() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-xs text-muted-foreground subtitle-fade px-2 font-normal">Generate unique band names, song titles, set lists, and lyrical inspiration</p>
+            <p className="text-responsive-xs text-muted-foreground subtitle-fade px-2 font-normal">Generate unique band names, song titles, and lyrical inspiration</p>
           </div>
 
           {/* Tabs Section */}
           <div className="w-full">
             <Tabs defaultValue="names" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 tabs-list-enhanced mb-4 md:mb-6">
+                <TabsList className="grid w-full grid-cols-2 tabs-list-enhanced mb-4 md:mb-6">
                   <TabsTrigger value="names" className="tabs-trigger-enhanced">
                     <span className="hidden sm:inline">NAME_JAM</span>
                     <span className="sm:hidden">NAMES</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="setlist" className="tabs-trigger-enhanced">
-                    <span className="hidden sm:inline">SET_JAM</span>
-                    <span className="sm:hidden">SET LISTS</span>
                   </TabsTrigger>
                   <TabsTrigger value="lyric" className="tabs-trigger-enhanced">
                     <span className="hidden sm:inline">LYRIC_JAM</span>
@@ -113,9 +108,6 @@ export default function Home() {
                 </TabsList>
                 <TabsContent value="names">
                   <NameGenerator />
-                </TabsContent>
-                <TabsContent value="setlist">
-                  <SetListGenerator onCopy={handleCopy} />
                 </TabsContent>
                 <TabsContent value="lyric">
                   <LyricJam />
