@@ -216,7 +216,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
   };
 
   const SongCard = ({ song, setName }: { song: SetListSong; setName: string }) => (
-    <Card key={song.id} className="bg-neutral-900/30 border-neutral-800 hover:bg-neutral-900/50 transition-colors">
+    <Card key={song.id} className="bg-gradient-to-br from-purple-500/10 to-purple-400/5 border-purple-500/20 hover:from-purple-500/20 hover:to-purple-400/10 hover:shadow-lg hover:shadow-purple-500/10 hover:border-purple-400/40 transition-all duration-300">
       <CardContent className="p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex-1">
@@ -426,7 +426,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
           </Card>
 
           {/* Set One */}
-          <Card className="bg-neutral-900/50 border-neutral-800">
+          <Card className="bg-gradient-to-br from-card/40 to-card/20 border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Music className="w-5 h-5" />
@@ -442,7 +442,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
           </Card>
 
           {/* Set Two */}
-          <Card className="bg-neutral-900/50 border-neutral-800">
+          <Card className="bg-gradient-to-br from-card/40 to-card/20 border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Music className="w-5 h-5" />
@@ -458,7 +458,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
           </Card>
 
           {/* Encore */}
-          <Card className="bg-gradient-to-r from-neutral-800 to-neutral-700 border-neutral-600">
+          <Card className="bg-gradient-to-br from-card/40 to-card/20 border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Music className="w-5 h-5" />
