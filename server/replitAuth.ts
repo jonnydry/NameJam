@@ -27,7 +27,7 @@ export function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
+    createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: "sessions",
   });
@@ -38,10 +38,10 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Always false for Replit development
       maxAge: sessionTtl,
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost'
+      sameSite: 'lax', // More permissive for dev
+      // Remove domain restriction for development
     },
     rolling: true, // Reset expiration on activity
     name: 'namejam.session', // Custom session name
@@ -108,24 +108,23 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    // For development (localhost), redirect to the production domain for authentication
+    // Use the first configured domain for authentication
     const domains = process.env.REPLIT_DOMAINS!.split(",");
-    const productionDomain = domains[0]; // Use first domain as primary
+    const authDomain = domains[0]; // Use first domain as primary
     
-    if (req.hostname === 'localhost' && process.env.NODE_ENV === 'development') {
-      // Redirect to production domain for OAuth
-      return res.redirect(`https://${productionDomain}/api/login`);
-    }
-    
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    passport.authenticate(`replitauth:${authDomain}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/app",
+    // Use the first configured domain for callback
+    const domains = process.env.REPLIT_DOMAINS!.split(",");
+    const authDomain = domains[0];
+    
+    passport.authenticate(`replitauth:${authDomain}`, {
+      successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
   });
