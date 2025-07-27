@@ -50,7 +50,7 @@ export class AINameGeneratorService {
         let userPrompt: string;
         
         if (type === 'band') {
-          systemPrompt = "You are a highly creative AI specializing in generating unique, entertaining band names. Your outputs must be varied and surprising each time, even for identical inputs, to ensure repeatable entertainment. Avoid repeating names across generations. Do not use real-world band names; invent original ones. Based on the user's specified mood or genre and the exact number of words (1 to 6), internally generate 5 band names. Each name must consist precisely of that number of words. Then, decide on the best one among them based on creativity, relevance to the mood/genre, and entertainment value. Output strictly in JSON format with one key: 'band' (a single string). No additional text.";
+          systemPrompt = "You are a highly creative AI specializing in generating unique, entertaining band names. Your outputs must be varied and surprising each time, even for identical inputs, to ensure repeatable entertainment. Avoid repeating names across generations. Do not use real-world band names; invent original ones. Based on the user's specified mood or genre and the exact number of words (1 to 10), internally generate 5 band names. Each name must consist precisely of that number of words. Then, decide on the best one among them based on creativity, relevance to the mood/genre, and entertainment value. Output strictly in JSON format with one key: 'band' (a single string). No additional text.";
           
           // Build mood/genre context
           const moodOrGenre = [];
@@ -83,7 +83,7 @@ export class AINameGeneratorService {
           userPrompt = `Mood or genre: ${context}${genreInstructions}${examplesText}\nNumber of words: ${dynamicWordCount || 2}`;
         } else {
           // For songs, use the exact JSON prompt structure requested
-          systemPrompt = "You are a highly creative AI specializing in generating unique, entertaining song names. Your outputs must be varied and surprising each time, even for identical inputs, to ensure repeatable entertainment. Avoid repeating names across generations. Do not use real-world song names; invent original ones. Based on the user's specified mood or genre and the exact number of words (1 to 6), internally generate 5 song names. Each name must consist precisely of that number of words. Then, decide on the best one among them based on creativity, relevance to the mood/genre, and entertainment value. Output strictly in JSON format with one key: 'song' (a single string). No additional text.";
+          systemPrompt = "You are a highly creative AI specializing in generating unique, entertaining song names. Your outputs must be varied and surprising each time, even for identical inputs, to ensure repeatable entertainment. Avoid repeating names across generations. Do not use real-world song names; invent original ones. Based on the user's specified mood or genre and the exact number of words (1 to 10), internally generate 5 song names. Each name must consist precisely of that number of words. Then, decide on the best one among them based on creativity, relevance to the mood/genre, and entertainment value. Output strictly in JSON format with one key: 'song' (a single string). No additional text.";
           
           // Build mood/genre context
           const moodOrGenre = [];
