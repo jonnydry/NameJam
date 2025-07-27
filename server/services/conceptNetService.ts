@@ -76,7 +76,25 @@ export class ConceptNetService {
 
       return uniqueConcepts;
     } catch (error) {
-      secureLog.error('ConceptNet API error:', error);
+      secureLog.error('ConceptNet API error, using XAI fallback:', error);
+      
+      // Use XAI fallback when ConceptNet fails
+      try {
+        const { xaiFallbackService } = await import('./xaiFallbackService');
+        const fallbackConcepts = await xaiFallbackService.generateConceptNetFallback(word, 'general');
+        
+        if (fallbackConcepts.length > 0) {
+          secureLog.info(`XAI fallback provided ${fallbackConcepts.length} concepts for "${word}"`);
+          return fallbackConcepts.map((w, index) => ({
+            word: w,
+            weight: 2.5 - (index * 0.1), // Simulated weight
+            relation: 'RelatedTo'
+          }));
+        }
+      } catch (fallbackError) {
+        secureLog.error('XAI fallback also failed:', fallbackError);
+      }
+      
       return [];
     }
   }
@@ -93,7 +111,21 @@ export class ConceptNetService {
         .map(c => c.word)
         .slice(0, 15);
     } catch (error) {
-      secureLog.error('Error getting emotional associations:', error);
+      secureLog.error('Error getting emotional associations, using XAI fallback:', error);
+      
+      // Use XAI fallback
+      try {
+        const { xaiFallbackService } = await import('./xaiFallbackService');
+        const fallbackEmotions = await xaiFallbackService.generateConceptNetFallback(emotion, 'emotional');
+        
+        if (fallbackEmotions.length > 0) {
+          secureLog.info(`XAI fallback provided ${fallbackEmotions.length} emotional associations`);
+          return fallbackEmotions;
+        }
+      } catch (fallbackError) {
+        secureLog.error('XAI fallback also failed:', fallbackError);
+      }
+      
       return [];
     }
   }
@@ -130,7 +162,21 @@ export class ConceptNetService {
       // Deduplicate and return
       return Array.from(new Set(allAssociations)).slice(0, 20);
     } catch (error) {
-      secureLog.error('Error getting genre associations:', error);
+      secureLog.error('Error getting genre associations, using XAI fallback:', error);
+      
+      // Use XAI fallback
+      try {
+        const { xaiFallbackService } = await import('./xaiFallbackService');
+        const fallbackAssociations = await xaiFallbackService.generateConceptNetFallback(genre, 'genre');
+        
+        if (fallbackAssociations.length > 0) {
+          secureLog.info(`XAI fallback provided ${fallbackAssociations.length} genre associations`);
+          return fallbackAssociations;
+        }
+      } catch (fallbackError) {
+        secureLog.error('XAI fallback also failed:', fallbackError);
+      }
+      
       return [];
     }
   }

@@ -1,4 +1,6 @@
 import fetch from 'node-fetch';
+import { xaiFallbackService } from './xaiFallbackService';
+import { secureLog } from '../utils/secureLogger';
 
 interface DatamuseWord {
   word: string;
@@ -107,8 +109,34 @@ export class DatamuseService {
 
       return words;
     } catch (error) {
-      console.error('Datamuse API error:', error);
-      return []; // Return empty array on error for graceful fallback
+      secureLog.error('Datamuse API error, using XAI fallback:', error);
+      
+      // Use XAI fallback when Datamuse fails
+      try {
+        // Determine the type of words requested
+        let type: 'adjectives' | 'nouns' | 'related' = 'related';
+        if (options.adjsForNoun) {
+          type = 'adjectives';
+        } else if (options.nounsForAdj) {
+          type = 'nouns';
+        }
+        
+        const fallbackWords = await xaiFallbackService.generateDatamuseFallback({
+          word: options.meansLike || options.triggers || options.topics,
+          theme: options.topics,
+          type,
+          count: options.maxResults || 50
+        });
+        
+        if (fallbackWords.length > 0) {
+          secureLog.info(`XAI fallback provided ${fallbackWords.length} words for Datamuse request`);
+          return fallbackWords;
+        }
+      } catch (fallbackError) {
+        secureLog.error('XAI fallback also failed:', fallbackError);
+      }
+      
+      return []; // Return empty array if both fail
     }
   }
 
