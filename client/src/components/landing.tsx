@@ -13,7 +13,7 @@ export function Landing() {
       icon: Zap,
       bgColor: "bg-blue-500/10",
       textColor: "text-blue-500",
-      shadowColor: "hover:shadow-blue-500/10",
+      customClass: "carousel-card-blue",
       title: "Quadruple API Intelligence",
       description: "Datamuse linguistics + Spotify data + Last.fm genres + ConceptNet semantics for unmatched authenticity"
     },
@@ -21,7 +21,7 @@ export function Landing() {
       icon: NotebookPen,
       bgColor: "bg-green-500/10",
       textColor: "text-green-500",
-      shadowColor: "hover:shadow-green-500/10",
+      customClass: "carousel-card-green",
       title: "Lyric Sparks",
       description: "AI-powered opening lines with authentic genre vocabulary from real artist data"
     },
@@ -29,7 +29,7 @@ export function Landing() {
       icon: Brain,
       bgColor: "bg-yellow-500/10",
       textColor: "text-yellow-500",
-      shadowColor: "hover:shadow-yellow-500/10",
+      customClass: "carousel-card-yellow",
       title: "Genre-Perfect AI",
       description: "Learns from 15+ real artist examples per genre to create names that truly fit your style"
     },
@@ -37,7 +37,7 @@ export function Landing() {
       icon: Archive,
       bgColor: "bg-orange-500/10",
       textColor: "text-orange-500",
-      shadowColor: "hover:shadow-orange-500/10",
+      customClass: "carousel-card-orange",
       title: "Organized Stash",
       description: "Rate, sort, and export your favorites - names, lyrics, and edgy band bios"
     },
@@ -45,7 +45,7 @@ export function Landing() {
       icon: Music,
       bgColor: "bg-red-500/10",
       textColor: "text-red-500",
-      shadowColor: "hover:shadow-red-500/10",
+      customClass: "carousel-card-red",
       title: "Instant Verification",
       description: "Check availability across Spotify, YouTube & Google with one click - know what's taken instantly"
     }
@@ -110,7 +110,7 @@ export function Landing() {
                   const Icon = feature.icon;
                   return (
                     <div key={index} className="w-full flex-shrink-0">
-                      <div className={`mx-4 text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg ${feature.shadowColor}`}>
+                      <div className={`mx-4 text-left p-8 rounded-xl border-2 border-border/30 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm transition-all duration-300 ${feature.customClass}`}>
                         <div className="flex items-start gap-4">
                           <div className={`p-3 rounded-lg ${feature.bgColor} ${feature.textColor}`}>
                             <Icon className="w-6 h-6" />
