@@ -96,150 +96,174 @@ export class EnhancedNameGeneratorService {
       // Map moods/genres to more poetic seed words
       const poeticSeeds = this.getPoeticSeedWords(mood, genre);
       
-      // Use Promise.allSettled for parallel API calls when possible
+      // Execute API calls in parallel for performance
       const apiPromises = [];
       
-      // STEP 1: Enhanced Last.fm Integration for Genre Intelligence
-      if (genre) {
-        secureLog.debug(`🎵 Fetching Last.fm vocabulary for genre: ${genre}`);
-        try {
-          const genreVocab = await lastfmService.getGenreVocabulary(genre);
-          sources.genreTerms.push(...genreVocab.genreTerms);
-          sources.lastfmWords.push(...genreVocab.descriptiveWords);
-          sources.contextualWords.push(...genreVocab.relatedGenres);
-          
-          secureLog.debug(`✅ Last.fm integration successful:`, {
-            genreTerms: genreVocab.genreTerms.length,
-            descriptiveWords: genreVocab.descriptiveWords.length,
-            confidence: genreVocab.confidence
-          });
-        } catch (error) {
-          secureLog.error('Last.fm integration failed, continuing with Datamuse only:', error);
-        }
-      }
-
-      // STEP 2: Spotify Integration for Genre/Mood Vocabulary
-      sources.spotifyWords = [];
-      try {
+      // Parallel API calls for all external services
+      if (genre || mood) {
+        // Last.fm API promise
         if (genre) {
-          secureLog.debug(`🎵 Fetching Spotify genre-specific artists for: ${genre}`);
-          const genreArtists = await this.spotifyService.getGenreArtists(genre, 30);
-          const genreTracks = await this.spotifyService.searchTracks(genre, 20);
-          const spotifyVocab = this.spotifyService.extractVocabularyPatterns(genreArtists, genreTracks);
-          sources.spotifyWords.push(...spotifyVocab.filter(w => this.isPoeticWord(w)));
-          secureLog.debug(`✅ Spotify genre integration: ${spotifyVocab.length} words extracted`);
+          apiPromises.push(
+            lastfmService.getGenreVocabulary(genre)
+              .then(genreVocab => {
+                sources.genreTerms.push(...genreVocab.genreTerms);
+                sources.lastfmWords.push(...genreVocab.descriptiveWords);
+                sources.contextualWords.push(...genreVocab.relatedGenres);
+                secureLog.debug(`✅ Last.fm integration successful:`, {
+                  genreTerms: genreVocab.genreTerms.length,
+                  descriptiveWords: genreVocab.descriptiveWords.length,
+                  confidence: genreVocab.confidence
+                });
+              })
+              .catch(error => secureLog.error('Last.fm integration failed:', error))
+          );
+        }
+        
+        // Spotify API promises
+        if (genre) {
+          apiPromises.push(
+            Promise.all([
+              this.spotifyService.getGenreArtists(genre, 30),
+              this.spotifyService.searchTracks(genre, 20)
+            ]).then(([genreArtists, genreTracks]) => {
+              const spotifyVocab = this.spotifyService.extractVocabularyPatterns(genreArtists, genreTracks);
+              sources.spotifyWords.push(...spotifyVocab.filter(w => this.isPoeticWord(w)));
+              secureLog.debug(`✅ Spotify genre integration: ${spotifyVocab.length} words extracted`);
+            }).catch(error => secureLog.error('Spotify genre integration failed:', error))
+          );
         }
         
         if (mood) {
-          secureLog.debug(`🎵 Fetching Spotify mood-based tracks for: ${mood}`);
-          const moodTracks = await this.spotifyService.getMoodTracks(mood, 30);
-          const moodArtists = await this.spotifyService.searchArtists(mood, 20);
-          const spotifyMoodVocab = this.spotifyService.extractVocabularyPatterns(moodArtists, moodTracks);
-          sources.spotifyWords.push(...spotifyMoodVocab.filter(w => this.isPoeticWord(w)));
-          secureLog.debug(`✅ Spotify mood integration: ${spotifyMoodVocab.length} words extracted`);
+          apiPromises.push(
+            Promise.all([
+              this.spotifyService.getMoodTracks(mood, 30),
+              this.spotifyService.searchArtists(mood, 20)
+            ]).then(([moodTracks, moodArtists]) => {
+              const spotifyMoodVocab = this.spotifyService.extractVocabularyPatterns(moodArtists, moodTracks);
+              sources.spotifyWords.push(...spotifyMoodVocab.filter(w => this.isPoeticWord(w)));
+              secureLog.debug(`✅ Spotify mood integration: ${spotifyMoodVocab.length} words extracted`);
+            }).catch(error => secureLog.error('Spotify mood integration failed:', error))
+          );
         }
-      } catch (error) {
-        secureLog.error('Spotify integration failed, continuing with other sources:', error);
-      }
-
-      // STEP 3: ConceptNet Integration for Conceptual Associations
-      sources.conceptNetWords = [];
-      try {
+        
+        // ConceptNet API promises
         if (genre) {
-          secureLog.debug(`🧠 Fetching ConceptNet associations for genre: ${genre}`);
-          const genreAssociations = await conceptNetService.getGenreAssociations(genre);
-          sources.conceptNetWords.push(...genreAssociations.filter(w => this.isPoeticWord(w)));
-          secureLog.debug(`✅ ConceptNet genre integration: ${genreAssociations.length} concepts found`);
+          apiPromises.push(
+            conceptNetService.getGenreAssociations(genre)
+              .then(genreAssociations => {
+                sources.conceptNetWords.push(...genreAssociations.filter(w => this.isPoeticWord(w)));
+                secureLog.debug(`✅ ConceptNet genre integration: ${genreAssociations.length} concepts found`);
+              })
+              .catch(error => secureLog.error('ConceptNet genre integration failed:', error))
+          );
         }
         
         if (mood) {
-          secureLog.debug(`🧠 Fetching ConceptNet emotional associations for: ${mood}`);
-          const emotionalAssociations = await conceptNetService.getEmotionalAssociations(mood);
-          sources.conceptNetWords.push(...emotionalAssociations.filter(w => this.isPoeticWord(w)));
-          secureLog.debug(`✅ ConceptNet mood integration: ${emotionalAssociations.length} concepts found`);
+          apiPromises.push(
+            conceptNetService.getEmotionalAssociations(mood)
+              .then(emotionalAssociations => {
+                sources.conceptNetWords.push(...emotionalAssociations.filter(w => this.isPoeticWord(w)));
+                secureLog.debug(`✅ ConceptNet mood integration: ${emotionalAssociations.length} concepts found`);
+              })
+              .catch(error => secureLog.error('ConceptNet mood integration failed:', error))
+          );
         }
         
-        // Get cultural connections for some seed words
         if (poeticSeeds.emotional.length > 0) {
-          const culturalWord = poeticSeeds.emotional[0];
-          const culturalConnections = await conceptNetService.getCulturalConnections(culturalWord);
-          sources.conceptNetWords.push(...culturalConnections.filter(w => this.isPoeticWord(w)));
+          apiPromises.push(
+            conceptNetService.getCulturalConnections(poeticSeeds.emotional[0])
+              .then(culturalConnections => {
+                sources.conceptNetWords.push(...culturalConnections.filter(w => this.isPoeticWord(w)));
+              })
+              .catch(error => secureLog.error('ConceptNet cultural connections failed:', error))
+          );
         }
-      } catch (error) {
-        secureLog.error('ConceptNet integration failed, continuing with other sources:', error);
       }
+      
+      // Wait for all parallel API calls to complete
+      await Promise.allSettled(apiPromises);
 
       // STEP 4: Get words using multiple linguistic relationships for richness  
       secureLog.debug(`🎨 Building poetic word palette...`);
       
+      // Parallelize Datamuse API calls for even better performance
+      const datamusePromises = [];
+      
       // 3. Get emotionally evocative words (process only first 2 seeds to reduce API calls)
       const emotionalSeeds = poeticSeeds.emotional.slice(0, 2);
-      for (const seed of emotionalSeeds) {
-        const emotionalWords = await this.datamuseService.findWords({
-          triggers: seed, // Words statistically associated
+      datamusePromises.push(...emotionalSeeds.map(seed =>
+        this.datamuseService.findWords({
+          triggers: seed,
           topics: `${mood || 'emotion'} music poetry`,
-          maxResults: 15 // Reduced from 20
-        });
-        // Filter for quality
-        const poeticWords = emotionalWords
-          .filter(w => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word))
-          .map(w => w.word);
-        sources.contextualWords.push(...poeticWords);
-      }
+          maxResults: 15
+        }).then(emotionalWords => {
+          const poeticWords = emotionalWords
+            .filter(w => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word))
+            .map(w => w.word);
+          sources.contextualWords.push(...poeticWords);
+        }).catch(error => secureLog.error('Datamuse emotional words failed:', error))
+      ));
       
       // 4. Get sensory/imagery words (process only first 2 seeds)
       const sensorySeeds = poeticSeeds.sensory.slice(0, 2);
-      for (const seed of sensorySeeds) {
-        const sensoryWords = await this.datamuseService.findWords({
+      datamusePromises.push(...sensorySeeds.map(seed =>
+        this.datamuseService.findWords({
           meansLike: seed,
           topics: 'nature poetry music',
-          maxResults: 10 // Reduced from 15
-        });
-        // Filter for quality
-        const poeticWords = sensoryWords
-          .filter(w => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word))
-          .map(w => w.word);
-        sources.associatedWords.push(...poeticWords);
-      }
+          maxResults: 10
+        }).then(sensoryWords => {
+          const poeticWords = sensoryWords
+            .filter(w => this.isPoeticWord(w.word) && !this.isProblematicWord(w.word))
+            .map(w => w.word);
+          sources.associatedWords.push(...poeticWords);
+        }).catch(error => secureLog.error('Datamuse sensory words failed:', error))
+      ));
       
       // 5. Get musical/rhythmic words (reduce to 2 seeds)
       const musicalSeeds = ['melody', 'rhythm'];
-      for (const seed of musicalSeeds) {
-        const musicWords = await this.datamuseService.findWords({
+      datamusePromises.push(...musicalSeeds.map(seed =>
+        this.datamuseService.findWords({
           triggers: seed,
           topics: 'music sound',
-          maxResults: 8 // Reduced from 10
-        });
-        sources.musicalTerms.push(...musicWords.map(w => w.word));
-      }
+          maxResults: 8
+        }).then(musicWords => {
+          sources.musicalTerms.push(...musicWords.map(w => w.word));
+        }).catch(error => secureLog.error('Datamuse musical words failed:', error))
+      ));
       
       // 6. Get adjectives using linguistic patterns (limit to 3 seeds)
       secureLog.debug(`✨ Finding evocative adjectives...`);
       const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre).slice(0, 3);
-      for (const seed of adjectiveSeeds) {
-        const adjs = await this.datamuseService.findAdjectivesForNoun(seed, 10); // Reduced from 15
-        sources.adjectives.push(...adjs.map((w: any) => w.word));
-      }
+      datamusePromises.push(...adjectiveSeeds.map(seed =>
+        this.datamuseService.findAdjectivesForNoun(seed, 10)
+          .then(adjs => {
+            sources.adjectives.push(...adjs.map((w: any) => w.word));
+          })
+          .catch(error => secureLog.error('Datamuse adjectives failed:', error))
+      ));
       
       // 7. Get poetic nouns using associations (limit to 3 seeds)
       secureLog.debug(`🌟 Finding poetic nouns...`);
       const nounSeeds = this.getNounSeeds(mood, genre).slice(0, 3);
-      for (const seed of nounSeeds) {
-        const nouns = await this.datamuseService.findWords({
+      datamusePromises.push(...nounSeeds.map(seed =>
+        this.datamuseService.findWords({
           triggers: seed,
-          maxResults: 10 // Reduced from 15
-        });
-        // Filter for concrete, evocative nouns
-        const poeticNouns = nouns.filter(w => {
-          const word = w.word;
-          return word.length >= 3 && 
-            word.length <= 10 &&
-            !this.isProblematicWord(word) &&
-            this.isPoeticWord(word) &&
-            !/^[A-Z]/.test(word); // Avoid proper nouns
-        });
-        sources.nouns.push(...poeticNouns.map(w => w.word));
-      }
+          maxResults: 10
+        }).then(nouns => {
+          const poeticNouns = nouns.filter(w => {
+            const word = w.word;
+            return word.length >= 3 && 
+              word.length <= 10 &&
+              !this.isProblematicWord(word) &&
+              this.isPoeticWord(word) &&
+              !/^[A-Z]/.test(word);
+          });
+          sources.nouns.push(...poeticNouns.map(w => w.word));
+        }).catch(error => secureLog.error('Datamuse nouns failed:', error))
+      ));
+      
+      // Wait for all Datamuse API calls to complete
+      await Promise.allSettled(datamusePromises);
       
       // Clean and deduplicate all sources
       this.cleanWordSources(sources);

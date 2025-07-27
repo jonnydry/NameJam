@@ -1,6 +1,7 @@
 import type { VerificationResult } from "@shared/schema";
 import { spotifyService } from "./spotifyService";
 import { lastFmRateLimiter, musicBrainzRateLimiter, withRetry } from '../utils/rateLimiter';
+import { secureLog } from '../utils/secureLogger';
 
 export class NameVerifierService {
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
@@ -148,7 +149,7 @@ export class NameVerifierService {
 
       // Minimal logging for debugging when needed
       if (searchResults.length > 5) {
-        console.log(`Found ${searchResults.length} results for "${name}"`);
+        secureLog.debug(`Found ${searchResults.length} results for "${name}"`);
       }
 
       // Check for exact matches in other sources
@@ -161,7 +162,7 @@ export class NameVerifierService {
         const match = exactMatches[0];
         const artistInfo = match.artist ? ` by ${match.artist}` : '';
         const similarNames = this.generateSimilarNames(name);
-        console.log(`Exact match found for "${name}": ${match.name} by ${match.artist || 'Unknown'}`);
+        secureLog.debug(`Exact match found for "${name}": ${match.name} by ${match.artist || 'Unknown'}`);
         return {
           status: 'taken',
           details: `Found existing ${type}${artistInfo}. Try these alternatives:`,
@@ -204,7 +205,7 @@ export class NameVerifierService {
       if (closeMatches.length > 0) {
         // Close matches found = Similar
         const similarNames = this.generateSimilarNames(name);
-        console.log(`Close matches found for "${name}":`, closeMatches.slice(0, 2));
+        secureLog.debug(`Close matches found for "${name}":`, closeMatches.slice(0, 2));
         return {
           status: 'similar',
           details: `Similar names found in music databases. Consider these alternatives:`,
