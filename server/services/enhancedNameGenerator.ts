@@ -536,12 +536,23 @@ export class EnhancedNameGeneratorService {
       return { name, actualWordCount: 3 };
     }
 
-    // 4+ words - use narrative patterns with dynamic length
-    if (wordCount >= 4) {
-      // For "4+" option, randomly select between 4-10 words
-      const dynamicWordCount = Math.floor(Math.random() * 7) + 4; // 4-10 words
-      const name = await this.generateLongFormContextual(sources, dynamicWordCount, type);
-      return { name, actualWordCount: dynamicWordCount };
+    if (wordCount === 4) {
+      const name = this.generateFourWordPoetic(sources, type);
+      return { name, actualWordCount: 4 };
+    }
+
+    // For 5+ words or "4+" dynamic option
+    if (wordCount >= 5) {
+      // If wordCount is exactly 5-10, use that exact count
+      if (wordCount <= 10) {
+        const name = await this.generateLongFormContextual(sources, wordCount, type);
+        return { name, actualWordCount: wordCount };
+      } else {
+        // For "4+" option (wordCount > 10), randomly select between 4-10 words
+        const dynamicWordCount = Math.floor(Math.random() * 7) + 4; // 4-10 words
+        const name = await this.generateLongFormContextual(sources, dynamicWordCount, type);
+        return { name, actualWordCount: dynamicWordCount };
+      }
     }
     
     // Fallback for any other word count
@@ -723,33 +734,53 @@ export class EnhancedNameGeneratorService {
       w => this.isNounLike(w)
     );
 
+    // Ensure we have at least some words to work with
+    if (enhancedAdjectives.length === 0) enhancedAdjectives.push('wild', 'dark', 'electric');
+    if (enhancedNouns.length === 0) enhancedNouns.push('storm', 'fire', 'dream');
+
     const patterns = [
-      // The [adj] [noun] [noun]
+      // [Adj] [Noun] [Adj] [Noun] - exactly 4 words, no articles
       () => {
-        const adj = this.getRandomWord(enhancedAdjectives) || 'electric';
+        const adj1 = this.getRandomWord(enhancedAdjectives) || 'wild';
         const noun1 = this.getRandomWord(enhancedNouns) || 'fire';
-        const noun2 = this.getRandomWord(enhancedNouns) || 'dream';
-        return `The ${this.capitalize(adj)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
+        const adj2 = this.getRandomWord(enhancedAdjectives) || 'dark';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'storm';
+        return `${this.capitalize(adj1)} ${this.capitalize(noun1)} ${this.capitalize(adj2)} ${this.capitalize(noun2)}`;
       },
-      // [Noun] of the [Noun]
+      // [Noun] [Verb] [Adj] [Noun] - exactly 4 words
       () => {
         const noun1 = this.getRandomWord(enhancedNouns) || 'storm';
+        const verbs = ['burns', 'breaks', 'falls', 'rises', 'shines'];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const adj = this.getRandomWord(enhancedAdjectives) || 'endless';
         const noun2 = this.getRandomWord(enhancedNouns) || 'night';
-        return `${this.capitalize(noun1)} of the ${this.capitalize(noun2)}`;
+        return `${this.capitalize(noun1)} ${verb} ${adj} ${noun2}`;
       },
-      // [Adj] [Noun] [Prep] [Noun]
+      // [Adj] [Adj] [Noun] [Noun] - exactly 4 words
       () => {
-        const adj = this.getRandomWord(enhancedAdjectives) || 'wild';
-        const noun1 = this.getRandomWord(enhancedNouns) || 'heart';
-        const noun2 = this.getRandomWord(enhancedNouns) || 'fire';
-        const preps = ['in', 'of', 'at'];
-        const prep = preps[Math.floor(Math.random() * preps.length)];
-        return `${this.capitalize(adj)} ${this.capitalize(noun1)} ${prep} ${this.capitalize(noun2)}`;
+        const adj1 = this.getRandomWord(enhancedAdjectives) || 'burning';
+        const adj2 = this.getRandomWord(enhancedAdjectives) || 'silver';
+        const noun1 = this.getRandomWord(enhancedNouns) || 'fire';
+        const noun2 = this.getRandomWord(enhancedNouns) || 'dream';
+        return `${this.capitalize(adj1)} ${this.capitalize(adj2)} ${this.capitalize(noun1)} ${this.capitalize(noun2)}`;
       }
     ];
     
     const pattern = patterns[Math.floor(Math.random() * patterns.length)];
-    return pattern();
+    const result = pattern();
+    
+    // Validate that result is exactly 4 words
+    const words = result.split(/\s+/);
+    if (words.length !== 4) {
+      // Fallback to simple 4-word pattern
+      const adj1 = this.getRandomWord(enhancedAdjectives) || 'wild';
+      const noun1 = this.getRandomWord(enhancedNouns) || 'fire';
+      const adj2 = this.getRandomWord(enhancedAdjectives) || 'dark';  
+      const noun2 = this.getRandomWord(enhancedNouns) || 'storm';
+      return `${this.capitalize(adj1)} ${this.capitalize(noun1)} ${this.capitalize(adj2)} ${this.capitalize(noun2)}`;
+    }
+    
+    return result;
   }
   
   // Five words with narrative flow
@@ -1096,7 +1127,20 @@ export class EnhancedNameGeneratorService {
       'foo', 'fighters', 'linkin', 'park', 'green', 'day', 'blink',
       'nickelback', 'coldplay', 'maroon', 'onerepublic', 'imagine',
       'dragons', 'arctic', 'monkeys', 'killers', 'strokes', 'white',
-      'weeknd', 'eilish', 'swift', 'beyonce', 'rihanna', 'adele'
+      'weeknd', 'eilish', 'swift', 'beyonce', 'rihanna', 'adele',
+      // Additional common band name words from Spotify/Last.fm contamination
+      'led', 'john', 'paul', 'george', 'ringo', 'mick', 'keith',
+      'robert', 'jimmy', 'ozzy', 'tony', 'bruce', 'steve', 'dave',
+      'kurt', 'eddie', 'chris', 'scott', 'axl', 'slash', 'duff',
+      'metallica', 'gangsta', 'gangstah', 'carpenter', 'carpenters',
+      'eagles', 'doors', 'kinks', 'clash', 'ramones', 'blondie',
+      'rush', 'yes', 'genesis', 'toto', 'journey', 'foreigner',
+      'boston', 'kansas', 'chicago', 'asia', 'europe', 'america',
+      'abba', 'kiss', 'cream', 'blind', 'melon', 'hole', 'bush',
+      'oasis', 'blur', 'pulp', 'suede', 'radiohead', 'muse',
+      'placebo', 'travis', 'keane', 'snow', 'patrol', 'kasabian',
+      'rocketeer', 'oblations', 'tourmente', 'shadowlord', 'gangsta',
+      'carpenter', 'weeknd', 'eilish', 'avatar', 'petition', 'solomon'
     ];
     
     return bandNames.includes(word.toLowerCase());
@@ -1367,8 +1411,17 @@ export class EnhancedNameGeneratorService {
    * Create enhanced word pool prioritizing genre/mood specific data
    */
   private createEnhancedWordPool(genreWords: string[], fallbackWords: string[], filter?: (w: string) => boolean): string[] {
-    const filtered = filter ? genreWords.filter(filter) : genreWords;
-    const fallbackFiltered = filter ? fallbackWords.filter(filter) : fallbackWords;
+    // Enhanced filtering to remove problematic words, band names, and non-poetic words
+    const enhancedFilter = (w: string) => {
+      if (filter && !filter(w)) return false;
+      return !this.isProblematicWord(w) && 
+             !this.isBandName(w) && 
+             this.isPoeticWord(w) &&
+             w.length >= 3 && w.length <= 12;
+    };
+    
+    const filtered = genreWords.filter(enhancedFilter);
+    const fallbackFiltered = fallbackWords.filter(enhancedFilter);
     
     // Prioritize genre-specific words first
     const genreSet = new Set(filtered);

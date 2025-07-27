@@ -177,6 +177,13 @@ export class AINameGeneratorService {
                 continue; // Try again with same model
               }
               
+              // Check for duplicate words within the same name
+              const uniqueWords = new Set(nameWords);
+              if (uniqueWords.size !== nameWords.length) {
+                secureLog.debug(`Rejected "${cleanName}" - contains duplicate words within the name`);
+                continue; // Try again with same model
+              }
+              
               // Check word count and track words for future avoidance
               if (wordCount && cleanName.split(/\s+/).length === wordCount) {
                 secureLog.info(`Successfully generated name "${cleanName}" using model: ${model}`);
