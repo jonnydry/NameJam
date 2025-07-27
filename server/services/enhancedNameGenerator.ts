@@ -1237,70 +1237,42 @@ export class EnhancedNameGeneratorService {
   }
 
   private isProblematicWord(word: string): boolean {
-    // Filter out problematic words
-    if (word.length < 2 || word.length > 15) return true;
+    // Basic length and character validation
+    if (word.length < 2 || word.length > 20) return true; // Increased max length
     if (/[0-9]/.test(word)) return true; // No numbers
     if (/[^a-zA-Z-']/.test(word)) return true; // Only letters, hyphens, apostrophes
-    if (word.includes('_')) return true; // No underscores
     
-    // Filter out technical/medical terms that sound weird
+    // Only filter truly technical/medical suffixes
     const problematicPatterns = [
       'itis', 'osis', 'ectomy', 'ology', 'graphy',
-      'metric', 'philic', 'phobic', 'scopy', 'etic',
-      'ious', 'eous', 'atic', 'istic'
+      'scopy', 'metric', 'philic', 'phobic'
     ];
     
-    // Specific medical/technical/scientific/business terms to avoid
+    // Much shorter list of truly problematic words
     const problematicWords = [
-      'thorax', 'stigmata', 'reddish', 'yellowish', 'greenish',
-      'underside', 'potency', 'generative', 'productive',
-      'imaginative', 'originative', 'fanciful', 'ability',
-      'electrons', 'radiation', 'mev', 'neutral', 'innovatory',
-      'inventive', 'fig', 'increases', 'decreases', 'particle',
-      'wavelength', 'frequency', 'amplitude', 'spectrum',
-      'molecule', 'atom', 'proton', 'neutron', 'quantum',
-      'magnate', 'powerfulness', 'notional', 'baron', 'tycoon',
-      'exponent', 'index', 'empyrean', 'fictive', 'innovatory',
-      // Additional scientific/chemical/physics terms
-      'nucleation', 'fractions', 'trigon', 'oblations', 'meteorology',
-      'thermodynamics', 'crystallization', 'precipitation', 'dissolution',
-      'oxidation', 'reduction', 'catalysis', 'enzyme', 'polymer',
-      'isomer', 'isotope', 'electron', 'photon', 'neutron',
-      'centrifuge', 'chromatography', 'spectroscopy', 'titration',
-      'distillation', 'sublimation', 'evaporation', 'condensation',
-      'pharmaceutical', 'biochemical', 'metabolic', 'enzymatic',
-      'synthesis', 'analysis', 'hypothesis', 'methodology', 'algorithm',
-      // Medical terms
-      'pulmonary', 'surgery', 'radius', 'medical', 'clinical',
-      'surgical', 'cardiac', 'neural', 'skeletal', 'muscular',
-      'coronary', 'transplant', 'lungs', 'kidney', 'liver',
-      'artery', 'vein', 'organ', 'disease', 'syndrome',
-      'diagnosis', 'prognosis', 'therapy', 'treatment',
-      // Religious/spiritual terms that appear too frequently
-      'brahman', 'brahma', 'vishnu', 'shiva', 'krishna',
-      'buddha', 'dharma', 'karma', 'nirvana', 'samsara',
-      // Geographic/political
-      'belgrade', 'feminism', 'minister', 'political', 'democracy',
-      'italia', 'italia', 'france', 'germany', 'spain',
-      'portugal', 'russia', 'china', 'japan', 'brazil',
-      // Technical/nautical
-      'liners', 'vessel', 'maritime', 'nautical', 'naval',
-      'submarine', 'destroyer', 'frigate', 'cruiser',
-      // Sports/mundane
-      'sports', 'surfing', 'surface', 'troopers', 'clay',
-      'athlete', 'player', 'coach', 'referee', 'stadium',
+      // Medical/body parts
+      'thorax', 'artery', 'vein', 'kidney', 'liver', 'lungs',
+      'pulmonary', 'cardiac', 'coronary', 'transplant',
+      // Technical/scientific
+      'electron', 'proton', 'neutron', 'molecule', 'isotope',
+      'chromatography', 'spectroscopy', 'titration', 'enzyme',
+      'oxidation', 'catalyst', 'polymer', 'algorithm',
       // Business/corporate
-      'corporate', 'executive', 'manager', 'supervisor',
-      'employee', 'revenue', 'profit', 'dividend', 'shareholder',
-      // Other awkward words
-      'slamming', 'fugue', 'changes', 'currents', 'tunes',
-      'songs', 'music', 'band', 'group', 'ensemble',
-      'ridge', 'arms', 'legs', 'limbs', 'torso'
+      'corporate', 'executive', 'manager', 'revenue', 'profit',
+      'dividend', 'shareholder', 'employee', 'supervisor',
+      // Avoid self-referential music words
+      'music', 'band', 'group', 'song', 'tune'
     ];
     
     const lowerWord = word.toLowerCase();
     if (problematicWords.includes(lowerWord)) return true;
-    return problematicPatterns.some(pattern => lowerWord.endsWith(pattern));
+    
+    // Only check suffixes for words longer than 8 characters
+    if (word.length > 8) {
+      return problematicPatterns.some(pattern => lowerWord.endsWith(pattern));
+    }
+    
+    return false;
   }
 
   private generateFallbackName(sources: EnhancedWordSource, wordCount: number): string {
