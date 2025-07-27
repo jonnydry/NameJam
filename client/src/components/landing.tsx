@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { FermataLogo } from "@/components/fermata-logo";
 import { Link } from "wouter";
-import { LogIn } from "lucide-react";
+import { LogIn, Zap, ListMusic, NotebookPen, Brain, Archive, Music } from "lucide-react";
 
 export function Landing() {
   return (
@@ -29,30 +29,72 @@ export function Landing() {
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
-              <h3 className="font-semibold mb-2">Datamuse-Powered Names</h3>
-              <p className="text-sm text-muted-foreground">Revolutionary linguistic engine with 300,000+ authentic word relationships</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 max-w-3xl mx-auto">
+            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-blue-500/10 text-blue-500">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Datamuse-Powered Names</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Revolutionary linguistic engine with 300,000+ authentic word relationships</p>
+                </div>
+              </div>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
-              <h3 className="font-semibold mb-2">Professional Set Lists</h3>
-              <p className="text-sm text-muted-foreground">Organized performance lists with Spotify verification and AI band names</p>
+            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-purple-500/10 text-purple-500">
+                  <ListMusic className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Professional Set Lists</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Organized performance lists with Spotify verification and AI band names</p>
+                </div>
+              </div>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
-              <h3 className="font-semibold mb-2">Enhanced Lyrics</h3>
-              <p className="text-sm text-muted-foreground">Genre-specific lyrical starters enriched with contextual vocabulary</p>
+            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-green-500/10 text-green-500">
+                  <NotebookPen className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Enhanced Lyrics</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Genre-specific lyrical starters enriched with contextual vocabulary</p>
+                </div>
+              </div>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
-              <h3 className="font-semibold mb-2">Hybrid AI System</h3>
-              <p className="text-sm text-muted-foreground">50/50 XAI Grok + Datamuse split with anti-repetition technology</p>
+            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/10">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-yellow-500/10 text-yellow-500">
+                  <Brain className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Hybrid AI System</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">50/50 XAI Grok + Datamuse split with anti-repetition technology</p>
+                </div>
+              </div>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
-              <h3 className="font-semibold mb-2">Advanced Stash</h3>
-              <p className="text-sm text-muted-foreground">Save names, lyrics, bios, and setlists with 5-star ratings</p>
+            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-orange-500/10 text-orange-500">
+                  <Archive className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Advanced Stash</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Save names, lyrics, bios, and setlists with 5-star ratings</p>
+                </div>
+              </div>
             </div>
-            <div className="text-center p-6 rounded-lg border border-border bg-card/60 backdrop-blur-sm">
-              <h3 className="font-semibold mb-2">Spotify Priority</h3>
-              <p className="text-sm text-muted-foreground">Real-time availability with popularity scores and direct search links</p>
+            <div className="text-left p-8 rounded-xl border border-border/50 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm hover:from-card/60 hover:to-card/40 transition-all duration-300 hover:shadow-lg hover:shadow-red-500/10">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-red-500/10 text-red-500">
+                  <Music className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Spotify Priority</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Real-time availability with popularity scores and direct search links</p>
+                </div>
+              </div>
             </div>
           </div>
 
