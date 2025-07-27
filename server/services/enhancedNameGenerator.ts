@@ -224,12 +224,12 @@ export class EnhancedNameGeneratorService {
       }
       
       // Wait for all parallel API calls to complete with timeout
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('External API timeout')), 3000); // 3 second timeout
-      });
-      
       if (apiPromises.length > 0) {
         try {
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('External API timeout')), 3000); // 3 second timeout
+          });
+          
           await Promise.race([
             Promise.allSettled(apiPromises),
             timeoutPromise
@@ -237,6 +237,7 @@ export class EnhancedNameGeneratorService {
           secureLog.debug(`🔄 External API calls completed`);
         } catch (error) {
           secureLog.warn(`⏰ External API calls timed out after 3 seconds, continuing with Datamuse-only generation`);
+          // Continue execution - don't re-throw the error
         }
       }
       
