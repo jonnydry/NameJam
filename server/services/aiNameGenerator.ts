@@ -39,6 +39,11 @@ export class AINameGeneratorService {
           // Add randomization to force variety
           const randomSeed = Math.random().toString(36).substring(7);
           const timestamp = Date.now() % 10000;
+          
+          // For "4+" option (wordCount >= 4), use dynamic range of 4-10 words
+          const dynamicWordCount = wordCount && wordCount >= 4 ? 
+            Math.floor(Math.random() * 7) + 4 : // 4-10 words for "4+" option
+            wordCount;
         
         // Build the system and user prompts based on type
         let systemPrompt: string;
@@ -75,7 +80,7 @@ export class AINameGeneratorService {
             genreInstructions = '\nIMPORTANT: The name must evoke country music. Think of rural life, trucks, whiskey, heartland values, and Southern culture.';
           }
           
-          userPrompt = `Mood or genre: ${context}${genreInstructions}${examplesText}\nNumber of words: ${wordCount || 2}`;
+          userPrompt = `Mood or genre: ${context}${genreInstructions}${examplesText}\nNumber of words: ${dynamicWordCount || 2}`;
         } else {
           // For songs, use the exact JSON prompt structure requested
           systemPrompt = "You are a highly creative AI specializing in generating unique, entertaining song names. Your outputs must be varied and surprising each time, even for identical inputs, to ensure repeatable entertainment. Avoid repeating names across generations. Do not use real-world song names; invent original ones. Based on the user's specified mood or genre and the exact number of words (1 to 6), internally generate 5 song names. Each name must consist precisely of that number of words. Then, decide on the best one among them based on creativity, relevance to the mood/genre, and entertainment value. Output strictly in JSON format with one key: 'song' (a single string). No additional text.";
@@ -108,7 +113,7 @@ export class AINameGeneratorService {
             genreInstructions = '\nIMPORTANT: The name must evoke country music. Think of rural life, trucks, whiskey, heartland values, and Southern culture.';
           }
           
-          userPrompt = `Mood or genre: ${context}${genreInstructions}${examplesText}\nNumber of words: ${wordCount || 3}`;
+          userPrompt = `Mood or genre: ${context}${genreInstructions}${examplesText}\nNumber of words: ${dynamicWordCount || 3}`;
         }
         
         // Add randomization seed to prevent identical responses

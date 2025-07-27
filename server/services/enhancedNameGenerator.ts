@@ -48,7 +48,12 @@ export class EnhancedNameGeneratorService {
         const result = await this.generateContextualNameWithCount(type, wordCount, wordSources, mood, genre);
         
         // Quality validation and check for repeated words
-        if (result && result.name && this.isValidName(result.name, result.actualWordCount) && !names.find(n => n.name === result.name) && !this.hasRecentWords(result.name)) {
+        // For "4+" option (wordCount >= 4), accept any result with 4-10 words
+        const isValidWordCount = wordCount >= 4 ? 
+          (result.actualWordCount >= 4 && result.actualWordCount <= 10) : 
+          (result.actualWordCount === wordCount);
+        
+        if (result && result.name && isValidWordCount && this.isValidName(result.name, result.actualWordCount) && !names.find(n => n.name === result.name) && !this.hasRecentWords(result.name)) {
           this.trackWords(result.name);
           names.push({ 
             name: result.name, 
@@ -67,7 +72,12 @@ export class EnhancedNameGeneratorService {
       if (names.length < count) {
         const fallbackWordCount = wordCount >= 4 ? Math.floor(Math.random() * 7) + 4 : wordCount;
         const fallbackName = this.generateFallbackName(wordSources, fallbackWordCount);
-        if (fallbackName && this.isValidName(fallbackName, fallbackWordCount) && !names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
+        // For "4+" option, accept any fallback with 4-10 words
+        const isFallbackValidWordCount = wordCount >= 4 ? 
+          (fallbackWordCount >= 4 && fallbackWordCount <= 10) : 
+          (fallbackWordCount === wordCount);
+        
+        if (fallbackName && isFallbackValidWordCount && this.isValidName(fallbackName, fallbackWordCount) && !names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
           this.trackWords(fallbackName);
           names.push({ 
             name: fallbackName, 
@@ -501,7 +511,7 @@ export class EnhancedNameGeneratorService {
       return await this.generateThreeWordContextual(sources, type, genre);
     }
 
-    // 4+ words - use narrative patterns with dynamic length
+    // 4+ words - use narrative patterns with dynamic length (4-10 words)
     if (wordCount >= 4) {
       // For "4+" option, randomly select between 4-10 words
       const dynamicWordCount = Math.floor(Math.random() * 7) + 4; // 4-10 words
@@ -536,23 +546,12 @@ export class EnhancedNameGeneratorService {
       return { name, actualWordCount: 3 };
     }
 
-    if (wordCount === 4) {
-      const name = this.generateFourWordPoetic(sources, type);
-      return { name, actualWordCount: 4 };
-    }
-
-    // For 5+ words or "4+" dynamic option
-    if (wordCount >= 5) {
-      // If wordCount is exactly 5-10, use that exact count
-      if (wordCount <= 10) {
-        const name = await this.generateLongFormContextual(sources, wordCount, type);
-        return { name, actualWordCount: wordCount };
-      } else {
-        // For "4+" option (wordCount > 10), randomly select between 4-10 words
-        const dynamicWordCount = Math.floor(Math.random() * 7) + 4; // 4-10 words
-        const name = await this.generateLongFormContextual(sources, dynamicWordCount, type);
-        return { name, actualWordCount: dynamicWordCount };
-      }
+    // 4+ words - use dynamic range of 4-10 words (this is the "4+" option behavior)
+    if (wordCount >= 4) {
+      // For "4+" option, randomly select between 4-10 words
+      const dynamicWordCount = Math.floor(Math.random() * 7) + 4; // 4-10 words
+      const name = await this.generateLongFormContextual(sources, dynamicWordCount, type);
+      return { name, actualWordCount: dynamicWordCount };
     }
     
     // Fallback for any other word count
