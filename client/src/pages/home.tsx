@@ -49,10 +49,10 @@ export default function Home() {
       {/* Stash Sidebar */}
       <StashSidebar isOpen={isStashOpen} onToggle={() => setIsStashOpen(!isStashOpen)} />
       
-      {/* Header with Stash and User Menu */}
-      <header className="relative w-full px-2 sm:px-4 py-4 z-40">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
+      {/* Fixed Header Bar */}
+      <div className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border/50">
+        <div className="px-2 sm:px-4 py-2">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
             {/* Stash Button */}
             <Button
               id="stash-toggle-btn"
@@ -69,11 +69,11 @@ export default function Home() {
             <UserMenu />
           </div>
         </div>
-      </header>
+      </div>
       
       {/* Main Content */}
       <main className={cn(
-        "flex-1 px-4 pb-8 md:pb-12 transition-all duration-300",
+        "flex-1 px-4 py-8 md:py-12 transition-all duration-300 mt-14",
         isStashOpen && "md:ml-96"
       )}>
         <div className="max-w-xl md:max-w-2xl mx-auto">
