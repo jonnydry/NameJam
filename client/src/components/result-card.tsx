@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, ExternalLink, Heart, BookOpen, Brain } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BandBioModal } from "./band-bio-modal";
 import { StatusBadge } from "./status-badge";
 
@@ -41,9 +41,42 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   const [showBioModal, setShowBioModal] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationType, setAnimationType] = useState<'add' | 'remove'>('add');
+  const [isHighlighted, setIsHighlighted] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   
   // Check if this is the easter egg
   const isEasterEgg = verification.details === 'We love you. Go to bed. <3';
+  
+  // Mobile scroll highlighting using Intersection Observer
+  useEffect(() => {
+    if (!cardRef.current) return;
+    
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            setIsHighlighted(true);
+          } else {
+            setIsHighlighted(false);
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: '-20% 0px -20% 0px',
+        threshold: 0.5
+      }
+    );
+    
+    observer.observe(cardRef.current);
+    
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const handleAddToStash = () => {
     // Check if user is authenticated (guest users have null IDs)
@@ -98,10 +131,18 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
 
 
   return (
-    <div className={`relative p-responsive rounded-lg border transition-all duration-200 overflow-hidden ${
+    <div 
+      ref={cardRef}
+      className={`relative p-responsive rounded-xl border transition-all duration-300 overflow-hidden ${
       isEasterEgg 
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
-        : 'border-border bg-card/50 backdrop-blur-sm hover:shadow-lg hover:border-primary/20'
+        : result.isAiGenerated
+          ? `bg-gradient-to-br from-purple-500/10 to-purple-400/5 border-purple-500/20 
+             hover:from-purple-500/20 hover:to-purple-400/10 hover:shadow-lg hover:shadow-purple-500/10 
+             hover:border-purple-400/40 ${isHighlighted ? 'from-purple-500/20 to-purple-400/10 shadow-lg shadow-purple-500/10 border-purple-400/40' : ''}`
+          : `bg-gradient-to-br from-blue-500/10 to-blue-400/5 border-blue-500/20 
+             hover:from-blue-500/20 hover:to-blue-400/10 hover:shadow-lg hover:shadow-blue-500/10 
+             hover:border-blue-400/40 ${isHighlighted ? 'from-blue-500/20 to-blue-400/10 shadow-lg shadow-blue-500/10 border-blue-400/40' : ''}`
     }`}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3">
         <StatusBadge status={verification.status} />
