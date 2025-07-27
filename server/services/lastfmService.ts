@@ -322,7 +322,7 @@ export class LastFmService {
       reggae: ['island', 'rhythm', 'roots', 'natural', 'peaceful', 'spiritual'],
       punk: ['raw', 'rebel', 'fast', 'loud', 'street', 'underground', 'riot'],
       indie: ['alternative', 'underground', 'creative', 'unique', 'artisan'],
-      country: ['rural', 'heartland', 'honest', 'simple', 'genuine', 'southern'],
+      country: ['rural', 'heartland', 'honest', 'simple', 'genuine', 'southern', 'cowboy', 'ranch', 'rodeo', 'barn', 'whiskey', 'boots', 'truck', 'dirt', 'road', 'spur', 'saddle', 'rusty', 'dusty', 'outlaw', 'lonesome', 'prairie', 'creek', 'trail', 'honky', 'tonk', 'fiddle', 'banjo'],
       hiphop: ['urban', 'street', 'rhythm', 'flow', 'beat', 'real', 'underground'],
       alternative: ['different', 'unique', 'alternative', 'independent', 'creative']
     };
