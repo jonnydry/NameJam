@@ -89,6 +89,17 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Differentiated Logic**: Stricter verification for bands (unique names required) vs more lenient for songs (shared titles allowed)
 - **Verification Links**: Includes direct Spotify search links for manual verification
 
+### ConceptNet Integration Service
+- **Location**: `server/services/conceptNetService.ts`
+- **Purpose**: Enhances name generation with semantic knowledge and conceptual associations
+- **Features**:
+  - **Conceptual Relationships**: Finds semantically related words using common-sense knowledge
+  - **Emotional Associations**: Discovers emotional connections for mood-based generation
+  - **Genre Associations**: Maps genres to culturally relevant concepts and vocabulary
+  - **Cultural Connections**: Identifies cultural and contextual relationships between words
+- **Integration**: Works alongside Datamuse, Spotify, and Last.fm APIs to provide richer vocabulary
+- **AI Enhancement**: Passes conceptual examples to AI generator for better contextual understanding
+
 ### Data Storage
 - **Schema**: `shared/schema.ts` defines the database structure using Drizzle ORM
 - **Storage Interface**: `server/storage.ts` provides abstraction layer
@@ -156,7 +167,15 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 29, 2025: AI CONTEXT ENHANCEMENT & QUALITY IMPROVEMENTS**
+**Latest Update - January 29, 2025: CONCEPTNET INTEGRATION & ENHANCED CONTEXT**
+- **ConceptNet API Integration**: Added semantic knowledge graph integration to enhance both AI and non-AI name generation with conceptual associations and common-sense relationships
+- **Quadruple API Integration**: Now using Datamuse (linguistic), Spotify (music data), Last.fm (genre intelligence), and ConceptNet (semantic knowledge) for comprehensive vocabulary enhancement
+- **Enhanced AI Context**: AI now receives up to 15 contextual examples from all four APIs, including conceptual associations from ConceptNet for richer understanding
+- **Semantic Relationships**: ConceptNet provides emotionally-relevant words, genre-specific cultural associations, and unexpected but meaningful conceptual connections
+- **Improved Word Pools**: All generation functions now incorporate ConceptNet vocabulary alongside existing sources for more creative and contextually relevant results
+- **Better Quality Control**: Multi-layer filtering now includes conceptual relevance from ConceptNet, ensuring names are not just linguistically correct but also semantically meaningful
+
+**Previous Update - January 29, 2025: AI CONTEXT ENHANCEMENT & QUALITY IMPROVEMENTS**
 - **AI Context Integration**: Enhanced AI name generation to receive real artist/track names from Spotify and Last.fm APIs as context examples, providing the AI with authentic genre-specific vocabulary patterns
 - **Genre-Appropriate Filtering**: Implemented comprehensive word filtering to prevent inappropriate combinations (e.g., avoiding "cyber" for reggae, "digital" for jazz) ensuring genre authenticity
 - **Enhanced Word Selection**: Added `isGenreAppropriate` method that filters out words inappropriate for specific genres, improving contextual relevance
