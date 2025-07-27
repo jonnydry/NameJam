@@ -40,7 +40,7 @@ export class EnhancedNameGeneratorService {
     const wordSources = await this.buildContextualWordSources(mood, genre, type);
 
     let attempts = 0;
-    const maxAttempts = count * 3; // Allow extra attempts for quality control
+    const maxAttempts = count * 10; // Increase attempts to ensure we get enough names
 
     while (names.length < count && attempts < maxAttempts) {
       attempts++;
@@ -67,25 +67,27 @@ export class EnhancedNameGeneratorService {
       } catch (error) {
         secureLog.error('Enhanced generation error:', error);
       }
+    }
+    
+    // Ensure we always return the requested number of names by using fallback generation
+    while (names.length < count) {
+      const fallbackWordCount = wordCount >= 4 ? Math.floor(Math.random() * 7) + 4 : wordCount;
+      const fallbackName = this.generateFallbackName(wordSources, fallbackWordCount);
       
-      // Always attempt fallback if we still need more names
-      if (names.length < count) {
-        const fallbackWordCount = wordCount >= 4 ? Math.floor(Math.random() * 7) + 4 : wordCount;
-        const fallbackName = this.generateFallbackName(wordSources, fallbackWordCount);
-        // For "4+" option, accept any fallback with 4-10 words
-        const isFallbackValidWordCount = wordCount >= 4 ? 
-          (fallbackWordCount >= 4 && fallbackWordCount <= 10) : 
-          (fallbackWordCount === wordCount);
-        
-        if (fallbackName && isFallbackValidWordCount && this.isValidName(fallbackName, fallbackWordCount) && !names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
-          this.trackWords(fallbackName);
-          names.push({ 
-            name: fallbackName, 
-            isAiGenerated: false, 
-            source: 'fallback' 
-          });
-          secureLog.debug(`✅ Generated fallback name: "${fallbackName}" (${fallbackWordCount} words)`);
-        }
+      // For "4+" option, accept any fallback with 4-10 words
+      const isFallbackValidWordCount = wordCount >= 4 ? 
+        (fallbackWordCount >= 4 && fallbackWordCount <= 10) : 
+        (fallbackWordCount === wordCount);
+      
+      if (fallbackName && isFallbackValidWordCount && !names.find(n => n.name === fallbackName)) {
+        // Skip recent word check for final fallbacks to ensure we get results
+        this.trackWords(fallbackName);
+        names.push({ 
+          name: fallbackName, 
+          isAiGenerated: false, 
+          source: 'fallback' 
+        });
+        secureLog.debug(`✅ Generated fallback name: "${fallbackName}" (${fallbackWordCount} words)`);
       }
     }
 
@@ -297,15 +299,38 @@ export class EnhancedNameGeneratorService {
 
     } catch (error) {
       secureLog.error('Error building word sources:', error);
-      // Provide poetic fallback words
-      sources.adjectives = ['midnight', 'velvet', 'silver', 'wild', 'burning'];
-      sources.nouns = ['moon', 'thunder', 'shadow', 'ocean', 'dream'];
-      sources.verbs = ['dance', 'whisper', 'ignite', 'soar', 'shatter'];
-      sources.musicalTerms = ['echo', 'melody', 'rhythm', 'harmony', 'silence'];
-      sources.genreTerms = [];
-      sources.lastfmWords = [];
-      sources.spotifyWords = [];
-      sources.conceptNetWords = [];
+    }
+    
+    // Always ensure we have a minimum word pool with high-quality words
+    if (sources.adjectives.length < 20) {
+      const fallbackAdjectives = [
+        'midnight', 'velvet', 'silver', 'wild', 'burning', 'frozen', 'electric',
+        'ancient', 'golden', 'crimson', 'eternal', 'mystic', 'savage', 'sacred',
+        'haunted', 'distant', 'broken', 'endless', 'silent', 'hidden', 'forgotten'
+      ];
+      sources.adjectives.push(...fallbackAdjectives.filter(w => !sources.adjectives.includes(w)));
+    }
+    
+    if (sources.nouns.length < 20) {
+      const fallbackNouns = [
+        'moon', 'thunder', 'shadow', 'ocean', 'dream', 'fire', 'storm', 'night',
+        'soul', 'heart', 'sky', 'star', 'wind', 'rain', 'sun', 'light', 'darkness',
+        'echo', 'spirit', 'ghost', 'phoenix', 'dragon', 'wolf', 'raven', 'serpent'
+      ];
+      sources.nouns.push(...fallbackNouns.filter(w => !sources.nouns.includes(w)));
+    }
+    
+    if (sources.verbs.length < 10) {
+      const fallbackVerbs = [
+        'dance', 'whisper', 'ignite', 'soar', 'shatter', 'break', 'burn', 'fall',
+        'rise', 'scream', 'bleed', 'shine', 'fade', 'roar', 'sing'
+      ];
+      sources.verbs.push(...fallbackVerbs.filter(w => !sources.verbs.includes(w)));
+    }
+    
+    if (sources.musicalTerms.length < 5) {
+      const fallbackMusicalTerms = ['echo', 'melody', 'rhythm', 'harmony', 'silence', 'symphony', 'chorus'];
+      sources.musicalTerms.push(...fallbackMusicalTerms.filter(w => !sources.musicalTerms.includes(w)));
     }
 
     return sources;
@@ -1342,11 +1367,16 @@ export class EnhancedNameGeneratorService {
       'electron', 'proton', 'neutron', 'molecule', 'isotope',
       'chromatography', 'spectroscopy', 'titration', 'enzyme',
       'oxidation', 'catalyst', 'polymer', 'algorithm',
+      'wavelength', 'equation', 'frequency', 'amplitude',
+      'quantum', 'particle', 'radiation', 'nucleus',
       // Business/corporate
       'corporate', 'executive', 'manager', 'revenue', 'profit',
       'dividend', 'shareholder', 'employee', 'supervisor',
       // Avoid self-referential music words
-      'music', 'band', 'group', 'song', 'tune'
+      'music', 'band', 'group', 'song', 'tune',
+      // Weird/unusual words from recent results
+      'reaper', 'currents', 'shift', 'line', 'dress',
+      'engine', 'rock', 'rise', 'loved', 'touched'
     ];
     
     const lowerWord = word.toLowerCase();
