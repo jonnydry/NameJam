@@ -24,7 +24,7 @@ export function Landing() {
               </div>
             </div>
             <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8">
-              Generate unique band names, song titles, set lists, and lyrical inspiration
+              Create band names with 1-10 words, full setlists, and opening lyrics powered by real music data
             </p>
           </div>
 
@@ -36,8 +36,8 @@ export function Landing() {
                   <Zap className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Datamuse-Powered Names</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Revolutionary linguistic engine with 300,000+ authentic word relationships</p>
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Quadruple API Intelligence</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Datamuse linguistics + Spotify data + Last.fm genres + ConceptNet semantics for unmatched authenticity</p>
                 </div>
               </div>
             </div>
@@ -47,8 +47,8 @@ export function Landing() {
                   <ListMusic className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Professional Set Lists</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Organized performance lists with Spotify verification and AI band names</p>
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Smart Set Lists</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Auto-organized 8 or 16-song performances with real-time verification and AI band naming</p>
                 </div>
               </div>
             </div>
@@ -58,8 +58,8 @@ export function Landing() {
                   <NotebookPen className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Enhanced Lyrics</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Genre-specific lyrical starters enriched with contextual vocabulary</p>
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Lyric Sparks</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">AI-powered opening lines with authentic genre vocabulary from real artist data</p>
                 </div>
               </div>
             </div>
@@ -69,8 +69,8 @@ export function Landing() {
                   <Brain className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Hybrid AI System</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">50/50 XAI Grok + Datamuse split with anti-repetition technology</p>
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Genre-Perfect AI</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Learns from 15+ real artist examples per genre to create names that truly fit your style</p>
                 </div>
               </div>
             </div>
@@ -80,8 +80,8 @@ export function Landing() {
                   <Archive className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Advanced Stash</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Save names, lyrics, bios, and setlists with 5-star ratings</p>
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Organized Stash</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Rate, sort, and export your favorites - names, setlists, lyrics, and edgy band bios</p>
                 </div>
               </div>
             </div>
@@ -91,8 +91,8 @@ export function Landing() {
                   <Music className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Spotify Priority</h3>
-                  <p className="text-base text-muted-foreground/90 leading-relaxed">Real-time availability with popularity scores and direct search links</p>
+                  <h3 className="font-bold text-lg mb-2 font-mono text-foreground">Instant Verification</h3>
+                  <p className="text-base text-muted-foreground/90 leading-relaxed">Check availability across Spotify, YouTube & Google with one click - know what's taken instantly</p>
                 </div>
               </div>
             </div>
