@@ -298,7 +298,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
           songs.push({
             id: i + 1,
             name: songName,
-            verification
+            verification,
+            isAiGenerated: songNameObj.isAiGenerated || false
           });
         } catch (err) {
           // Generate a simple fallback name using basic word combination
@@ -314,7 +315,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
           songs.push({
             id: i + 1,
             name: fallbackName,
-            verification
+            verification,
+            isAiGenerated: false
           });
         }
       }

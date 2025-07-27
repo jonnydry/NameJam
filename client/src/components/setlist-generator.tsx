@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Copy, Music, RefreshCw, ListMusic, Heart, ExternalLink, Lightbulb, Bookmark } from 'lucide-react';
+import { Copy, Music, RefreshCw, ListMusic, Heart, ExternalLink, Lightbulb, Bookmark, Brain } from 'lucide-react';
 import { LoadingAnimation } from './loading-animation';
 import { useStash } from '@/hooks/use-stash';
 import { useToast } from '@/hooks/use-toast';
@@ -136,7 +136,7 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
       type: 'song',
       wordCount: song.name.split(' ').length,
       verification: song.verification,
-      isAiGenerated: false, // Setlist songs are always traditional generation
+      isAiGenerated: song.isAiGenerated || false,
     });
     
     if (action === 'added' && success) {
@@ -220,8 +220,15 @@ export function SetListGenerator({ onCopy }: SetListGeneratorProps) {
       <CardContent className="p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex-1">
-            <h3 className="font-semibold text-base sm:text-lg">{song.name}</h3>
-            <div className="flex flex-wrap items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-semibold text-base sm:text-lg">{song.name}</h3>
+              {song.isAiGenerated && (
+                <span title="AI Generated">
+                  <Brain className="h-4 w-4 text-purple-500" />
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline" className="text-xs">
                 {setName}
               </Badge>
