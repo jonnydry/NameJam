@@ -247,15 +247,21 @@ export class EnhancedNameGeneratorService {
       sensory: ['light', 'sound', 'touch']
     };
     
-    // Add mood-specific seeds
+    // Add mood-specific seeds (comprehensive for all moods)
     if (mood) {
       const moodSeeds: Record<string, { emotional: string[], sensory: string[] }> = {
-        dark: { emotional: ['shadow', 'void', 'abyss'], sensory: ['darkness', 'silence', 'cold'] },
-        bright: { emotional: ['joy', 'light', 'hope'], sensory: ['sunshine', 'warmth', 'glow'] },
-        energetic: { emotional: ['fire', 'electric', 'surge'], sensory: ['thunder', 'spark', 'blast'] },
-        melancholy: { emotional: ['sorrow', 'longing', 'rain'], sensory: ['mist', 'twilight', 'echo'] },
-        mysterious: { emotional: ['enigma', 'secret', 'mystic'], sensory: ['fog', 'whisper', 'veil'] },
-        ethereal: { emotional: ['dream', 'celestial', 'spirit'], sensory: ['starlight', 'breath', 'shimmer'] }
+        dark: { emotional: ['shadow', 'void', 'abyss', 'doom', 'despair', 'nightmare'], sensory: ['darkness', 'silence', 'cold', 'blackness', 'emptiness', 'chill'] },
+        bright: { emotional: ['joy', 'light', 'hope', 'bliss', 'radiance', 'happiness'], sensory: ['sunshine', 'warmth', 'glow', 'brilliance', 'sparkle', 'luminance'] },
+        energetic: { emotional: ['fire', 'electric', 'surge', 'power', 'force', 'vitality'], sensory: ['thunder', 'spark', 'blast', 'lightning', 'explosion', 'rush'] },
+        melancholy: { emotional: ['sorrow', 'longing', 'rain', 'grief', 'yearning', 'regret'], sensory: ['mist', 'twilight', 'echo', 'drizzle', 'fog', 'dusk'] },
+        mysterious: { emotional: ['enigma', 'secret', 'mystic', 'riddle', 'unknown', 'puzzle'], sensory: ['fog', 'whisper', 'veil', 'shadow', 'haze', 'obscurity'] },
+        ethereal: { emotional: ['dream', 'celestial', 'spirit', 'transcendent', 'divine', 'sublime'], sensory: ['starlight', 'breath', 'shimmer', 'mist', 'glow', 'radiance'] },
+        aggressive: { emotional: ['rage', 'fury', 'wrath', 'anger', 'violence', 'hatred'], sensory: ['crash', 'roar', 'scream', 'smash', 'crush', 'pound'] },
+        peaceful: { emotional: ['calm', 'tranquil', 'serene', 'gentle', 'quiet', 'harmony'], sensory: ['breeze', 'water', 'soft', 'flow', 'hush', 'stillness'] },
+        nostalgic: { emotional: ['memory', 'past', 'remembrance', 'yesterday', 'youth', 'history'], sensory: ['sepia', 'vintage', 'faded', 'worn', 'aged', 'classic'] },
+        futuristic: { emotional: ['tomorrow', 'evolution', 'progress', 'innovation', 'advance', 'destiny'], sensory: ['chrome', 'neon', 'laser', 'digital', 'hologram', 'quantum'] },
+        romantic: { emotional: ['love', 'passion', 'desire', 'heart', 'romance', 'devotion'], sensory: ['rose', 'silk', 'velvet', 'candlelight', 'moonlight', 'caress'] },
+        epic: { emotional: ['legend', 'hero', 'glory', 'triumph', 'saga', 'destiny'], sensory: ['thunder', 'mountain', 'horizon', 'vastness', 'grandeur', 'majesty'] }
       };
       
       if (moodSeeds[mood]) {
@@ -267,20 +273,20 @@ export class EnhancedNameGeneratorService {
     // Add genre-specific seeds
     if (genre) {
       const genreSeeds: Record<string, string[]> = {
-        rock: ['thunder', 'steel', 'storm', 'rebel'],
-        metal: ['iron', 'chaos', 'inferno', 'rage'],
-        electronic: ['neon', 'pulse', 'digital', 'circuit'],
-        jazz: ['blue', 'smoke', 'velvet', 'midnight'],
-        folk: ['river', 'mountain', 'home', 'story'],
-        indie: ['dream', 'city', 'youth', 'wonder'],
-        pop: ['bubble', 'sparkle', 'sugar', 'rainbow', 'shine', 'glitter'],
+        rock: ['thunder', 'steel', 'storm', 'rebel', 'power', 'edge', 'fury', 'lightning', 'roar', 'anthem', 'concrete', 'velocity', 'avalanche', 'hurricane', 'volcano', 'earthquake'],
+        metal: ['iron', 'chaos', 'inferno', 'rage', 'darkness', 'doom', 'brutal', 'apocalypse', 'carnage', 'venom', 'serpent', 'torment', 'blade', 'skull', 'demon', 'throne'],
+        electronic: ['neon', 'pulse', 'digital', 'circuit', 'synth', 'cyber', 'matrix', 'laser', 'binary', 'quantum', 'pixel', 'voltage', 'frequency', 'techno', 'bass', 'glitch'],
+        jazz: ['blue', 'smoke', 'velvet', 'midnight', 'swing', 'sax', 'bourbon', 'groove', 'cool', 'bebop', 'smooth', 'brass', 'rhythm', 'note', 'club', 'lounge'],
+        folk: ['river', 'mountain', 'home', 'story', 'wood', 'meadow', 'valley', 'harvest', 'journey', 'tradition', 'cabin', 'campfire', 'wanderer', 'trail', 'autumn', 'oak'],
+        indie: ['dream', 'city', 'youth', 'wonder', 'coffee', 'vintage', 'bicycle', 'sunset', 'rooftop', 'streetlight', 'notebook', 'polaroid', 'thrift', 'vinyl', 'bedroom', 'nostalgia'],
+        pop: ['bubble', 'sparkle', 'sugar', 'rainbow', 'shine', 'glitter', 'candy', 'neon', 'dance', 'summer', 'beach', 'party', 'diamond', 'star', 'magic', 'bright'],
         country: ['dust', 'road', 'whiskey', 'boots', 'truck', 'ranch', 'barn', 'field', 'fence', 'saddle', 'creek', 'honky-tonk', 'backroad', 'dixie', 'heartland', 'holler'],
-        blues: ['muddy', 'crossroads', 'train', 'bottle'],
-        reggae: ['island', 'roots', 'sun', 'peace'],
-        punk: ['riot', 'anarchy', 'crash', 'rebel'],
-        hip_hop: ['street', 'flow', 'beat', 'rhyme'],
-        classical: ['symphony', 'sonata', 'aria', 'opus'],
-        alternative: ['strange', 'echo', 'mirror', 'twisted']
+        blues: ['muddy', 'crossroads', 'train', 'bottle', 'mississippi', 'harmonica', 'chain', 'mojo', 'gravel', 'freight', 'levee', 'juke', 'hobo', 'rambler', 'twelve-bar', 'soul'],
+        reggae: ['island', 'roots', 'sun', 'peace', 'dread', 'babylon', 'zion', 'irie', 'riddim', 'dub', 'ganja', 'rastafari', 'kingston', 'yard', 'sound-system', 'vibration'],
+        punk: ['riot', 'anarchy', 'crash', 'rebel', 'chaos', 'spit', 'scream', 'destroy', 'noise', 'underground', 'mohawk', 'safety-pin', 'graffiti', 'DIY', 'revolution', 'clash'],
+        hip_hop: ['street', 'flow', 'beat', 'rhyme', 'cipher', 'grind', 'hustle', 'hood', 'block', 'boom', 'scratch', 'sample', 'turntable', 'mic', 'freestyle', 'breakbeat'],
+        classical: ['symphony', 'sonata', 'aria', 'opus', 'concerto', 'crescendo', 'allegro', 'baroque', 'chamber', 'fugue', 'prelude', 'nocturne', 'waltz', 'minuet', 'adagio', 'forte'],
+        alternative: ['strange', 'echo', 'mirror', 'twisted', 'void', 'static', 'distortion', 'feedback', 'experimental', 'underground', 'abstract', 'surreal', 'chaos', 'raw', 'unpolished', 'edge']
       };
       
       if (genreSeeds[genre]) {
@@ -295,13 +301,29 @@ export class EnhancedNameGeneratorService {
   private getAdjectiveSeeds(mood?: string, genre?: string): string[] {
     const baseSeeds = ['moon', 'fire', 'ocean', 'night', 'dream'];
     
-    if (mood === 'dark') return ['shadow', 'void', 'storm', 'midnight'];
-    if (mood === 'bright') return ['sun', 'crystal', 'gold', 'diamond'];
-    if (mood === 'energetic') return ['electric', 'wild', 'explosive', 'fierce'];
+    // Mood-specific adjective seeds
+    if (mood === 'dark') return ['shadow', 'void', 'storm', 'midnight', 'black', 'grim'];
+    if (mood === 'bright') return ['sun', 'crystal', 'gold', 'diamond', 'radiant', 'luminous'];
+    if (mood === 'energetic') return ['electric', 'wild', 'explosive', 'fierce', 'dynamic', 'kinetic'];
+    if (mood === 'melancholy') return ['rain', 'gray', 'autumn', 'fading', 'distant', 'wistful'];
+    if (mood === 'mysterious') return ['shadow', 'hidden', 'cryptic', 'veiled', 'enigmatic', 'mystic'];
+    if (mood === 'ethereal') return ['celestial', 'floating', 'transparent', 'gossamer', 'delicate', 'sublime'];
     
-    if (genre === 'rock') return ['thunder', 'steel', 'raw', 'rebel'];
-    if (genre === 'electronic') return ['neon', 'digital', 'pulse', 'laser'];
-    if (genre === 'country') return ['truck', 'barn', 'field', 'whiskey', 'ranch', 'dirt'];
+    // Genre-specific adjective seeds
+    if (genre === 'rock') return ['thunder', 'steel', 'raw', 'rebel', 'heavy', 'loud'];
+    if (genre === 'metal') return ['dark', 'brutal', 'savage', 'infernal', 'demonic', 'apocalyptic'];
+    if (genre === 'electronic') return ['neon', 'digital', 'pulse', 'laser', 'synthetic', 'cybernetic'];
+    if (genre === 'jazz') return ['smooth', 'sultry', 'cool', 'blue', 'mellow', 'swinging'];
+    if (genre === 'folk') return ['wooden', 'earthy', 'homespun', 'rustic', 'weathered', 'natural'];
+    if (genre === 'indie') return ['quirky', 'vintage', 'dreamy', 'nostalgic', 'lo-fi', 'authentic'];
+    if (genre === 'pop') return ['bright', 'catchy', 'bubbly', 'sweet', 'glossy', 'sparkling'];
+    if (genre === 'country') return ['dusty', 'lonesome', 'rugged', 'homegrown', 'southern', 'weathered'];
+    if (genre === 'blues') return ['muddy', 'lonesome', 'weary', 'soulful', 'gritty', 'raw'];
+    if (genre === 'reggae') return ['irie', 'rootsy', 'tropical', 'peaceful', 'conscious', 'dread'];
+    if (genre === 'punk') return ['raw', 'angry', 'chaotic', 'anarchic', 'rebellious', 'underground'];
+    if (genre === 'hip_hop') return ['street', 'fresh', 'urban', 'underground', 'real', 'flow'];
+    if (genre === 'classical') return ['elegant', 'refined', 'majestic', 'baroque', 'romantic', 'grand'];
+    if (genre === 'alternative') return ['strange', 'experimental', 'abstract', 'unorthodox', 'surreal', 'avant-garde'];
     
     return baseSeeds;
   }
@@ -310,13 +332,29 @@ export class EnhancedNameGeneratorService {
   private getNounSeeds(mood?: string, genre?: string): string[] {
     const baseSeeds = ['heart', 'soul', 'sky', 'star', 'wave'];
     
-    if (mood === 'dark') return ['shadow', 'abyss', 'ghost', 'raven'];
-    if (mood === 'bright') return ['light', 'rainbow', 'sunrise', 'crystal'];
-    if (mood === 'mysterious') return ['enigma', 'phantom', 'oracle', 'maze'];
+    // Mood-specific noun seeds
+    if (mood === 'dark') return ['shadow', 'abyss', 'ghost', 'raven', 'void', 'nightmare'];
+    if (mood === 'bright') return ['light', 'rainbow', 'sunrise', 'crystal', 'sunshine', 'beacon'];
+    if (mood === 'mysterious') return ['enigma', 'phantom', 'oracle', 'maze', 'riddle', 'secret'];
+    if (mood === 'melancholy') return ['rain', 'tears', 'sorrow', 'memory', 'echo', 'twilight'];
+    if (mood === 'energetic') return ['storm', 'lightning', 'thunder', 'fire', 'explosion', 'surge'];
+    if (mood === 'ethereal') return ['mist', 'dream', 'spirit', 'angel', 'aurora', 'starlight'];
     
-    if (genre === 'metal') return ['blade', 'iron', 'demon', 'throne'];
-    if (genre === 'folk') return ['river', 'tree', 'home', 'road'];
+    // Genre-specific noun seeds
+    if (genre === 'rock') return ['thunder', 'guitar', 'stage', 'anthem', 'rebel', 'highway'];
+    if (genre === 'metal') return ['blade', 'iron', 'demon', 'throne', 'apocalypse', 'inferno'];
+    if (genre === 'electronic') return ['circuit', 'pulse', 'synth', 'matrix', 'laser', 'bass'];
+    if (genre === 'jazz') return ['saxophone', 'club', 'blues', 'groove', 'note', 'rhythm'];
+    if (genre === 'folk') return ['river', 'tree', 'home', 'road', 'story', 'mountain'];
+    if (genre === 'indie') return ['city', 'coffee', 'bicycle', 'rooftop', 'record', 'dream'];
+    if (genre === 'pop') return ['star', 'dance', 'party', 'summer', 'love', 'magic'];
     if (genre === 'country') return ['truck', 'road', 'farm', 'cowboy', 'boots', 'saddle'];
+    if (genre === 'blues') return ['crossroads', 'train', 'bottle', 'soul', 'harmonica', 'mississippi'];
+    if (genre === 'reggae') return ['island', 'roots', 'sun', 'babylon', 'zion', 'vibration'];
+    if (genre === 'punk') return ['riot', 'anarchy', 'street', 'revolution', 'noise', 'clash'];
+    if (genre === 'hip_hop') return ['street', 'beat', 'flow', 'cipher', 'mic', 'turntable'];
+    if (genre === 'classical') return ['symphony', 'orchestra', 'concerto', 'aria', 'sonata', 'opus'];
+    if (genre === 'alternative') return ['echo', 'mirror', 'void', 'static', 'feedback', 'distortion'];
     
     return baseSeeds;
   }
@@ -1037,12 +1075,20 @@ export class EnhancedNameGeneratorService {
   // Helper methods for Last.fm integration
 
   /**
-   * Create enhanced word pool prioritizing Last.fm genre data
+   * Create enhanced word pool prioritizing genre/mood specific data
    */
   private createEnhancedWordPool(genreWords: string[], fallbackWords: string[], filter?: (w: string) => boolean): string[] {
     const filtered = filter ? genreWords.filter(filter) : genreWords;
-    // Combine with 30% of fallback words for variety
-    const fallbackSelection = fallbackWords.slice(0, Math.floor(fallbackWords.length * 0.3));
+    const fallbackFiltered = filter ? fallbackWords.filter(filter) : fallbackWords;
+    
+    // Prioritize genre-specific words first
+    const genreSet = new Set(filtered);
+    
+    // Add only non-duplicate fallback words for variety (30% of total)
+    const uniqueFallbacks = fallbackFiltered.filter(w => !genreSet.has(w));
+    const fallbackSelection = uniqueFallbacks.slice(0, Math.floor(uniqueFallbacks.length * 0.3));
+    
+    // Return combined pool with genre words having priority
     return [...filtered, ...fallbackSelection];
   }
 
