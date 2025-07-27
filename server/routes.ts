@@ -155,7 +155,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
             id: storedName?.id || null,
             name: nameResult.name,
             type: request.type,
-            wordCount: request.wordCount,
+            wordCount: nameResult.name.split(/\s+/).length, // Use actual word count instead of requested
             isAiGenerated: nameResult.isAiGenerated,
             verification
           };
