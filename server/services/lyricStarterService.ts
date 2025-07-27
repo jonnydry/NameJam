@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
 import { DatamuseService } from './datamuseService';
+import { secureLog } from '../utils/secureLogger';
 
 export class LyricStarterService {
   private openai: OpenAI | null = null;
@@ -18,7 +19,7 @@ export class LyricStarterService {
           apiKey: process.env.XAI_API_KEY
         });
       } catch (error) {
-        console.log("Failed to initialize OpenAI client for lyric generation:", error);
+        secureLog.error("Failed to initialize OpenAI client for lyric generation:", error);
         this.openai = null;
       }
     }
@@ -37,7 +38,7 @@ export class LyricStarterService {
     
     for (const model of models) {
       try {
-        console.log(`Attempting lyric generation with model: ${model}`);
+        secureLog.debug(`Attempting lyric generation with model: ${model}`);
         const timestamp = Date.now();
         
         // Song structure elements
@@ -137,7 +138,7 @@ Always respond with a JSON object containing the lyric.`
                 .replace(/^["'""']|["'""']$/g, '')
                 .trim();
               
-              console.log(`Successfully generated lyric: "${cleanLyric}" using model: ${model} with Datamuse context`);
+              secureLog.info(`Successfully generated lyric: "${cleanLyric}" using model: ${model} with Datamuse context`);
               return {
                 lyric: cleanLyric,
                 model: model,
@@ -145,7 +146,7 @@ Always respond with a JSON object containing the lyric.`
               };
             }
           } catch (parseError) {
-            console.log(`Failed to parse JSON response from ${model}:`, parseError);
+            secureLog.error(`Failed to parse JSON response from ${model}:`, parseError);
             // Try to extract lyric from plain text response as fallback
             if (generatedResponse.length > 5 && generatedResponse.length < 200) {
               const cleanLyric = generatedResponse
@@ -162,7 +163,7 @@ Always respond with a JSON object containing the lyric.`
           }
         }
       } catch (error: any) {
-        console.log(`Model ${model} failed:`, error.message);
+        secureLog.error(`Model ${model} failed:`, error.message);
       }
     }
 
@@ -291,10 +292,10 @@ Always respond with a JSON object containing the lyric.`
         ...context.associatedWords
       ]);
       
-      console.log(`🎵 Enhanced Datamuse context for ${genre || 'contemporary'}: ${allWords.size} unique words`);
+      secureLog.debug(`🎵 Enhanced Datamuse context for ${genre || 'contemporary'}: ${allWords.size} unique words`);
       
     } catch (error) {
-      console.log('Error fetching Datamuse context:', error);
+      secureLog.error('Error fetching Datamuse context:', error);
       // Return minimal context on error
     }
     
