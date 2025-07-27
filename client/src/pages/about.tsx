@@ -35,7 +35,7 @@ export default function About() {
               <div className="text-muted-foreground">
                 <p>I made this app because I thought my musician friends and I would have had fun with it in the practice room and when hanging around discussing ideas.</p>
                 <br />
-                <p>Use NAME_JAM to find inspiration, generate performance set lists, create lyrical sparks, or just jam around to brainstorm ideas and spark your next project!</p>
+                <p>Use NAME_JAM to find inspiration, create lyrical sparks, or just jam around to brainstorm ideas and spark your next project!</p>
               </div>
               
               {/* Placeholder sections */}
@@ -56,9 +56,8 @@ export default function About() {
                     <li>• <strong>Hybrid AI Integration:</strong> XAI Grok 3/4 models with custom JSON prompts for 50% AI + 50% Datamuse generation split, complete with anti-repetition filtering and model attribution</li>
                     <li>• <strong>Advanced Customization:</strong> Choose 1-6 word combinations, 12 mood themes, 14 musical genres with precise linguistic filtering and contextual word selection</li>
                     <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, enhanced with popularity scores, genres, and direct search links</li>
-                    <li>• <strong>Professional Set Lists:</strong> Generate organized performance sets (8/16 songs) with intelligent word count variation and comprehensive Spotify verification</li>
                     <li>• <strong>Enhanced Lyric Generation:</strong> Datamuse-enriched lyrical starters using genre-specific vocabulary, emotional words, rhymes, and sensory terms for authentic results</li>
-                    <li>• <strong>Advanced Stash System:</strong> Save names, setlists, lyrics, and band bios with 5-star ratings, category filtering, and comprehensive export options (text/JSON/print)</li>
+                    <li>• <strong>Advanced Stash System:</strong> Save names, lyrics, and band bios with 5-star ratings, category filtering, and comprehensive export options (text/JSON/print)</li>
                     <li>• <strong>Pure Linguistic Intelligence:</strong> Datamuse API eliminates static vocabulary for authentic language patterns with grammatical consistency and natural flow</li>
                     <li>• <strong>AI Band Bio Generator:</strong> Create hilarious, edgy R-rated band biographies with sophisticated humor and anti-formulaic storytelling using production logger system</li>
                     <li>• <strong>Performance Optimization:</strong> Major codebase cleanup removing 49 packages (~36MB), unified caching system, custom date utilities, and production-ready logging</li>
@@ -114,7 +113,7 @@ export default function About() {
                         <li>• Revolutionary Datamuse API integration replacing all static vocabulary with authentic linguistic data</li>
                         <li>• Advanced grammatical consistency engine with singular/plural agreement and natural flow optimization</li>
                         <li>• Real-time name verification with Spotify-priority checking, popularity scoring, and direct search links</li>
-                        <li>• Comprehensive stash system supporting names, setlists, lyrics, and band bios with 5-star ratings</li>
+                        <li>• Comprehensive stash system supporting names, lyrics, and band bios with 5-star ratings</li>
                         <li>• Enhanced lyric generation using Datamuse context for genre-specific vocabulary and rhyme patterns</li>
                         <li>• Production-ready codebase with major cleanup removing 49 packages and 36MB bundle reduction</li>
                         <li>• Unified caching system with NodeCache replacing duplicate verification systems</li>
