@@ -231,20 +231,20 @@ export class EnhancedNameGeneratorService {
         }).catch(error => secureLog.error('Datamuse musical words failed:', error))
       ));
       
-      // 6. Get adjectives using linguistic patterns (limit to 3 seeds)
+      // 6. Get adjectives using linguistic patterns (increase to 5 seeds for variety)
       secureLog.debug(`✨ Finding evocative adjectives...`);
-      const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre).slice(0, 3);
+      const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre).slice(0, 5);
       datamusePromises.push(...adjectiveSeeds.map(seed =>
-        this.datamuseService.findAdjectivesForNoun(seed, 10)
+        this.datamuseService.findAdjectivesForNoun(seed, 15)
           .then(adjs => {
             sources.adjectives.push(...adjs.map((w: any) => w.word));
           })
           .catch(error => secureLog.error('Datamuse adjectives failed:', error))
       ));
       
-      // 7. Get poetic nouns using associations (limit to 3 seeds)
+      // 7. Get poetic nouns using associations (increase to 5 seeds for variety)
       secureLog.debug(`🌟 Finding poetic nouns...`);
-      const nounSeeds = this.getNounSeeds(mood, genre).slice(0, 3);
+      const nounSeeds = this.getNounSeeds(mood, genre).slice(0, 5);
       datamusePromises.push(...nounSeeds.map(seed =>
         this.datamuseService.findWords({
           triggers: seed,
@@ -453,16 +453,25 @@ export class EnhancedNameGeneratorService {
   private cleanWordSources(sources: EnhancedWordSource): void {
     const seen = new Set<string>();
     
+    // Add blacklist for overused words
+    const overusedWords = new Set([
+      'brahman', 'coronary', 'transplant', 'lungs', 'italia', 'liners',
+      'military', 'disease', 'ridge', 'arms', 'tunes', 'songs'
+    ]);
+    
     // Clean each category
     for (const key of Object.keys(sources) as (keyof EnhancedWordSource)[]) {
       sources[key] = sources[key].filter(word => {
         const lower = word.toLowerCase();
-        if (seen.has(lower) || this.isProblematicWord(word) || !this.isPoeticWord(word)) {
+        if (seen.has(lower) || overusedWords.has(lower) || this.isProblematicWord(word) || !this.isPoeticWord(word)) {
           return false;
         }
         seen.add(lower);
         return true;
       });
+      
+      // Shuffle the arrays for better variety
+      sources[key] = sources[key].sort(() => Math.random() - 0.5);
     }
   }
 
@@ -962,7 +971,17 @@ export class EnhancedNameGeneratorService {
   // Helper methods
   private getRandomWord(wordArray: string[]): string | null {
     if (wordArray.length === 0) return null;
-    return wordArray[Math.floor(Math.random() * wordArray.length)];
+    
+    // Filter out problematic words first
+    const filtered = wordArray.filter(w => !this.isProblematicWord(w));
+    if (filtered.length === 0) return null;
+    
+    // Shuffle array for better randomization
+    const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+    
+    // Pick from first half to avoid always picking from same pool
+    const halfLength = Math.floor(shuffled.length / 2) || 1;
+    return shuffled[Math.floor(Math.random() * halfLength)];
   }
 
   // Function to singularize common plural nouns
@@ -1063,12 +1082,29 @@ export class EnhancedNameGeneratorService {
       // Medical terms
       'pulmonary', 'surgery', 'radius', 'medical', 'clinical',
       'surgical', 'cardiac', 'neural', 'skeletal', 'muscular',
+      'coronary', 'transplant', 'lungs', 'kidney', 'liver',
+      'artery', 'vein', 'organ', 'disease', 'syndrome',
+      'diagnosis', 'prognosis', 'therapy', 'treatment',
+      // Religious/spiritual terms that appear too frequently
+      'brahman', 'brahma', 'vishnu', 'shiva', 'krishna',
+      'buddha', 'dharma', 'karma', 'nirvana', 'samsara',
       // Geographic/political
       'belgrade', 'feminism', 'minister', 'political', 'democracy',
+      'italia', 'italia', 'france', 'germany', 'spain',
+      'portugal', 'russia', 'china', 'japan', 'brazil',
+      // Technical/nautical
+      'liners', 'vessel', 'maritime', 'nautical', 'naval',
+      'submarine', 'destroyer', 'frigate', 'cruiser',
       // Sports/mundane
       'sports', 'surfing', 'surface', 'troopers', 'clay',
+      'athlete', 'player', 'coach', 'referee', 'stadium',
+      // Business/corporate
+      'corporate', 'executive', 'manager', 'supervisor',
+      'employee', 'revenue', 'profit', 'dividend', 'shareholder',
       // Other awkward words
-      'slamming', 'fugue', 'changes'
+      'slamming', 'fugue', 'changes', 'currents', 'tunes',
+      'songs', 'music', 'band', 'group', 'ensemble',
+      'ridge', 'arms', 'legs', 'limbs', 'torso'
     ];
     
     const lowerWord = word.toLowerCase();
