@@ -127,9 +127,9 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       isEasterEgg 
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
         : result.isAiGenerated
-          ? `bg-gradient-to-r from-black/90 to-gray-900/90 border-purple-500/20 
-             hover:border-purple-400/40 hover:shadow-lg hover:shadow-purple-500/10 
-             ${isHighlighted ? 'border-purple-400/40 shadow-lg shadow-purple-500/10' : ''}`
+          ? `bg-gradient-to-r from-black/90 to-gray-900/90 border-yellow-500/20 
+             hover:border-yellow-400/40 hover:shadow-lg hover:shadow-yellow-500/10 
+             ${isHighlighted ? 'border-yellow-400/40 shadow-lg shadow-yellow-500/10' : ''}`
           : `bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 
              hover:border-blue-400/40 hover:shadow-lg hover:shadow-blue-500/10 
              ${isHighlighted ? 'border-blue-400/40 shadow-lg shadow-blue-500/10' : ''}`
@@ -185,7 +185,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
           </h3>
           {result.isAiGenerated && (
             <span title="AI Generated">
-              <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 shrink-0" />
+              <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 shrink-0" />
             </span>
           )}
         </div>
