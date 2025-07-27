@@ -23,9 +23,7 @@ export function Landing() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8">
-              Create band names with 1-10 words, full setlists, and opening lyrics powered by real music data
-            </p>
+            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8">Create unique band or song names, generate a lyric to prompt your own writing, or write an imaginary setlist. Name your Jam!</p>
           </div>
 
           {/* Features Grid */}
@@ -125,7 +123,6 @@ export function Landing() {
           </div>
         </div>
       </main>
-
       {/* Footer */}
       <footer className="border-t border-border py-6">
         <div className="max-w-4xl mx-auto px-4 text-center">
