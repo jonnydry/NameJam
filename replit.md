@@ -32,7 +32,7 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Location**: `server/services/nameGenerator.ts`
 - **Purpose**: Generates creative band and song names using advanced grammatical patterns with enhanced humor and wordplay
 - **Strategy**: Uses multiple generation patterns including grammatical structures, poetic repetition, atmospheric combinations, and narrative flows
-- **Customization**: Supports different word counts (1-6 words), generation types (band/song), and thematic mood selection
+- **Customization**: Supports precise word counts (1-3 words) and dynamic "4+" option for poetic narratives (4-7 words), generation types (band/song), and thematic mood selection
 - **Advanced Logic**: For 4+ word combinations, employs varied grammatical patterns to create more natural and poetic results
 - **Pattern Types**: Article-adjective-noun structures, parallel constructions, repetitive patterns, atmospheric combinations, and narrative sequences
 - **Mood Themes**: 12 different mood options (dark, bright, mysterious, energetic, melancholy, ethereal, aggressive, peaceful, nostalgic, futuristic, romantic, epic) that filter word choices to match the desired emotional tone using focused filtering (70% mood-specific words, 30% base vocabulary)
@@ -316,6 +316,7 @@ Changelog:
 - July 24, 2025. Complete static vocabulary removal and Datamuse API integration: removed all 3,000+ static vocabulary words, replaced with Datamuse API for contextual linguistic relationships, fixed AI service to return clean names instead of JSON objects, enhanced setlist generator with quality filtering to remove scientific/technical terms (electrons, radiation, etc.), improved grammatical patterns for more natural song names, added problematic word filtering and better base word selection from Datamuse API
 - July 25, 2025. Enhanced XAI API prompt system: implemented user-requested JSON-based prompt structure for both band and song name generation with explicit mood/genre integration and exact word count enforcement, updated AI service to parse JSON responses correctly, achieved perfect integration with new prompt format generating contextually appropriate names like "Obsidian Crypt Whisper" for dark rock bands and "Fading Echoes Paint Shadows" for melancholy indie songs
 - July 25, 2025. Fixed critical generation issues: resolved duplicate word bug in AI names by switching from parallel to sequential generation, added comprehensive genre support for all music styles with specific seed words (pop: bubble/sparkle/sugar, jazz: blue/smoke/velvet), implemented grammar correction engine with singular/plural noun agreement to prevent errors like "Souls Breaking Reaper"
+- January 27, 2025. Restructured word count feature for better usability: replaced fixed 1-6 word options with "1", "2", "3", and "4+" where 4+ generates dynamic 4-7 word names with enhanced poetic structure inspired by lyric generation patterns; applied narrative flow patterns for 4-word poetic structures, 5-word narrative journeys, 6-word complete statements, and 7-word mini-stories; enhanced linguistic coherence for longer names using subject-verb relationships and prepositional phrases
 
 ## User Preferences
 
