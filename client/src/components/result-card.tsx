@@ -79,16 +79,6 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   }, []);
 
   const handleAddToStash = () => {
-    // Check if user is authenticated (guest users have null IDs)
-    if (!result.id) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to save names to your stash",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     const isCurrentlyInStash = isInStash(name, nameType);
     
     // Set animation type before triggering
