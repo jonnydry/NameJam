@@ -96,8 +96,8 @@ export class EnhancedNameGeneratorService {
       // Map moods/genres to more poetic seed words
       const poeticSeeds = this.getPoeticSeedWords(mood, genre);
       
-      // Ensure we get enough diverse words for generation
-      const minWordTarget = 20;
+      // Use Promise.allSettled for parallel API calls when possible
+      const apiPromises = [];
       
       // STEP 1: Enhanced Last.fm Integration for Genre Intelligence
       if (genre) {
@@ -252,7 +252,8 @@ export class EnhancedNameGeneratorService {
         genreTerms: sources.genreTerms.length,
         lastfmWords: sources.lastfmWords.length,
         spotifyWords: sources.spotifyWords.length,
-        total: sources.adjectives.length + sources.nouns.length + sources.verbs.length + sources.musicalTerms.length + sources.genreTerms.length + sources.lastfmWords.length + sources.spotifyWords.length
+        conceptNetWords: sources.conceptNetWords.length,
+        total: sources.adjectives.length + sources.nouns.length + sources.verbs.length + sources.musicalTerms.length + sources.genreTerms.length + sources.lastfmWords.length + sources.spotifyWords.length + sources.conceptNetWords.length
       });
 
     } catch (error) {
@@ -265,6 +266,7 @@ export class EnhancedNameGeneratorService {
       sources.genreTerms = [];
       sources.lastfmWords = [];
       sources.spotifyWords = [];
+      sources.conceptNetWords = [];
     }
 
     return sources;

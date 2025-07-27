@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
-import { logger } from '../utils/logger';
+import { secureLog } from '../utils/secureLogger';
 
 export class BandBioGeneratorService {
   private openai: OpenAI | null = null;
@@ -14,7 +14,7 @@ export class BandBioGeneratorService {
           apiKey: process.env.XAI_API_KEY
         });
       } catch (error) {
-        logger.warn("Failed to initialize OpenAI client:", error);
+        secureLog.warn("Failed to initialize OpenAI client:", error);
         this.openai = null;
       }
     }
@@ -116,7 +116,7 @@ export class BandBioGeneratorService {
         const bio = response.choices[0]?.message?.content || "";
         
         if (bio && bio.trim() !== "") {
-          logger.log(`Successfully generated bio using model: ${model}`);
+          secureLog.info(`Successfully generated bio using model: ${model}`);
           return JSON.stringify({
             bio: bio.trim(),
             model: model,
@@ -125,16 +125,16 @@ export class BandBioGeneratorService {
         }
         
         // If we get here, the model returned empty content
-        console.log(`Model ${model} returned empty content, trying next model...`);
+        secureLog.info(`Model ${model} returned empty content, trying next model...`);
         
       } catch (error: any) {
-        console.log(`Model ${model} failed:`, error.message);
+        secureLog.info(`Model ${model} failed:`, error.message);
         // Continue to next model
       }
     }
     
     // If all models fail, use fallback
-    console.log("All Grok models failed, using fallback bio generator");
+    secureLog.info("All Grok models failed, using fallback bio generator");
     const fallbackBio = this.generateFallbackBio(bandName, genre, mood);
     return JSON.stringify({
       bio: fallbackBio,
@@ -252,7 +252,7 @@ export class BandBioGeneratorService {
         const funFact = funFacts[funFactIdx];
         
         // Ensure we're not using the first items repeatedly
-        console.log(`Using indices: formation=${formationIdx}, story=${storyIdx}, funFact=${funFactIdx}`);
+        secureLog.info(`Using indices: formation=${formationIdx}, story=${storyIdx}, funFact=${funFactIdx}`);
         
         // Mix up the second paragraph for variety
         const secondParagraphs = [
@@ -300,7 +300,7 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
     
     // Ensure we pick a random structure each time
     const structureIndex = Math.floor(Math.random() * structures.length);
-    console.log(`Using bio structure ${structureIndex + 1} of ${structures.length}`);
+    secureLog.info(`Using bio structure ${structureIndex + 1} of ${structures.length}`);
     return structures[structureIndex]();
   }
   
@@ -398,15 +398,15 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
       const { setlistContext, songNames } = details;
       
       // Debug logging to see what songs we're working with
-      console.log('Generating band name from setlist with songs:', songNames);
+      secureLog.info('Generating band name from setlist with songs:', songNames);
       
       // Try each Grok model in order (Grok 3 prioritized for reliability)
       const models = ['grok-3', 'grok-4', 'grok-3-mini'];
       
       for (const model of models) {
         try {
-          console.log(`Attempting model: ${model}`);
-          console.log(`Attempting to generate band name with model: ${model}`);
+          secureLog.info(`Attempting model: ${model}`);
+          secureLog.info(`Attempting to generate band name with model: ${model}`);
           
           const prompt = `You are a music industry expert tasked with naming a band based on their complete setlist. Analyze the following song titles and create a unique, memorable band name that reflects their artistic identity.
 
@@ -483,8 +483,8 @@ Respond with ONLY the band name, nothing else.`;
           const content = response.choices[0]?.message?.content || "";
           
           if (content && content.trim() !== "") {
-            console.log(`Successfully generated band name using model: ${model}`);
-            console.log(`Raw response content: "${content}"`);
+            secureLog.info(`Successfully generated band name using model: ${model}`);
+            secureLog.info(`Raw response content: "${content}"`);
             
             // Handle different response formats based on model
             if (model === 'grok-4') {
@@ -525,11 +525,11 @@ Respond with ONLY the band name, nothing else.`;
             }
           }
           
-          console.log(`Model ${model} returned empty content, trying next model...`);
+          secureLog.info(`Model ${model} returned empty content, trying next model...`);
           
         } catch (error: any) {
-          console.log(`Model ${model} failed with error:`, error.message);
-          console.log(`Error details:`, error.response?.data || error.code || 'No additional details');
+          secureLog.info(`Model ${model} failed with error:`, error.message);
+          secureLog.info(`Error details:`, error.response?.data || error.code || 'No additional details');
           // Continue to next model
         }
       }
