@@ -128,12 +128,14 @@ export default function About() {
                 <div className="p-4 border border-solid border-border/30 rounded-lg bg-card/60 backdrop-blur-sm">
                   <h3 className="font-medium mb-2">Credits & Acknowledgments</h3>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Replit</li>
-                    <li>• xAI</li>
-                    <li>• Anthropic</li>
-                    <li>• Spotify</li>
-                    <li>• Last.fm</li>
-                    <li>• my incredibly intelligent cat, Marci ♥</li>
+                    <li>• Replit - Development platform and deployment</li>
+                    <li>• xAI - Grok AI models for creative name and bio generation</li>
+                    <li>• Datamuse API - Linguistic relationships and word associations</li>
+                    <li>• Spotify Web API - Music verification and artist data</li>
+                    <li>• Last.fm API - Genre intelligence and music metadata</li>
+                    <li>• ConceptNet API - Semantic knowledge and conceptual relationships</li>
+                    <li>• MusicBrainz API - Additional music database coverage</li>
+                    <li>• My incredibly intelligent cat, Marci ♥</li>
                     <li>• My beautiful and wonderful girlfriend Sam, who knows me better than anyone ever will ❤</li>
                   </ul>
                 </div>
