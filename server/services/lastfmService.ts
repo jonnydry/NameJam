@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Using native fetch API (available in Node.js 18+)
 import { secureLog } from '../utils/secureLogger';
 
 interface LastFmTag {
