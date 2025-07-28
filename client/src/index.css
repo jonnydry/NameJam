@@ -208,35 +208,55 @@
     animation: cursor-appear 0.1s 1.7s forwards, terminal-blink 0.8s 1.7s step-end infinite, cursor-fade 0.5s 2.5s forwards;
   }
 
-  /* Carousel card color hover effects */
+  /* Carousel card color hover effects with rounded glow */
   .carousel-card-blue:hover {
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.5) !important;
+    box-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.4),
+      0 0 40px rgba(59, 130, 246, 0.3),
+      0 0 80px rgba(59, 130, 246, 0.2),
+      0 8px 32px rgba(59, 130, 246, 0.1);
     background-color: rgba(59, 130, 246, 0.05) !important;
+    transform: translateY(-2px);
   }
   
   .carousel-card-green:hover {
-    box-shadow: 0 0 30px rgba(34, 197, 94, 0.5), 0 0 60px rgba(34, 197, 94, 0.2);
-    border-color: rgba(34, 197, 94, 0.5) !important;
+    box-shadow: 
+      0 0 20px rgba(34, 197, 94, 0.4),
+      0 0 40px rgba(34, 197, 94, 0.3),
+      0 0 80px rgba(34, 197, 94, 0.2),
+      0 8px 32px rgba(34, 197, 94, 0.1);
     background-color: rgba(34, 197, 94, 0.05) !important;
+    transform: translateY(-2px);
   }
   
   .carousel-card-yellow:hover {
-    box-shadow: 0 0 30px rgba(234, 179, 8, 0.5), 0 0 60px rgba(234, 179, 8, 0.2);
-    border-color: rgba(234, 179, 8, 0.5) !important;
+    box-shadow: 
+      0 0 20px rgba(234, 179, 8, 0.4),
+      0 0 40px rgba(234, 179, 8, 0.3),
+      0 0 80px rgba(234, 179, 8, 0.2),
+      0 8px 32px rgba(234, 179, 8, 0.1);
     background-color: rgba(234, 179, 8, 0.05) !important;
+    transform: translateY(-2px);
   }
   
   .carousel-card-orange:hover {
-    box-shadow: 0 0 30px rgba(249, 115, 22, 0.5), 0 0 60px rgba(249, 115, 22, 0.2);
-    border-color: rgba(249, 115, 22, 0.5) !important;
+    box-shadow: 
+      0 0 20px rgba(249, 115, 22, 0.4),
+      0 0 40px rgba(249, 115, 22, 0.3),
+      0 0 80px rgba(249, 115, 22, 0.2),
+      0 8px 32px rgba(249, 115, 22, 0.1);
     background-color: rgba(249, 115, 22, 0.05) !important;
+    transform: translateY(-2px);
   }
   
   .carousel-card-red:hover {
-    box-shadow: 0 0 30px rgba(239, 68, 68, 0.5), 0 0 60px rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.5) !important;
+    box-shadow: 
+      0 0 20px rgba(239, 68, 68, 0.4),
+      0 0 40px rgba(239, 68, 68, 0.3),
+      0 0 80px rgba(239, 68, 68, 0.2),
+      0 8px 32px rgba(239, 68, 68, 0.1);
     background-color: rgba(239, 68, 68, 0.05) !important;
+    transform: translateY(-2px);
   }
   
   @keyframes cursor-appear {
