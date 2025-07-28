@@ -34,7 +34,18 @@ export const generatedNames = pgTable("generated_names", {
   isAiGenerated: boolean("is_ai_generated").default(false).notNull(),
   userId: varchar("user_id"), // Link to users table, nullable for backward compatibility
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  // Index for user-specific queries
+  index("idx_generated_names_user_id").on(table.userId),
+  // Index for type-based filtering
+  index("idx_generated_names_type").on(table.type),
+  // Index for recent names ordering
+  index("idx_generated_names_created_at").on(table.createdAt),
+  // Composite index for user's recent names
+  index("idx_generated_names_user_created").on(table.userId, table.createdAt),
+  // Composite index for type + user + created queries
+  index("idx_generated_names_type_user_created").on(table.type, table.userId, table.createdAt),
+]);
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -119,7 +130,14 @@ export const errorLogs = pgTable("error_logs", {
   url: text("url"),
   userId: varchar("user_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  // Index for user-specific error queries
+  index("idx_error_logs_user_id").on(table.userId),
+  // Index for recent errors
+  index("idx_error_logs_created_at").on(table.createdAt),
+  // Composite index for user's recent errors
+  index("idx_error_logs_user_created").on(table.userId, table.createdAt),
+]);
 
 export type ErrorLog = typeof errorLogs.$inferSelect;
 export type InsertErrorLog = typeof errorLogs.$inferInsert;
