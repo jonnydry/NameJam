@@ -1,6 +1,7 @@
 import type { GenerateNameRequest } from "@shared/schema";
 import type { AINameGeneratorService } from "./aiNameGenerator";
 import { enhancedNameGenerator } from "./enhancedNameGenerator";
+import { secureLog } from "../utils/secureLogger";
 
 export class NameGeneratorService {
   private aiNameGenerator: AINameGeneratorService | null = null;
@@ -21,7 +22,7 @@ export class NameGeneratorService {
     const aiCount = Math.floor(count / 2); // Half the names from AI
     const datamuseCount = count - aiCount;
 
-    console.log(`🎯 Generating ${count} names: ${aiCount} AI + ${datamuseCount} Datamuse`);
+    secureLog.info(`🎯 Generating ${count} names: ${aiCount} AI + ${datamuseCount} Datamuse`);
 
     const results: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
 
@@ -53,9 +54,9 @@ export class NameGeneratorService {
         }));
         
         results.push(...aiResultsArray);
-        console.log(`✅ Generated ${aiResultsArray.length} AI names`);
+        secureLog.info(`✅ Generated ${aiResultsArray.length} AI names`);
       } catch (error) {
-        console.error("AI generation failed, using Datamuse fallback:", error);
+        secureLog.warn("AI generation failed, using Datamuse fallback:", error);
         // Fallback to Datamuse if AI fails
         const fallbackResults = await enhancedNameGenerator.generateEnhancedNames({
           ...request,
@@ -73,9 +74,9 @@ export class NameGeneratorService {
           count: datamuseCount
         });
         results.push(...datamuseResults);
-        console.log(`✅ Generated ${datamuseResults.length} Datamuse names`);
+        secureLog.info(`✅ Generated ${datamuseResults.length} Datamuse names`);
       } catch (error) {
-        console.error("Datamuse generation failed:", error);
+        secureLog.warn("Datamuse generation failed:", error);
         // Provide simple fallback names if both systems fail
         const fallbackNames = this.generateSimpleFallback(request.type, datamuseCount);
         results.push(...fallbackNames);
@@ -100,7 +101,7 @@ export class NameGeneratorService {
 
   // Enhanced setlist generation with AI and full feature integration
   async generateSetlistNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
-    console.log(`🎵 Generating enhanced setlist songs with AI + Datamuse + ConceptNet integration`);
+    secureLog.info(`🎵 Generating enhanced setlist songs with AI + Datamuse + ConceptNet integration`);
     
     try {
       // Use the same enhanced generation as main names but with song focus
