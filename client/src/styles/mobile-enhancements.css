@@ -2,38 +2,46 @@
 
 /* Mobile control panel improvements */
 @media (max-width: 768px) {
-  /* Better spacing for control panels */
+  /* Much more spacious control panels */
   .control-panel-mobile {
-    padding: 1rem !important;
+    padding: 1.75rem !important;
   }
   
-  /* Larger touch targets for type toggle buttons */
+  /* Larger touch targets for type toggle buttons with more spacing */
   .type-toggle-mobile {
-    min-height: 3rem;
-    padding: 0.75rem 1.5rem !important;
-    font-size: 0.875rem !important;
+    min-height: 3.25rem;
+    padding: 0.875rem 1.75rem !important;
+    font-size: 1rem !important;
+  }
+  
+  /* Space around type toggle container */
+  .type-toggle-container-mobile {
+    margin-bottom: 2rem !important;
   }
   
   /* Improved select dropdowns on mobile */
   .select-mobile {
-    min-height: 3rem !important;
-    font-size: 1rem !important;
+    min-height: 3.25rem !important;
+    font-size: 1.05rem !important;
   }
   
   .select-trigger-mobile {
-    padding: 0.75rem 1rem !important;
+    padding: 0.875rem 1.125rem !important;
   }
   
-  /* Better spacing between form elements */
+  /* Much better spacing between form elements */
   .form-row-mobile {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1.25rem;
     align-items: stretch !important;
+    margin-bottom: 1.75rem !important;
   }
   
   .form-row-mobile label {
     text-align: left;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.925rem !important;
+    font-weight: 500 !important;
   }
   
   /* Full width selects on mobile */
@@ -41,34 +49,35 @@
     width: 100% !important;
   }
   
-  /* Larger generate button */
+  /* Much larger and prominent generate button */
   .generate-button-mobile {
-    min-height: 3.5rem !important;
-    font-size: 1.125rem !important;
-    padding: 1rem 2rem !important;
+    min-height: 3.75rem !important;
+    font-size: 1.175rem !important;
+    padding: 1.125rem 2.25rem !important;
     width: 100% !important;
-    max-width: 20rem;
-    margin: 0 auto;
+    max-width: none;
+    margin: 2rem auto 1rem auto !important;
+    font-weight: 600 !important;
   }
   
-  /* Result cards mobile spacing */
+  /* Result cards mobile spacing - much more generous */
   .result-card-mobile {
-    padding: 1.25rem !important;
-    margin-bottom: 1rem !important;
+    padding: 1.75rem !important;
+    margin-bottom: 1.5rem !important;
   }
   
-  /* Larger buttons in result cards */
+  /* Larger buttons in result cards for easier tapping */
   .result-card-button-mobile {
-    min-width: 2.5rem !important;
-    min-height: 2.5rem !important;
-    padding: 0.5rem !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0.625rem !important;
   }
   
-  /* Better name display on mobile */
+  /* Better name display on mobile with more space */
   .result-name-mobile {
-    font-size: 1.25rem !important;
-    line-height: 1.5 !important;
-    margin-bottom: 0.75rem !important;
+    font-size: 1.375rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 1rem !important;
   }
   
   /* Verification links mobile formatting */
@@ -99,40 +108,63 @@
     padding: 0.75rem 1.5rem !important;
   }
   
-  /* Loading animation mobile adjustments */
+  /* Loading animation mobile adjustments with more space */
   .loading-container-mobile {
-    padding: 2rem 1rem !important;
+    padding: 2.5rem 1.5rem !important;
+    margin: 1.5rem 0 !important;
   }
   
-  /* Better spacing for mood/genre selectors */
+  /* Much better spacing for mood/genre selectors */
   .selector-group-mobile {
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 2rem !important;
   }
   
-  /* Tab content mobile padding */
+  /* Tab content mobile padding - more generous */
   .tab-content-mobile {
-    padding: 1rem !important;
+    padding: 1.5rem !important;
+  }
+  
+  /* Overall results container spacing */
+  .results-container-mobile {
+    margin-top: 2rem !important;
+    padding: 0 0.5rem !important;
+  }
+  
+  /* Main app container - better margins */
+  .app-container-mobile {
+    padding: 1rem 0.75rem 2rem 0.75rem !important;
   }
 }
 
 /* Extra small devices (phones in portrait) */
 @media (max-width: 480px) {
-  /* Even more compact for very small screens */
+  /* Still maintain generous spacing even on small screens */
   .control-panel-mobile {
-    padding: 0.75rem !important;
+    padding: 1.5rem !important;
   }
   
   .type-toggle-mobile {
-    font-size: 0.75rem !important;
-    padding: 0.625rem 1rem !important;
+    font-size: 0.925rem !important;
+    padding: 0.75rem 1.25rem !important;
   }
   
   .generate-button-mobile {
-    font-size: 1rem !important;
+    font-size: 1.125rem !important;
+    padding: 1rem 1.75rem !important;
   }
   
   .result-name-mobile {
-    font-size: 1.125rem !important;
+    font-size: 1.25rem !important;
+  }
+  
+  /* Even better form spacing on small screens */
+  .form-row-mobile {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  /* Ensure dropdowns are still spacious */
+  .select-mobile {
+    min-height: 3rem !important;
   }
 }
 
