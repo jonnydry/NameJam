@@ -1,15 +1,20 @@
 import OpenAI from "openai";
 import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
 import { DatamuseService } from './datamuseService';
+import { lastfmService } from './lastfmService';
+import { SpotifyService } from './spotifyService';
+import { conceptNetService } from './conceptNetService';
 import { secureLog } from '../utils/secureLogger';
 
 export class LyricStarterService {
   private openai: OpenAI | null = null;
   private datamuseService: DatamuseService;
+  private spotifyService: SpotifyService;
 
   constructor() {
-    // Initialize Datamuse service
+    // Initialize all API services
     this.datamuseService = new DatamuseService();
+    this.spotifyService = new SpotifyService();
     
     // Initialize OpenAI only if API key is available
     if (process.env.XAI_API_KEY) {
@@ -31,8 +36,8 @@ export class LyricStarterService {
       return this.generateFallbackLyric(genre);
     }
 
-    // Get Datamuse context for enhanced lyric generation
-    const datamuseContext = await this.getDatamuseContext(genre);
+    // Get comprehensive context from all APIs for enhanced lyric generation
+    const apiContext = await this.getComprehensiveAPIContext(genre);
     
     const models = ["grok-3", "grok-4", "grok-3-mini"];
     
@@ -89,15 +94,28 @@ export class LyricStarterService {
               poeticMeter: selectedMeter,
               rhymeScheme: selectedRhyme
             },
-            datamuseContext: {
-              genreWords: datamuseContext.genreWords.slice(0, 15),
-              emotionalWords: datamuseContext.emotionalWords.slice(0, 10),
-              rhymeWords: datamuseContext.rhymeWords.slice(0, 8),
-              sensoryWords: datamuseContext.sensoryWords.slice(0, 8),
-              tempoWords: datamuseContext.tempoWords.slice(0, 5),
-              culturalWords: datamuseContext.culturalWords.slice(0, 5),
-              contrastWords: datamuseContext.contrastWords.slice(0, 5),
-              associatedWords: datamuseContext.associatedWords.slice(0, 5)
+            apiContext: {
+              datamuse: {
+                genreWords: apiContext.datamuse.genreWords,
+                emotionalWords: apiContext.datamuse.emotionalWords,
+                rhymeWords: apiContext.datamuse.rhymeWords,
+                sensoryWords: apiContext.datamuse.sensoryWords
+              },
+              spotify: {
+                genreArtists: apiContext.spotify.genreArtists,
+                moodTracks: apiContext.spotify.moodTracks,
+                audioFeatures: apiContext.spotify.audioFeatures
+              },
+              lastfm: {
+                genreInfo: apiContext.lastfm.genreInfo,
+                topArtists: apiContext.lastfm.topArtists,
+                relatedGenres: apiContext.lastfm.relatedGenres
+              },
+              conceptnet: {
+                genreConcepts: apiContext.conceptnet.genreConcepts,
+                emotionalConcepts: apiContext.conceptnet.emotionalConcepts,
+                culturalAssociations: apiContext.conceptnet.culturalAssociations
+              }
             },
             styleGuidelines: {
               tone: currentSection === 'chorus' ? 'anthemic_memorable' : 
@@ -132,7 +150,11 @@ CRITICAL INSTRUCTIONS:
 3. Implement rhyme scheme "${selectedRhyme}" (${spec.lines > 1 ? 'end rhymes for multi-line' : 'internal rhyme for single line'})
 4. Keep each line between ${spec.wordsPerLine[0]}-${spec.wordsPerLine[1]} words
 5. Total syllable count should be ${spec.totalSyllables[0]}-${spec.totalSyllables[1]}
-6. Blend Datamuse context words naturally - don't force them
+6. Use the rich API context provided:
+   - Datamuse: Linguistic patterns and rhyme words for natural flow
+   - Spotify: Real artist names and track titles for authentic vocabulary
+   - Last.fm: Genre characteristics and cultural context
+   - ConceptNet: Semantic associations for deeper meaning
 7. Match the tone "${jsonPrompt.parameters.styleGuidelines.tone}" for ${currentSection}
 
 FORMATTING:
@@ -307,6 +329,207 @@ QUALITY STANDARDS:
       model: 'fallback',
       songSection: section
     };
+  }
+
+  private async getComprehensiveAPIContext(genre?: string): Promise<{
+    datamuse: {
+      genreWords: string[];
+      emotionalWords: string[];
+      rhymeWords: string[];
+      sensoryWords: string[];
+    };
+    spotify: {
+      genreArtists: string[];
+      moodTracks: string[];
+      audioFeatures: any;
+    };
+    lastfm: {
+      genreInfo: any;
+      topArtists: string[];
+      relatedGenres: string[];
+    };
+    conceptnet: {
+      genreConcepts: string[];
+      emotionalConcepts: string[];
+      culturalAssociations: string[];
+    };
+  }> {
+    const context = {
+      datamuse: {
+        genreWords: [] as string[],
+        emotionalWords: [] as string[],
+        rhymeWords: [] as string[],
+        sensoryWords: [] as string[]
+      },
+      spotify: {
+        genreArtists: [] as string[],
+        moodTracks: [] as string[],
+        audioFeatures: null as any
+      },
+      lastfm: {
+        genreInfo: null as any,
+        topArtists: [] as string[],
+        relatedGenres: [] as string[]
+      },
+      conceptnet: {
+        genreConcepts: [] as string[],
+        emotionalConcepts: [] as string[],
+        culturalAssociations: [] as string[]
+      }
+    };
+
+    try {
+      // Execute all API calls in parallel for better performance
+      const apiPromises = [];
+
+      // 1. Datamuse context (original implementation)
+      apiPromises.push(this.fetchDatamuseContext(genre || 'contemporary', context));
+
+      // 2. Spotify context for authentic music industry vocabulary
+      if (genre) {
+        apiPromises.push(this.fetchSpotifyContext(genre, context));
+      }
+
+      // 3. Last.fm context for genre intelligence
+      if (genre) {
+        apiPromises.push(this.fetchLastFmContext(genre, context));
+      }
+
+      // 4. ConceptNet context for semantic associations
+      if (genre) {
+        apiPromises.push(this.fetchConceptNetContext(genre, context));
+      }
+
+      // Execute all API calls concurrently
+      await Promise.allSettled(apiPromises);
+
+      const totalWords = [
+        ...context.datamuse.genreWords,
+        ...context.datamuse.emotionalWords,
+        ...context.datamuse.rhymeWords,
+        ...context.datamuse.sensoryWords,
+        ...context.spotify.genreArtists,
+        ...context.spotify.moodTracks,
+        ...context.lastfm.topArtists,
+        ...context.lastfm.relatedGenres,
+        ...context.conceptnet.genreConcepts,
+        ...context.conceptnet.emotionalConcepts,
+        ...context.conceptnet.culturalAssociations
+      ].filter(Boolean);
+
+      secureLog.debug(`🎵 Comprehensive API context for ${genre || 'contemporary'}: ${totalWords.length} total vocabulary items from all APIs`);
+
+    } catch (error) {
+      secureLog.error('Error fetching comprehensive API context:', error);
+    }
+
+    return context;
+  }
+
+  // Helper method to fetch Datamuse context
+  private async fetchDatamuseContext(genre: string, context: any): Promise<void> {
+    try {
+      const genreSeeds = this.getGenreSeedWords(genre);
+      const emotionalSeeds = this.getEmotionalSeeds(genre);
+      
+      const primaryResults = await this.datamuseService.findWords({
+        triggers: genreSeeds.slice(0, 2).join(','),
+        topics: `${genre || 'music'} emotion lyrics`,
+        maxResults: 40
+      });
+      
+      const filteredPrimary = primaryResults
+        .filter(w => this.isGoodLyricWord(w.word))
+        .map(w => w.word);
+      
+      context.datamuse.genreWords = filteredPrimary.slice(0, 12);
+      context.datamuse.emotionalWords = filteredPrimary.slice(12, 20);
+      context.datamuse.sensoryWords = filteredPrimary.slice(20, 28);
+      
+      // Get rhyming words
+      const rhymeSeeds = ['night', 'day', 'heart', 'love', 'time', 'life', 'dream'];
+      const selectedRhyme = rhymeSeeds[Math.floor(Math.random() * rhymeSeeds.length)];
+      const rhymeResults = await this.datamuseService.findWords({
+        rhymesWith: selectedRhyme,
+        maxResults: 15
+      });
+      
+      context.datamuse.rhymeWords = rhymeResults
+        .filter(w => this.isGoodLyricWord(w.word))
+        .map(w => w.word)
+        .slice(0, 10);
+        
+      secureLog.debug(`✅ Datamuse context: ${context.datamuse.genreWords.length + context.datamuse.emotionalWords.length + context.datamuse.rhymeWords.length} words fetched`);
+    } catch (error) {
+      secureLog.error('❌ Datamuse context fetch failed:', error);
+    }
+  }
+
+  // Helper method to fetch Spotify context
+  private async fetchSpotifyContext(genre: string, context: any): Promise<void> {
+    try {
+      if (await this.spotifyService.isAvailable()) {
+        // Get genre-specific artists
+        const genreArtists = await this.spotifyService.getGenreArtists(genre);
+        context.spotify.genreArtists = genreArtists.slice(0, 10);
+        
+        // Get mood-based tracks for the genre
+        const moodTracks = await this.spotifyService.getMoodTracks(genre);
+        context.spotify.moodTracks = moodTracks.slice(0, 8);
+        
+        // Get audio features for genre characteristics
+        context.spotify.audioFeatures = {
+          genre: genre,
+          characteristics: `${genre} music style traits`
+        };
+        
+        secureLog.debug(`✅ Spotify context: ${context.spotify.genreArtists.length} artists, ${context.spotify.moodTracks.length} tracks`);
+      }
+    } catch (error) {
+      secureLog.error('❌ Spotify context fetch failed:', error);
+    }
+  }
+
+  // Helper method to fetch Last.fm context
+  private async fetchLastFmContext(genre: string, context: any): Promise<void> {
+    try {
+      // Get genre vocabulary and intelligence
+      const genreVocabulary = await lastfmService.getGenreVocabulary(genre);
+      if (genreVocabulary) {
+        context.lastfm.genreInfo = {
+          description: `${genre} music genre characteristics`,
+          confidence: genreVocabulary.confidence
+        };
+        
+        context.lastfm.topArtists = genreVocabulary.descriptiveWords.slice(0, 8);
+        context.lastfm.relatedGenres = genreVocabulary.relatedGenres.slice(0, 5);
+        
+        secureLog.debug(`✅ Last.fm context: ${context.lastfm.topArtists.length} descriptive words, ${context.lastfm.relatedGenres.length} related genres`);
+      }
+    } catch (error) {
+      secureLog.error('❌ Last.fm context fetch failed:', error);
+    }
+  }
+
+  // Helper method to fetch ConceptNet context
+  private async fetchConceptNetContext(genre: string, context: any): Promise<void> {
+    try {
+      // Get genre-specific conceptual associations
+      const genreConcepts = await conceptNetService.getGenreAssociations(genre);
+      context.conceptnet.genreConcepts = genreConcepts.slice(0, 10);
+      
+      // Get emotional associations for the genre
+      const emotionalConcepts = await conceptNetService.getEmotionalAssociations(genre);
+      context.conceptnet.emotionalConcepts = emotionalConcepts.slice(0, 8);
+      
+      // Get cultural associations
+      const culturalAssociations = await conceptNetService.getCulturalConnections(genre);
+      context.conceptnet.culturalAssociations = culturalAssociations.slice(0, 6);
+      
+      secureLog.debug(`✅ ConceptNet context: ${context.conceptnet.genreConcepts.length} concepts, ${context.conceptnet.emotionalConcepts.length} emotions`);
+    } catch (error) {
+      secureLog.error('❌ ConceptNet context fetch failed:', error);
+    }
   }
 
   private async getDatamuseContext(genre?: string): Promise<{
