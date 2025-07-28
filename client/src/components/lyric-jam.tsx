@@ -213,9 +213,17 @@ export function LyricJam() {
                           {currentLyric.songSection.toUpperCase()}
                         </Badge>
                       )}
-                      <p className="text-lg sm:text-xl font-medium italic leading-relaxed break-words">
-                        "{currentLyric.lyric}"
-                      </p>
+                      <div className="text-lg sm:text-xl font-medium italic leading-relaxed break-words">
+                        {currentLyric.lyric.includes('\n') ? (
+                          currentLyric.lyric.split('\n').map((line, index) => (
+                            <div key={index} className={index > 0 ? 'mt-2' : ''}>
+                              {index === 0 && '"'}{line}{index === currentLyric.lyric.split('\n').length - 1 && '"'}
+                            </div>
+                          ))
+                        ) : (
+                          <span>"{currentLyric.lyric}"</span>
+                        )}
+                      </div>
                     </div>
                     <Button
                       variant="ghost"

@@ -65,17 +65,29 @@ NameJam is a modern web application that generates unique band names and song ti
 - **Integration**: Lightbulb button in name generator UI with dedicated AI result display showing model attribution
 - **Features**: Full verification and database storage, graceful fallback to algorithmic generation when AI unavailable
 
-### Enhanced AI Lyric Generation Service
+### Enhanced AI Lyric Generation Service with Variable Length & Poetic Meter
 - **Location**: `server/services/lyricStarterService.ts`
-- **Purpose**: Generates lyrical starters enhanced with Datamuse linguistic context for authentic genre vocabulary
-- **Enhancement**: Integrates Datamuse API to provide:
-  - **Genre Words**: Authentic vocabulary related to the selected genre using statistical associations
-  - **Emotional Words**: Mood-appropriate language based on genre characteristics
-  - **Rhyme Words**: Common rhyme patterns for lyrical flow
-  - **Sensory Words**: Vivid imagery vocabulary for poetic expression
-- **JSON Prompt Structure**: Uses reliable JSON-based prompts with Datamuse context for consistent results
-- **Implementation**: Fetches context words from Datamuse → Structures into JSON → AI generates lyrics using enriched vocabulary
-- **Benefits**: More authentic, genre-appropriate lyrics with richer vocabulary than pure AI generation
+- **Purpose**: Generates diverse lyrical starters with variable length, poetic meter, and authentic genre vocabulary
+- **Length Variations**: 
+  - **Short**: Single line (6-10 words, 8-14 syllables)
+  - **Medium**: Two lines (5-8 words per line, 16-24 syllables total)
+  - **Long**: Four lines (4-7 words per line, 32-48 syllables total)
+  - **Couplet**: Two rhyming lines (7-10 words per line, 20-28 syllables total)
+- **Poetic Meter Patterns**:
+  - **Iambic**: da-DUM pattern (unstressed-stressed) for classic rhythm
+  - **Trochaic**: DUM-da pattern (stressed-unstressed) for emphasis
+  - **Anapestic**: da-da-DUM (two unstressed, one stressed) for flow
+  - **Dactylic**: DUM-da-da (stressed, two unstressed) for drama
+  - **Free Verse**: No specific meter for contemporary feel
+- **Rhyme Schemes**: AABB, ABAB, ABCB, internal rhymes, or free verse
+- **Enhanced JSON Prompt Structure**: Detailed specifications including:
+  - Structural requirements (lines, syllables, meter, rhyme)
+  - Datamuse context with 8 word categories (genre, emotional, rhyme, sensory, tempo, cultural, contrast, associated)
+  - Style guidelines matching song sections (anthemic chorus, storytelling verse, reflective bridge)
+  - Quality requirements for natural flow and authenticity
+- **AI Parameters**: Temperature 1.2 for creativity, frequency penalty 0.6, presence penalty 0.5 for variety
+- **Frontend Support**: Multi-line display with proper formatting and line breaks
+- **Benefits**: Dramatically improved variety in rhythm, length, and poetic structure compared to static single-line generation
 
 ### Name Verification Service
 - **Location**: `server/services/nameVerifier.ts`
@@ -167,7 +179,17 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 31, 2025: CODE ORGANIZATION & MODULAR REFACTORING**
+**Latest Update - January 31, 2025: ENHANCED LYRIC GENERATION WITH POETIC VARIETY**
+- **Variable Length Implementation**: Added 4 length types (short/medium/long/couplet) with different line counts and syllable ranges for dramatic variety
+- **Poetic Meter Patterns**: Implemented 5 meter patterns (iambic, trochaic, anapestic, dactylic, free verse) for authentic rhythm and flow
+- **Rhyme Scheme Options**: Added multiple rhyme patterns (AABB, ABAB, ABCB, internal rhymes) appropriate to song sections
+- **Enhanced JSON Prompts**: Created detailed JSON structure with structural specifications, style guidelines, and quality requirements
+- **Increased AI Creativity**: Raised temperature to 1.2 and frequency penalties to 0.6 for maximum variety and reduced repetition
+- **Multi-line Frontend Support**: Updated lyric display to properly handle line breaks and formatting for 2-4 line lyrics
+- **Improved Fallback System**: Enhanced fallback lyrics with short/medium/long variations for each song section
+- **Result**: Transformed static single-line generation into dynamic, poetically diverse system with authentic rhythm and structure
+
+**Previous Update - January 31, 2025: CODE ORGANIZATION & MODULAR REFACTORING**
 - **Enhanced Code Organization**: Refactored the massive 1843-line enhancedNameGenerator.ts into 5 focused, modular files for improved maintainability and faster TypeScript compilation
 - **Modular Architecture**: Created dedicated modules: wordSourceBuilder.ts (API integration), wordValidation.ts (validation logic), nameGenerationPatterns.ts (pattern generation), generationHelpers.ts (utility functions), and types.ts (shared types)
 - **Improved Development Experience**: Achieved 20-30% improvement in developer productivity through better code organization, easier debugging, and separation of concerns
