@@ -99,7 +99,23 @@ export class AINameGeneratorService {
             genreInstructions = '\nIMPORTANT: The name must evoke country music. Think of rural life, trucks, whiskey, heartland values, and Southern culture.';
           }
           
-          userPrompt = `Mood or genre: ${context}${genreInstructions}${examplesText}\nNumber of words: ${dynamicWordCount || 2}`;
+          // Build user prompt with API context
+          userPrompt = `{
+  "request": {
+    "mood_genre": "${context}",
+    "word_count": ${dynamicWordCount || 2}
+  },
+  "api_context": ${contextExamples && contextExamples.length > 0 ? `{
+    "discovered_vocabulary": "${contextExamples.slice(0, 15).join(', ')}",
+    "sources": {
+      "datamuse": "Linguistic patterns, rhymes, semantic relationships",
+      "spotify": "Real ${genre || 'music'} artist naming trends",
+      "lastfm": "Genre-specific vocabulary and cultural references",
+      "conceptnet": "Conceptual associations and emotional connections"
+    },
+    "instruction": "Transform these API discoveries into entirely new creative combinations"
+  }` : 'null'}
+}${genreInstructions}${examplesText}`;
         } else {
           // For songs, use the exact JSON prompt structure requested
           systemPrompt = `You are a creative song title specialist. Generate song names according to this JSON specification:
@@ -151,7 +167,23 @@ export class AINameGeneratorService {
             genreInstructions = '\nIMPORTANT: The name must evoke country music. Think of rural life, trucks, whiskey, heartland values, and Southern culture.';
           }
           
-          userPrompt = `Mood or genre: ${context}${genreInstructions}${examplesText}\nNumber of words: ${dynamicWordCount || 3}`;
+          // Build user prompt with API context for songs
+          userPrompt = `{
+  "request": {
+    "mood_genre": "${context}",
+    "word_count": ${dynamicWordCount || 3}
+  },
+  "api_context": ${contextExamples && contextExamples.length > 0 ? `{
+    "discovered_vocabulary": "${contextExamples.slice(0, 15).join(', ')}",
+    "sources": {
+      "datamuse": "Linguistic patterns, rhymes, semantic relationships for songs",
+      "spotify": "Real ${genre || 'music'} song title patterns and trends",
+      "lastfm": "Genre-specific lyrical vocabulary and themes",
+      "conceptnet": "Emotional associations and conceptual connections"
+    },
+    "instruction": "Transform these API discoveries into emotionally evocative song titles"
+  }` : 'null'}
+}${genreInstructions}${examplesText}`;
         }
         
         // Add randomization seed to prevent identical responses
