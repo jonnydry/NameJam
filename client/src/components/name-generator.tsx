@@ -205,7 +205,7 @@ export function NameGenerator() {
   return (
     <div className="space-y-6">
       {/* Controls Panel */}
-      <div className="bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 rounded-xl shadow-sm border p-6">
+      <div className="bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 rounded-xl shadow-sm border p-6 control-panel-mobile">
         {/* Type Toggle */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex rounded-lg bg-muted p-1">
@@ -213,7 +213,7 @@ export function NameGenerator() {
               variant={nameType === 'band' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setNameType('band')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 type-toggle-mobile ${
                 nameType === 'band'
                   ? 'btn-gradient text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-primary'
@@ -228,7 +228,7 @@ export function NameGenerator() {
               variant={nameType === 'song' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setNameType('song')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 type-toggle-mobile ${
                 nameType === 'song'
                   ? 'btn-gradient text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-primary'
@@ -243,12 +243,12 @@ export function NameGenerator() {
         </div>
 
         {/* Word Count Selector */}
-        <div className="flex items-center justify-center space-x-4 mb-6">
+        <div className="flex items-center justify-center space-x-4 mb-6 form-row-mobile">
           <label htmlFor="wordCount" className="text-responsive-sm font-medium text-muted-foreground">
             Number of words:
           </label>
           <Select value={wordCount.toString()} onValueChange={(value) => setWordCount(parseInt(value))}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-32 select-mobile select-trigger-mobile select-container-mobile">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -261,13 +261,13 @@ export function NameGenerator() {
         </div>
 
         {/* Mood Selector */}
-        <div className="flex items-center justify-center space-x-4 mb-4">
+        <div className="flex items-center justify-center space-x-4 mb-4 form-row-mobile selector-group-mobile">
           <label htmlFor="mood" className="text-responsive-sm font-medium text-muted-foreground flex items-center">
             <Palette className="w-4 h-4 mr-2" />
             Mood:
           </label>
           <Select value={mood} onValueChange={setMood}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 select-mobile select-trigger-mobile select-container-mobile">
               <SelectValue placeholder="Any mood" />
             </SelectTrigger>
             <SelectContent>
@@ -289,13 +289,13 @@ export function NameGenerator() {
         </div>
 
         {/* Genre Selector */}
-        <div className="flex items-center justify-center space-x-4 mb-6">
+        <div className="flex items-center justify-center space-x-4 mb-6 form-row-mobile selector-group-mobile">
           <label htmlFor="genre" className="text-responsive-sm font-medium text-muted-foreground flex items-center">
             <Music className="w-4 h-4 mr-2" />
             Genre:
           </label>
           <Select value={genre} onValueChange={setGenre}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 select-mobile select-trigger-mobile select-container-mobile">
               <SelectValue placeholder="Any genre" />
             </SelectTrigger>
             <SelectContent>
@@ -323,7 +323,7 @@ export function NameGenerator() {
           <Button
             onClick={handleGenerate}
             disabled={generateMutation.isPending || isGenerating}
-            className="inline-flex items-center px-8 py-3 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            className="inline-flex items-center px-8 py-3 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-primary generate-button-mobile"
             aria-label="Generate band or song names"
           >
             <Lightbulb className="w-4 h-4 mr-2" />
@@ -340,7 +340,7 @@ export function NameGenerator() {
 
       {/* Search Section */}
       <div 
-        className={`rounded-xl shadow-sm transition-all duration-300 border p-6 ${
+        className={`rounded-xl shadow-sm transition-all duration-300 border p-6 search-section-mobile ${
           isSearchActive ? 'bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20' : 'bg-card border-border'
         }`}
         onMouseEnter={() => setIsSearchActive(true)}
@@ -359,12 +359,12 @@ export function NameGenerator() {
             onChange={(e) => setSearchInput(e.target.value)}
             onFocus={() => setIsSearchActive(true)}
             onBlur={() => setIsSearchActive(false)}
+            className="flex-1 search-input-mobile"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !searchMutation.isPending && searchInput.trim()) {
                 handleSearch();
               }
             }}
-            className="flex-1"
             disabled={searchMutation.isPending}
             maxLength={100}
             aria-label={`Enter ${nameType} name to verify`}
@@ -372,7 +372,7 @@ export function NameGenerator() {
           <Button
             onClick={handleSearch}
             disabled={searchMutation.isPending || !searchInput.trim()}
-            className="inline-flex items-center btn-gradient text-primary-foreground font-medium"
+            className="inline-flex items-center btn-gradient text-primary-foreground font-medium search-button-mobile"
             aria-label="Check name availability"
           >
             {searchMutation.isPending ? (

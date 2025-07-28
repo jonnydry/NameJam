@@ -123,7 +123,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   return (
     <div 
       ref={cardRef}
-      className={`relative p-responsive rounded-xl border transition-all duration-300 overflow-hidden ${
+      className={`relative p-responsive rounded-xl border transition-all duration-300 overflow-hidden result-card-mobile ${
       isEasterEgg 
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
         : result.isAiGenerated
@@ -141,7 +141,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             variant="ghost"
             size="sm"
             onClick={handleAddToStash}
-            className={`p-2 md:p-2 focus:ring-2 focus:ring-offset-2 focus:ring-primary h-10 w-10 md:h-9 md:w-9 ${
+            className={`p-2 md:p-2 focus:ring-2 focus:ring-offset-2 focus:ring-primary h-10 w-10 md:h-9 md:w-9 result-card-button-mobile ${
               isInStash(name, nameType) 
                 ? 'text-red-500 hover:text-red-600' 
                 : 'text-muted-foreground hover:text-red-500'
@@ -157,7 +157,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
             variant="ghost"
             size="sm"
             onClick={() => onCopy(name)}
-            className="text-muted-foreground hover:text-primary transition-colors p-2 h-10 w-10 md:h-9 md:w-9"
+            className="text-muted-foreground hover:text-primary transition-colors p-2 h-10 w-10 md:h-9 md:w-9 result-card-button-mobile"
             title="Copy to clipboard"
           >
             <Copy className="w-5 h-5 md:w-4 md:h-4" aria-hidden="true" />
@@ -167,7 +167,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
               variant="ghost"
               size="sm"
               onClick={() => setShowBioModal(true)}
-              className="text-muted-foreground hover:text-primary transition-colors p-2 h-10 w-10 md:h-9 md:w-9"
+              className="text-muted-foreground hover:text-primary transition-colors p-2 h-10 w-10 md:h-9 md:w-9 result-card-button-mobile"
               title="Generate band bio"
             >
               <BookOpen className="w-5 h-5 md:w-4 md:h-4" aria-hidden="true" />
@@ -178,7 +178,7 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-1 min-w-0">
-          <h3 className={`text-responsive-lg sm:text-responsive-xl font-semibold text-foreground break-words leading-tight ${
+          <h3 className={`text-responsive-lg sm:text-responsive-xl font-semibold text-foreground break-words leading-tight result-name-mobile ${
             verification.status === 'taken' ? 'line-through' : ''
           }`}>
             {name}

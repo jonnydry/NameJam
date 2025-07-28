@@ -1,0 +1,168 @@
+/* Mobile-specific enhancements for better formatting */
+
+/* Mobile control panel improvements */
+@media (max-width: 768px) {
+  /* Better spacing for control panels */
+  .control-panel-mobile {
+    padding: 1rem !important;
+  }
+  
+  /* Larger touch targets for type toggle buttons */
+  .type-toggle-mobile {
+    min-height: 3rem;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  /* Improved select dropdowns on mobile */
+  .select-mobile {
+    min-height: 3rem !important;
+    font-size: 1rem !important;
+  }
+  
+  .select-trigger-mobile {
+    padding: 0.75rem 1rem !important;
+  }
+  
+  /* Better spacing between form elements */
+  .form-row-mobile {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch !important;
+  }
+  
+  .form-row-mobile label {
+    text-align: left;
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Full width selects on mobile */
+  .select-container-mobile {
+    width: 100% !important;
+  }
+  
+  /* Larger generate button */
+  .generate-button-mobile {
+    min-height: 3.5rem !important;
+    font-size: 1.125rem !important;
+    padding: 1rem 2rem !important;
+    width: 100% !important;
+    max-width: 20rem;
+    margin: 0 auto;
+  }
+  
+  /* Result cards mobile spacing */
+  .result-card-mobile {
+    padding: 1.25rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Larger buttons in result cards */
+  .result-card-button-mobile {
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+    padding: 0.5rem !important;
+  }
+  
+  /* Better name display on mobile */
+  .result-name-mobile {
+    font-size: 1.25rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  /* Verification links mobile formatting */
+  .verification-links-mobile {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  
+  .verification-link-mobile {
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* Search section mobile improvements */
+  .search-section-mobile {
+    padding: 1rem !important;
+  }
+  
+  .search-input-mobile {
+    min-height: 3rem !important;
+    font-size: 1rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+  
+  .search-button-mobile {
+    min-height: 3rem !important;
+    padding: 0.75rem 1.5rem !important;
+  }
+  
+  /* Loading animation mobile adjustments */
+  .loading-container-mobile {
+    padding: 2rem 1rem !important;
+  }
+  
+  /* Better spacing for mood/genre selectors */
+  .selector-group-mobile {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  /* Tab content mobile padding */
+  .tab-content-mobile {
+    padding: 1rem !important;
+  }
+}
+
+/* Extra small devices (phones in portrait) */
+@media (max-width: 480px) {
+  /* Even more compact for very small screens */
+  .control-panel-mobile {
+    padding: 0.75rem !important;
+  }
+  
+  .type-toggle-mobile {
+    font-size: 0.75rem !important;
+    padding: 0.625rem 1rem !important;
+  }
+  
+  .generate-button-mobile {
+    font-size: 1rem !important;
+  }
+  
+  .result-name-mobile {
+    font-size: 1.125rem !important;
+  }
+}
+
+/* Improved touch interaction feedback */
+@media (hover: none) and (pointer: coarse) {
+  /* Better touch feedback for buttons */
+  button:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Highlight tappable areas */
+  .tappable {
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* Reduce vertical spacing in landscape */
+  .control-panel-mobile {
+    padding: 0.75rem 1rem !important;
+  }
+  
+  .form-row-mobile {
+    flex-direction: row;
+    gap: 1rem;
+  }
+  
+  .selector-group-mobile {
+    margin-bottom: 0.75rem !important;
+  }
+}
