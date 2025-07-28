@@ -50,7 +50,26 @@ export class AINameGeneratorService {
         let userPrompt: string;
         
         if (type === 'band') {
-          systemPrompt = "You are a creative naming specialist focused on maximum variety and freshness. CRITICAL: Each generation must introduce entirely new vocabulary, themes, and stylistic approaches - never reuse words, concepts, or patterns from any previous generation. Your mental model should reset completely between requests. Actively avoid common naming tropes and explore unexpected linguistic territories. Generate names that surprise and delight through novel word combinations and fresh perspectives. Based on the user's mood/genre and exact word count (1-10), internally brainstorm 5 unique band names using completely different conceptual frameworks for each. Select the most original and entertaining one. Output strictly as JSON with key 'band' (single string). No additional text.";
+          systemPrompt = `You are a creative naming specialist. Generate band names according to this JSON specification:
+{
+  "task": "Generate unique band name",
+  "requirements": {
+    "variety": "CRITICAL: Introduce entirely new vocabulary, themes, and stylistic approaches with EVERY generation",
+    "mental_reset": "Reset your creative approach completely between requests - no patterns from previous generations",
+    "originality": "Actively avoid common naming tropes (no 'The [Adjective] [Nouns]', no 'Shadow/Echo/Dream' clichés)",
+    "exploration": "Explore unexpected linguistic territories and novel word combinations",
+    "word_count": "Match exact requested word count (1-10 words)",
+    "selection": "Internally brainstorm 5 names using different conceptual frameworks, select most original"
+  },
+  "output_format": {
+    "structure": "JSON object with single key",
+    "key": "band",
+    "value": "string containing the band name",
+    "example": {"band": "Kaleidoscope Breakfast"}
+  },
+  "forbidden_patterns": ["The [X] [Y]", "Shadow/Echo/Dream/Midnight", "Fire/Ice/Storm", "Dark/Light/Night"],
+  "creative_direction": "Surprise and delight through fresh perspectives and unexpected word pairings"
+}`;
           
           // Build mood/genre context
           const moodOrGenre = [];
@@ -83,7 +102,26 @@ export class AINameGeneratorService {
           userPrompt = `Mood or genre: ${context}${genreInstructions}${examplesText}\nNumber of words: ${dynamicWordCount || 2}`;
         } else {
           // For songs, use the exact JSON prompt structure requested
-          systemPrompt = "You are a creative song title specialist committed to perpetual originality. ESSENTIAL: Every generation must explore uncharted linguistic territory - introduce fresh vocabulary, unique emotional angles, and novel imagery that hasn't appeared in previous titles. Think like a poet discovering language for the first time. Song titles should capture fleeting moments, emotions, or stories through unexpected word pairings. Based on the user's mood/genre and exact word count (1-10), internally create 5 distinct song titles using radically different approaches. Choose the most evocative and original. Output strictly as JSON with key 'song' (single string). No additional text.";
+          systemPrompt = `You are a creative song title specialist. Generate song names according to this JSON specification:
+{
+  "task": "Generate unique song title",
+  "requirements": {
+    "perpetual_originality": "ESSENTIAL: Explore uncharted linguistic territory with EVERY generation",
+    "fresh_vocabulary": "Introduce new words, unique emotional angles, and novel imagery never used before",
+    "poetic_thinking": "Think like a poet discovering language for the first time",
+    "emotional_capture": "Capture fleeting moments, emotions, or stories through unexpected word pairings",
+    "word_count": "Match exact requested word count (1-10 words)",
+    "selection": "Create 5 distinct titles using radically different approaches, select most evocative"
+  },
+  "output_format": {
+    "structure": "JSON object with single key",
+    "key": "song",
+    "value": "string containing the song title",
+    "example": {"song": "Velvet Whispers in Binary"}
+  },
+  "forbidden_patterns": ["Heart/Soul/Love", "Tonight/Forever/Always", "Dream/Shadow/Echo", "Fire/Rain/Sky"],
+  "creative_direction": "Evoke emotions through novel imagery and unexpected linguistic discoveries"
+}`;
           
           // Build mood/genre context
           const moodOrGenre = [];
