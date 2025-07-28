@@ -34,7 +34,7 @@ export class BandBioGeneratorService {
         const genreInfo = genre ? ` ${genre}` : 'rock';
         const moodInfo = mood ? ` ${mood}` : 'energetic';
         
-        // Enhanced humor-focused prompts with anti-formulaic instructions
+        // Enhanced humor-focused prompts with diverse journalistic styles
         let prompt;
         const timestamp = Date.now();
         const uniqueElements = [
@@ -45,28 +45,136 @@ export class BandBioGeneratorService {
         ];
         const randomElement = uniqueElements[Math.floor(Math.random() * uniqueElements.length)];
         
-        if (model === 'grok-3-mini' || model === 'grok-3-mini-fast') {
-          // Edgy humor-focused simple prompts
-          const humorPrompts = [
-            `Write a wickedly funny biography for "${bandName}", a ${genreInfo} band. Include their chaotic origin involving ${randomElement}, questionable life choices, member drama, and their most cringe-worthy public moment. Be EDGY, irreverent, and brutally honest! Under 150 words. Timestamp: ${timestamp}`,
-            `Create a no-holds-barred bio for "${bandName}" (${genreInfo}). Focus on their dysfunctional formation story, their terrible decisions, messy relationships, and the most awkward thing that ever happened. Be SAVAGE and witty! Under 150 words. ID: ${timestamp}`,
-            `Tell the unfiltered story of "${bandName}" - their ${genreInfo} sound emerged from ${randomElement} and poor judgment. Include messy member backstories, questionable morals, and their most embarrassing performance disaster. Be SHARP and merciless! Under 150 words. Seed: ${timestamp}`
-          ];
-          prompt = humorPrompts[Math.floor(Math.random() * humorPrompts.length)];
+        // Expanded journalistic styles for variety
+        const journalisticStyles = [
+          {
+            name: "Rolling Stone Pretentious",
+            systemPrompt: "You are a pretentious Rolling Stone music journalist who uses unnecessarily complex metaphors and references obscure philosophers while writing about bands. You believe everything is a cultural paradigm shift.",
+            instruction: "Write in overly intellectual Rolling Stone style, comparing the band to Kafka and using phrases like 'zeitgeist-defining' and 'post-modern sonic landscape'"
+          },
+          {
+            name: "TMZ Gossip",
+            systemPrompt: "You are a TMZ gossip reporter who only cares about scandal, drama, and embarrassing moments. Everything is BREAKING NEWS and SHOCKING REVELATIONS.",
+            instruction: "Write in sensational TMZ tabloid style with ALL CAPS for emphasis and focus on the most SCANDALOUS and SHOCKING aspects"
+          },
+          {
+            name: "NPR Tiny Desk",
+            systemPrompt: "You are an NPR music correspondent who finds deep meaning in everything and speaks in hushed, reverent tones about the artistic process while sipping fair-trade coffee.",
+            instruction: "Write in NPR style, finding profound meaning in mundane details and using phrases like 'intimate sonic tapestry' and 'vulnerable artistic expression'"
+          },
+          {
+            name: "Pitchfork Hipster",
+            systemPrompt: "You are a Pitchfork reviewer who liked bands before they were cool and drops obscure references to prove your superiority. Everything is either a 2.3 or 8.7 out of 10.",
+            instruction: "Write in Pitchfork hipster style, mentioning you saw them in a basement venue in 2003 and comparing them to bands nobody has heard of"
+          },
+          {
+            name: "Behind The Music Documentary",
+            systemPrompt: "You are the dramatic narrator of a VH1 Behind The Music documentary. Everything is a turning point, and there's always darkness before the triumph.",
+            instruction: "Write in dramatic documentary style with phrases like 'But then, everything changed...' and 'Little did they know, tragedy was about to strike...'"
+          },
+          {
+            name: "Small Town Newspaper",
+            systemPrompt: "You are a local newspaper reporter from a small town covering this band like they're the biggest thing since the harvest festival. You relate everything to local landmarks and events.",
+            instruction: "Write in small-town newspaper style, comparing their success to winning the county fair pie contest and mentioning local businesses"
+          },
+          {
+            name: "Gen Z Music Blog",
+            systemPrompt: "You are a Gen Z music blogger who communicates primarily in memes, uses 'slay' and 'no cap' constantly, and relates everything to TikTok trends.",
+            instruction: "Write in Gen Z style with phrases like 'this band is giving main character energy fr fr' and 'the way they ATE and left NO CRUMBS'"
+          },
+          {
+            name: "Academic Thesis",
+            systemPrompt: "You are an overly serious musicology PhD candidate analyzing this band like it's your dissertation. Use unnecessary footnotes and academic jargon.",
+            instruction: "Write in academic style with phrases like 'The semiotic implications of their chord progressions vis-à-vis late capitalism' and citations nobody will check"
+          }
+        ];
+        
+        // Decide whether to use original edgy style or new journalistic style (50/50 chance)
+        const useJournalisticStyle = Math.random() < 0.5;
+        let selectedStyle;
+        let systemPromptOverride;
+        
+        if (useJournalisticStyle && model !== 'grok-3-mini') {
+          // Use new journalistic style with detailed JSON prompt
+          selectedStyle = journalisticStyles[Math.floor(Math.random() * journalisticStyles.length)];
+          systemPromptOverride = selectedStyle.systemPrompt;
+          
+          // Create detailed JSON prompt structure
+          const jsonPrompt = {
+            task: "Generate a hilarious fictional band biography",
+            band_info: {
+              name: bandName,
+              genre: genreInfo,
+              mood: moodInfo
+            },
+            style_requirements: {
+              journalistic_style: selectedStyle.name,
+              style_instruction: selectedStyle.instruction,
+              tone: "Wickedly funny, entertaining, witty, and absurd",
+              must_avoid: ["Generic band bio clichés", "Boring factual information", "Serious or respectful tone"],
+              must_include: ["Outrageous origin story", "Embarrassing moments", "Ridiculous band member quirks", "Absurd traditions or rituals"]
+            },
+            story_elements: {
+              catalyst_event: randomElement,
+              required_themes: ["Dysfunction", "Poor life choices", "Embarrassing failures", "Absurd situations"],
+              humor_style: "Sharp wit, clever wordplay, unexpected twists, satirical observations"
+            },
+            format: {
+              max_words: 150,
+              structure: "Narrative biography with punchy sentences",
+              emphasis: "Entertainment value over accuracy"
+            },
+            examples_of_good_humor: [
+              "Band member names that are ridiculous but believable",
+              "Origin stories that escalate from normal to absurd",
+              "Mundane events described with dramatic importance",
+              "Contradictions and ironic situations"
+            ],
+            unique_id: timestamp
+          };
+          
+          prompt = `You must follow this exact JSON specification for the band biography:\n\n${JSON.stringify(jsonPrompt, null, 2)}\n\nRemember: This is FICTIONAL comedy writing. Make it outrageously funny!`;
+          
         } else {
-          // Edgy, R-rated humor prompts with no-holds-barred approach
-          const advancedHumorPrompts = [
-            `EDGY COMEDY: Write a brutally honest, darkly funny biography for "${bandName}", a ${genreInfo} band. Feature: ${randomElement}, dysfunctional member relationships, terrible life choices, and their most spectacularly embarrassing meltdown. AVOID all sanitized band bio clichés. Be SAVAGE, witty, and unapologetically honest about their messy reality! Max 150 words. Chaos ID: ${timestamp}`,
+          // Use original edgy prompts
+          if (model === 'grok-3-mini' || model === 'grok-3-mini-fast') {
+            // Edgy humor-focused simple prompts
+            const humorPrompts = [
+              `Write a wickedly funny biography for "${bandName}", a ${genreInfo} band. Include their chaotic origin involving ${randomElement}, questionable life choices, member drama, and their most cringe-worthy public moment. Be EDGY, irreverent, and brutally honest! Under 150 words. Timestamp: ${timestamp}`,
+              `Create a no-holds-barred bio for "${bandName}" (${genreInfo}). Focus on their dysfunctional formation story, their terrible decisions, messy relationships, and the most awkward thing that ever happened. Be SAVAGE and witty! Under 150 words. ID: ${timestamp}`,
+              `Tell the unfiltered story of "${bandName}" - their ${genreInfo} sound emerged from ${randomElement} and poor judgment. Include messy member backstories, questionable morals, and their most embarrassing performance disaster. Be SHARP and merciless! Under 150 words. Seed: ${timestamp}`
+            ];
+            prompt = humorPrompts[Math.floor(Math.random() * humorPrompts.length)];
+          } else {
+            // Enhanced with detailed JSON structure for original style
+            const jsonPrompt = {
+              task: "Generate an edgy, brutally honest band biography",
+              band_info: {
+                name: bandName,
+                genre: genreInfo,
+                mood: moodInfo
+              },
+              style_requirements: {
+                tone: "Savage, irreverent, darkly humorous, brutally honest",
+                approach: "Roast comedy meets music journalism",
+                voice: "Sarcastic music journalist with zero filter",
+                must_include: ["Failed relationships", "Poor decisions", "Embarrassing moments", "Dysfunctional dynamics"]
+              },
+              story_elements: {
+                catalyst_event: randomElement,
+                themes: ["Chaos", "Bad judgment", "Public humiliation", "Personal failures"],
+                humor_type: "Dark, edgy, uncomfortable truths, savage observations"
+              },
+              format: {
+                max_words: 150,
+                style: "Exposé format with cutting commentary"
+              },
+              avoid: ["Sanitized industry speak", "Feel-good narratives", "Respectful tone", "Generic band bio templates"],
+              unique_id: timestamp
+            };
             
-            `NO-FILTER MODE: Create a wickedly funny exposé of "${bandName}" (${genreInfo}, ${moodInfo}). Include: their chaotic formation via ${randomElement}, members with questionable morals and worse judgment, plus their most cringe-inducing public disaster. REJECT all wholesome music industry BS! Be SHARP, irreverent, and mercilessly entertaining! Max 150 words. Anarchy seed: ${timestamp}`,
-            
-            `DARK HUMOR ALERT: Document the trainwreck story of "${bandName}" - ${moodInfo} ${genreInfo} disasters. Start with ${randomElement}, add member drama involving bad decisions and worse relationships, include their most mortifying tradition. DESTROY all feel-good bio templates! Be EDGY, sarcastic, and brutally amusing! Max 150 words. Mayhem code: ${timestamp}`,
-            
-            `SAVAGE ROAST MODE: Chronicle the messy reality of "${bandName}" in ${genreInfo}. Feature: ${randomElement} catalyst, members with commitment issues and substance problems, their most awkward public humiliation. BURN all generic music bios! Make it CUTTING, honest, and hilariously uncomfortable! Max 150 words. Destruction level: ${timestamp}`,
-            
-            `UNHINGED COMEDY: Tell the unvarnished truth about "${bandName}" - ${genreInfo} degenerates with ${moodInfo} energy. Include: ${randomElement} as the turning point, spectacularly dysfunctional band dynamics, and their most embarrassing personal failures made public. TORCH all sanitized storytelling! Be RUTHLESS and savagely funny! Max 150 words. Chaos maximum: ${timestamp}`
-          ];
-          prompt = advancedHumorPrompts[Math.floor(Math.random() * advancedHumorPrompts.length)];
+            prompt = `DARK COMEDY BRIEF:\n\n${JSON.stringify(jsonPrompt, null, 2)}\n\nWrite the biography now. Be RUTHLESS and savagely funny!`;
+          }
         }
 
         // Configure parameters for maximum creativity and humor
@@ -75,7 +183,7 @@ export class BandBioGeneratorService {
           messages: [
             {
               role: "system",
-              content: "You are a sarcastic music journalist with zero filter and a dark sense of humor. Write band biographies that are brutally honest, wickedly funny, and unapologetically edgy. Think 'roast comedy meets music journalism.' Expose the messy reality behind the facade - failed relationships, poor decisions, embarrassing moments, and dysfunctional dynamics. Be sharp, irreverent, and savagely entertaining while staying clever rather than crude. No sanitized industry speak allowed."
+              content: systemPromptOverride || "You are a sarcastic music journalist with zero filter and a dark sense of humor. Write band biographies that are brutally honest, wickedly funny, and unapologetically edgy. Think 'roast comedy meets music journalism.' Expose the messy reality behind the facade - failed relationships, poor decisions, embarrassing moments, and dysfunctional dynamics. Be sharp, irreverent, and savagely entertaining while staying clever rather than crude. No sanitized industry speak allowed."
             },
             {
               role: "user", 
