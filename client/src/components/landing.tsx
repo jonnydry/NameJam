@@ -130,14 +130,14 @@ export function Landing() {
             {/* Navigation Buttons */}
             <button
               onClick={prevSlide}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg"
               aria-label="Previous feature"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={nextSlide}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg"
               aria-label="Next feature"
             >
               <ChevronRight className="w-6 h-6" />
