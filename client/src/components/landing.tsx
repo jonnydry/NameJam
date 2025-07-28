@@ -82,27 +82,27 @@ export function Landing() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Main Content */}
-      <main className="flex-1 px-4 py-8 md:py-12">
-        <div className="max-w-4xl mx-auto bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-8 md:p-12">
+      <main className="flex-1 px-4 py-8 md:py-12 landing-container-mobile">
+        <div className="max-w-4xl mx-auto bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-8 md:p-12 landing-main-card-mobile">
           {/* Logo and Title Section */}
           <div className="text-center mb-8">
             <div className="flex flex-col items-center">
               {/* Logo */}
-              <div className="mb-4">
+              <div className="mb-4 logo-mobile">
                 <FermataLogo size="xl" />
               </div>
               {/* Title with special alignment */}
               <div className="relative">
-                <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center relative">
+                <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono flex items-center justify-center relative landing-title-mobile">
                   <span className="title-text title-align">&gt;Name_Jam</span>
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8">Create unique band or song names and generate lyrics to prompt your own writing. Name your Jam!</p>
+            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8 landing-subtitle-mobile">Create unique band or song names and generate lyrics to prompt your own writing. Name your Jam!</p>
           </div>
 
           {/* Features Carousel */}
-          <div className="relative mb-12 max-w-3xl mx-auto">
+          <div className="relative mb-12 max-w-3xl mx-auto carousel-container-mobile">
             {/* Carousel Container */}
             <div className="overflow-hidden">
               <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
@@ -110,9 +110,9 @@ export function Landing() {
                   const Icon = feature.icon;
                   return (
                     <div key={index} className="w-full flex-shrink-0">
-                      <div className={`mx-4 text-left p-8 rounded-xl border-2 border-border/20 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm transition-all duration-300 ${feature.customClass}`}>
+                      <div className={`mx-4 text-left p-8 rounded-xl border-2 border-border/20 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm transition-all duration-300 carousel-card-mobile ${feature.customClass}`}>
                         <div className="flex items-start gap-4">
-                          <div className={`p-3 rounded-lg ${feature.bgColor} ${feature.textColor}`}>
+                          <div className={`p-3 rounded-lg carousel-icon-mobile ${feature.bgColor} ${feature.textColor}`}>
                             <Icon className="w-6 h-6" />
                           </div>
                           <div className="flex-1">
@@ -130,21 +130,21 @@ export function Landing() {
             {/* Navigation Buttons */}
             <button
               onClick={prevSlide}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-10 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-10 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg carousel-nav-mobile"
               aria-label="Previous feature"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={nextSlide}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-10 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-10 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg carousel-nav-mobile"
               aria-label="Next feature"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
 
             {/* Indicators */}
-            <div className="flex justify-center gap-2 mt-6">
+            <div className="flex justify-center gap-2 mt-6 carousel-indicators-mobile">
               {features.map((_, index) => (
                 <button
                   key={index}
@@ -165,14 +165,14 @@ export function Landing() {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="font-semibold px-8 py-4 text-lg w-full sm:w-auto"
+                  className="font-semibold px-8 py-4 text-lg w-full sm:w-auto landing-cta-mobile"
                 >
                   Proceed as Guest Artist
                 </Button>
               </Link>
               <Button 
                 size="lg" 
-                className="font-semibold px-8 py-4 text-lg"
+                className="font-semibold px-8 py-4 text-lg landing-cta-mobile"
                 onClick={() => window.location.href = "/api/login"}
               >
                 <LogIn className="w-5 h-5 mr-2" />
