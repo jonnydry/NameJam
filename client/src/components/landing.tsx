@@ -110,7 +110,7 @@ export function Landing() {
                   const Icon = feature.icon;
                   return (
                     <div key={index} className="w-full flex-shrink-0">
-                      <div className={`mx-4 text-left p-8 rounded-xl bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm transition-all duration-300 ${feature.customClass}`}>
+                      <div className={`mx-4 text-left p-8 rounded-xl border-2 border-border/20 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm transition-all duration-300 ${feature.customClass}`}>
                         <div className="flex items-start gap-4">
                           <div className={`p-3 rounded-lg ${feature.bgColor} ${feature.textColor}`}>
                             <Icon className="w-6 h-6" />
