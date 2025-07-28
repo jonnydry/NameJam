@@ -57,8 +57,8 @@ export class ParallelVerificationService {
         }
       });
 
-      // Execute with limited concurrency (max 3 parallel requests)
-      const batchSize = 3;
+      // Execute with optimized concurrency (max 5 parallel requests for better throughput)
+      const batchSize = 5;
       for (let i = 0; i < verificationPromises.length; i += batchSize) {
         const batch = verificationPromises.slice(i, i + batchSize);
         const batchResults = await Promise.allSettled(batch);
