@@ -33,7 +33,7 @@ export default function About() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-muted-foreground">
-                <p>I made this app because I thought my musician friends and I would have had fun with it in the practice room and when hanging around discussing ideas.</p>
+                <p>I made this app because imagined having fun with something like this with my friends. Hold your creative spark close and turn it into something uniquely yours. Name_Jam is designed to be a novelty that helps you free associate your idea. Name your Jam! Name your art, Be yourself.</p>
                 <br />
                 <p>Use NAME_JAM to find inspiration, create lyrical sparks, or just jam around to brainstorm ideas and spark your next project!</p>
               </div>
@@ -142,7 +142,6 @@ export default function About() {
           </Card>
         </div>
       </main>
-
       {/* Simple Footer */}
       <footer className="py-6">
         <div className="text-center">
