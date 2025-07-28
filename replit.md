@@ -179,12 +179,12 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 31, 2025: ENHANCED AI PROMPTS FOR MAXIMUM VARIETY**
-- **Refined AI System Prompts**: Completely rewrote band and song name generation prompts to emphasize perpetual originality and prevent repetition
-- **Band Name Prompt**: Now focuses on introducing entirely new vocabulary, themes, and stylistic approaches with each generation, actively avoiding common naming tropes
-- **Song Name Prompt**: Emphasizes exploring uncharted linguistic territory, unique emotional angles, and novel imagery - thinking like a poet discovering language for the first time  
-- **Key Improvements**: Stronger emphasis on resetting mental model between requests, exploring unexpected linguistic territories, and capturing emotions through unexpected word pairings
-- **Result**: AI generations now produce significantly more varied and original names, reducing repetitive patterns and increasing entertainment value
+**Latest Update - January 31, 2025: JSON-FORMATTED AI PROMPTS FOR MAXIMUM VARIETY**
+- **JSON-Structured System Prompts**: Converted AI prompts to comprehensive JSON format for better model understanding and clarity
+- **Band Name JSON**: Includes task definition, detailed requirements, output format with examples, forbidden pattern lists, and creative direction - emphasizes complete mental reset between generations
+- **Song Title JSON**: Features perpetual originality requirements, poetic thinking instructions, emotional capture guidelines, and specific forbidden clichés to avoid
+- **Key Improvements**: Clear specification structure, explicit forbidden patterns (no "The [X] [Y]", "Shadow/Echo/Dream"), example outputs, and stronger variety enforcement
+- **Result**: AI models now have crystal-clear understanding of requirements, producing more varied and original names while actively avoiding common naming tropes
 
 **Previous Update - January 31, 2025: SPACE AND PERFORMANCE OPTIMIZATION**
 - **Major Space Reduction**: Cleaned attached_assets folder removing 142 old development screenshots and images, reducing storage from 41MB to 0MB
