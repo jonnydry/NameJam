@@ -32,9 +32,9 @@ export class NameGeneratorService {
         let contextExamples: string[] = [];
         if (request.genre) {
           // Get real examples from enhanced name generator's API sources
-          const wordSources = await enhancedNameGenerator.buildContextualWordSources(request.mood, request.genre);
+          const generationContext = await enhancedNameGenerator.getGenerationContext(request.mood, request.genre);
           // Combine artist names from Spotify, Last.fm, and ConceptNet for context
-          contextExamples = [...wordSources.spotifyWords, ...wordSources.lastfmWords, ...wordSources.conceptNetWords]
+          contextExamples = [...generationContext.spotifyContext, ...generationContext.lastfmContext, ...generationContext.conceptNetContext]
             .filter(w => w.length > 2 && !w.includes(' ')) // Filter for quality
             .slice(0, 15); // Increased to 15 examples for richer context
         }
@@ -125,8 +125,8 @@ export class NameGeneratorService {
           // Get enhanced context from all sources (Spotify, Last.fm, ConceptNet)
           let contextExamples: string[] = [];
           if (enhancedRequest.genre) {
-            const wordSources = await enhancedNameGenerator.buildContextualWordSources(enhancedRequest.mood, enhancedRequest.genre);
-            contextExamples = [...wordSources.spotifyWords, ...wordSources.lastfmWords, ...wordSources.conceptNetWords]
+            const generationContext = await enhancedNameGenerator.getGenerationContext(enhancedRequest.mood, enhancedRequest.genre);
+            contextExamples = [...generationContext.spotifyContext, ...generationContext.lastfmContext, ...generationContext.conceptNetContext]
               .filter(w => w.length > 2 && !w.includes(' '))
               .slice(0, 15);
           }
