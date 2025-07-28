@@ -167,15 +167,16 @@ NameJam is a modern web application that generates unique band names and song ti
 
 ## Changelog
 
-**Latest Update - January 31, 2025: PERFORMANCE OPTIMIZATION & DATABASE INDEXING**
+**Latest Update - January 31, 2025: PERFORMANCE OPTIMIZATION, DATABASE INDEXING & API TIMEOUT FIX**
 - **Database Performance**: Added comprehensive indexes to `generatedNames` and `errorLogs` tables for significantly faster query performance
 - **Indexed Queries**: Optimized user-specific queries, type filtering, and chronological ordering with strategic single and composite indexes
 - **Dependency Cleanup**: Successfully removed 66 unused packages (23 dependencies) including unused Radix UI components, reducing bundle size by ~12.6%
 - **Native Fetch Migration**: Replaced node-fetch with native fetch API (Node.js 18+) in datamuseService and lastfmService
+- **API Timeout Improvement**: Increased external API timeout from 3 seconds to 15 seconds to prevent premature timeouts with Spotify, Last.fm, and ConceptNet APIs
 - **Applied Indexes**: 
   - generatedNames: userId, type, createdAt, (userId + createdAt), (type + userId + createdAt)
   - errorLogs: userId, createdAt, (userId + createdAt)
-- **Result**: Faster database queries, smaller bundle size, and modern API usage
+- **Result**: Faster database queries, smaller bundle size, better API reliability, and modern API usage
 
 **Previous Update - January 30, 2025: LANDING PAGE CAROUSEL IMPLEMENTATION**
 - **Implemented feature carousel**: Replaced asymmetrical 5-card grid layout with elegant one-at-a-time carousel display
