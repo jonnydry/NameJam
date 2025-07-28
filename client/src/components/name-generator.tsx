@@ -207,7 +207,7 @@ export function NameGenerator() {
       {/* Controls Panel */}
       <div className="bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 rounded-xl shadow-sm border p-6 control-panel-mobile">
         {/* Type Toggle */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-6 type-toggle-container-mobile">
           <div className="inline-flex rounded-lg bg-muted p-1">
             <Button
               variant={nameType === 'band' ? 'default' : 'ghost'}
