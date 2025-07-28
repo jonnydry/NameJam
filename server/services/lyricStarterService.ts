@@ -45,77 +45,151 @@ export class LyricStarterService {
         const songSections = ['verse', 'chorus', 'bridge', 'pre-chorus', 'outro'];
         const currentSection = songSections[Math.floor(Math.random() * songSections.length)];
         
-        // Create JSON prompt structure
+        // Length variation types
+        const lengthTypes = ['short', 'medium', 'long', 'couplet'];
+        const selectedLength = lengthTypes[Math.floor(Math.random() * lengthTypes.length)];
+        
+        // Poetic meter patterns
+        const meterPatterns = [
+          'iambic' as const,      // da-DUM (unstressed-stressed)
+          'trochaic' as const,    // DUM-da (stressed-unstressed)
+          'anapestic' as const,   // da-da-DUM (two unstressed, one stressed)
+          'dactylic' as const,    // DUM-da-da (stressed, two unstressed)
+          'free_verse' as const   // No specific meter
+        ];
+        const selectedMeter = meterPatterns[Math.floor(Math.random() * meterPatterns.length)];
+        
+        // Rhyme scheme options
+        const rhymeSchemes = currentSection === 'chorus' 
+          ? ['AABB', 'ABAB', 'AAAA', 'internal'] 
+          : ['ABAB', 'ABCB', 'free', 'internal'];
+        const selectedRhyme = rhymeSchemes[Math.floor(Math.random() * rhymeSchemes.length)];
+        
+        // Define length specifications
+        const lengthSpecs = {
+          short: { lines: 1, wordsPerLine: [6, 10], totalSyllables: [8, 14] },
+          medium: { lines: 2, wordsPerLine: [5, 8], totalSyllables: [16, 24] },
+          long: { lines: 4, wordsPerLine: [4, 7], totalSyllables: [32, 48] },
+          couplet: { lines: 2, wordsPerLine: [7, 10], totalSyllables: [20, 28] }
+        };
+        
+        const spec = lengthSpecs[selectedLength as keyof typeof lengthSpecs];
+        
+        // Create detailed JSON prompt structure
         const jsonPrompt = {
           task: "generate_lyric_starter",
           parameters: {
             genre: genre || "contemporary",
             songSection: currentSection,
+            structure: {
+              lengthType: selectedLength,
+              lines: spec.lines,
+              wordsPerLine: spec.wordsPerLine,
+              syllableRange: spec.totalSyllables,
+              poeticMeter: selectedMeter,
+              rhymeScheme: selectedRhyme
+            },
             datamuseContext: {
-              genreWords: datamuseContext.genreWords,
-              emotionalWords: datamuseContext.emotionalWords,
-              rhymeWords: datamuseContext.rhymeWords,
-              sensoryWords: datamuseContext.sensoryWords,
-              tempoWords: datamuseContext.tempoWords,
-              culturalWords: datamuseContext.culturalWords,
-              contrastWords: datamuseContext.contrastWords,
-              associatedWords: datamuseContext.associatedWords
+              genreWords: datamuseContext.genreWords.slice(0, 15),
+              emotionalWords: datamuseContext.emotionalWords.slice(0, 10),
+              rhymeWords: datamuseContext.rhymeWords.slice(0, 8),
+              sensoryWords: datamuseContext.sensoryWords.slice(0, 8),
+              tempoWords: datamuseContext.tempoWords.slice(0, 5),
+              culturalWords: datamuseContext.culturalWords.slice(0, 5),
+              contrastWords: datamuseContext.contrastWords.slice(0, 5),
+              associatedWords: datamuseContext.associatedWords.slice(0, 5)
+            },
+            styleGuidelines: {
+              tone: currentSection === 'chorus' ? 'anthemic_memorable' : 
+                    currentSection === 'verse' ? 'storytelling_intimate' :
+                    currentSection === 'bridge' ? 'reflective_turning_point' :
+                    'emotionally_engaging',
+              imagery: 'vivid_sensory',
+              language: 'contemporary_authentic',
+              emotionalIntensity: genre === 'metal' || genre === 'punk' ? 'high' :
+                                 genre === 'jazz' || genre === 'folk' ? 'subtle' : 'moderate'
             },
             requirements: {
-              wordCount: { min: 5, max: 15 },
-              style: currentSection === 'chorus' ? 'memorable_hook' : 'engaging_opener',
-              format: "single_line"
+              mustIncludeGenreVocabulary: true,
+              avoidClichePhrases: true,
+              naturalLanguageFlow: true,
+              appropriateToSection: true
             }
           }
         };
         
-        const prompt = `You are given a JSON request to generate a lyric starter. Use the Datamuse context words for authentic vocabulary.
+        const prompt = `You are given a detailed JSON request to generate a lyric starter with specific structural requirements.
 
 Request: ${JSON.stringify(jsonPrompt, null, 2)}
 
-Instructions:
-1. Study the genreWords and emotionalWords to capture the authentic ${genre || 'contemporary'} feel
-2. Use tempoWords and culturalWords for authentic genre-specific rhythm and cultural references
-3. Consider using some of the rhymeWords for potential rhyme schemes
-4. Incorporate sensoryWords for vivid imagery
-5. Add depth with contrastWords (antonyms) for emotional complexity
-6. Blend in associatedWords (synonyms) for richer vocabulary
-7. Create ONE powerful ${currentSection} line that feels authentically ${genre || 'contemporary'}
-8. The line should naturally incorporate vocabulary from multiple context categories
+CRITICAL INSTRUCTIONS:
+1. Generate EXACTLY ${spec.lines} line(s) as specified in structure.lines
+2. Follow the poetic meter "${selectedMeter}" if not free_verse:
+   - iambic: da-DUM pattern (e.g., "I WALK a-LONE through STREETS of GOLD")
+   - trochaic: DUM-da pattern (e.g., "FIRE-light DANC-ing IN the DARK-ness")
+   - anapestic: da-da-DUM (e.g., "in the HEAT of the NIGHT we are FREE")
+   - dactylic: DUM-da-da (e.g., "BEAU-ti-ful MEM-o-ries FADE a-way")
+3. Implement rhyme scheme "${selectedRhyme}" (${spec.lines > 1 ? 'end rhymes for multi-line' : 'internal rhyme for single line'})
+4. Keep each line between ${spec.wordsPerLine[0]}-${spec.wordsPerLine[1]} words
+5. Total syllable count should be ${spec.totalSyllables[0]}-${spec.totalSyllables[1]}
+6. Blend Datamuse context words naturally - don't force them
+7. Match the tone "${jsonPrompt.parameters.styleGuidelines.tone}" for ${currentSection}
 
-Response format: {"lyric": "your lyric line here"}
+FORMATTING:
+- For single line: {"lyric": "your single line here"}
+- For multiple lines: {"lyric": "First line here\\nSecond line here"} (use \\n for line breaks)
 
-Important: Reply with ONLY the JSON object, nothing else.`;
+QUALITY REQUIREMENTS:
+- Sound natural when spoken aloud
+- Have clear rhythm and flow
+- Feel authentic to ${genre || 'contemporary'} genre
+- Avoid generic phrases like "in the night" or "heart and soul"
+- Create something memorable and fresh
+
+Reply with ONLY the JSON object.`;
 
         const requestParams: any = {
           model: model,
           messages: [
             {
               role: "system",
-              content: `You are a master lyricist who uses JSON-structured requests to create authentic, genre-specific lyrics. 
+              content: `You are a master lyricist who creates structurally diverse lyrics based on detailed JSON specifications.
 
-Your expertise:
-1. Analyzing linguistic context from Datamuse API data
-2. Incorporating authentic genre vocabulary naturally
-3. Creating lyrics that feel genuine to the specified style
-4. Using sensory and emotional words for vivid imagery
-5. Building on rhyme potential from provided word lists
+CORE COMPETENCIES:
+1. POETIC METER MASTERY: Expert in iambic, trochaic, anapestic, dactylic patterns
+2. LENGTH VARIATION: Create short hooks, medium verses, long narratives, and rhyming couplets
+3. SYLLABLE PRECISION: Count syllables accurately for rhythmic flow
+4. RHYME SCHEMES: Master of AABB, ABAB, ABCB, internal rhymes, and free verse
+5. GENRE AUTHENTICITY: Use Datamuse context words to capture genuine genre feel
+6. STRUCTURAL VARIETY: Adapt tone and style for verse, chorus, bridge, pre-chorus, outro
 
-Always respond with a JSON object containing the lyric.`
+OUTPUT RULES:
+- ALWAYS return JSON format: {"lyric": "text"} for single line
+- Use {"lyric": "line1\\nline2"} for multiple lines (\\n for breaks)
+- STRICTLY follow the line count specified in structure.lines
+- MAINTAIN word count per line as specified in wordsPerLine range
+- MATCH total syllable count to syllableRange specification
+
+QUALITY STANDARDS:
+- Natural spoken rhythm that matches the specified meter
+- Fresh imagery avoiding clichéd phrases
+- Seamless integration of context vocabulary
+- Emotional resonance matching the song section
+- Professional songwriting quality`
             },
             {
               role: "user",
               content: prompt
             }
           ],
-          temperature: 0.9,
-          max_tokens: 100
+          temperature: 1.2, // Higher temperature for more creative variety
+          max_tokens: 200 // Increased for longer lyrics
         };
 
         // Add frequency penalties for Grok 3
         if (model === 'grok-3' || model === 'grok-3-mini') {
-          requestParams.frequency_penalty = 0.3;
-          requestParams.presence_penalty = 0.3;
+          requestParams.frequency_penalty = 0.6; // Higher to avoid repetition
+          requestParams.presence_penalty = 0.5; // Encourage diverse vocabulary
         }
 
         const completion = await xaiRateLimiter.execute(async () => {
@@ -173,33 +247,60 @@ Always respond with a JSON object containing the lyric.`
 
   private generateFallbackLyric(genre?: string): { lyric: string; model: string; songSection: string } {
     const fallbackLyrics = {
-      verse: [
-        "I've been walking down this empty road alone",
-        "There's a story written in the stars tonight",
-        "Every morning brings a different kind of light",
-        "The city sleeps but my mind is wide awake",
-        "Letters that I never sent still haunt my dreams"
-      ],
-      chorus: [
-        "We're all just searching for a place to call our own",
-        "Hold on tight, the best is yet to come",
-        "This is our moment, written in the sky",
-        "Love like wildfire, burning through the night",
-        "We are the dreamers, never backing down"
-      ],
-      bridge: [
-        "Maybe all we need is time to understand",
-        "Looking back, I see how far we've come",
-        "In the silence, truth begins to speak",
-        "Everything changes when you change your mind",
-        "The answer was inside us all along"
-      ]
+      verse: {
+        short: [
+          "I've been walking down this empty road alone",
+          "There's a story written in the stars tonight",
+          "Every morning brings a different kind of light"
+        ],
+        medium: [
+          "The city sleeps but my mind is wide awake\nSearching for the words I couldn't say",
+          "Letters that I never sent still haunt my dreams\nEchoing like whispers in between the seams",
+          "Thunder rolls across the purple sky\nWondering if you still remember why"
+        ],
+        long: [
+          "Walking through the streets where we used to laugh\nEvery corner holds a photograph\nMemories dance like shadows on the wall\nWaiting for the moment when you call"
+        ]
+      },
+      chorus: {
+        short: [
+          "We're all just searching for a place to call our own",
+          "Hold on tight, the best is yet to come",
+          "This is our moment, written in the sky"
+        ],
+        medium: [
+          "Love like wildfire, burning through the night\nWe are the dreamers, never backing down",
+          "Rise above the chaos, find your way\nTomorrow's just a heartbeat away",
+          "Sing it loud, let the whole world know\nThis is where our story starts to grow"
+        ],
+        long: [
+          "When the world gets heavy, I'll be your strength\nThrough the storms and shadows, we'll go the length\nHand in hand, we'll face whatever comes our way\nTogether we're unstoppable, come what may"
+        ]
+      },
+      bridge: {
+        short: [
+          "Maybe all we need is time to understand",
+          "Looking back, I see how far we've come",
+          "In the silence, truth begins to speak"
+        ],
+        medium: [
+          "Everything changes when you change your mind\nLeave the past and all your fears behind",
+          "The answer was inside us all along\nNow we're right where we belong",
+          "Breaking through the walls we built so high\nFinally learning how to fly"
+        ],
+        long: [
+          "And if we lose our way tonight\nI'll be the compass to your light\nThrough every twist and turn we'll find\nThe peace we're searching for in time"
+        ]
+      }
     };
 
     const sections = Object.keys(fallbackLyrics) as Array<keyof typeof fallbackLyrics>;
     const section = sections[Math.floor(Math.random() * sections.length)];
-    const lyrics = fallbackLyrics[section];
-    const selectedLyric = lyrics[Math.floor(Math.random() * lyrics.length)];
+    const lengthTypes = ['short', 'medium', 'long'] as const;
+    const length = lengthTypes[Math.floor(Math.random() * lengthTypes.length)];
+    
+    const sectionLyrics = fallbackLyrics[section][length];
+    const selectedLyric = sectionLyrics[Math.floor(Math.random() * sectionLyrics.length)];
 
     return {
       lyric: selectedLyric,
