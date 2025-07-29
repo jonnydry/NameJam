@@ -110,37 +110,78 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    // Use the first configured domain for authentication
-    const domains = process.env.REPLIT_DOMAINS!.split(",");
-    const authDomain = domains[0]; // Use first domain as primary
-    
-    passport.authenticate(`replitauth:${authDomain}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    try {
+      // Use the first configured domain for authentication
+      const domains = process.env.REPLIT_DOMAINS!.split(",");
+      const authDomain = domains[0]; // Use first domain as primary
+      
+      console.log("Starting authentication for domain:", authDomain);
+      
+      passport.authenticate(`replitauth:${authDomain}`, {
+        prompt: "login consent",
+        scope: ["openid", "email", "profile", "offline_access"],
+      })(req, res, next);
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Authentication failed" });
+    }
   });
 
   app.get("/api/callback", (req, res, next) => {
-    // Use the first configured domain for callback
-    const domains = process.env.REPLIT_DOMAINS!.split(",");
-    const authDomain = domains[0];
-    
-    passport.authenticate(`replitauth:${authDomain}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    })(req, res, next);
+    try {
+      // Use the first configured domain for callback
+      const domains = process.env.REPLIT_DOMAINS!.split(",");
+      const authDomain = domains[0];
+      
+      console.log("Processing callback for domain:", authDomain);
+      console.log("Callback query params:", req.query);
+      
+      passport.authenticate(`replitauth:${authDomain}`, {
+        successReturnToOrRedirect: "/",
+        failureRedirect: "/auth-error",
+        failureFlash: false
+      })(req, res, next);
+    } catch (error) {
+      console.error("Callback error:", error);
+      res.redirect("/auth-error");
+    }
   });
 
   app.get("/api/logout", async (req, res) => {
-    const config = await getOidcConfig();
-    req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
-    });
+    try {
+      const config = await getOidcConfig();
+      req.logout(() => {
+        // Fix hostname deprecation warning and use proper domain
+        const domains = process.env.REPLIT_DOMAINS!.split(",");
+        const domain = domains[0];
+        const protocol = domain.includes('replit.dev') ? 'https' : 'http';
+        const logoutUri = `${protocol}://${domain}`;
+        
+        res.redirect(
+          client.buildEndSessionUrl(config, {
+            client_id: process.env.REPL_ID!,
+            post_logout_redirect_uri: logoutUri,
+          }).href
+        );
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.redirect("/");
+    }
+  });
+
+  // Add auth error route
+  app.get("/auth-error", (req, res) => {
+    res.status(401).send(`
+      <html>
+        <head><title>Authentication Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h1>Authentication Failed</h1>
+          <p>Sorry, there was a problem signing you in.</p>
+          <a href="/" style="color: #007bff; text-decoration: none;">← Back to NameJam</a>
+        </body>
+      </html>
+    `);
   });
 }
 
