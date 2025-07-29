@@ -92,12 +92,14 @@ export async function setupAuth(app: Express) {
   const domains = process.env.REPLIT_DOMAINS!.split(",");
   
   for (const domain of domains) {
+    // Use the current protocol and domain for callback URL
+    const protocol = domain.includes('replit.dev') ? 'https' : 'http';
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
         config,
         scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
+        callbackURL: `${protocol}://${domain}/api/callback`,
       },
       verify,
     );
@@ -129,7 +131,8 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.get("/api/logout", (req, res) => {
+  app.get("/api/logout", async (req, res) => {
+    const config = await getOidcConfig();
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
