@@ -68,7 +68,7 @@ export function NameGenerator() {
       const response = await apiRequest('POST', '/api/generate-names', {
         type: nameType,
         wordCount,
-        count: 8,
+        count: 4, // Reduced from 8 to 4 for better speed and quality
         ...(mood && mood !== 'none' && { mood }),
         ...(genre && genre !== 'none' && { genre })
       });
