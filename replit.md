@@ -20,6 +20,9 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Non-blocking Database Storage**: Made database storage asynchronous to speed up API responses
 - **Reduced Retries**: Limited AI generation retries to 1 attempt per model for faster responses
 
+### Bug Fixes (January 2025)
+- **Fixed Band Bio Display**: Fixed issue where raw JSON was displayed instead of biography text. Added proper parsing to extract biography from nested AI response structures.
+
 ### Name Quality Improvements (January 2025)
 - **Musical Word Filter**: Created comprehensive filter to exclude inappropriate words (anatomical terms, food items, archaic words) and overused AI clichés
 - **Smart Name Patterns**: Implemented pattern-based generation following real band/song naming conventions (e.g., "The [Adj] [Noun]s", compound words, personal statements)
@@ -29,6 +32,12 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Reduced Generation Count**: Changed from 8 names to 4 names (2 AI + 2 non-AI) to prioritize quality over quantity and improve response speed
 - **Unified Word Filtering**: Implemented coordinated word filtering across AI and non-AI generation to prevent repetition within generations (4 results) and reduce similarity between back-to-back generations. Features time-weighted penalties, stem tracking for word variations, and 30-minute word memory for maximum variety while preserving creativity.
 - **Retry Logic for Complete Results**: Added intelligent retry mechanisms that generate additional candidates when word filtering rejects names, ensuring users always receive the full count of 4 results (2 AI + 2 non-AI) while maintaining variety standards.
+
+### Code Quality Improvements (January 2025)
+- **Removed Console.log Statements**: Replaced all console.log with secure logging throughout the codebase
+- **Simplified Quality Control Service**: Removed 300+ lines of unused code from NameQualityControlService for better maintainability
+- **Centralized Constants**: Created constants.ts file for all hardcoded values (generation counts, retry multipliers, cache timeouts, etc.)
+- **Eliminated Code Duplication**: Created shared generateWithRetry method, reducing codebase by ~100 lines
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
