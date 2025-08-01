@@ -10,6 +10,13 @@ NameJam is a web application designed to generate unique band names and song tit
   - Added poetry vocabulary to both AI and non-AI name generation for more literary and sophisticated results
   - Poetry context is cached for 15 minutes for optimal performance
   - Maps genres and moods to appropriate poetry search terms (e.g., jazz → moon/night/smoke, metal → darkness/rage)
+- **Enhanced 4+ Word Generation with Poetic Flow**: Implemented natural language patterns for names with 4 or more words
+  - Created PoeticFlowPatterns class to generate naturally flowing phrases using linguistic templates
+  - Integrated all API contexts (Spotify, Last.fm, ConceptNet, Datamuse, PoetryDB) into 4+ word generation
+  - Added natural language connectives (prepositions, conjunctions, transitions) for grammatical correctness
+  - Implemented smart word selection that categorizes words by type (noun, verb, adjective) for proper placement
+  - 4+ word names now resemble natural language while maintaining metaphorical excitement
+  - Poetry context is passed through all generation methods including fallback generation
 
 ## Recent Updates (January 2025)
 - Implemented comprehensive 5-step API synergy enhancement plan:

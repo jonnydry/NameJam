@@ -155,6 +155,9 @@ export class EnhancedNameGeneratorService {
 
     secureLog.debug(`🚀 Enhanced generation: ${count} ${type} names with ${wordCount} words`);
     
+    // Get full generation context including poetry
+    const fullContext = await this.getGenerationContext(mood, genre);
+    
     // If API context is provided, log it
     if (apiContext && apiContext.length > 0) {
       secureLog.debug(`📌 Using API context: ${apiContext.length} words - ${apiContext.slice(0, 5).join(', ')}...`);
@@ -206,7 +209,8 @@ export class EnhancedNameGeneratorService {
             wordCount, 
             wordSources, 
             mood, 
-            genre
+            genre,
+            fullContext.poetryContext
           ).catch(() => null)
         );
         
@@ -256,7 +260,7 @@ export class EnhancedNameGeneratorService {
     while (names.length < count && fallbackAttempts < maxFallbackAttempts) {
       fallbackAttempts++;
       const fallbackWordCount = wordCount >= 4 ? Math.floor(Math.random() * 7) + 4 : wordCount;
-      const fallbackName = generateFallbackName(wordSources, fallbackWordCount);
+      const fallbackName = generateFallbackName(wordSources, fallbackWordCount, fullContext.poetryContext);
       
       if (!names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
         // Skip quality check for performance - just add fallback name
