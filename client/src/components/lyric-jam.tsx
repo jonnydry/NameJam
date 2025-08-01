@@ -210,9 +210,9 @@ export function LyricJam() {
                 {/* Background gradient effect */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-black/20" />
                 
-                <CardHeader className="relative space-y-6 p-8 sm:p-10">
+                <CardHeader className="relative space-y-6 p-6 sm:p-8">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-4 flex-1 min-w-0 max-w-4xl">
+                    <div className="space-y-4 flex-1 min-w-0">
                       {currentLyric.songSection && (
                         <div className="inline-flex">
                           <Badge className={`${getSectionColor(currentLyric.songSection)} text-white font-bold px-4 py-1 text-sm shadow-lg`}>
@@ -220,18 +220,18 @@ export function LyricJam() {
                           </Badge>
                         </div>
                       )}
-                      <div className="space-y-3 mt-4">
+                      <div className="space-y-2 mt-6">
                         {currentLyric.lyric.includes('\n') ? (
                           currentLyric.lyric.split('\n').map((line, index) => (
                             <div 
                               key={index} 
-                              className={`text-xl sm:text-2xl lg:text-3xl font-light leading-relaxed text-white ${index > 0 ? 'mt-3' : ''}`}
+                              className={`text-lg sm:text-xl font-light leading-relaxed text-gray-100 ${index > 0 ? 'mt-2' : ''}`}
                             >
-                              <span className="italic">{line}</span>
+                              <span className="italic tracking-wide">{line}</span>
                             </div>
                           ))
                         ) : (
-                          <span className="text-xl sm:text-2xl lg:text-3xl font-light italic leading-relaxed text-white">
+                          <span className="text-lg sm:text-xl font-light italic leading-relaxed text-gray-100 tracking-wide">
                             {currentLyric.lyric}
                           </span>
                         )}
