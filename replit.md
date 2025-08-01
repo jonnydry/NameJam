@@ -46,6 +46,13 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Centralized Constants**: Created constants.ts file for all hardcoded values (generation counts, retry multipliers, cache timeouts, etc.)
 - **Eliminated Code Duplication**: Created shared generateWithRetry method, reducing codebase by ~100 lines
 
+### UI/UX Improvements (January 2025)
+- **Enhanced Lyrics Result Card**: Redesigned with gradient backgrounds, improved typography, glassmorphism effects, and better visual hierarchy
+- **Visual Consistency**: Aligned lyrics cards with overall dark theme using purple/pink gradient accents
+- **Better Readability**: Added semi-transparent background boxes for lyrics text with proper spacing and larger font sizes
+- **Improved Section Badges**: Added gradient effects to song section badges (intro, verse, chorus, etc.)
+- **Refined Metadata Display**: Better organization of generation info and genre display with improved color coding
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
