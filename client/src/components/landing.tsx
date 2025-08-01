@@ -34,12 +34,12 @@ export function Landing() {
       description: "4+ word names that read like natural speech while staying creative and memorable"
     },
     {
-      icon: Zap,
+      icon: Archive,
       bgColor: "bg-purple-500/10",
       textColor: "text-purple-500",
       customClass: "carousel-card-purple",
-      title: "Lightning-Fast Generation",
-      description: "Get results in 7-10 seconds, down from over 50 seconds with our optimized system"
+      title: "Advanced Stash System",
+      description: "Save, rate, and organize your favorite names and lyrics with 5-star ratings and smart sorting"
     },
     {
       icon: Music,
