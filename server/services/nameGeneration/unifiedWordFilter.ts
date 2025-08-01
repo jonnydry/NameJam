@@ -111,7 +111,7 @@ export class UnifiedWordFilter {
       this.cleanupOldWords();
     }
     
-    secureLog.debug(`✅ Accepted "${name}" - tracking ${words.length} words + ${stems.length} stems`);
+    secureLog.debug(`✅ Accepted "${name}" - tracking ${words.length} words + ${stems.length} stems: [${words.join(', ')}]`);
   }
 
   // Get variety score for a name (higher = more variety)
@@ -140,13 +140,28 @@ export class UnifiedWordFilter {
     return Math.max(0, score);
   }
 
-  // Extract meaningful words from a name
+  // Extract meaningful words from a name (excluding common function words)
   private extractWords(name: string): string[] {
+    // Common function words that should not be filtered
+    const functionWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+      'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
+      'before', 'after', 'above', 'below', 'between', 'among', 'under', 'over',
+      'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+      'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might',
+      'can', 'must', 'shall', 'this', 'that', 'these', 'those', 'i', 'you', 
+      'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+      'my', 'your', 'his', 'her', 'its', 'our', 'their'
+    ]);
+    
     return name
       .toLowerCase()
       .split(/[\s\-_]+/)
       .map(word => word.replace(/[^a-z]/g, ''))
-      .filter(word => word.length >= 3); // Only track meaningful words
+      .filter(word => 
+        word.length >= 3 && // Only track meaningful words
+        !functionWords.has(word) // Exclude common function words
+      );
   }
 
   // Simple word stemming to catch variations
