@@ -102,48 +102,50 @@ export function Landing() {
           </div>
 
           {/* Features Carousel */}
-          <div className="relative mb-12 max-w-3xl mx-auto carousel-container-mobile">
-            {/* Carousel Container */}
-            <div className="overflow-hidden">
-              <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
-                {features.map((feature, index) => {
-                  const Icon = feature.icon;
-                  return (
-                    <div key={index} className="w-full flex-shrink-0">
-                      <div className={`mx-4 text-left p-8 rounded-xl border-2 border-border/20 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm transition-all duration-300 carousel-card-mobile ${feature.customClass}`}>
-                        <div className="flex items-start gap-4">
-                          <div className={`p-3 rounded-lg carousel-icon-mobile ${feature.bgColor} ${feature.textColor}`}>
-                            <Icon className="w-6 h-6" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg mb-2 font-mono text-foreground">{feature.title}</h3>
-                            <p className="text-base text-muted-foreground/90 leading-relaxed">{feature.description}</p>
+          <div className="mb-12 max-w-3xl mx-auto carousel-container-mobile">
+            {/* Carousel Container with Navigation */}
+            <div className="relative">
+              <div className="overflow-hidden">
+                <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+                  {features.map((feature, index) => {
+                    const Icon = feature.icon;
+                    return (
+                      <div key={index} className="w-full flex-shrink-0">
+                        <div className={`mx-4 text-left p-8 rounded-xl border-2 border-border/20 bg-gradient-to-br from-card/40 to-card/20 backdrop-blur-sm transition-all duration-300 carousel-card-mobile ${feature.customClass}`}>
+                          <div className="flex items-start gap-4">
+                            <div className={`p-3 rounded-lg carousel-icon-mobile ${feature.bgColor} ${feature.textColor}`}>
+                              <Icon className="w-6 h-6" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg mb-2 font-mono text-foreground">{feature.title}</h3>
+                              <p className="text-base text-muted-foreground/90 leading-relaxed">{feature.description}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* Navigation Buttons - Now positioned relative to the card area only */}
+              <button
+                onClick={prevSlide}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-10 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg carousel-nav-mobile"
+                aria-label="Previous feature"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-10 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg carousel-nav-mobile"
+                aria-label="Next feature"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
             </div>
 
-            {/* Navigation Buttons */}
-            <button
-              onClick={prevSlide}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-10 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg carousel-nav-mobile"
-              aria-label="Previous feature"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-10 p-3 rounded-full bg-background/90 border border-border/50 hover:bg-background hover:border-border hover:shadow-xl transition-all duration-200 shadow-lg carousel-nav-mobile"
-              aria-label="Next feature"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-
-            {/* Indicators */}
+            {/* Indicators - Outside the relative positioned container */}
             <div className="flex justify-center gap-2 mt-6 carousel-indicators-mobile">
               {features.map((_, index) => (
                 <button
