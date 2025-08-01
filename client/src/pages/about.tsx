@@ -52,17 +52,20 @@ export default function About() {
                 <div className="p-4 border border-solid border-border/30 rounded-lg bg-card/60 backdrop-blur-sm">
                   <h3 className="font-medium mb-3">Key Features</h3>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• <strong>Datamuse-Powered Generation:</strong> Revolutionary replacement of static vocabulary with Datamuse API providing authentic linguistic relationships from 300,000+ word database for contextual word pairing</li>
-                    <li>• <strong>Hybrid AI Integration:</strong> XAI Grok 3/4 models with custom JSON prompts for 50% AI + 50% Datamuse generation split, complete with anti-repetition filtering and model attribution</li>
-                    <li>• <strong>Advanced Customization:</strong> Choose 1-6 word combinations, 12 mood themes, 14 musical genres with precise linguistic filtering and contextual word selection</li>
+                    <li>• <strong>5-API Synergy System:</strong> Revolutionary integration of Spotify, Last.fm, ConceptNet, Datamuse, and PoetryDB APIs working together to create contextually rich, genre-authentic names</li>
+                    <li>• <strong>PoetryDB Integration:</strong> Classical poetry context enhances generation with poetic vocabulary, imagery, and themes mapped to genres/moods (e.g., jazz → moon/night/smoke, metal → darkness/rage)</li>
+                    <li>• <strong>Enhanced 4+ Word Generation:</strong> Natural language patterns using PoeticFlowPatterns class with linguistic templates, grammatical connectives, and smart word categorization for poetic flow</li>
+                    <li>• <strong>Optimized Performance:</strong> Reduced response times from 50+ seconds to 7-10 seconds through parallel processing, intelligent caching, and single-model AI approach</li>
+                    <li>• <strong>Advanced AI Integration:</strong> XAI Grok models (grok-2-1212, grok-2-vision-1212, grok-3-mini) with dynamic temperature (1.0-1.4), forbidden word filtering, and quality-focused generation (4 results: 2 AI + 2 non-AI)</li>
+                    <li>• <strong>Musical Word Filter:</strong> Comprehensive filtering excludes inappropriate terms, overused AI clichés, and non-musical vocabulary while integrating genre-specific terminology</li>
                     <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, enhanced with popularity scores, genres, and direct search links</li>
-                    <li>• <strong>Enhanced Lyric Generation:</strong> Datamuse-enriched lyrical starters using genre-specific vocabulary, emotional words, rhymes, and sensory terms for authentic results</li>
+                    <li>• <strong>Enhanced Lyric Generation:</strong> Poetry-enriched lyrical starters with variable length, poetic meter options (Iambic, Trochaic, etc.), and authentic genre vocabulary from all 5 APIs</li>
                     <li>• <strong>Advanced Stash System:</strong> Save names, lyrics, and band bios with 5-star ratings, category filtering, and comprehensive export options (text/JSON/print)</li>
-                    <li>• <strong>Pure Linguistic Intelligence:</strong> Datamuse API eliminates static vocabulary for authentic language patterns with grammatical consistency and natural flow</li>
-                    <li>• <strong>AI Band Bio Generator:</strong> Create hilarious, edgy R-rated band biographies with sophisticated humor and anti-formulaic storytelling using production logger system</li>
-                    <li>• <strong>Performance Optimization:</strong> Major codebase cleanup removing 49 packages (~36MB), unified caching system, custom date utilities, and production-ready logging</li>
-                    <li>• <strong>Dynamic Loading System:</strong> Real-time progress tracking with intelligent estimation curves that match actual API response times</li>
-                    <li>• <strong>Anti-Repetition Technology:</strong> Cross-generation word tracking preventing repeated words across multiple generations with 100-word memory system</li>
+                    <li>• <strong>Quality Control System:</strong> Semantic coherence checks, pronunciation validation, anti-repetition with 30-minute word memory, and poetic quality assessment</li>
+                    <li>• <strong>Set List Generator:</strong> Create organized song lists (8 or 16 songs) with mood/genre settings, automatic structuring, and Spotify verification for each song</li>
+                    <li>• <strong>Band Bio Generator:</strong> Create engaging band biographies with sophisticated humor, authentic backstories, and genre-appropriate narrative styles</li>
+                    <li>• <strong>Smart Name Patterns:</strong> Pattern-based generation following real band/song naming conventions with compound words, personal statements, and genre-specific structures</li>
+                    <li>• <strong>Unified Word Filtering:</strong> Coordinated filtering across all generation methods with time-weighted penalties, stem tracking, and intelligent retry mechanisms</li>
                     <li>• <strong>Modern Typography:</strong> Optimized monospace design with JetBrains Mono font, typing animations, and responsive text scaling using CSS clamp() functions</li>
                   </ul>
                 </div>
@@ -98,28 +101,33 @@ export default function About() {
                     <div>
                       <h4 className="font-medium text-foreground mb-1">AI & External APIs</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• XAI Grok 3, Grok 4, and Grok 3-mini with custom JSON prompts and intelligent parameter configuration</li>
-                        <li>• Datamuse API integration for authentic linguistic relationships and contextual word pairing (300,000+ words)</li>
-                        <li>• Spotify Web API (priority) for authoritative music verification with popularity scores and genre data</li>
-                        <li>• Last.fm API and MusicBrainz API for comprehensive music database coverage</li>
-                        <li>• Famous Names Database with 60+ well-known artists for easter easter egg trolling</li>
-                        <li>• Advanced rate limiting with intelligent retry mechanisms and graceful degradation</li>
-                        <li>• Cross-generation anti-repetition system tracking 100+ recent words for unique results</li>
+                        <li>• XAI Grok models (grok-2-1212, grok-2-vision-1212, grok-3-mini) with dynamic temperature control and 10-second timeout optimization</li>
+                        <li>• PoetryDB API for classical poetry context - vocabulary, imagery, themes, and phrases mapped to musical genres and moods</li>
+                        <li>• Datamuse API for authentic linguistic relationships, multi-query strategies, and contextual word chains (300,000+ words)</li>
+                        <li>• ConceptNet API for semantic knowledge, emotional associations, and cultural context with 30-minute response caching</li>
+                        <li>• Spotify Web API (priority) for authoritative music verification with popularity scores, genre data, and artist/track vocabulary extraction</li>
+                        <li>• Last.fm API for genre vocabulary, descriptive words, and related genre discovery with confidence scoring</li>
+                        <li>• MusicBrainz API for additional music database coverage and artist verification</li>
+                        <li>• Famous Names Database with 60+ well-known artists for playful easter egg responses</li>
+                        <li>• Unified caching system with 15-minute timeouts for poetry/context data and 30-minute timeouts for ConceptNet responses</li>
+                        <li>• Cross-generation anti-repetition system with stem tracking, time-weighted penalties, and 30-minute word memory</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Core Architecture</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• Revolutionary Datamuse API integration replacing all static vocabulary with authentic linguistic data</li>
-                        <li>• Advanced grammatical consistency engine with singular/plural agreement and natural flow optimization</li>
+                        <li>• 5-API Synergy System integrating Spotify, Last.fm, ConceptNet, Datamuse, and PoetryDB for comprehensive context</li>
+                        <li>• PoeticFlowPatterns class for natural language generation with linguistic templates and grammatical connectives</li>
+                        <li>• Advanced word categorization system (noun, verb, adjective) for proper placement in multi-word names</li>
+                        <li>• Parallel processing architecture reducing response times from 50+ to 7-10 seconds</li>
                         <li>• Real-time name verification with Spotify-priority checking, popularity scoring, and direct search links</li>
-                        <li>• Comprehensive stash system supporting names, lyrics, and band bios with 5-star ratings</li>
-                        <li>• Enhanced lyric generation using Datamuse context for genre-specific vocabulary and rhyme patterns</li>
-                        <li>• Production-ready codebase with major cleanup removing 49 packages and 36MB bundle reduction</li>
-                        <li>• Unified caching system with NodeCache replacing duplicate verification systems</li>
-                        <li>• Custom lightweight utilities replacing heavy libraries (date-fns → 1KB custom formatter)</li>
-                        <li>• Dynamic loading progress system with real-time API response tracking</li>
-                        <li>• Complete TypeScript error resolution and production logging optimization</li>
+                        <li>• Comprehensive quality control with semantic coherence checks and pronunciation validation</li>
+                        <li>• Unified caching system with intelligent timeouts (15-minute for context, 30-minute for API responses)</li>
+                        <li>• Musical word filtering system excluding 30+ overused terms and inappropriate vocabulary</li>
+                        <li>• Pattern-based name generation following real band/song naming conventions</li>
+                        <li>• Intelligent retry mechanisms ensuring complete results (4 names) despite filtering</li>
+                        <li>• Non-blocking database storage for improved API response times</li>
+                        <li>• Complete TypeScript type safety with centralized constants and eliminated code duplication</li>
                       </ul>
                     </div>
                   </div>
@@ -130,6 +138,7 @@ export default function About() {
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• Replit - Development platform and deployment</li>
                     <li>• xAI - Grok AI models for creative name and bio generation</li>
+                    <li>• PoetryDB API - Classical poetry context and literary vocabulary</li>
                     <li>• Datamuse API - Linguistic relationships and word associations</li>
                     <li>• Spotify Web API - Music verification and artist data</li>
                     <li>• Last.fm API - Genre intelligence and music metadata</li>
