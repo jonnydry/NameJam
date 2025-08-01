@@ -39,7 +39,6 @@ export function singularize(word: string): string {
     'syllabi': 'syllabus',
     'foci': 'focus',
     'termini': 'terminus',
-    'alumni': 'alumnus',
     'vita': 'vitae',
   };
   
@@ -195,7 +194,24 @@ export function isNounLike(word: string): boolean {
   return nounPatterns.some(pattern => pattern.test(word.toLowerCase()));
 }
 
-export function generateFallbackName(sources: EnhancedWordSource, wordCount: number): string {
+export function isVerbLike(word: string): boolean {
+  // Check if the word is likely a verb based on common patterns
+  const verbPatterns = [
+    /^.*(ing|ed|es|ize|ify|ate)$/,
+    /^(run|walk|jump|sing|dance|fly|swim|write|read|think|feel|love|hate)$/i
+  ];
+  
+  return verbPatterns.some(pattern => pattern.test(word.toLowerCase()));
+}
+
+export function generateFallbackName(sources: EnhancedWordSource, wordCount: number, poetryContext?: string[]): string {
+  // For 4+ words, use poetic flow patterns
+  if (wordCount >= 4 && poetryContext && poetryContext.length > 0) {
+    // Import poeticFlowPatterns dynamically to avoid circular dependency
+    const { poeticFlowPatterns } = require('./poeticFlowPatterns');
+    return poeticFlowPatterns.generatePoeticName(wordCount, sources, poetryContext);
+  }
+  
   // Base fallback words for when all else fails
   const fallbackAdjectives = [
     'Silent', 'Golden', 'Silver', 'Crimson', 'Emerald', 'Shadow', 'Crystal',
@@ -211,6 +227,14 @@ export function generateFallbackName(sources: EnhancedWordSource, wordCount: num
     'Rise', 'Fall', 'Dance', 'Sing', 'Fly', 'Run', 'Walk', 'Sleep',
     'Dream', 'Think', 'Feel', 'Know', 'See', 'Hear', 'Touch', 'Breathe'
   ];
+  
+  // Include poetry context if available
+  if (poetryContext && poetryContext.length > 0) {
+    const poeticWords = poetryContext.filter(w => w && w.length > 2 && w.length < 12);
+    sources.adjectives.unshift(...poeticWords.filter(w => isAdjectiveLike(w)));
+    sources.nouns.unshift(...poeticWords.filter(w => isNounLike(w)));
+    sources.verbs.unshift(...poeticWords.filter(w => isVerbLike(w)));
+  }
   
   const allWords = [
     ...sources.adjectives.slice(0, 20),

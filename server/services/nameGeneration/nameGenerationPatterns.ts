@@ -11,6 +11,7 @@ import {
   isGenreAppropriate 
 } from './generationHelpers';
 import { generateSmartBandName, generateSmartSongName } from './smartNamePatterns';
+import { poeticFlowPatterns } from './poeticFlowPatterns';
 
 export class NameGenerationPatterns {
   constructor(private datamuseService: DatamuseService) {}
@@ -20,7 +21,8 @@ export class NameGenerationPatterns {
     type: string, 
     wordCount: number,
     mood?: string,
-    genre?: string
+    genre?: string,
+    poetryContext?: string[]
   ): Promise<{ name: string; actualWordCount: number }> {
     let name = '';
     
@@ -52,7 +54,8 @@ export class NameGenerationPatterns {
         break;
       default:
         if (wordCount >= 4 && wordCount <= 10) {
-          name = await this.generateLongFormContextual(sources, wordCount, type);
+          // Use poetic flow patterns for 4+ words
+          name = poeticFlowPatterns.generatePoeticName(wordCount, sources, poetryContext);
         } else {
           name = this.generateStructuredPhrase(sources, wordCount);
         }
@@ -68,7 +71,8 @@ export class NameGenerationPatterns {
     requestedWordCount: number,
     sources: EnhancedWordSource,
     mood?: string,
-    genre?: string
+    genre?: string,
+    poetryContext?: string[]
   ): Promise<{ name: string; actualWordCount: number }> {
     let wordCount = requestedWordCount;
     
@@ -78,14 +82,14 @@ export class NameGenerationPatterns {
     }
     
     try {
-      const result = await this.generateContextualName(sources, type, wordCount, mood, genre);
+      const result = await this.generateContextualName(sources, type, wordCount, mood, genre, poetryContext);
       
       // Quality check - ensure no repeated words
       const words = result.name.split(' ');
       const uniqueWords = new Set(words);
       if (uniqueWords.size !== words.length) {
         // Has duplicate words, regenerate
-        return await this.generateContextualNameWithCount(type, requestedWordCount, sources, mood, genre);
+        return await this.generateContextualNameWithCount(type, requestedWordCount, sources, mood, genre, poetryContext);
       }
       
       return result;
