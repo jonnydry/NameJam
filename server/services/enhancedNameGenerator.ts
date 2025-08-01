@@ -2,6 +2,7 @@ import { datamuseService, DatamuseService } from './datamuseService';
 import { lastfmService } from './lastfmService';
 import { SpotifyService } from './spotifyService';
 import { conceptNetService } from './conceptNetService';
+import { poetryDbService } from './poetryDbService';
 import type { GenerateNameRequest } from '@shared/schema';
 import { secureLog } from '../utils/secureLogger';
 
@@ -49,7 +50,8 @@ export class EnhancedNameGeneratorService {
   async getGenerationContext(mood?: string, genre?: string): Promise<{
     spotifyContext: string[],
     lastfmContext: string[],
-    conceptNetContext: string[]
+    conceptNetContext: string[],
+    poetryContext: string[]
   }> {
     // Performance: Check cache first
     const cacheKey = `context_${mood || 'none'}_${genre || 'none'}`;
@@ -63,7 +65,8 @@ export class EnhancedNameGeneratorService {
     const context = {
       spotifyContext: [] as string[],
       lastfmContext: [] as string[],
-      conceptNetContext: [] as string[]
+      conceptNetContext: [] as string[],
+      poetryContext: [] as string[]
     };
     
     try {
@@ -114,9 +117,23 @@ export class EnhancedNameGeneratorService {
         );
       }
       
+      // PoetryDB context - get poetic vocabulary and imagery
+      promises.push(
+        poetryDbService.getPoetryContext(genre, mood)
+          .then(poetryData => {
+            // Combine vocabulary and imagery for name generation context
+            context.poetryContext = [
+              ...poetryData.vocabulary.slice(0, 10),
+              ...poetryData.imagery.slice(0, 5)
+            ].filter(w => w.length > 3);
+            secureLog.debug(`🎭 Poetry context: ${context.poetryContext.length} poetic words`);
+          })
+          .catch((err: any) => secureLog.debug('Poetry context failed:', err))
+      );
+      
       await Promise.allSettled(promises);
       
-      secureLog.debug(`📚 Collected context: Spotify(${context.spotifyContext.length}), Last.fm(${context.lastfmContext.length}), ConceptNet(${context.conceptNetContext.length})`);
+      secureLog.debug(`📚 Collected context: Spotify(${context.spotifyContext.length}), Last.fm(${context.lastfmContext.length}), ConceptNet(${context.conceptNetContext.length}), Poetry(${context.poetryContext.length})`);
       
       // Cache the result for performance
       this.contextCache.set(cacheKey, {

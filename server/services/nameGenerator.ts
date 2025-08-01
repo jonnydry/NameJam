@@ -2,6 +2,7 @@ import type { GenerateNameRequest } from "@shared/schema";
 import type { AINameGeneratorService } from "./aiNameGenerator";
 import { enhancedNameGenerator } from "./enhancedNameGenerator";
 import { unifiedWordFilter } from "./nameGeneration/unifiedWordFilter";
+import { poetryDbService } from "./poetryDbService";
 import { secureLog } from "../utils/secureLogger";
 import { 
   DEFAULT_GENERATION_COUNT, 
@@ -98,8 +99,8 @@ export class NameGeneratorService {
         if (request.genre) {
           // Get real examples from enhanced name generator's API sources
           const generationContext = await enhancedNameGenerator.getGenerationContext(request.mood, request.genre);
-          // Combine artist names from Spotify, Last.fm, and ConceptNet for context
-          contextExamples = [...generationContext.spotifyContext, ...generationContext.lastfmContext, ...generationContext.conceptNetContext]
+          // Combine artist names from Spotify, Last.fm, ConceptNet, and Poetry for context
+          contextExamples = [...generationContext.spotifyContext, ...generationContext.lastfmContext, ...generationContext.conceptNetContext, ...generationContext.poetryContext]
             .filter(w => w.length > MIN_WORD_LENGTH_FOR_CONTEXT && !w.includes(' ')) // Filter for quality
             .slice(0, MAX_CONTEXT_EXAMPLES);
         }
@@ -142,7 +143,8 @@ export class NameGeneratorService {
           datamuseContext = [
             ...generationContext.spotifyContext, 
             ...generationContext.lastfmContext, 
-            ...generationContext.conceptNetContext
+            ...generationContext.conceptNetContext,
+            ...generationContext.poetryContext
           ].filter(w => w.length > 2);
           secureLog.debug(`📚 Datamuse using context: ${datamuseContext.length} words`);
         }
@@ -215,7 +217,7 @@ export class NameGeneratorService {
           let contextExamples: string[] = [];
           if (enhancedRequest.genre) {
             const generationContext = await enhancedNameGenerator.getGenerationContext(enhancedRequest.mood, enhancedRequest.genre);
-            contextExamples = [...generationContext.spotifyContext, ...generationContext.lastfmContext, ...generationContext.conceptNetContext]
+            contextExamples = [...generationContext.spotifyContext, ...generationContext.lastfmContext, ...generationContext.conceptNetContext, ...generationContext.poetryContext]
               .filter(w => w.length > 2 && !w.includes(' '))
               .slice(0, 15);
           }
