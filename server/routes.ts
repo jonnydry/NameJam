@@ -37,7 +37,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   // Add performance optimization middleware
   app.use(compressionMiddleware);
   app.use(responseTimeMiddleware);
-  app.use(timeoutMiddleware(35000)); // 35 second timeout for complex generations
+  app.use(timeoutMiddleware(50000)); // 50 second timeout for complex generations
   app.use(cacheHeaders);
   
   // Auth middleware
