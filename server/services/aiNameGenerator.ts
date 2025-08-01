@@ -64,14 +64,14 @@ export class AINameGeneratorService {
       ...models.slice(0, startModelIndex)
     ];
     
-    for (const model of rotatedModels) {
-      // Try each model up to 1 time for faster response
-      for (let attempt = 0; attempt < 1; attempt++) {
-        try {
-          secureLog.debug(`Attempting model: ${model} (rotation: ${this.modelRotation}, attempt ${attempt + 1})`);
-          // Add randomization to force variety
-          const randomSeed = Math.random().toString(36).substring(7);
-          const timestamp = Date.now() % 10000;
+    // Try only the first model with a timeout for fast response
+    const primaryModel = rotatedModels[0];
+    
+    try {
+      secureLog.debug(`Attempting model: ${primaryModel} (rotation: ${this.modelRotation})`);
+      // Add randomization to force variety
+      const randomSeed = Math.random().toString(36).substring(7);
+      const timestamp = Date.now() % 10000;
           
           // For "4+" option (wordCount >= 4), use dynamic range of 4-6 words
           const dynamicWordCount = wordCount && wordCount >= 4 ? 
@@ -230,7 +230,7 @@ export class AINameGeneratorService {
 
         // Configure parameters based on model capabilities
         const requestParams: any = {
-          model: model,
+          model: primaryModel,
           messages: [
             {
               role: "system",
@@ -247,15 +247,15 @@ export class AINameGeneratorService {
         };
 
         // Model-specific parameter configuration
-        if (model === 'grok-4') {
+        if (primaryModel === 'grok-4') {
           // Grok 4 - minimal parameters for maximum compatibility
           requestParams.top_p = 0.95;
-        } else if (model === 'grok-3') {
+        } else if (primaryModel === 'grok-3') {
           // Grok 3 full - supports all parameters
           requestParams.top_p = 0.9;
           requestParams.frequency_penalty = 0.8;
           requestParams.presence_penalty = 0.6;
-        } else if (model === 'grok-3-mini') {
+        } else if (primaryModel === 'grok-3-mini') {
           // Grok 3 mini - limited parameter support
           requestParams.top_p = 0.9;
           // No frequency_penalty or presence_penalty for mini
@@ -264,12 +264,19 @@ export class AINameGeneratorService {
           requestParams.top_p = 0.9;
         }
 
-        const response = await xaiRateLimiter.execute(async () => {
+        // Add timeout wrapper for AI API calls (10 seconds max)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('AI API timeout')), 10000);
+        });
+        
+        const apiPromise = xaiRateLimiter.execute(async () => {
           return withRetry(async () => {
             const resp = await this.openai!.chat.completions.create(requestParams);
             return resp;
           }, 1, 1000); // Reduced to 1 retry with 1 second delay for faster response
         });
+        
+        const response = await Promise.race([apiPromise, timeoutPromise]) as any;
 
         const generatedContent = response.choices[0]?.message?.content?.trim() || "";
         
@@ -288,7 +295,7 @@ export class AINameGeneratorService {
               
               if (containsRecentWord) {
                 secureLog.debug(`Rejected "${cleanName}" - contains recently used word`);
-                continue; // Try again with same model
+                return this.generateFallbackName(type, genre, mood, wordCount);
               }
               
               // Check for forbidden words
@@ -298,14 +305,14 @@ export class AINameGeneratorService {
               
               if (containsForbiddenWord) {
                 secureLog.debug(`Rejected "${cleanName}" - contains forbidden word`);
-                continue; // Try again with same model
+                return this.generateFallbackName(type, genre, mood, wordCount);
               }
               
               // Check for duplicate words within the same name
               const uniqueWords = new Set(nameWords);
               if (uniqueWords.size !== nameWords.length) {
                 secureLog.debug(`Rejected "${cleanName}" - contains duplicate words within the name`);
-                continue; // Try again with same model
+                return this.generateFallbackName(type, genre, mood, wordCount);
               }
               
               // Check word count and track words for future avoidance
@@ -316,23 +323,19 @@ export class AINameGeneratorService {
                 
               if (isValidWordCount) {
                 // Skip quality check for performance - just track the words
-                secureLog.info(`Successfully generated name "${cleanName}" using model: ${model}`);
+                secureLog.info(`Successfully generated name "${cleanName}" using model: ${primaryModel}`);
                 this.trackRecentWords(cleanName);
                 return cleanName;
               }
             }
           } catch (parseError) {
-            secureLog.error(`Failed to parse JSON response from model ${model}:`, generatedContent);
-            continue;
+            secureLog.error(`Failed to parse JSON response from model ${primaryModel}:`, generatedContent);
           }
         }
         
-        } catch (error: any) {
-          secureLog.error(`Model ${model} failed with error:`, error.message);
-          secureLog.debug(`Error details:`, error.response?.data || error.code || 'No additional details');
-          // Continue to next attempt
-        }
-      }
+    } catch (error: any) {
+      secureLog.error(`Model ${primaryModel} failed with error:`, error.message);
+      secureLog.debug(`Error details:`, error.response?.data || error.code || 'No additional details');
     }
 
     // If all models fail, return fallback

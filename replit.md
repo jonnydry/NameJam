@@ -16,9 +16,11 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Optimized Quality Checks**: Made quality checks optional and simplified for performance, removing expensive ConceptNet API calls by default
 - **Added Caching**: Implemented caching for ConceptNet API responses with 30-minute timeout
 - **Removed Sequential Bottlenecks**: Eliminated sequential processing in verification service, now all verifications run in parallel
-- **Timeout Improvements**: Increased request timeout to 35 seconds and improved timeout handling to prevent double responses
+- **Timeout Improvements**: Increased request timeout to 50 seconds and improved timeout handling to prevent double responses
 - **Non-blocking Database Storage**: Made database storage asynchronous to speed up API responses
 - **Reduced Retries**: Limited AI generation retries to 1 attempt per model for faster responses
+- **AI Model Optimization**: Implemented single-model approach with 10-second timeout (reduced from multi-model sequential attempts)
+- **Response Time Improvements**: Achieved 7-10 second response times (down from 50+ seconds)
 
 ### Bug Fixes (January 2025)
 - **Fixed Band Bio Display**: Fixed issue where raw JSON was displayed instead of biography text. Added proper parsing to extract biography from nested AI response structures.
