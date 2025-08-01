@@ -7,7 +7,7 @@ import { MAX_RECENT_WORDS_AI } from './nameGeneration/constants';
 export class AINameGeneratorService {
   private openai: OpenAI | null = null;
   private recentWords: string[] = [];
-  private modelRotation = 0; // Track model rotation for variety
+  // Using fixed best model instead of rotation for consistent quality
   
   // Expanded forbidden words list
   private forbiddenWords = new Set([
@@ -51,24 +51,13 @@ export class AINameGeneratorService {
       return this.generateFallbackName(type, genre, mood, wordCount);
     }
 
-    // Use latest available Grok models with rotation for variety
-    const models = ["grok-3", "grok-4", "grok-3-mini"];
-    
-    // Model rotation: cycle through models to ensure variety
-    const startModelIndex = this.modelRotation % models.length;
-    this.modelRotation++; // Increment for next generation
-    
-    // Reorder models array starting from rotation index
-    const rotatedModels = [
-      ...models.slice(startModelIndex),
-      ...models.slice(0, startModelIndex)
-    ];
-    
-    // Try only the first model with a timeout for fast response
-    const primaryModel = rotatedModels[0];
+    // Use the best performing model for consistent quality
+    // grok-3 has full parameter support including frequency/presence penalties for variety
+    const primaryModel = "grok-3";
+    const fallbackModels = ["grok-4", "grok-3-mini"]; // Fallback options if primary fails
     
     try {
-      secureLog.debug(`Attempting model: ${primaryModel} (rotation: ${this.modelRotation})`);
+      secureLog.debug(`Using primary model: ${primaryModel}`);
       // Add randomization to force variety
       const randomSeed = Math.random().toString(36).substring(7);
       const timestamp = Date.now() % 10000;
@@ -246,23 +235,11 @@ export class AINameGeneratorService {
           response_format: { type: "json_object" }
         };
 
-        // Model-specific parameter configuration
-        if (primaryModel === 'grok-4') {
-          // Grok 4 - minimal parameters for maximum compatibility
-          requestParams.top_p = 0.95;
-        } else if (primaryModel === 'grok-3') {
-          // Grok 3 full - supports all parameters
-          requestParams.top_p = 0.9;
-          requestParams.frequency_penalty = 0.8;
-          requestParams.presence_penalty = 0.6;
-        } else if (primaryModel === 'grok-3-mini') {
-          // Grok 3 mini - limited parameter support
-          requestParams.top_p = 0.9;
-          // No frequency_penalty or presence_penalty for mini
-        } else {
-          // Other models - basic parameters
-          requestParams.top_p = 0.9;
-        }
+        // Configure parameters for grok-3 (our primary model)
+        // grok-3 supports all parameters for maximum variety
+        requestParams.top_p = 0.9;
+        requestParams.frequency_penalty = 0.8;
+        requestParams.presence_penalty = 0.6;
 
         // Add timeout wrapper for AI API calls (10 seconds max)
         const timeoutPromise = new Promise((_, reject) => {
