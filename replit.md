@@ -4,6 +4,14 @@
 NameJam is a web application designed to generate unique band names and song titles with real-time availability verification. It combines creative name generation with web-powered checking to help musicians and artists find memorable names for their projects. The project aims to provide a tool that not only sparks creativity but also ensures the practical usability of generated names by integrating with music databases.
 
 ## Recent Updates (January 2025)
+- **PoetryDB Integration**: Added PoetryDB API integration to enhance lyric and name generation with classical poetry context
+  - Created PoetryDbService that fetches poetic vocabulary, imagery, and themes based on genre/mood
+  - Integrated poetry context into lyric generation to enrich AI prompts with classical poetry elements
+  - Added poetry vocabulary to both AI and non-AI name generation for more literary and sophisticated results
+  - Poetry context is cached for 15 minutes for optimal performance
+  - Maps genres and moods to appropriate poetry search terms (e.g., jazz → moon/night/smoke, metal → darkness/rage)
+
+## Recent Updates (January 2025)
 - Implemented comprehensive 5-step API synergy enhancement plan:
   - **Step 1**: AI improvements with dynamic temperature (1.0-1.4), model rotation (grok-2-1212, grok-2-vision-1212, grok-3-mini), forbidden word filtering (30+ overused terms)
   - **Step 2**: Datamuse optimization with multi-query strategy, frequency filtering, contextual chains, enhanced relationship mining
@@ -99,6 +107,7 @@ Preferred communication style: Simple, everyday language.
     - Last.fm API
     - MusicBrainz API
     - ConceptNet API
+    - PoetryDB API (for classical poetry context)
     - XAI Grok models (for AI name and lyric generation)
 - **UI Libraries**: Radix UI (primitives), shadcn/ui
 - **Forms**: React Hook Form with Zod validation

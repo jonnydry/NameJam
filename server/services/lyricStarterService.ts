@@ -4,6 +4,7 @@ import { DatamuseService } from './datamuseService';
 import { lastfmService } from './lastfmService';
 import { SpotifyService } from './spotifyService';
 import { conceptNetService } from './conceptNetService';
+import { poetryDbService } from './poetryDbService';
 import { secureLog } from '../utils/secureLogger';
 
 export class LyricStarterService {
@@ -115,6 +116,12 @@ export class LyricStarterService {
                 genreConcepts: apiContext.conceptnet.genreConcepts,
                 emotionalConcepts: apiContext.conceptnet.emotionalConcepts,
                 culturalAssociations: apiContext.conceptnet.culturalAssociations
+              },
+              poetry: {
+                poeticPhrases: apiContext.poetry.poeticPhrases,
+                vocabulary: apiContext.poetry.vocabulary,
+                imagery: apiContext.poetry.imagery,
+                themes: apiContext.poetry.themes
               }
             },
             styleGuidelines: {
@@ -155,6 +162,7 @@ CRITICAL INSTRUCTIONS:
    - Spotify: Real artist names and track titles for authentic vocabulary
    - Last.fm: Genre characteristics and cultural context
    - ConceptNet: Semantic associations for deeper meaning
+   - Poetry: Classical poetic vocabulary, imagery, and themes for elevated language
 7. Match the tone "${jsonPrompt.parameters.styleGuidelines.tone}" for ${currentSection}
 
 FORMATTING:
@@ -353,6 +361,12 @@ QUALITY STANDARDS:
       emotionalConcepts: string[];
       culturalAssociations: string[];
     };
+    poetry: {
+      poeticPhrases: string[];
+      vocabulary: string[];
+      imagery: string[];
+      themes: string[];
+    };
   }> {
     const context = {
       datamuse: {
@@ -375,6 +389,12 @@ QUALITY STANDARDS:
         genreConcepts: [] as string[],
         emotionalConcepts: [] as string[],
         culturalAssociations: [] as string[]
+      },
+      poetry: {
+        poeticPhrases: [] as string[],
+        vocabulary: [] as string[],
+        imagery: [] as string[],
+        themes: [] as string[]
       }
     };
 
@@ -400,6 +420,9 @@ QUALITY STANDARDS:
         apiPromises.push(this.fetchConceptNetContext(genre, context));
       }
 
+      // 5. PoetryDB context for classic poetic vocabulary and imagery
+      apiPromises.push(this.fetchPoetryContext(genre, context));
+
       // Execute all API calls concurrently
       await Promise.allSettled(apiPromises);
 
@@ -414,7 +437,10 @@ QUALITY STANDARDS:
         ...context.lastfm.relatedGenres,
         ...context.conceptnet.genreConcepts,
         ...context.conceptnet.emotionalConcepts,
-        ...context.conceptnet.culturalAssociations
+        ...context.conceptnet.culturalAssociations,
+        ...context.poetry.vocabulary,
+        ...context.poetry.imagery,
+        ...context.poetry.themes
       ].filter(Boolean);
 
       secureLog.debug(`🎵 Comprehensive API context for ${genre || 'contemporary'}: ${totalWords.length} total vocabulary items from all APIs`);
@@ -751,5 +777,22 @@ QUALITY STANDARDS:
     };
     
     return contrastMap[emotion] || contrastMap['default'];
+  }
+
+  private async fetchPoetryContext(genre: string | undefined, context: any): Promise<void> {
+    try {
+      const poetryContext = await poetryDbService.getPoetryContext(genre);
+      
+      // Add poetry context to the overall context
+      context.poetry.poeticPhrases = poetryContext.poeticPhrases;
+      context.poetry.vocabulary = poetryContext.vocabulary;
+      context.poetry.imagery = poetryContext.imagery;
+      context.poetry.themes = poetryContext.themes;
+      
+      secureLog.debug(`🎭 Poetry context for ${genre || 'general'}: ${poetryContext.poeticPhrases.length} phrases, ${poetryContext.vocabulary.length} words`);
+    } catch (error) {
+      secureLog.error('Error fetching poetry context:', error);
+      // Continue without poetry context on error
+    }
   }
 }
