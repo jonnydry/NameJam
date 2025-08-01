@@ -16,7 +16,7 @@ export class NameGeneratorService {
 
   // Main generation method - routes between AI and Datamuse API
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
-    const { count = 8 } = request;
+    const { count = 4 } = request; // Reduced from 8 to 4 for better speed
     
     // Calculate AI vs Datamuse split (50% AI, 50% Datamuse)
     const aiCount = Math.floor(count / 2); // Half the names from AI
