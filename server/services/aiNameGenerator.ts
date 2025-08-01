@@ -23,7 +23,11 @@ export class AINameGeneratorService {
     'angel', 'demon', 'phoenix', 'dragon', 'wolf', 'lion',
     // Prevent repetitive patterns (like quartz variations)
     'quartz', 'quartzine', 'quartzian', 'quantum', 'vortex', 
-    'odyssey', 'frontier', 'abyss', 'abyssal', 'anthem'
+    'odyssey', 'frontier', 'abyss', 'abyssal', 'anthem',
+    // NEW: Inappropriate words from Datamuse results
+    'bosom', 'breast', 'meat', 'beef', 'pork', 'aglow', 'gloaming',
+    'hither', 'thither', 'rampantly', 'glimmering', 'dancing', 'ancient',
+    'lunar', 'celestial', 'ethereal', 'mystical', 'eternal', 'infinite'
   ]);
 
   constructor() {

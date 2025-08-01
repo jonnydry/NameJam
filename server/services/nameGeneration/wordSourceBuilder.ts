@@ -6,6 +6,7 @@ import { conceptNetService } from '../conceptNetService';
 import { secureLog } from '../../utils/secureLogger';
 import { EnhancedWordSource } from './types';
 import { isPoeticWord, isProblematicWord } from './wordValidation';
+import { isMusicallyAppropriate, filterWordsForMusic, getRealMusicExamples, getGenreWords } from './musicalWordFilter';
 
 export class WordSourceBuilder {
   private datamuseService: DatamuseService;
@@ -183,8 +184,12 @@ export class WordSourceBuilder {
         sampleResults: genreAssociations.slice(0, 5)
       });
       
-      const filteredWords = genreAssociations.filter(w => isPoeticWord(w));
+      const filteredWords = genreAssociations.filter(w => isPoeticWord(w) && isMusicallyAppropriate(w));
       sources.conceptNetWords.push(...filteredWords);
+      
+      // Add genre-specific vocabulary from our curated list
+      const genreVocab = getGenreWords(genre);
+      sources.genreTerms.push(...genreVocab);
       
       secureLog.debug(`✅ ConceptNet genre integration: ${genreAssociations.length} concepts found, ${filteredWords.length} after filtering`);
     } catch (error) {
@@ -230,9 +235,9 @@ export class WordSourceBuilder {
         ...contextChain.slice(1) // Skip the seed word itself
       ];
       
-      // Filter and deduplicate
+      // Filter and deduplicate with musical appropriateness
       const uniqueWords = Array.from(new Set(allWords))
-        .filter(w => isPoeticWord(w) && !isProblematicWord(w) && w.length >= 4 && w.length <= 12);
+        .filter(w => isPoeticWord(w) && !isProblematicWord(w) && isMusicallyAppropriate(w) && w.length >= 4 && w.length <= 12);
       
       secureLog.debug(`Enhanced Datamuse for "${seedWord}": ${uniqueWords.length} unique quality words`);
       
@@ -309,7 +314,8 @@ export class WordSourceBuilder {
         !word.includes('-') &&
         !/^\d+$/.test(word) &&
         isPoeticWord(word) &&
-        !isProblematicWord(word)
+        !isProblematicWord(word) &&
+        isMusicallyAppropriate(word)
       );
       
       sources[sourceKey] = sources[sourceKey].slice(0, 100);

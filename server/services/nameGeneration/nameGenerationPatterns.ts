@@ -10,6 +10,7 @@ import {
   getRandomWord,
   isGenreAppropriate 
 } from './generationHelpers';
+import { generateSmartBandName, generateSmartSongName } from './smartNamePatterns';
 
 export class NameGenerationPatterns {
   constructor(private datamuseService: DatamuseService) {}
@@ -23,6 +24,22 @@ export class NameGenerationPatterns {
   ): Promise<{ name: string; actualWordCount: number }> {
     let name = '';
     
+    // Use smart patterns 50% of the time for better quality
+    if (Math.random() < 0.5) {
+      if (type === 'band') {
+        name = generateSmartBandName(sources, genre);
+      } else {
+        name = generateSmartSongName(sources, genre);
+      }
+      const actualWordCount = name.split(' ').filter(w => w.length > 0).length;
+      
+      // If word count matches request (or is in range for 4+), return it
+      if (wordCount >= 4 ? (actualWordCount >= 4 && actualWordCount <= 10) : actualWordCount === wordCount) {
+        return { name, actualWordCount };
+      }
+    }
+    
+    // Otherwise use original pattern-based generation
     switch (wordCount) {
       case 1:
         name = this.generateSingleContextualWord(sources);
