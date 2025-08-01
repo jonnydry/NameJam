@@ -1,6 +1,7 @@
 import type { GenerateNameRequest } from "@shared/schema";
 import type { AINameGeneratorService } from "./aiNameGenerator";
 import { enhancedNameGenerator } from "./enhancedNameGenerator";
+import { unifiedWordFilter } from "./nameGeneration/unifiedWordFilter";
 import { secureLog } from "../utils/secureLogger";
 
 export class NameGeneratorService {
@@ -17,6 +18,9 @@ export class NameGeneratorService {
   // Main generation method - routes between AI and Datamuse API
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
     const { count = 4 } = request; // Reduced from 8 to 4 for better speed
+    
+    // Start new generation session for word filtering
+    const generationId = unifiedWordFilter.startNewGeneration();
     
     // Calculate AI vs Datamuse split (50% AI, 50% Datamuse)
     const aiCount = Math.floor(count / 2); // Half the names from AI
@@ -56,14 +60,21 @@ export class NameGeneratorService {
         
         const aiResults = (await Promise.all(aiPromises)).filter(name => name !== null);
         
-        const aiResultsArray = aiResults.map(name => ({
-          name,
-          isAiGenerated: true,
-          source: 'ai'
-        }));
+        // Filter AI results through unified word filter and accept valid ones
+        for (const name of aiResults) {
+          if (!unifiedWordFilter.shouldRejectName(name, generationId)) {
+            unifiedWordFilter.acceptName(name, generationId);
+            results.push({
+              name,
+              isAiGenerated: true,
+              source: 'ai'
+            });
+          } else {
+            secureLog.debug(`🚫 AI name filtered: "${name}"`);
+          }
+        }
         
-        results.push(...aiResultsArray);
-        secureLog.info(`✅ Generated ${aiResultsArray.length} AI names`);
+        secureLog.info(`✅ Generated ${results.filter(r => r.isAiGenerated).length} AI names (after filtering)`);
       } catch (error) {
         secureLog.warn("AI generation failed, using Datamuse fallback:", error);
         // Fallback to Datamuse if AI fails
@@ -94,8 +105,18 @@ export class NameGeneratorService {
           ...request,
           count: datamuseCount
         }, datamuseContext);
-        results.push(...datamuseResults);
-        secureLog.info(`✅ Generated ${datamuseResults.length} Datamuse names`);
+        
+        // Filter Datamuse results through unified word filter and accept valid ones
+        for (const result of datamuseResults) {
+          if (!unifiedWordFilter.shouldRejectName(result.name, generationId)) {
+            unifiedWordFilter.acceptName(result.name, generationId);
+            results.push(result);
+          } else {
+            secureLog.debug(`🚫 Datamuse name filtered: "${result.name}"`);
+          }
+        }
+        
+        secureLog.info(`✅ Generated ${results.filter(r => !r.isAiGenerated).length} Datamuse names (after filtering)`);
       } catch (error) {
         secureLog.warn("Datamuse generation failed:", error);
         // Provide simple fallback names if both systems fail
