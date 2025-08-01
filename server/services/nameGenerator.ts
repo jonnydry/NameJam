@@ -40,12 +40,21 @@ export class NameGeneratorService {
             .slice(0, 15); // Increased to 15 examples for richer context
         }
         
-        // Generate multiple AI names sequentially to ensure anti-repetition works
-        const aiResults = [];
-        for (let i = 0; i < aiCount; i++) {
-          const name = await this.aiNameGenerator.generateAIName(request.type, request.genre, request.mood, request.wordCount, contextExamples);
-          aiResults.push(name);
-        }
+        // Generate multiple AI names in parallel for better performance
+        const aiPromises = Array(aiCount).fill(null).map((_, index) => 
+          this.aiNameGenerator!.generateAIName(
+            request.type, 
+            request.genre, 
+            request.mood, 
+            request.wordCount, 
+            contextExamples
+          ).catch(error => {
+            secureLog.warn(`AI generation ${index} failed:`, error);
+            return null;
+          })
+        );
+        
+        const aiResults = (await Promise.all(aiPromises)).filter(name => name !== null);
         
         const aiResultsArray = aiResults.map(name => ({
           name,
