@@ -27,6 +27,7 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Forbidden Words Expansion**: Added inappropriate Datamuse results (bosom, meat, aglow) and additional AI clichés to forbidden list
 - **Context Usage**: Better integration of Spotify/Last.fm context data to guide name generation with real musical examples
 - **Reduced Generation Count**: Changed from 8 names to 4 names (2 AI + 2 non-AI) to prioritize quality over quantity and improve response speed
+- **Unified Word Filtering**: Implemented coordinated word filtering across AI and non-AI generation to prevent repetition within generations (4 results) and reduce similarity between back-to-back generations. Features time-weighted penalties, stem tracking for word variations, and 30-minute word memory for maximum variety while preserving creativity.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
