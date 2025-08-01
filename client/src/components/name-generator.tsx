@@ -49,7 +49,7 @@ export function NameGenerator() {
   
   // Dynamic loading progress tracking
   const generateProgress = useLoadingProgress({ 
-    estimatedDuration: 4000, // Estimate 4 seconds for generation
+    estimatedDuration: wordCount >= 4 ? 12000 : 4000, // Longer for 4+ words
     onComplete: () => {
       // Progress animation complete
     }

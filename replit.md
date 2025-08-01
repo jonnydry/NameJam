@@ -22,6 +22,11 @@ NameJam is a web application designed to generate unique band names and song tit
 
 ### Bug Fixes (January 2025)
 - **Fixed Band Bio Display**: Fixed issue where raw JSON was displayed instead of biography text. Added proper parsing to extract biography from nested AI response structures.
+- **Fixed Loading Bar Flickering**: Removed regeneration of bar pattern on stage change to prevent visual artifacts
+- **Fixed 4+ Word Generation Timeouts**: 
+  - Reduced maximum word count from 10 to 6 words for "4+" option
+  - Increased server timeout from 35 to 50 seconds
+  - Adjusted loading animation duration to 12 seconds for 4+ word generation
 
 ### Name Quality Improvements (January 2025)
 - **Musical Word Filter**: Created comprehensive filter to exclude inappropriate words (anatomical terms, food items, archaic words) and overused AI clichés
