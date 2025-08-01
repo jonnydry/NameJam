@@ -204,7 +204,7 @@ export class NameGeneratorService {
       const aiCount = Math.floor(totalCount * 0.3); // 30% AI
       const datamuseCount = totalCount - aiCount;
       
-      console.log(`🎯 Setlist generation: ${aiCount} AI + ${datamuseCount} Datamuse songs`);
+      secureLog.info(`🎯 Setlist generation: ${aiCount} AI + ${datamuseCount} Datamuse songs`);
       
       const results: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
       
@@ -256,9 +256,9 @@ export class NameGeneratorService {
           }));
           
           results.push(...aiResultsArray);
-          console.log(`✅ Generated ${aiResultsArray.length} AI setlist songs`);
+          secureLog.info(`✅ Generated ${aiResultsArray.length} AI setlist songs`);
         } catch (error) {
-          console.error("AI setlist generation failed, using enhanced Datamuse fallback:", error);
+          secureLog.error("AI setlist generation failed, using enhanced Datamuse fallback:", error);
           // Enhanced fallback with ConceptNet and Datamuse
           const fallbackResults = await enhancedNameGenerator.generateEnhancedNames({
             ...enhancedRequest,
@@ -313,13 +313,13 @@ export class NameGeneratorService {
           results.push(...fallbackSongs);
         }
         
-        console.log(`✅ Generated ${results.length - aiCount} enhanced Datamuse setlist songs`);
+        secureLog.info(`✅ Generated ${results.length - aiCount} enhanced Datamuse setlist songs`);
       }
       
       // Final check: ensure we have exactly the number of songs requested
       if (results.length < totalCount) {
         const stillNeeded = totalCount - results.length;
-        console.log(`⚠️ Still need ${stillNeeded} more songs, adding fallback...`);
+        secureLog.info(`⚠️ Still need ${stillNeeded} more songs, adding fallback...`);
         const extraFallback = this.generateSimpleFallback('song', stillNeeded);
         results.push(...extraFallback);
       }
