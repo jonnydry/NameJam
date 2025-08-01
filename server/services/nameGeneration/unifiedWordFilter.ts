@@ -1,5 +1,6 @@
 // Unified word filtering system for maximum variety across all generation methods
 import { secureLog } from '../../utils/secureLogger';
+import { MAX_RECENT_WORDS_FILTER, WORD_MEMORY_TIMEOUT, VERY_RECENT_WORD_TIMEOUT, RECENT_WORD_TIMEOUT } from './constants';
 
 interface WordTrackingEntry {
   word: string;
@@ -12,9 +13,7 @@ export class UnifiedWordFilter {
   private static instance: UnifiedWordFilter;
   private recentWords: Map<string, WordTrackingEntry> = new Map();
   private currentGenerationWords: Set<string> = new Set(); // Track words in current generation
-  private maxRecentWords = 150; // Increased for better variety
   private generationId = 0; // Track generation sessions
-  private maxGenerationAge = 1000 * 60 * 30; // 30 minutes retention
 
   static getInstance(): UnifiedWordFilter {
     if (!UnifiedWordFilter.instance) {
@@ -55,8 +54,8 @@ export class UnifiedWordFilter {
     }
     
     // 3. Check against recent words from previous generations (weighted by recency)
-    const recentThreshold = Date.now() - (1000 * 60 * 10); // Last 10 minutes
-    const veryRecentThreshold = Date.now() - (1000 * 60 * 2); // Last 2 minutes
+    const recentThreshold = Date.now() - RECENT_WORD_TIMEOUT;
+    const veryRecentThreshold = Date.now() - VERY_RECENT_WORD_TIMEOUT;
     
     for (const word of words) {
       const entry = this.recentWords.get(word.toLowerCase());
@@ -107,7 +106,7 @@ export class UnifiedWordFilter {
     });
     
     // Cleanup if needed
-    if (this.recentWords.size > this.maxRecentWords) {
+    if (this.recentWords.size > MAX_RECENT_WORDS_FILTER) {
       this.cleanupOldWords();
     }
     
@@ -199,7 +198,7 @@ export class UnifiedWordFilter {
 
   // Clean up old entries
   private cleanupOldWords(): void {
-    const cutoff = Date.now() - this.maxGenerationAge;
+    const cutoff = Date.now() - WORD_MEMORY_TIMEOUT;
     const initialSize = this.recentWords.size;
     
     for (const [word, entry] of this.recentWords.entries()) {
