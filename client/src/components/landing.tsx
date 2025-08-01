@@ -14,40 +14,40 @@ export function Landing() {
       bgColor: "bg-blue-500/10",
       textColor: "text-blue-500",
       customClass: "carousel-card-blue",
-      title: "Quadruple API Intelligence",
-      description: "Datamuse linguistics + Spotify data + Last.fm genres + ConceptNet semantics for unmatched authenticity"
+      title: "5-API Musical Intelligence",
+      description: "Spotify + Last.fm + ConceptNet + Datamuse + PoetryDB working together for contextually rich, genre-authentic names"
     },
     {
       icon: NotebookPen,
       bgColor: "bg-green-500/10",
       textColor: "text-green-500",
       customClass: "carousel-card-green",
-      title: "Lyric Sparks",
-      description: "AI-powered opening lines with authentic genre vocabulary from real artist data"
+      title: "Poetry-Enhanced Lyrics",
+      description: "Classical poetry context with variable meter options (Iambic, Trochaic, etc.) and authentic genre vocabulary from all 5 APIs"
     },
     {
       icon: Brain,
       bgColor: "bg-yellow-500/10",
       textColor: "text-yellow-500",
       customClass: "carousel-card-yellow",
-      title: "Genre-Perfect AI",
-      description: "Learns from 15+ real artist examples per genre to create names that truly fit your style"
+      title: "Natural Language Flow",
+      description: "Enhanced 4+ word generation with PoeticFlowPatterns class creating names that read like natural language while staying metaphorical"
     },
     {
-      icon: Archive,
-      bgColor: "bg-orange-500/10",
-      textColor: "text-orange-500",
-      customClass: "carousel-card-orange",
-      title: "Organized Stash",
-      description: "Rate, sort, and export your favorites - names, lyrics, and edgy band bios"
+      icon: Zap,
+      bgColor: "bg-purple-500/10",
+      textColor: "text-purple-500",
+      customClass: "carousel-card-purple",
+      title: "Lightning-Fast Generation",
+      description: "Optimized from 50+ seconds to just 7-10 seconds through parallel processing and intelligent caching"
     },
     {
       icon: Music,
       bgColor: "bg-red-500/10",
       textColor: "text-red-500",
       customClass: "carousel-card-red",
-      title: "Instant Verification",
-      description: "Check availability across Spotify, YouTube & Google with one click - know what's taken instantly"
+      title: "Smart Quality Control",
+      description: "Musical word filtering, anti-repetition with 30-minute memory, and pattern-based generation following real band conventions"
     }
   ];
 
@@ -98,7 +98,7 @@ export function Landing() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8 landing-subtitle-mobile">Create unique band or song names and generate lyrics to prompt your own writing. Name your Jam!</p>
+            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8 landing-subtitle-mobile">AI-powered music creativity with 5-API synergy • Lightning-fast generation • Poetic flow</p>
           </div>
 
           {/* Features Carousel */}
