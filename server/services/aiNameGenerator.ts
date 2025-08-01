@@ -1,11 +1,27 @@
 import OpenAI from "openai";
 import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
 import { secureLog } from '../utils/secureLogger';
+import { nameQualityControl } from './nameQualityControl';
 
 export class AINameGeneratorService {
   private openai: OpenAI | null = null;
   private recentWords: string[] = [];
   private maxRecentWords = 30; // Increased to track more words
+  private modelRotation = 0; // Track model rotation for variety
+  
+  // Expanded forbidden words list
+  private forbiddenWords = new Set([
+    // Common overused music terms
+    'shadow', 'echo', 'dream', 'midnight', 'fire', 'ice', 'storm', 
+    'dark', 'light', 'night', 'soul', 'heart', 'love', 'forever',
+    'always', 'tonight', 'rain', 'sky', 'moon', 'star', 'sun',
+    // Clichéd combinations
+    'velvet', 'cosmic', 'neon', 'crystal', 'diamond', 'golden',
+    'silver', 'broken', 'fallen', 'rising', 'burning', 'frozen',
+    // Additional overused terms
+    'whisper', 'scream', 'thunder', 'lightning', 'heaven', 'hell',
+    'angel', 'demon', 'phoenix', 'dragon', 'wolf', 'lion'
+  ]);
 
   constructor() {
     // Initialize OpenAI only if API key is available
@@ -28,14 +44,24 @@ export class AINameGeneratorService {
       return this.generateFallbackName(type, genre, mood, wordCount);
     }
 
-    // Use latest available Grok models (July 2025) - Grok 3 prioritized for reliability
+    // Use latest available Grok models with rotation for variety
     const models = ["grok-3", "grok-4", "grok-3-mini"];
     
-    for (const model of models) {
+    // Model rotation: cycle through models to ensure variety
+    const startModelIndex = this.modelRotation % models.length;
+    this.modelRotation++; // Increment for next generation
+    
+    // Reorder models array starting from rotation index
+    const rotatedModels = [
+      ...models.slice(startModelIndex),
+      ...models.slice(0, startModelIndex)
+    ];
+    
+    for (const model of rotatedModels) {
       // Try each model up to 1 time for faster response
       for (let attempt = 0; attempt < 1; attempt++) {
         try {
-          secureLog.debug(`Attempting model: ${model} (attempt ${attempt + 1})`);
+          secureLog.debug(`Attempting model: ${model} (rotation: ${this.modelRotation}, attempt ${attempt + 1})`);
           // Add randomization to force variety
           const randomSeed = Math.random().toString(36).substring(7);
           const timestamp = Date.now() % 10000;
@@ -44,6 +70,10 @@ export class AINameGeneratorService {
           const dynamicWordCount = wordCount && wordCount >= 4 ? 
             Math.floor(Math.random() * 7) + 4 : // 4-10 words for "4+" option
             wordCount;
+          
+          // Dynamic temperature based on word count
+          // Higher temperature for longer names to encourage creativity
+          const dynamicTemperature = this.calculateDynamicTemperature(dynamicWordCount || wordCount || 2);
         
         // Build the system and user prompts based on type
         let systemPrompt: string;
@@ -68,6 +98,7 @@ export class AINameGeneratorService {
     "example": {"band": "Kaleidoscope Breakfast"}
   },
   "forbidden_patterns": ["The [X] [Y]", "Shadow/Echo/Dream/Midnight", "Fire/Ice/Storm", "Dark/Light/Night"],
+  "forbidden_words": ${JSON.stringify(Array.from(this.forbiddenWords))},
   "creative_direction": "Surprise and delight through fresh perspectives and unexpected word pairings"
 }`;
           
@@ -136,6 +167,7 @@ export class AINameGeneratorService {
     "example": {"song": "Velvet Whispers in Binary"}
   },
   "forbidden_patterns": ["Heart/Soul/Love", "Tonight/Forever/Always", "Dream/Shadow/Echo", "Fire/Rain/Sky"],
+  "forbidden_words": ${JSON.stringify(Array.from(this.forbiddenWords))},
   "creative_direction": "Evoke emotions through novel imagery and unexpected linguistic discoveries"
 }`;
           
@@ -203,7 +235,7 @@ export class AINameGeneratorService {
             }
           ],
           max_tokens: 30,
-          temperature: 1.2,
+          temperature: dynamicTemperature,
           response_format: { type: "json_object" }
         };
 
@@ -252,6 +284,16 @@ export class AINameGeneratorService {
                 continue; // Try again with same model
               }
               
+              // Check for forbidden words
+              const containsForbiddenWord = nameWords.some(word => 
+                this.forbiddenWords.has(word.toLowerCase())
+              );
+              
+              if (containsForbiddenWord) {
+                secureLog.debug(`Rejected "${cleanName}" - contains forbidden word`);
+                continue; // Try again with same model
+              }
+              
               // Check for duplicate words within the same name
               const uniqueWords = new Set(nameWords);
               if (uniqueWords.size !== nameWords.length) {
@@ -260,14 +302,28 @@ export class AINameGeneratorService {
               }
               
               // Check word count and track words for future avoidance
-              if (wordCount && cleanName.split(/\s+/).length === wordCount) {
-                secureLog.info(`Successfully generated name "${cleanName}" using model: ${model}`);
-                this.trackRecentWords(cleanName);
-                return cleanName;
-              } else if (!wordCount && cleanName.length > 0 && cleanName.length < 100) {
-                secureLog.info(`Successfully generated name "${cleanName}" using model: ${model}`);
-                this.trackRecentWords(cleanName);
-                return cleanName;
+              const actualWordCount = cleanName.split(/\s+/).length;
+              const isValidWordCount = wordCount ? 
+                (wordCount >= 4 ? actualWordCount >= 4 && actualWordCount <= 10 : actualWordCount === wordCount) :
+                (cleanName.length > 0 && cleanName.length < 100);
+                
+              if (isValidWordCount) {
+                // Quality control check
+                const qualityScore = await nameQualityControl.evaluateNameQuality(cleanName, type);
+                secureLog.debug(`🎯 AI Quality check for "${cleanName}": ${(qualityScore.overallScore * 100).toFixed(1)}%`);
+                
+                // Higher quality threshold for AI names (0.65)
+                if (qualityScore.overallScore >= 0.65) {
+                  secureLog.info(`Successfully generated high-quality name "${cleanName}" using model: ${model} (quality: ${(qualityScore.overallScore * 100).toFixed(1)}%)`);
+                  this.trackRecentWords(cleanName);
+                  return cleanName;
+                } else {
+                  secureLog.debug(`❌ Rejected AI name: "${cleanName}" - low quality: ${(qualityScore.overallScore * 100).toFixed(1)}%`);
+                  if (qualityScore.issues.length > 0) {
+                    secureLog.debug(`   Issues: ${qualityScore.issues.join(', ')}`);
+                  }
+                  continue; // Try again
+                }
               }
             }
           } catch (parseError) {
@@ -287,6 +343,26 @@ export class AINameGeneratorService {
     // If all models fail, return fallback
     const fallbackName = this.generateFallbackName(type, genre, mood, wordCount);
     return fallbackName;
+  }
+
+  // Calculate dynamic temperature based on word count
+  private calculateDynamicTemperature(wordCount: number): number {
+    // Base temperature: 1.0
+    // Increase for longer names to encourage creativity
+    // 1-2 words: 1.0-1.1 (more controlled)
+    // 3-4 words: 1.2 (balanced)
+    // 5-7 words: 1.3 (more creative)
+    // 8-10 words: 1.4 (maximum creativity)
+    
+    if (wordCount <= 2) {
+      return 1.0 + (wordCount - 1) * 0.1; // 1.0 for 1 word, 1.1 for 2 words
+    } else if (wordCount <= 4) {
+      return 1.2;
+    } else if (wordCount <= 7) {
+      return 1.3;
+    } else {
+      return 1.4;
+    }
   }
 
   private generateFallbackName(type: 'band' | 'song', genre?: string, mood?: string, wordCount?: number): string {

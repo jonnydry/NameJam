@@ -69,10 +69,22 @@ export class NameGeneratorService {
     // Generate Datamuse names for the remainder
     if (datamuseCount > 0) {
       try {
+        // Get context for Datamuse generation too
+        let datamuseContext: string[] = [];
+        if (request.genre || request.mood) {
+          const generationContext = await enhancedNameGenerator.getGenerationContext(request.mood, request.genre);
+          datamuseContext = [
+            ...generationContext.spotifyContext, 
+            ...generationContext.lastfmContext, 
+            ...generationContext.conceptNetContext
+          ].filter(w => w.length > 2);
+          secureLog.debug(`📚 Datamuse using context: ${datamuseContext.length} words`);
+        }
+        
         const datamuseResults = await enhancedNameGenerator.generateEnhancedNames({
           ...request,
           count: datamuseCount
-        });
+        }, datamuseContext);
         results.push(...datamuseResults);
         secureLog.info(`✅ Generated ${datamuseResults.length} Datamuse names`);
       } catch (error) {

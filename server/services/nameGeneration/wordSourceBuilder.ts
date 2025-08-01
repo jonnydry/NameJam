@@ -1,4 +1,5 @@
 import { DatamuseService } from '../datamuseService';
+import { datamuseEnhancementService } from '../datamuseEnhancements';
 import { lastfmService } from '../lastfmService';
 import { SpotifyService } from '../spotifyService';
 import { conceptNetService } from '../conceptNetService';
@@ -210,100 +211,88 @@ export class WordSourceBuilder {
     }
   }
 
+  // Enhanced multi-query method for better variety
+  private async fetchEnhancedDatamuseWords(seedWord: string, type: 'noun' | 'adjective' | 'verb'): Promise<string[]> {
+    try {
+      // Use multi-query strategy
+      const multiResults = await datamuseEnhancementService.multiQueryWords(seedWord, 30);
+      
+      // Mine relationships for deeper connections
+      const relationshipResults = await datamuseEnhancementService.mineRelationships(seedWord, type);
+      
+      // Build contextual chain for creative associations
+      const contextChain = await datamuseEnhancementService.buildContextualChain(seedWord, 2);
+      
+      // Combine all results
+      const allWords = [
+        ...multiResults.map(r => r.word),
+        ...relationshipResults.map(r => r.word),
+        ...contextChain.slice(1) // Skip the seed word itself
+      ];
+      
+      // Filter and deduplicate
+      const uniqueWords = Array.from(new Set(allWords))
+        .filter(w => isPoeticWord(w) && !isProblematicWord(w) && w.length >= 4 && w.length <= 12);
+      
+      secureLog.debug(`Enhanced Datamuse for "${seedWord}": ${uniqueWords.length} unique quality words`);
+      
+      return uniqueWords;
+    } catch (error) {
+      secureLog.error('Enhanced Datamuse fetch failed:', error);
+      return [];
+    }
+  }
+
   private async fetchDatamuseData(poeticSeeds: any, mood: string | undefined, genre: string | undefined, sources: EnhancedWordSource): Promise<void> {
     const datamusePromises = [];
     
-    // Get emotionally evocative words
+    // Get emotionally evocative words using enhanced multi-query
     const emotionalSeeds = poeticSeeds.emotional.slice(0, 2);
     datamusePromises.push(...emotionalSeeds.map((seed: string) =>
-      this.datamuseService.findWords({
-        meansLike: seed,
-        topics: 'music poetry emotion',
-        maxResults: 20
-      }).then(emotionalWords => {
-        const poeticWords = emotionalWords
-          .filter(w => isPoeticWord(w.word) && !isProblematicWord(w.word) && w.word.length >= 4 && w.word.length <= 10)
-          .slice(0, 8)
-          .map(w => w.word);
-        sources.contextualWords.push(...poeticWords);
-      }).catch(error => secureLog.error('Datamuse emotional words failed:', error))
+      this.fetchEnhancedDatamuseWords(seed, 'adjective').then(enhancedWords => {
+        sources.contextualWords.push(...enhancedWords.slice(0, 8));
+      }).catch(error => secureLog.error('Enhanced emotional words failed:', error))
     ));
     
-    // Get sensory/imagery words
+    // Get sensory/imagery words using enhanced multi-query
     const sensorySeeds = poeticSeeds.sensory.slice(0, 2);
     datamusePromises.push(...sensorySeeds.map((seed: string) =>
-      this.datamuseService.findWords({
-        meansLike: seed,
-        topics: 'nature poetry music',
-        maxResults: 10
-      }).then(sensoryWords => {
-        const poeticWords = sensoryWords
-          .filter(w => isPoeticWord(w.word) && !isProblematicWord(w.word))
-          .map(w => w.word);
-        sources.associatedWords.push(...poeticWords);
-      }).catch(error => secureLog.error('Datamuse sensory words failed:', error))
+      this.fetchEnhancedDatamuseWords(seed, 'noun').then(enhancedWords => {
+        sources.associatedWords.push(...enhancedWords.slice(0, 10));
+      }).catch(error => secureLog.error('Enhanced sensory words failed:', error))
     ));
     
-    // Get musical/rhythmic words
+    // Get musical/rhythmic words using enhanced multi-query
     const musicalSeeds = ['melody', 'rhythm'];
     datamusePromises.push(...musicalSeeds.map(seed =>
-      this.datamuseService.findWords({
-        meansLike: seed,
-        topics: 'music sound poetry',
-        maxResults: 20
-      }).then(musicWords => {
-        const qualityMusicWords = musicWords
-          .filter(w => isPoeticWord(w.word) && !isProblematicWord(w.word) && w.word.length >= 4 && w.word.length <= 10)
-          .slice(0, 5)
-          .map(w => w.word);
-        sources.musicalTerms.push(...qualityMusicWords);
-      }).catch(error => secureLog.error('Datamuse musical words failed:', error))
+      this.fetchEnhancedDatamuseWords(seed, 'noun').then(enhancedWords => {
+        sources.musicalTerms.push(...enhancedWords.slice(0, 5));
+      }).catch(error => secureLog.error('Enhanced musical words failed:', error))
     ));
     
-    // Get high-quality adjectives
+    // Get high-quality adjectives using enhanced multi-query
     const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre).slice(0, 3);
     datamusePromises.push(...adjectiveSeeds.map(seed =>
-      this.datamuseService.findAdjectivesForNoun(seed, 30)
-        .then(adjs => {
-          const qualityAdjs = adjs
-            .filter((w: any) => isPoeticWord(w.word) && !isProblematicWord(w.word) && w.word.length >= 4 && w.word.length <= 10)
-            .slice(0, 10)
-            .map((w: any) => w.word);
-          sources.adjectives.push(...qualityAdjs);
-        })
-        .catch(error => secureLog.error('Datamuse adjectives failed:', error))
+      this.fetchEnhancedDatamuseWords(seed, 'adjective').then(enhancedWords => {
+        sources.adjectives.push(...enhancedWords.slice(0, 10));
+      }).catch(error => secureLog.error('Enhanced adjectives failed:', error))
     ));
     
-    // Get poetic nouns
+    // Get poetic nouns using enhanced multi-query
     const nounSeeds = this.getNounSeeds(mood, genre).slice(0, 3);
     datamusePromises.push(...nounSeeds.map(seed =>
-      this.datamuseService.findWords({
-        meansLike: seed,
-        topics: 'music poetry nature emotion',
-        maxResults: 30
-      }).then(nouns => {
-        const qualityNouns = nouns
-          .filter(w => isPoeticWord(w.word) && !isProblematicWord(w.word) && w.word.length >= 4 && w.word.length <= 10)
-          .slice(0, 10)
-          .map(w => w.word);
-        sources.nouns.push(...qualityNouns);
-      }).catch(error => secureLog.error('Datamuse nouns failed:', error))
+      this.fetchEnhancedDatamuseWords(seed, 'noun').then(enhancedWords => {
+        sources.nouns.push(...enhancedWords.slice(0, 10));
+      }).catch(error => secureLog.error('Enhanced nouns failed:', error))
     ));
     
-    // Get verbs
+    // Get verbs using enhanced multi-query
     const verbSeeds = this.getVerbSeeds(mood, genre).slice(0, 2);
     datamusePromises.push(...verbSeeds.map(seed =>
-      this.datamuseService.findWords({
-        meansLike: seed,
-        topics: 'music poetry action emotion',
-        maxResults: 20
-      }).then(verbs => {
-        const actionVerbs = verbs
-          .filter(w => this.isActionWord(w.word) && isPoeticWord(w.word) && !isProblematicWord(w.word))
-          .slice(0, 8)
-          .map(w => w.word);
-        sources.verbs.push(...actionVerbs);
-      }).catch(error => secureLog.error('Datamuse verbs failed:', error))
+      this.fetchEnhancedDatamuseWords(seed, 'verb').then(enhancedWords => {
+        const actionVerbs = enhancedWords.filter(w => this.isActionWord(w));
+        sources.verbs.push(...actionVerbs.slice(0, 8));
+      }).catch(error => secureLog.error('Enhanced verbs failed:', error))
     ));
     
     await Promise.allSettled(datamusePromises);
