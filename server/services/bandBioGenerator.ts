@@ -133,7 +133,7 @@ export class BandBioGeneratorService {
             unique_id: timestamp
           };
           
-          prompt = `You must follow this exact JSON specification for the band biography:\n\n${JSON.stringify(jsonPrompt, null, 2)}\n\nRemember: This is FICTIONAL comedy writing. Make it outrageously funny!`;
+          prompt = `Based on these requirements, write a hilarious band biography:\n\n${JSON.stringify(jsonPrompt, null, 2)}\n\nIMPORTANT: Generate ONLY the biography text itself, not the JSON structure. Write the actual funny biography story in the requested style!`;
           
         } else {
           // Use original edgy prompts
@@ -173,7 +173,7 @@ export class BandBioGeneratorService {
               unique_id: timestamp
             };
             
-            prompt = `DARK COMEDY BRIEF:\n\n${JSON.stringify(jsonPrompt, null, 2)}\n\nWrite the biography now. Be RUTHLESS and savagely funny!`;
+            prompt = `DARK COMEDY BRIEF:\n\n${JSON.stringify(jsonPrompt, null, 2)}\n\nWrite ONLY the biography text based on these requirements. Be RUTHLESS and savagely funny!`;
           }
         }
 
@@ -231,6 +231,13 @@ export class BandBioGeneratorService {
           let bioText = content.trim();
           try {
             const parsed = JSON.parse(content);
+            
+            // Check if this looks like the prompt structure being returned
+            if (parsed.task && parsed.band_info && parsed.style_requirements) {
+              secureLog.warn(`AI returned prompt structure instead of biography for ${bandName}, attempting next model`);
+              continue; // Try next model
+            }
+            
             // Extract biography text from various possible formats
             if (parsed.biography?.text) {
               bioText = parsed.biography.text;
@@ -238,8 +245,10 @@ export class BandBioGeneratorService {
               bioText = parsed.bio;
             } else if (parsed.text) {
               bioText = parsed.text;
+            } else if (typeof parsed === 'string') {
+              bioText = parsed;
             }
-            // If it's still an object, keep the original content
+            // If it's still an object without recognizable fields, keep original content
           } catch (e) {
             // Not JSON, use the content as-is
           }
