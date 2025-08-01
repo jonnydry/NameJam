@@ -206,13 +206,13 @@ export function LyricJam() {
             )}
 
             {currentLyric && !isLoading && (
-              <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 shadow-xl hover:shadow-2xl transition-all duration-300">
                 {/* Background gradient effect */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-white/5 opacity-50" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-black/20" />
                 
-                <CardHeader className="relative space-y-6 p-6 sm:p-8">
+                <CardHeader className="relative space-y-6 p-8 sm:p-10">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-4 flex-1 min-w-0">
+                    <div className="space-y-4 flex-1 min-w-0 max-w-4xl">
                       {currentLyric.songSection && (
                         <div className="inline-flex">
                           <Badge className={`${getSectionColor(currentLyric.songSection)} text-white font-bold px-4 py-1 text-sm shadow-lg`}>
@@ -220,24 +220,20 @@ export function LyricJam() {
                           </Badge>
                         </div>
                       )}
-                      <div className="space-y-3">
+                      <div className="space-y-3 mt-4">
                         {currentLyric.lyric.includes('\n') ? (
-                          <div className="bg-black/30 backdrop-blur-sm rounded-lg p-6 sm:p-8 border border-white/10">
-                            {currentLyric.lyric.split('\n').map((line, index) => (
-                              <div 
-                                key={index} 
-                                className={`text-lg sm:text-xl lg:text-2xl font-light leading-relaxed text-gray-100 ${index > 0 ? 'mt-3' : ''}`}
-                              >
-                                <span className="italic">{line}</span>
-                              </div>
-                            ))}
-                          </div>
+                          currentLyric.lyric.split('\n').map((line, index) => (
+                            <div 
+                              key={index} 
+                              className={`text-xl sm:text-2xl lg:text-3xl font-light leading-relaxed text-white ${index > 0 ? 'mt-3' : ''}`}
+                            >
+                              <span className="italic">{line}</span>
+                            </div>
+                          ))
                         ) : (
-                          <div className="bg-black/30 backdrop-blur-sm rounded-lg p-6 sm:p-8 border border-white/10">
-                            <span className="text-lg sm:text-xl lg:text-2xl font-light italic leading-relaxed text-gray-100">
-                              {currentLyric.lyric}
-                            </span>
-                          </div>
+                          <span className="text-xl sm:text-2xl lg:text-3xl font-light italic leading-relaxed text-white">
+                            {currentLyric.lyric}
+                          </span>
                         )}
                       </div>
                     </div>
