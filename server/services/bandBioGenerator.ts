@@ -221,12 +221,31 @@ export class BandBioGeneratorService {
           }, 3, 2000);
         });
 
-        const bio = response.choices[0]?.message?.content || "";
+        const content = response.choices[0]?.message?.content || "";
         
-        if (bio && bio.trim() !== "") {
+        if (content && content.trim() !== "") {
           secureLog.info(`Successfully generated bio using model: ${model}`);
+          secureLog.debug(`Bio generated for ${bandName}:`, content);
+          
+          // Parse the AI response which may be in JSON format
+          let bioText = content.trim();
+          try {
+            const parsed = JSON.parse(content);
+            // Extract biography text from various possible formats
+            if (parsed.biography?.text) {
+              bioText = parsed.biography.text;
+            } else if (parsed.bio) {
+              bioText = parsed.bio;
+            } else if (parsed.text) {
+              bioText = parsed.text;
+            }
+            // If it's still an object, keep the original content
+          } catch (e) {
+            // Not JSON, use the content as-is
+          }
+          
           return JSON.stringify({
-            bio: bio.trim(),
+            bio: bioText,
             model: model,
             source: 'ai'
           });
