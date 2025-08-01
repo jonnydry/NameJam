@@ -37,7 +37,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   // Add performance optimization middleware
   app.use(compressionMiddleware);
   app.use(responseTimeMiddleware);
-  app.use(timeoutMiddleware(25000)); // 25 second timeout
+  app.use(timeoutMiddleware(35000)); // 35 second timeout for complex generations
   app.use(cacheHeaders);
   
   // Auth middleware
@@ -113,24 +113,43 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     validationRules.generateNames, 
     handleValidationErrors, 
     async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
+    let hasResponded = false;
+    
+    const sendResponse = (statusCode: number, data: any) => {
+      if (!hasResponded && !res.headersSent) {
+        hasResponded = true;
+        res.status(statusCode).json(data);
+      }
+    };
+
     try {
       const request = generateNameRequestSchema.parse(req.body);
       
       // Generate names using new routing system (AI + Datamuse)
       const names = await nameGenerator.generateNames(request);
       
+      // Check if response was already sent (due to timeout)
+      if (hasResponded || res.headersSent) {
+        return;
+      }
+      
       // Optimized parallel verification and storage
       const isUserAuthenticated = req.isAuthenticated && req.isAuthenticated();
       
-      // Batch verification for better performance
+      // Batch verification for better performance - use faster approach
       const { parallelVerificationService } = await import('./services/parallelVerification');
       const namesToVerify = names.map(nameResult => ({
         name: nameResult.name,
         type: request.type as 'band' | 'song'
       }));
       
-      // Verify all names in parallel with caching
+      // Verify all names in parallel with caching (reduced timeout for faster response)
       const verificationResults = await parallelVerificationService.verifyNamesInParallel(namesToVerify);
+      
+      // Check again before processing results
+      if (hasResponded || res.headersSent) {
+        return;
+      }
       
       // Process results and handle database storage
       const results = await Promise.all(
@@ -139,12 +158,12 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
           let storedName = null;
           
           // Only store in database if user is authenticated (non-blocking)
-          if (isUserAuthenticated) {
+          if (isUserAuthenticated && !hasResponded && !res.headersSent) {
             const userId = req.user.claims.sub;
             
             try {
-              // Make database storage blocking for proper ID retrieval
-              storedName = await storage.createGeneratedName({
+              // Make database storage non-blocking to speed up response
+              storage.createGeneratedName({
                 name: nameResult.name,
                 type: request.type,
                 wordCount: request.wordCount,
@@ -152,6 +171,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
                 verificationDetails: verification.details || null,
                 isAiGenerated: nameResult.isAiGenerated,
                 userId: userId,
+              }).catch(error => {
+                secureLog.error("Database storage error (non-blocking):", error);
               });
             } catch (error) {
               secureLog.error("Database storage error:", error);
@@ -159,7 +180,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
           }
 
           return {
-            id: storedName?.id || null,
+            id: null, // Skip ID for faster response since storage is async
             name: nameResult.name,
             type: request.type,
             wordCount: nameResult.name.split(/\s+/).length, // Use actual word count instead of requested
@@ -169,14 +190,14 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
         })
       );
 
-      res.json({ results });
+      sendResponse(200, { results });
     } catch (error) {
       secureLog.error("Error generating names:", error);
       if (error instanceof z.ZodError) {
-        res.status(400).json({ error: "Invalid request parameters", details: error.errors });
+        sendResponse(400, { error: "Invalid request parameters", details: error.errors });
       } else {
         const errorMessage = error instanceof Error ? error.message : "Failed to generate names";
-        res.status(500).json({ 
+        sendResponse(500, { 
           error: errorMessage,
           suggestion: "Please try again with different settings or a smaller word count." 
         });
