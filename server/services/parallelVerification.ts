@@ -57,18 +57,14 @@ export class ParallelVerificationService {
         }
       });
 
-      // Execute with optimized concurrency (max 5 parallel requests for better throughput)
-      const batchSize = 5;
-      for (let i = 0; i < verificationPromises.length; i += batchSize) {
-        const batch = verificationPromises.slice(i, i + batchSize);
-        const batchResults = await Promise.allSettled(batch);
-        
-        batchResults.forEach((result) => {
-          if (result.status === 'fulfilled') {
-            results[result.value.index] = result.value.result;
-          }
-        });
-      }
+      // Execute all verification promises in parallel for maximum speed
+      const verificationResults = await Promise.allSettled(verificationPromises);
+      
+      verificationResults.forEach((result) => {
+        if (result.status === 'fulfilled') {
+          results[result.value.index] = result.value.result;
+        }
+      });
     }
 
     return results;

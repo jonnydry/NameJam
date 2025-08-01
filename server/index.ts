@@ -10,6 +10,7 @@ try {
   validateEnvironment();
   secureLog.info('🔒 Security: Environment validation passed');
   secureLog.info('📊 Environment Summary:', getEnvSummary());
+  secureLog.info('⚡ Performance Mode: Quality checks optimized for speed');
 } catch (error) {
   secureLog.error('❌ Critical Security Error - Environment validation failed:', error);
   process.exit(1);

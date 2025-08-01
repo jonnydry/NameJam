@@ -210,33 +210,17 @@ export class EnhancedNameGeneratorService {
           }
         }
         
-        // Batch quality check for performance
-        const qualityPromises = candidates.map(candidate => 
-          nameQualityControl.evaluateNameQuality(candidate.name, type)
-            .then(score => ({ candidate, score }))
-            .catch(() => null)
-        );
-        
-        const qualityResults = await Promise.all(qualityPromises);
-        
-        // Process quality results
-        for (const result of qualityResults) {
-          if (!result) continue;
+        // Skip quality checks for performance - just add all valid candidates
+        for (const candidate of candidates) {
+          this.trackWords(candidate.name);
+          names.push({ 
+            name: candidate.name, 
+            isAiGenerated: false, 
+            source: 'datamuse-enhanced' 
+          });
+          secureLog.debug(`✅ Generated valid name: "${candidate.name}"`);
           
-          const { candidate, score } = result;
-          secureLog.debug(`🎯 Quality check for "${candidate.name}": ${(score.overallScore * 100).toFixed(1)}%`);
-          
-          if (score.overallScore >= 0.6) {
-            this.trackWords(candidate.name);
-            names.push({ 
-              name: candidate.name, 
-              isAiGenerated: false, 
-              source: 'datamuse-enhanced' 
-            });
-            secureLog.debug(`✅ Generated valid name: "${candidate.name}" (quality: ${(score.overallScore * 100).toFixed(1)}%)`);
-            
-            if (names.length >= count) break;
-          }
+          if (names.length >= count) break;
         }
         
         // Clear processed candidates
@@ -257,20 +241,14 @@ export class EnhancedNameGeneratorService {
       const fallbackName = generateFallbackName(wordSources, fallbackWordCount);
       
       if (!names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
-        // Quality check for fallback names too
-        const qualityScore = await nameQualityControl.evaluateNameQuality(fallbackName, type);
-        
-        if (qualityScore.overallScore >= 0.5) { // Slightly lower threshold for fallbacks
-          this.trackWords(fallbackName);
-          names.push({ 
-            name: fallbackName, 
-            isAiGenerated: false, 
-            source: 'fallback' 
-          });
-          secureLog.debug(`✅ Generated fallback name: "${fallbackName}" (quality: ${(qualityScore.overallScore * 100).toFixed(1)}%)`);
-        } else {
-          secureLog.debug(`❌ Rejected fallback: "${fallbackName}" - low quality: ${(qualityScore.overallScore * 100).toFixed(1)}%`);
-        }
+        // Skip quality check for performance - just add fallback name
+        this.trackWords(fallbackName);
+        names.push({ 
+          name: fallbackName, 
+          isAiGenerated: false, 
+          source: 'fallback' 
+        });
+        secureLog.debug(`✅ Generated fallback name: "${fallbackName}"`);
       }
     }
     

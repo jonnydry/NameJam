@@ -311,22 +311,10 @@ export class AINameGeneratorService {
                 (cleanName.length > 0 && cleanName.length < 100);
                 
               if (isValidWordCount) {
-                // Quality control check
-                const qualityScore = await nameQualityControl.evaluateNameQuality(cleanName, type);
-                secureLog.debug(`🎯 AI Quality check for "${cleanName}": ${(qualityScore.overallScore * 100).toFixed(1)}%`);
-                
-                // Higher quality threshold for AI names (0.65)
-                if (qualityScore.overallScore >= 0.65) {
-                  secureLog.info(`Successfully generated high-quality name "${cleanName}" using model: ${model} (quality: ${(qualityScore.overallScore * 100).toFixed(1)}%)`);
-                  this.trackRecentWords(cleanName);
-                  return cleanName;
-                } else {
-                  secureLog.debug(`❌ Rejected AI name: "${cleanName}" - low quality: ${(qualityScore.overallScore * 100).toFixed(1)}%`);
-                  if (qualityScore.issues.length > 0) {
-                    secureLog.debug(`   Issues: ${qualityScore.issues.join(', ')}`);
-                  }
-                  continue; // Try again
-                }
+                // Skip quality check for performance - just track the words
+                secureLog.info(`Successfully generated name "${cleanName}" using model: ${model}`);
+                this.trackRecentWords(cleanName);
+                return cleanName;
               }
             }
           } catch (parseError) {
