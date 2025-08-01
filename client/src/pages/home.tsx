@@ -90,7 +90,23 @@ export default function Home() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-xs text-muted-foreground subtitle-fade px-2 font-normal">Generate unique band names, song titles, and lyrical inspiration</p>
+            <p className="text-responsive-xs text-muted-foreground subtitle-fade px-2 font-normal">AI-powered music creativity with 5-API synergy • Lightning-fast generation • Poetic flow</p>
+          </div>
+
+          {/* Feature Highlights */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 text-center">
+            <div className="p-3 bg-card/60 backdrop-blur-sm rounded-lg border border-border/30">
+              <div className="text-primary font-mono text-sm mb-1">5-API SYNERGY</div>
+              <p className="text-xs text-muted-foreground">Spotify • Last.fm • Poetry • AI</p>
+            </div>
+            <div className="p-3 bg-card/60 backdrop-blur-sm rounded-lg border border-border/30">
+              <div className="text-primary font-mono text-sm mb-1">POETIC FLOW</div>
+              <p className="text-xs text-muted-foreground">Natural language • 4+ words</p>
+            </div>
+            <div className="p-3 bg-card/60 backdrop-blur-sm rounded-lg border border-border/30">
+              <div className="text-primary font-mono text-sm mb-1">7-10 SECONDS</div>
+              <p className="text-xs text-muted-foreground">Lightning-fast generation</p>
+            </div>
           </div>
 
           {/* Tabs Section */}
@@ -120,8 +136,9 @@ export default function Home() {
       <footer className="bg-card border-t border-border py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <p className="text-responsive-sm text-muted-foreground">© 2025 NameJam. Powered by web-sourced creativity.</p>
-            <div className="flex justify-center space-x-6 mt-4">
+            <p className="text-responsive-sm text-muted-foreground mb-2">© 2025 NameJam. Powered by 5-API musical intelligence.</p>
+            <p className="text-xs text-muted-foreground/70 mb-4">Spotify • Last.fm • ConceptNet • Datamuse • PoetryDB • XAI Grok</p>
+            <div className="flex justify-center space-x-6">
               <Link href="/about" className="text-responsive-xs text-muted-foreground hover:text-primary transition-colors">About</Link>
               <a href="#" className="text-responsive-xs text-muted-foreground hover:text-primary transition-colors">Contact</a>
               <a href="#" className="text-responsive-xs text-muted-foreground hover:text-primary transition-colors">API Documentation</a>
