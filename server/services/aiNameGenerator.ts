@@ -20,7 +20,10 @@ export class AINameGeneratorService {
     'silver', 'broken', 'fallen', 'rising', 'burning', 'frozen',
     // Additional overused terms
     'whisper', 'scream', 'thunder', 'lightning', 'heaven', 'hell',
-    'angel', 'demon', 'phoenix', 'dragon', 'wolf', 'lion'
+    'angel', 'demon', 'phoenix', 'dragon', 'wolf', 'lion',
+    // Prevent repetitive patterns (like quartz variations)
+    'quartz', 'quartzine', 'quartzian', 'quantum', 'vortex', 
+    'odyssey', 'frontier', 'abyss', 'abyssal', 'anthem'
   ]);
 
   constructor() {
@@ -347,22 +350,23 @@ export class AINameGeneratorService {
 
   // Calculate dynamic temperature based on word count
   private calculateDynamicTemperature(wordCount: number): number {
-    // Base temperature: 1.0
-    // Increase for longer names to encourage creativity
-    // 1-2 words: 1.0-1.1 (more controlled)
-    // 3-4 words: 1.2 (balanced)
-    // 5-7 words: 1.3 (more creative)
-    // 8-10 words: 1.4 (maximum creativity)
+    // Higher base temperatures with random variation to prevent patterns
+    // Add random variation to break repetitive patterns
     
+    let baseTemp: number;
     if (wordCount <= 2) {
-      return 1.0 + (wordCount - 1) * 0.1; // 1.0 for 1 word, 1.1 for 2 words
+      baseTemp = 1.2 + (wordCount - 1) * 0.1; // 1.2-1.3 for 1-2 words
     } else if (wordCount <= 4) {
-      return 1.2;
+      baseTemp = 1.4; // Higher for 3-4 words
     } else if (wordCount <= 7) {
-      return 1.3;
+      baseTemp = 1.5; // More creative for 5-7 words
     } else {
-      return 1.4;
+      baseTemp = 1.6; // Maximum creativity for 8-10 words
     }
+    
+    // Add random variation (±0.3) to prevent getting stuck in patterns
+    const variation = (Math.random() - 0.5) * 0.6;
+    return Math.max(0.9, Math.min(1.8, baseTemp + variation));
   }
 
   private generateFallbackName(type: 'band' | 'song', genre?: string, mood?: string, wordCount?: number): string {
@@ -438,8 +442,11 @@ export class AINameGeneratorService {
       word.replace(/[^a-z]/g, '') // Remove punctuation
     ).filter(word => word.length > 2); // Only track meaningful words
     
-    // Add new words to the front of the array
-    this.recentWords.unshift(...words);
+    // Also track word stems to prevent variations like quartz/quartzine/quartzian
+    const stems = words.map(w => this.getWordStem(w));
+    
+    // Add new words and stems to the front of the array
+    this.recentWords.unshift(...words, ...stems);
     
     // Keep only the most recent words
     this.recentWords = this.recentWords.slice(0, this.maxRecentWords);
@@ -448,5 +455,21 @@ export class AINameGeneratorService {
     this.recentWords = Array.from(new Set(this.recentWords));
     
     secureLog.debug(`Recent words tracked: ${this.recentWords.slice(0, 10).join(', ')}`);
+  }
+  
+  private getWordStem(word: string): string {
+    // Simple stemming to catch variations
+    // Remove common suffixes to find root
+    const suffixes = ['ine', 'ian', 'ium', 'ous', 'al', 'ic', 'ize', 'ify', 'ate', 'tion', 'sion'];
+    let stem = word.toLowerCase();
+    
+    for (const suffix of suffixes) {
+      if (stem.endsWith(suffix) && stem.length - suffix.length > 3) {
+        stem = stem.slice(0, -suffix.length);
+        break;
+      }
+    }
+    
+    return stem;
   }
 }

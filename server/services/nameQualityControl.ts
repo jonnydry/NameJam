@@ -81,15 +81,15 @@ export class NameQualityControlService {
         // Skip very short words
         if (word1.length < 3 || word2.length < 3) continue;
         
-        // Get conceptual associations for both words
+        // Get related concepts for both words
         const [concepts1, concepts2] = await Promise.all([
-          conceptNetService.getConceptualAssociations(word1).catch(() => []),
-          conceptNetService.getConceptualAssociations(word2).catch(() => [])
+          conceptNetService.getRelatedConcepts(word1, 10).catch(() => []),
+          conceptNetService.getRelatedConcepts(word2, 10).catch(() => [])
         ]);
         
-        // Calculate overlap in concepts
-        const set1 = new Set(concepts1.map(c => c.toLowerCase()));
-        const set2 = new Set(concepts2.map(c => c.toLowerCase()));
+        // Calculate overlap in concepts - extract words from ConceptNetWord objects
+        const set1 = new Set(concepts1.map(c => c.word.toLowerCase()));
+        const set2 = new Set(concepts2.map(c => c.word.toLowerCase()));
         const intersection = new Set([...set1].filter(x => set2.has(x)));
         
         // Calculate Jaccard similarity
