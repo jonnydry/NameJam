@@ -213,14 +213,7 @@ export function LyricJam() {
                 <CardHeader className="relative space-y-6 p-6 sm:p-8">
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-4 flex-1 min-w-0">
-                      {currentLyric.songSection && (
-                        <div className="inline-flex">
-                          <Badge className={`${getSectionColor(currentLyric.songSection)} text-white font-bold px-4 py-1 text-sm shadow-lg`}>
-                            {currentLyric.songSection.toUpperCase()}
-                          </Badge>
-                        </div>
-                      )}
-                      <div className="space-y-2 mt-6">
+                      <div className="space-y-2">
                         {currentLyric.lyric.includes('\n') ? (
                           currentLyric.lyric.split('\n').map((line, index) => (
                             <div 
