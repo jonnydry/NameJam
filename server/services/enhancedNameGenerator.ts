@@ -19,6 +19,7 @@ import {
   isPoeticWord, 
   isProblematicWord 
 } from './nameGeneration/wordValidation';
+import { nameQualityControl } from './nameQualityControl';
 
 export class EnhancedNameGeneratorService {
   private datamuseService: DatamuseService;
@@ -27,6 +28,11 @@ export class EnhancedNameGeneratorService {
   private namePatterns: NameGenerationPatterns;
   private recentWords: Set<string> = new Set();
   private maxRecentWords: number = 100;
+  
+  // Performance optimization: Cache for word sources
+  private wordSourceCache: Map<string, { data: EnhancedWordSource; timestamp: number }> = new Map();
+  private contextCache: Map<string, { data: any; timestamp: number }> = new Map();
+  private cacheTimeout: number = 1000 * 60 * 15; // 15 minutes
 
   constructor() {
     this.datamuseService = datamuseService;
@@ -37,68 +43,234 @@ export class EnhancedNameGeneratorService {
     );
     this.namePatterns = new NameGenerationPatterns(this.datamuseService);
   }
+  
+  // Collect generation context from multiple APIs for enrichment
+  async getGenerationContext(mood?: string, genre?: string): Promise<{
+    spotifyContext: string[],
+    lastfmContext: string[],
+    conceptNetContext: string[]
+  }> {
+    // Performance: Check cache first
+    const cacheKey = `context_${mood || 'none'}_${genre || 'none'}`;
+    const cached = this.contextCache.get(cacheKey);
+    
+    if (cached && (Date.now() - cached.timestamp < this.cacheTimeout)) {
+      secureLog.debug(`💾 Using cached context for ${cacheKey}`);
+      return cached.data;
+    }
+    
+    const context = {
+      spotifyContext: [] as string[],
+      lastfmContext: [] as string[],
+      conceptNetContext: [] as string[]
+    };
+    
+    try {
+      // Collect vocabulary from APIs in parallel for performance
+      const promises = [];
+      
+      // Spotify context - get artists and tracks, then extract vocabulary
+      if (genre) {
+        promises.push(
+          Promise.all([
+            this.spotifyService.getGenreArtists(genre, 20),
+            this.spotifyService.searchTracks(genre, 20)
+          ]).then(([artists, tracks]) => {
+            const vocab = this.spotifyService.extractVocabularyPatterns(artists, tracks);
+            context.spotifyContext = vocab.filter(w => w.length > 3).slice(0, 15);
+          }).catch((err: any) => secureLog.debug('Spotify context failed:', err))
+        );
+      }
+      
+      // Last.fm context
+      if (genre) {
+        promises.push(
+          lastfmService.getGenreVocabulary(genre)
+            .then((vocabulary) => {
+              // Combine genre terms and descriptive words
+              const vocab = [
+                ...vocabulary.genreTerms,
+                ...vocabulary.descriptiveWords,
+                ...vocabulary.relatedGenres
+              ].filter(w => w.length > 3 && w.length < 15)
+                .slice(0, 15);
+              context.lastfmContext = vocab;
+            })
+            .catch((err: any) => secureLog.debug('Last.fm context failed:', err))
+        );
+      }
+      
+      // ConceptNet context - use appropriate method based on input
+      if (mood || genre) {
+        const seed = mood || genre;
+        promises.push(
+          (genre ? conceptNetService.getGenreAssociations(genre) : 
+           conceptNetService.getEmotionalAssociations(seed!))
+            .then(concepts => {
+              context.conceptNetContext = concepts.slice(0, 15);
+            })
+            .catch((err: any) => secureLog.debug('ConceptNet context failed:', err))
+        );
+      }
+      
+      await Promise.allSettled(promises);
+      
+      secureLog.debug(`📚 Collected context: Spotify(${context.spotifyContext.length}), Last.fm(${context.lastfmContext.length}), ConceptNet(${context.conceptNetContext.length})`);
+      
+      // Cache the result for performance
+      this.contextCache.set(cacheKey, {
+        data: context,
+        timestamp: Date.now()
+      });
+      
+    } catch (error) {
+      secureLog.error('Context collection error:', error);
+    }
+    
+    return context;
+  }
 
   // Enhanced generation using Datamuse API for contextual relationships
-  async generateEnhancedNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
+  async generateEnhancedNames(request: GenerateNameRequest, apiContext?: string[]): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
     const { type, wordCount, count, mood, genre } = request;
     const names: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
 
     secureLog.debug(`🚀 Enhanced generation: ${count} ${type} names with ${wordCount} words`);
+    
+    // If API context is provided, log it
+    if (apiContext && apiContext.length > 0) {
+      secureLog.debug(`📌 Using API context: ${apiContext.length} words - ${apiContext.slice(0, 5).join(', ')}...`);
+    }
 
-    // Build contextual word sources using the modular builder
-    const wordSources = await this.wordSourceBuilder.buildContextualWordSources(mood, genre, type);
+    // Performance: Check cache for word sources
+    const wordSourceCacheKey = `words_${type}_${mood || 'none'}_${genre || 'none'}`;
+    let wordSources: EnhancedWordSource;
+    
+    const cachedWordSources = this.wordSourceCache.get(wordSourceCacheKey);
+    if (cachedWordSources && (Date.now() - cachedWordSources.timestamp < this.cacheTimeout)) {
+      secureLog.debug(`💾 Using cached word sources for ${wordSourceCacheKey}`);
+      wordSources = { ...cachedWordSources.data }; // Clone to avoid mutations
+    } else {
+      // Build contextual word sources using the modular builder
+      wordSources = await this.wordSourceBuilder.buildContextualWordSources(mood, genre, type);
+      
+      // Cache the word sources
+      this.wordSourceCache.set(wordSourceCacheKey, {
+        data: { ...wordSources }, // Clone for cache
+        timestamp: Date.now()
+      });
+    }
+    
+    // Enrich word sources with API context if provided
+    if (apiContext && apiContext.length > 0) {
+      // Add API context words to appropriate categories
+      const contextWords = apiContext.filter(w => isPoeticWord(w) && !isProblematicWord(w));
+      wordSources.contextualWords.unshift(...contextWords.slice(0, 10));
+      wordSources.associatedWords.unshift(...contextWords.slice(10, 20));
+      secureLog.debug(`💫 Enriched word sources with ${contextWords.length} API context words`);
+    }
 
     let attempts = 0;
     const maxAttempts = count * 10;
+    
+    // Performance: Batch generate candidates for efficiency
+    const batchSize = 5;
+    const candidates: Array<{name: string, actualWordCount: number}> = [];
 
     while (names.length < count && attempts < maxAttempts) {
-      attempts++;
+      attempts += batchSize;
+      
       try {
-        const result = await this.namePatterns.generateContextualNameWithCount(
-          type, 
-          wordCount, 
-          wordSources, 
-          mood, 
-          genre
+        // Generate batch of candidates in parallel
+        const batchPromises = Array(batchSize).fill(null).map(() => 
+          this.namePatterns.generateContextualNameWithCount(
+            type, 
+            wordCount, 
+            wordSources, 
+            mood, 
+            genre
+          ).catch(() => null)
         );
         
-        // Quality validation and check for repeated words
-        const isValidWordCount = wordCount >= 4 ? 
-          (result.actualWordCount >= 4 && result.actualWordCount <= 10) : 
-          (result.actualWordCount === wordCount);
+        const batchResults = await Promise.all(batchPromises);
         
-        if (result && result.name && isValidWordCount && 
-            this.isValidName(result.name, result.actualWordCount) && 
-            !names.find(n => n.name === result.name) && 
-            !this.hasRecentWords(result.name)) {
-          this.trackWords(result.name);
-          names.push({ 
-            name: result.name, 
-            isAiGenerated: false, 
-            source: 'datamuse-enhanced' 
-          });
-          secureLog.debug(`✅ Generated valid name: "${result.name}" (${result.actualWordCount} words)`);
-        } else {
-          secureLog.debug(`❌ Rejected name: "${result?.name}" - validation failed`);
+        // Filter and validate batch results
+        for (const result of batchResults) {
+          if (!result || !result.name) continue;
+          
+          const isValidWordCount = wordCount >= 4 ? 
+            (result.actualWordCount >= 4 && result.actualWordCount <= 10) : 
+            (result.actualWordCount === wordCount);
+          
+          if (isValidWordCount && 
+              this.isValidName(result.name, result.actualWordCount) && 
+              !names.find(n => n.name === result.name) && 
+              !this.hasRecentWords(result.name)) {
+            candidates.push(result);
+          }
         }
+        
+        // Batch quality check for performance
+        const qualityPromises = candidates.map(candidate => 
+          nameQualityControl.evaluateNameQuality(candidate.name, type)
+            .then(score => ({ candidate, score }))
+            .catch(() => null)
+        );
+        
+        const qualityResults = await Promise.all(qualityPromises);
+        
+        // Process quality results
+        for (const result of qualityResults) {
+          if (!result) continue;
+          
+          const { candidate, score } = result;
+          secureLog.debug(`🎯 Quality check for "${candidate.name}": ${(score.overallScore * 100).toFixed(1)}%`);
+          
+          if (score.overallScore >= 0.6) {
+            this.trackWords(candidate.name);
+            names.push({ 
+              name: candidate.name, 
+              isAiGenerated: false, 
+              source: 'datamuse-enhanced' 
+            });
+            secureLog.debug(`✅ Generated valid name: "${candidate.name}" (quality: ${(score.overallScore * 100).toFixed(1)}%)`);
+            
+            if (names.length >= count) break;
+          }
+        }
+        
+        // Clear processed candidates
+        candidates.length = 0;
+        
       } catch (error) {
-        secureLog.error('Enhanced generation error:', error);
+        secureLog.error('Enhanced generation batch error:', error);
       }
     }
     
     // Ensure we always return the requested number of names by using fallback generation
-    while (names.length < count) {
+    let fallbackAttempts = 0;
+    const maxFallbackAttempts = count * 5;
+    
+    while (names.length < count && fallbackAttempts < maxFallbackAttempts) {
+      fallbackAttempts++;
       const fallbackWordCount = wordCount >= 4 ? Math.floor(Math.random() * 7) + 4 : wordCount;
       const fallbackName = generateFallbackName(wordSources, fallbackWordCount);
       
       if (!names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {
-        this.trackWords(fallbackName);
-        names.push({ 
-          name: fallbackName, 
-          isAiGenerated: false, 
-          source: 'fallback' 
-        });
-        secureLog.debug(`✅ Generated fallback name: "${fallbackName}"`);
+        // Quality check for fallback names too
+        const qualityScore = await nameQualityControl.evaluateNameQuality(fallbackName, type);
+        
+        if (qualityScore.overallScore >= 0.5) { // Slightly lower threshold for fallbacks
+          this.trackWords(fallbackName);
+          names.push({ 
+            name: fallbackName, 
+            isAiGenerated: false, 
+            source: 'fallback' 
+          });
+          secureLog.debug(`✅ Generated fallback name: "${fallbackName}" (quality: ${(qualityScore.overallScore * 100).toFixed(1)}%)`);
+        } else {
+          secureLog.debug(`❌ Rejected fallback: "${fallbackName}" - low quality: ${(qualityScore.overallScore * 100).toFixed(1)}%`);
+        }
       }
     }
     
@@ -148,17 +320,7 @@ export class EnhancedNameGeneratorService {
     return true;
   }
 
-  // Get context for AI generation (used by other services)
-  async getGenerationContext(mood?: string, genre?: string): Promise<{ datamuseContext: string[], spotifyContext: string[], lastfmContext: string[], conceptNetContext: string[] }> {
-    const wordSources = await this.wordSourceBuilder.buildContextualWordSources(mood, genre, 'band');
-    
-    return {
-      datamuseContext: [...wordSources.adjectives, ...wordSources.nouns, ...wordSources.verbs].slice(0, 10),
-      spotifyContext: wordSources.spotifyWords?.slice(0, 10) || [],
-      lastfmContext: wordSources.lastfmWords?.slice(0, 10) || [],
-      conceptNetContext: wordSources.conceptNetWords?.slice(0, 10) || []
-    };
-  }
+
 }
 
 export const enhancedNameGenerator = new EnhancedNameGeneratorService();
