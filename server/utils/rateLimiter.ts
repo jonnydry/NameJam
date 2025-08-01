@@ -1,3 +1,5 @@
+import { secureLog } from './secureLogger';
+
 interface RateLimiterOptions {
   maxRequests: number;
   windowMs: number;
@@ -99,7 +101,7 @@ export async function withRetry<T>(
       
       if (attempt < maxRetries - 1 && isRateLimitError) {
         const delay = initialDelay * Math.pow(2, attempt);
-        console.log(`Rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        secureLog.info(`Rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, delay));
       } else {
         throw error;
