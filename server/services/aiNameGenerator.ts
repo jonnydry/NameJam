@@ -2,11 +2,11 @@ import OpenAI from "openai";
 import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
 import { secureLog } from '../utils/secureLogger';
 import { nameQualityControl } from './nameQualityControl';
+import { MAX_RECENT_WORDS_AI } from './nameGeneration/constants';
 
 export class AINameGeneratorService {
   private openai: OpenAI | null = null;
   private recentWords: string[] = [];
-  private maxRecentWords = 30; // Increased to track more words
   private modelRotation = 0; // Track model rotation for variety
   
   // Expanded forbidden words list
@@ -441,7 +441,7 @@ export class AINameGeneratorService {
     this.recentWords.unshift(...words, ...stems);
     
     // Keep only the most recent words
-    this.recentWords = this.recentWords.slice(0, this.maxRecentWords);
+    this.recentWords = this.recentWords.slice(0, MAX_RECENT_WORDS_AI);
     
     // Remove duplicates while preserving order
     this.recentWords = Array.from(new Set(this.recentWords));

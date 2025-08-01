@@ -20,6 +20,7 @@ import {
   isProblematicWord 
 } from './nameGeneration/wordValidation';
 import { nameQualityControl } from './nameQualityControl';
+import { WORD_SOURCE_CACHE_TIMEOUT } from './nameGeneration/constants';
 
 export class EnhancedNameGeneratorService {
   private datamuseService: DatamuseService;
@@ -32,7 +33,7 @@ export class EnhancedNameGeneratorService {
   // Performance optimization: Cache for word sources
   private wordSourceCache: Map<string, { data: EnhancedWordSource; timestamp: number }> = new Map();
   private contextCache: Map<string, { data: any; timestamp: number }> = new Map();
-  private cacheTimeout: number = 1000 * 60 * 15; // 15 minutes
+  private cacheTimeout: number = WORD_SOURCE_CACHE_TIMEOUT;
 
   constructor() {
     this.datamuseService = datamuseService;

@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { secureLog } from "./utils/secureLogger";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -115,14 +116,14 @@ export async function setupAuth(app: Express) {
       const domains = process.env.REPLIT_DOMAINS!.split(",");
       const authDomain = domains[0]; // Use first domain as primary
       
-      console.log("Starting authentication for domain:", authDomain);
+      secureLog.info("Starting authentication for domain:", authDomain);
       
       passport.authenticate(`replitauth:${authDomain}`, {
         prompt: "login consent",
         scope: ["openid", "email", "profile", "offline_access"],
       })(req, res, next);
     } catch (error) {
-      console.error("Login error:", error);
+      secureLog.error("Login error:", error);
       res.status(500).json({ message: "Authentication failed" });
     }
   });
@@ -133,8 +134,8 @@ export async function setupAuth(app: Express) {
       const domains = process.env.REPLIT_DOMAINS!.split(",");
       const authDomain = domains[0];
       
-      console.log("Processing callback for domain:", authDomain);
-      console.log("Callback query params:", req.query);
+      secureLog.info("Processing callback for domain:", authDomain);
+      secureLog.debug("Callback query params:", req.query);
       
       passport.authenticate(`replitauth:${authDomain}`, {
         successReturnToOrRedirect: "/",
@@ -142,7 +143,7 @@ export async function setupAuth(app: Express) {
         failureFlash: false
       })(req, res, next);
     } catch (error) {
-      console.error("Callback error:", error);
+      secureLog.error("Callback error:", error);
       res.redirect("/auth-error");
     }
   });

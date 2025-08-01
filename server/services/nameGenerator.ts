@@ -3,6 +3,15 @@ import type { AINameGeneratorService } from "./aiNameGenerator";
 import { enhancedNameGenerator } from "./enhancedNameGenerator";
 import { unifiedWordFilter } from "./nameGeneration/unifiedWordFilter";
 import { secureLog } from "../utils/secureLogger";
+import { 
+  DEFAULT_GENERATION_COUNT, 
+  AI_GENERATION_SPLIT,
+  AI_RETRY_MULTIPLIER, 
+  DATAMUSE_RETRY_MULTIPLIER, 
+  BATCH_GENERATION_MULTIPLIER,
+  MAX_CONTEXT_EXAMPLES,
+  MIN_WORD_LENGTH_FOR_CONTEXT 
+} from "./nameGeneration/constants";
 
 export class NameGeneratorService {
   private aiNameGenerator: AINameGeneratorService | null = null;
@@ -15,15 +24,66 @@ export class NameGeneratorService {
     this.aiNameGenerator = aiService;
   }
 
+  /**
+   * Shared retry logic for name generation with word filtering
+   */
+  private async generateWithRetry(
+    targetCount: number,
+    retryMultiplier: number,
+    generateFunction: () => Promise<string | { name: string; isAiGenerated: boolean; source: string } | null>,
+    generationId: string,
+    source: string
+  ): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
+    const maxAttempts = targetCount * retryMultiplier;
+    let attempts = 0;
+    const acceptedResults: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
+    
+    while (acceptedResults.length < targetCount && attempts < maxAttempts) {
+      const batchSize = Math.min(targetCount * BATCH_GENERATION_MULTIPLIER, maxAttempts - attempts);
+      const promises = Array(batchSize).fill(null).map(() => 
+        generateFunction().catch(error => {
+          secureLog.warn(`${source} generation failed:`, error);
+          return null;
+        })
+      );
+      
+      const batchResults = (await Promise.all(promises)).filter(result => result !== null);
+      attempts += batchSize;
+      
+      // Process batch results
+      for (const result of batchResults) {
+        if (acceptedResults.length >= targetCount) break;
+        
+        // Handle both string results (AI) and object results (Datamuse)
+        const name = typeof result === 'string' ? result : result.name;
+        const isAiGenerated = source === 'AI';
+        
+        if (!unifiedWordFilter.shouldRejectName(name, generationId)) {
+          unifiedWordFilter.acceptName(name, generationId);
+          acceptedResults.push({
+            name,
+            isAiGenerated,
+            source: source.toLowerCase()
+          });
+        } else {
+          secureLog.debug(`🚫 ${source} name filtered: "${name}"`);
+        }
+      }
+    }
+    
+    secureLog.info(`✅ Generated ${acceptedResults.length}/${targetCount} ${source} names (after filtering, ${attempts} attempts)`);
+    return acceptedResults;
+  }
+
   // Main generation method - routes between AI and Datamuse API
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
-    const { count = 4 } = request; // Reduced from 8 to 4 for better speed
+    const { count = DEFAULT_GENERATION_COUNT } = request;
     
     // Start new generation session for word filtering
     const generationId = unifiedWordFilter.startNewGeneration();
     
-    // Calculate AI vs Datamuse split (50% AI, 50% Datamuse)
-    const aiCount = Math.floor(count / 2); // Half the names from AI
+    // Calculate AI vs Datamuse split
+    const aiCount = Math.floor(count * AI_GENERATION_SPLIT);
     const datamuseCount = count - aiCount;
 
     secureLog.info(`🎯 Generating ${count} names: ${aiCount} AI + ${datamuseCount} Datamuse`);
@@ -40,52 +100,27 @@ export class NameGeneratorService {
           const generationContext = await enhancedNameGenerator.getGenerationContext(request.mood, request.genre);
           // Combine artist names from Spotify, Last.fm, and ConceptNet for context
           contextExamples = [...generationContext.spotifyContext, ...generationContext.lastfmContext, ...generationContext.conceptNetContext]
-            .filter(w => w.length > 2 && !w.includes(' ')) // Filter for quality
-            .slice(0, 15); // Increased to 15 examples for richer context
+            .filter(w => w.length > MIN_WORD_LENGTH_FOR_CONTEXT && !w.includes(' ')) // Filter for quality
+            .slice(0, MAX_CONTEXT_EXAMPLES);
         }
         
-        // Generate AI names with retry logic to ensure we get the target count
-        const maxAttempts = aiCount * 3; // Generate up to 3x more candidates if needed
-        let aiAttempts = 0;
-        const acceptedAiResults: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
-        
-        while (acceptedAiResults.length < aiCount && aiAttempts < maxAttempts) {
-          const batchSize = Math.min(aiCount * 2, maxAttempts - aiAttempts); // Generate 2x in parallel
-          const aiPromises = Array(batchSize).fill(null).map((_, index) => 
-            this.aiNameGenerator!.generateAIName(
-              request.type, 
-              request.genre, 
-              request.mood, 
-              request.wordCount, 
-              contextExamples
-            ).catch(error => {
-              secureLog.warn(`AI generation ${aiAttempts + index} failed:`, error);
-              return null;
-            })
-          );
-          
-          const batchResults = (await Promise.all(aiPromises)).filter(name => name !== null);
-          aiAttempts += batchSize;
-          
-          // Filter batch results through unified word filter
-          for (const name of batchResults) {
-            if (acceptedAiResults.length >= aiCount) break; // Stop when we have enough
-            
-            if (!unifiedWordFilter.shouldRejectName(name, generationId)) {
-              unifiedWordFilter.acceptName(name, generationId);
-              acceptedAiResults.push({
-                name,
-                isAiGenerated: true,
-                source: 'ai'
-              });
-            } else {
-              secureLog.debug(`🚫 AI name filtered: "${name}"`);
-            }
-          }
-        }
+        // Generate AI names with retry logic
+        const acceptedAiResults = await this.generateWithRetry(
+          aiCount,
+          AI_RETRY_MULTIPLIER,
+          async () => this.aiNameGenerator!.generateAIName(
+            request.type, 
+            request.genre, 
+            request.mood, 
+            request.wordCount, 
+            contextExamples
+          ),
+          generationId,
+          'AI'
+        );
         
         results.push(...acceptedAiResults);
-        secureLog.info(`✅ Generated ${acceptedAiResults.length}/${aiCount} AI names (after filtering, ${aiAttempts} attempts)`);
+        secureLog.info(`✅ Generated ${acceptedAiResults.length}/${aiCount} AI names`);
       } catch (error) {
         secureLog.warn("AI generation failed, using Datamuse fallback:", error);
         // Fallback to Datamuse if AI fails
@@ -112,36 +147,22 @@ export class NameGeneratorService {
           secureLog.debug(`📚 Datamuse using context: ${datamuseContext.length} words`);
         }
         
-        // Generate Datamuse names with retry logic to ensure we get the target count
-        const maxDatamuseAttempts = datamuseCount * 4; // Generate up to 4x more candidates if needed
-        let datamuseAttempts = 0;
-        const acceptedDatamuseResults: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
-        
-        while (acceptedDatamuseResults.length < datamuseCount && datamuseAttempts < maxDatamuseAttempts) {
-          const batchCount = Math.min(datamuseCount * 2, maxDatamuseAttempts - datamuseAttempts);
-          
-          const batchResults = await enhancedNameGenerator.generateEnhancedNames({
-            ...request,
-            count: batchCount
-          }, datamuseContext);
-          
-          datamuseAttempts += batchCount;
-          
-          // Filter batch results through unified word filter
-          for (const result of batchResults) {
-            if (acceptedDatamuseResults.length >= datamuseCount) break; // Stop when we have enough
-            
-            if (!unifiedWordFilter.shouldRejectName(result.name, generationId)) {
-              unifiedWordFilter.acceptName(result.name, generationId);
-              acceptedDatamuseResults.push(result);
-            } else {
-              secureLog.debug(`🚫 Datamuse name filtered: "${result.name}"`);
-            }
-          }
-        }
+        // Generate Datamuse names with retry logic
+        const acceptedDatamuseResults = await this.generateWithRetry(
+          datamuseCount,
+          DATAMUSE_RETRY_MULTIPLIER,
+          async () => {
+            const results = await enhancedNameGenerator.generateEnhancedNames({
+              ...request,
+              count: 1 // Generate one at a time for better filtering control
+            }, datamuseContext);
+            return results[0] || null;
+          },
+          generationId,
+          'Datamuse'
+        );
         
         results.push(...acceptedDatamuseResults);
-        secureLog.info(`✅ Generated ${acceptedDatamuseResults.length}/${datamuseCount} Datamuse names (after filtering, ${datamuseAttempts} attempts)`);
       } catch (error) {
         secureLog.warn("Datamuse generation failed:", error);
         // Provide simple fallback names if both systems fail
