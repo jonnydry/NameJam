@@ -90,10 +90,10 @@ export class NameQualityControlService {
         // Calculate overlap in concepts - extract words from ConceptNetWord objects
         const set1 = new Set(concepts1.map(c => c.word.toLowerCase()));
         const set2 = new Set(concepts2.map(c => c.word.toLowerCase()));
-        const intersection = new Set([...set1].filter(x => set2.has(x)));
+        const intersection = new Set(Array.from(set1).filter(x => set2.has(x)));
         
         // Calculate Jaccard similarity
-        const union = new Set([...set1, ...set2]);
+        const union = new Set([...Array.from(set1), ...Array.from(set2)]);
         const similarity = union.size > 0 ? intersection.size / union.size : 0;
         
         totalCoherence += similarity;
@@ -197,9 +197,9 @@ export class NameQualityControlService {
     let totalSimilarity = 0;
     let comparisons = 0;
     
-    for (const [recentName, recentConcepts] of this.recentSemanticConcepts.entries()) {
-      const intersection = new Set([...currentConcepts].filter(x => recentConcepts.has(x)));
-      const union = new Set([...currentConcepts, ...recentConcepts]);
+    for (const [recentName, recentConcepts] of Array.from(this.recentSemanticConcepts.entries())) {
+      const intersection = new Set(Array.from(currentConcepts).filter(x => recentConcepts.has(x)));
+      const union = new Set([...Array.from(currentConcepts), ...Array.from(recentConcepts)]);
       
       if (union.size > 0) {
         const similarity = intersection.size / union.size;
@@ -219,7 +219,9 @@ export class NameQualityControlService {
     // Maintain history size
     if (this.recentSemanticConcepts.size > this.maxSemanticHistory) {
       const firstKey = this.recentSemanticConcepts.keys().next().value;
-      this.recentSemanticConcepts.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.recentSemanticConcepts.delete(firstKey);
+      }
     }
     
     return uniquenessScore;

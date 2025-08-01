@@ -258,6 +258,17 @@ export class ConceptNetService {
       .map(c => c.word)
       .slice(0, 15);
   }
+
+  // Add the missing method for nameQualityControl.ts
+  async getConceptualAssociations(word: string): Promise<string[]> {
+    try {
+      const concepts = await this.getRelatedConcepts(word, 20);
+      return concepts.map(c => c.word);
+    } catch (error) {
+      secureLog.error('Error getting conceptual associations:', error);
+      return [];
+    }
+  }
 }
 
 export const conceptNetService = new ConceptNetService();
