@@ -15,7 +15,7 @@ export function Landing() {
       textColor: "text-blue-500",
       customClass: "carousel-card-blue",
       title: "5-API Musical Intelligence",
-      description: "Spotify + Last.fm + ConceptNet + Datamuse + PoetryDB working together for contextually rich, genre-authentic names"
+      description: "Real music data from Spotify, Last.fm, and poetry sources creates authentic, genre-perfect names"
     },
     {
       icon: NotebookPen,
@@ -23,7 +23,7 @@ export function Landing() {
       textColor: "text-green-500",
       customClass: "carousel-card-green",
       title: "Poetry-Enhanced Lyrics",
-      description: "Classical poetry context with variable meter options (Iambic, Trochaic, etc.) and authentic genre vocabulary from all 5 APIs"
+      description: "Classical poetry meets modern AI for lyrical starters with authentic rhythm and flow"
     },
     {
       icon: Brain,
@@ -31,7 +31,7 @@ export function Landing() {
       textColor: "text-yellow-500",
       customClass: "carousel-card-yellow",
       title: "Natural Language Flow",
-      description: "Enhanced 4+ word generation with PoeticFlowPatterns class creating names that read like natural language while staying metaphorical"
+      description: "4+ word names that read like natural speech while staying creative and memorable"
     },
     {
       icon: Zap,
@@ -39,7 +39,7 @@ export function Landing() {
       textColor: "text-purple-500",
       customClass: "carousel-card-purple",
       title: "Lightning-Fast Generation",
-      description: "Optimized from 50+ seconds to just 7-10 seconds through parallel processing and intelligent caching"
+      description: "Get results in 7-10 seconds, down from over 50 seconds with our optimized system"
     },
     {
       icon: Music,
@@ -47,7 +47,7 @@ export function Landing() {
       textColor: "text-red-500",
       customClass: "carousel-card-red",
       title: "Smart Quality Control",
-      description: "Musical word filtering, anti-repetition with 30-minute memory, and pattern-based generation following real band conventions"
+      description: "Intelligent filtering ensures every name sounds musical and avoids repetitive results"
     }
   ];
 
