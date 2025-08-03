@@ -62,51 +62,91 @@ const BAND_PATTERNS = [
 ];
 
 const SONG_PATTERNS = [
-  // Verb + Preposition + Noun (Dancing in the Dark, Running up that Hill)
+  // Unique compound word + common word (Hyperstellar Dreams, Neonwave Hearts)
   {
-    pattern: 'verb_prep_noun',
-    weight: 0.2,
+    pattern: 'unique_compound',
+    weight: 0.25,
     generate: (words: any) => {
-      const verb = getRandomWord(words.verbs) || 'running';
-      const preps = ['in', 'on', 'through', 'over', 'under', 'with', 'without'];
-      const prep = getRandomWord(preps);
-      const noun = getRandomWord(words.nouns) || 'night';
-      return `${capitalize(verb)}ing ${prep} the ${capitalize(noun)}`;
+      const prefixes = ['hyper', 'ultra', 'neo', 'meta', 'proto', 'anti', 'omni', 'poly', 'multi'];
+      const midWords = getRandomWord([...words.adjectives, ...words.nouns, ...words.genreTerms]) || 'stellar';
+      const suffix = getRandomWord(words.nouns) || 'dreams';
+      const prefix = getRandomWord(prefixes);
+      return `${capitalize(prefix + midWords)} ${capitalize(suffix)}`;
     }
   },
-  // Adjective + Noun (Sweet Emotion, Purple Rain)
+  // Invented word + real word (Synthopia Rising, Dreamscape Echo)
   {
-    pattern: 'adj_noun',
+    pattern: 'invented_word',
     weight: 0.2,
     generate: (words: any) => {
-      const adj = getRandomWord(words.adjectives) || 'sweet';
-      const noun = getRandomWord([...words.nouns, ...words.musicalTerms]) || 'emotion';
+      const endings = ['opia', 'scape', 'tron', 'verse', 'sphere', 'flux', 'wave', 'core'];
+      const base = getRandomWord([...words.nouns, ...words.genreTerms]) || 'dream';
+      const ending = getRandomWord(endings);
+      const action = getRandomWord([...words.verbs.map((v: string) => v + 'ing'), ...words.musicalTerms]) || 'rising';
+      return `${capitalize(base + ending)} ${capitalize(action)}`;
+    }
+  },
+  // Number/Code + Emotion (404 Heartbreak, Seven Sorrows)
+  {
+    pattern: 'number_emotion',
+    weight: 0.15,
+    generate: (words: any) => {
+      const numbers = ['zero', 'seven', 'eleven', '404', '808', 'XIII', 'infinite', 'binary'];
+      const emotions = ['heartbreak', 'sorrows', 'desires', 'whispers', 'echoes', 'memories'];
+      const number = getRandomWord(numbers);
+      const emotion = getRandomWord([...emotions, ...words.nouns.filter((n: string) => n.length > 5)]) || 'echoes';
+      return `${capitalize(number)} ${capitalize(emotion)}`;
+    }
+  },
+  // Genre-specific unique pattern (Pixelated Sunrise, Glitchwave Memory)
+  {
+    pattern: 'genre_unique',
+    weight: 0.15,
+    generate: (words: any) => {
+      const techWords = ['pixel', 'glitch', 'byte', 'cyber', 'quantum', 'digital', 'analog', 'fractal'];
+      const natureWords = ['sunrise', 'twilight', 'horizon', 'aurora', 'nebula', 'cosmos'];
+      const tech = getRandomWord([...techWords, ...words.genreTerms]) || 'pixel';
+      const nature = getRandomWord([...natureWords, ...words.contextualWords]) || 'sunrise';
+      return Math.random() > 0.5 
+        ? `${capitalize(tech)}ated ${capitalize(nature)}`
+        : `${capitalize(tech)}wave ${capitalize(nature)}`;
+    }
+  },
+  // Adjective + Noun (but with rare/unique combinations)
+  {
+    pattern: 'rare_adj_noun',
+    weight: 0.1,
+    generate: (words: any) => {
+      const rareAdjs = ['lucid', 'visceral', 'ethereal', 'prismatic', 'chromatic', 'holographic', 'iridescent'];
+      const uniqueNouns = ['prism', 'void', 'nexus', 'flux', 'vortex', 'paradox', 'enigma'];
+      const adj = getRandomWord([...rareAdjs, ...words.adjectives.filter((a: string) => a.length > 6)]) || 'lucid';
+      const noun = getRandomWord([...uniqueNouns, ...words.musicalTerms, ...words.genreTerms]) || 'prism';
       return `${capitalize(adj)} ${capitalize(singularize(noun))}`;
     }
   },
-  // Personal statement (I Want It That Way, Don't Stop Me Now)
+  // Single rare/invented word (for 1-word songs)
   {
-    pattern: 'personal_statement',
-    weight: 0.15,
+    pattern: 'single_unique',
+    weight: 0.1,
     generate: (words: any) => {
-      const starters = ["I", "You", "We", "Don't", "Can't", "Won't"];
-      const verbs = ['want', 'need', 'feel', 'see', 'know', 'believe'];
-      const starter = getRandomWord(starters);
-      const verb = getRandomWord([...verbs, ...words.verbs]) || 'feel';
-      const thing = getRandomWord(words.nouns) || 'way';
-      return `${starter} ${capitalize(verb)} the ${capitalize(thing)}`;
+      const bases = getRandomWord([...words.nouns, ...words.genreTerms, ...words.musicalTerms]) || 'echo';
+      const modifiers = ['ism', 'ology', 'esque', 'onic', 'atic', 'morphic'];
+      const modifier = getRandomWord(modifiers);
+      return capitalize(bases + modifier);
     }
   },
-  // Time/Place + Action (Midnight City, California Dreamin')
+  // Original patterns with updated word selections (kept but reduced weight)
   {
-    pattern: 'time_place_action',
-    weight: 0.15,
+    pattern: 'verb_prep_noun',
+    weight: 0.05,
     generate: (words: any) => {
-      const times = ['midnight', 'morning', 'evening', 'summer', 'winter'];
-      const actions = ['calling', 'running', 'dreaming', 'falling', 'rising'];
-      const time = getRandomWord([...times, ...words.contextualWords]) || 'midnight';
-      const action = getRandomWord([...actions, ...words.verbs.map((v: string) => v + 'ing')]) || 'calling';
-      return `${capitalize(time)} ${capitalize(action)}`;
+      const uniqueVerbs = words.verbs.filter((v: string) => v.length > 5) || ['transcend', 'illuminate', 'resonate'];
+      const verb = getRandomWord(uniqueVerbs) || 'transcend';
+      const preps = ['beyond', 'beneath', 'within', 'between', 'alongside'];
+      const prep = getRandomWord(preps);
+      const uniqueNouns = words.nouns.filter((n: string) => n.length > 6) || ['horizon', 'spectrum', 'dimension'];
+      const noun = getRandomWord(uniqueNouns) || 'horizon';
+      return `${capitalize(verb)}ing ${prep} ${capitalize(noun)}`;
     }
   }
 ];
