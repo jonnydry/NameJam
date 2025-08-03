@@ -475,13 +475,12 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     }
   });
 
-  // Generate AI name endpoint (protected with rate limiting and validation)
+  // Generate AI name endpoint (public with rate limiting and validation)
   app.post("/api/generate-ai-name", 
     rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
-    isAuthenticated, 
     validationRules.generateNames, 
     handleValidationErrors, 
-    async (req: Request & { user?: any }, res: Response) => {
+    async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
     try {
       const { type, genre, mood } = req.body;
       
@@ -512,20 +511,23 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       // Verify the generated name
       const verification = await nameVerifier.verifyName(parsedResponse.name, type);
       
-      // Store in database with user ID
-      const userId = req.user.claims.sub;
-      const storedName = await storage.createGeneratedName({
-        name: parsedResponse.name,
-        type: type,
-        wordCount: parsedResponse.name.split(' ').length,
-        verificationStatus: verification.status,
-        verificationDetails: verification.details || null,
-        isAiGenerated: true,
-        userId: userId,
-      });
+      // Only store in database if user is authenticated
+      let storedName = null;
+      if (req.isAuthenticated && req.isAuthenticated()) {
+        const userId = req.user.claims.sub;
+        storedName = await storage.createGeneratedName({
+          name: parsedResponse.name,
+          type: type,
+          wordCount: parsedResponse.name.split(' ').length,
+          verificationStatus: verification.status,
+          verificationDetails: verification.details || null,
+          isAiGenerated: true,
+          userId: userId,
+        });
+      }
 
       res.json({ 
-        id: storedName.id,
+        id: storedName?.id || Date.now(),
         name: parsedResponse.name,
         type: type,
         wordCount: parsedResponse.name.split(' ').length,
@@ -542,13 +544,12 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     }
   });
 
-  // Generate band bio endpoint (protected with rate limiting and validation)
+  // Generate band bio endpoint (public with rate limiting and validation)
   app.post("/api/generate-band-bio", 
     rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
-    isAuthenticated, 
     validationRules.generateBandBio, 
     handleValidationErrors, 
-    async (req: Request & { user?: any }, res: Response) => {
+    async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
     try {
       const { bandName, genre, mood } = req.body;
       
