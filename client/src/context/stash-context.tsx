@@ -65,7 +65,7 @@ export function StashProvider({ children }: { children: ReactNode }) {
     setStash(prev => prev.filter(item => item.id !== id));
   };
 
-  const removeFromStashByName = (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam') => {
+  const removeFromStashByName = (name: string, type: 'band' | 'song' | 'bandLore' | 'lyricJam') => {
     setStash(prev => prev.filter(item => !(item.name === name && item.type === type)));
   };
 
@@ -73,7 +73,7 @@ export function StashProvider({ children }: { children: ReactNode }) {
     setStash([]);
   };
 
-  const isInStash = (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam') => {
+  const isInStash = (name: string, type: 'band' | 'song' | 'bandLore' | 'lyricJam') => {
     return stash.some(item => item.name === name && item.type === type);
   };
 
