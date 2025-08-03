@@ -99,11 +99,11 @@ export default function Home() {
                 <TabsList className="grid w-full grid-cols-2 tabs-list-enhanced mb-4 md:mb-6">
                   <TabsTrigger value="names" className="tabs-trigger-enhanced">
                     <span className="hidden sm:inline">NAME_JAM</span>
-                    <span className="sm:hidden">NAMES</span>
+                    <span className="sm:hidden">Name_Jam</span>
                   </TabsTrigger>
                   <TabsTrigger value="lyric" className="tabs-trigger-enhanced">
                     <span className="hidden sm:inline">LYRIC_JAM</span>
-                    <span className="sm:hidden">LYRICS</span>
+                    <span className="sm:hidden">Lyric_Jam</span>
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="names">
