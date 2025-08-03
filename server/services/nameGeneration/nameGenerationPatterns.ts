@@ -102,8 +102,42 @@ export class NameGenerationPatterns {
   }
 
   private generateSingleContextualWord(sources: EnhancedWordSource): string {
+    // 60% chance to generate an invented/unique word
+    if (Math.random() < 0.6) {
+      const patterns = [
+        // Add suffix to create unique word
+        () => {
+          const base = getRandomWord([...sources.nouns, ...sources.genreTerms]) || 'echo';
+          const suffixes = ['ism', 'ology', 'esque', 'onic', 'atic', 'morphic', 'core', 'wave', 'flux'];
+          const suffix = getRandomWord(suffixes);
+          return capitalize(base + suffix);
+        },
+        // Compound single word
+        () => {
+          const prefixes = ['neo', 'hyper', 'ultra', 'meta', 'proto', 'omni'];
+          const base = getRandomWord([...sources.musicalTerms, ...sources.genreTerms]) || 'wave';
+          const prefix = getRandomWord(prefixes);
+          return capitalize(prefix + base);
+        },
+        // Number/code words
+        () => {
+          const codes = ['404', '808', 'XIII', 'Binary', 'Zero', 'Infinite', 'Omega'];
+          return getRandomWord(codes) || '404';
+        },
+        // Rare/unique single words
+        () => {
+          const uniqueWords = ['Paradox', 'Nexus', 'Prism', 'Void', 'Flux', 'Cipher', 'Enigma', 'Zenith', 'Nadir', 'Apex'];
+          return getRandomWord(uniqueWords) || 'Paradox';
+        }
+      ];
+      
+      const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+      return pattern();
+    }
+    
+    // 40% chance to use traditional single word selection
     const singleWordSources = [
-      ...sources.nouns.filter(n => n.length >= 4),
+      ...sources.nouns.filter(n => n.length >= 5), // Prefer longer words
       ...sources.musicalTerms,
       ...sources.genreTerms
     ];
@@ -118,40 +152,72 @@ export class NameGenerationPatterns {
 
   private async generateTwoWordContextual(sources: EnhancedWordSource, type: string, genre?: string): Promise<string> {
     const patterns = [
-      // Adjective + Noun pattern (most common)
+      // Invented/Compound word patterns
+      () => {
+        const prefixes = ['neo', 'hyper', 'ultra', 'meta', 'proto', 'omni', 'anti'];
+        const base = getRandomWord([...sources.nouns, ...sources.genreTerms, ...sources.musicalTerms]) || 'wave';
+        const prefix = getRandomWord(prefixes);
+        const suffix = getRandomWord(['core', 'wave', 'flux', 'sphere', 'verse', 'scape']) || 'core';
+        return Math.random() > 0.5 
+          ? `${capitalize(prefix + base)} ${capitalize(suffix)}`
+          : `${capitalize(base + suffix)} ${capitalize(getRandomWord(sources.nouns) || 'echo')}`;
+      },
+      
+      // Number/Code + Concept
+      () => {
+        const numbers = ['Zero', 'Seven', 'Eleven', '404', '808', 'XIII', 'Binary', 'Infinite'];
+        const concepts = [...sources.musicalTerms, ...sources.genreTerms, 'Void', 'Nexus', 'Prism', 'Paradox'];
+        const number = getRandomWord(numbers);
+        const concept = getRandomWord(concepts) || 'Echo';
+        return `${number} ${capitalize(concept)}`;
+      },
+      
+      // Rare adjective + Unique noun
       async () => {
-        const noun = getRandomWord(sources.nouns) || 'soul';
+        const rareAdjs = ['Lucid', 'Visceral', 'Ethereal', 'Prismatic', 'Chromatic', 'Holographic', 'Iridescent', 'Crystalline'];
+        const uniqueNouns = ['Prism', 'Void', 'Nexus', 'Flux', 'Vortex', 'Paradox', 'Enigma', 'Cipher'];
+        
+        // Try to get rare adjectives from Datamuse
+        const noun = getRandomWord([...uniqueNouns, ...sources.musicalTerms]) || 'prism';
         try {
-          const adjectives = await this.datamuseService.findAdjectivesForNoun(noun, 10);
+          const adjectives = await this.datamuseService.findAdjectivesForNoun(noun.toLowerCase(), 20);
           if (adjectives && adjectives.length > 0) {
-            const filteredAdjs = genre ? 
-              adjectives.filter((adj: any) => isGenreAppropriate(adj.word, genre)) : 
-              adjectives;
-            if (filteredAdjs.length > 0) {
-              const adj = getRandomWord(filteredAdjs.map((a: any) => a.word));
-              return `${capitalize(adj)} ${capitalize(singularize(noun))}`;
+            const rareDatamuseAdjs = adjectives
+              .filter((adj: any) => adj.word.length > 6 && !['good', 'bad', 'big', 'small', 'new', 'old'].includes(adj.word))
+              .map((a: any) => a.word);
+            if (rareDatamuseAdjs.length > 0) {
+              const adj = getRandomWord(rareDatamuseAdjs);
+              if (adj) {
+                return `${capitalize(adj)} ${capitalize(noun)}`;
+              }
             }
           }
         } catch (error) {
-          secureLog.debug('Error getting adjectives for noun:', error);
+          secureLog.debug('Error getting rare adjectives:', error);
         }
-        const fallbackAdj = getRandomWord(sources.adjectives) || 'wild';
-        return `${capitalize(fallbackAdj)} ${capitalize(singularize(noun))}`;
+        
+        const adj = getRandomWord(rareAdjs);
+        return `${adj} ${capitalize(noun)}`;
       },
       
-      // Noun + Noun compound
+      // Genre-specific tech/nature fusion
       () => {
-        const noun1 = getRandomWord([...sources.nouns, ...sources.genreTerms]) || 'fire';
-        const noun2 = getRandomWord([...sources.nouns, ...sources.musicalTerms]) || 'soul';
-        return `${capitalize(singularize(noun1))} ${capitalize(singularize(noun2))}`;
+        const techWords = ['Pixel', 'Glitch', 'Byte', 'Cyber', 'Quantum', 'Digital', 'Analog', 'Fractal', 'Neon'];
+        const natureWords = ['Aurora', 'Nebula', 'Cosmos', 'Horizon', 'Eclipse', 'Twilight', 'Zenith'];
+        const tech = getRandomWord([...techWords, ...sources.genreTerms.filter((t: string) => t.length > 5)]) || 'Pixel';
+        const nature = getRandomWord([...natureWords, ...sources.contextualWords]) || 'Aurora';
+        return `${tech} ${nature}`;
       },
       
-      // Color/Material + Object
+      // Portmanteau creation
       () => {
-        const materials = ['Silver', 'Gold', 'Crystal', 'Velvet', 'Iron', 'Glass', 'Stone'];
-        const material = getRandomWord(materials);
-        const noun = getRandomWord(sources.nouns) || 'dream';
-        return `${material} ${capitalize(singularize(noun))}`;
+        const word1 = getRandomWord([...sources.nouns, ...sources.adjectives]) || 'dream';
+        const word2 = getRandomWord([...sources.nouns, ...sources.musicalTerms]) || 'scape';
+        // Create a portmanteau by combining parts of words
+        const portmanteau = word1.substring(0, Math.ceil(word1.length * 0.6)) + 
+                           word2.substring(Math.floor(word2.length * 0.4));
+        const companion = getRandomWord([...sources.nouns, ...sources.musicalTerms]) || 'echo';
+        return `${capitalize(portmanteau)} ${capitalize(companion)}`;
       }
     ];
     
@@ -188,20 +254,61 @@ export class NameGenerationPatterns {
       return pattern();
     }
     
-    // For songs, use more varied patterns
+    // For songs, use more unique and creative patterns
     const songPatterns = [
-      () => this.generateTheAdjectiveNoun(sources),
+      // Compound word + verb/noun
       () => {
-        const verb = getRandomWord(sources.verbs) || 'burn';
-        const adj = getRandomWord(sources.adjectives) || 'bright';
-        const noun = getRandomWord(sources.nouns) || 'light';
-        return `${capitalize(verb)} ${capitalize(adj)} ${capitalize(singularize(noun))}`;
+        const prefixes = ['neo', 'hyper', 'ultra', 'meta', 'proto', 'anti'];
+        const base = getRandomWord([...sources.nouns, ...sources.genreTerms]) || 'wave';
+        const prefix = getRandomWord(prefixes);
+        const compound = capitalize(prefix + base);
+        const action = getRandomWord([...sources.verbs.map((v: string) => v + 's'), 'rises', 'echoes', 'falls']) || 'rises';
+        const modifier = getRandomWord(['tonight', 'within', 'beyond', 'alone']) || 'tonight';
+        return `${compound} ${capitalize(action)} ${capitalize(modifier)}`;
       },
+      // Number/Symbol + unique phrase
       () => {
-        const noun1 = getRandomWord(sources.nouns) || 'heart';
-        const verb = getRandomWord(sources.verbs) || 'beats';
-        const adverb = getRandomWord(['Forever', 'Always', 'Never', 'Still']);
-        return `${capitalize(singularize(noun1))} ${capitalize(verb)} ${adverb}`;
+        const numbers = ['Zero', 'Seven', '404', 'XIII', 'Binary'];
+        const number = getRandomWord(numbers);
+        const concepts = ['point', 'degrees', 'minutes', 'seconds', 'miles'];
+        const concept = getRandomWord(concepts) || 'degrees';
+        const direction = getRandomWord(['north', 'south', 'beyond', 'below', 'within']) || 'north';
+        return `${number} ${capitalize(concept)} ${capitalize(direction)}`;
+      },
+      // Invented word + preposition + noun
+      () => {
+        const base = getRandomWord([...sources.nouns.filter((n: string) => n.length < 7), ...sources.genreTerms]) || 'dream';
+        const endings = ['scape', 'verse', 'core', 'flux', 'wave'];
+        const ending = getRandomWord(endings);
+        const inventedWord = capitalize(base + ending);
+        const prep = getRandomWord(['beyond', 'beneath', 'within', 'without']) || 'beyond';
+        const noun = getRandomWord([...sources.musicalTerms, 'horizon', 'nexus', 'void']) || 'horizon';
+        return `${inventedWord} ${prep} ${capitalize(noun)}`;
+      },
+      // Rare adjective + verb + adverb
+      () => {
+        const rareAdjs = ['lucid', 'ethereal', 'visceral', 'prismatic', 'holographic'];
+        const adj = getRandomWord(rareAdjs) || 'lucid';
+        const uniqueVerbs = sources.verbs.filter((v: string) => v.length > 5 && !['walk', 'run', 'go', 'come', 'take'].includes(v));
+        const verb = getRandomWord(uniqueVerbs) || 'transcend';
+        const adverbs = ['endlessly', 'silently', 'eternally', 'backwards', 'sideways'];
+        const adverb = getRandomWord(adverbs) || 'endlessly';
+        return `${capitalize(adj)} ${capitalize(verb)}s ${capitalize(adverb)}`;
+      },
+      // Genre mashup pattern
+      () => {
+        const genres = ['pixel', 'neon', 'cyber', 'vapor', 'glitch', 'retro'];
+        const genre = getRandomWord(genres) || 'pixel';
+        const emotions = ['euphoria', 'melancholy', 'nostalgia', 'catharsis', 'serenity'];
+        const emotion = getRandomWord(emotions) || 'euphoria';
+        const suffix = getRandomWord(['syndrome', 'complex', 'theory', 'paradox']) || 'syndrome';
+        return `${capitalize(genre)} ${capitalize(emotion)} ${capitalize(suffix)}`;
+      },
+      // Original pattern but with rare words only
+      () => {
+        const adj = getRandomWord(sources.adjectives.filter((a: string) => a.length > 7)) || 'chromatic';
+        const noun = getRandomWord([...sources.musicalTerms, ...sources.genreTerms].filter((n: string) => n.length > 6)) || 'resonance';
+        return `The ${capitalize(adj)} ${capitalize(noun)}`;
       }
     ];
     
@@ -421,7 +528,10 @@ export class NameGenerationPatterns {
     
     // Start with an article or determiner sometimes
     if (Math.random() > 0.5 && wordCount > 2) {
-      words.push(getRandomWord(['The', 'A', 'My', 'Your', 'Our']));
+      const article = getRandomWord(['The', 'A', 'My', 'Your', 'Our']);
+      if (article) {
+        words.push(article);
+      }
     }
     
     // Add adjectives
