@@ -5,6 +5,7 @@ NameJam is a web application designed to generate unique band names and song tit
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+Authentication approach: Non-authenticated users have full access to all features except server-side stash persistence. Only the stash feature requires login for server storage.
 
 ## System Architecture
 

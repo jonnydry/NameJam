@@ -425,7 +425,6 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
                             <div className="flex items-center gap-1 flex-shrink-0">
                               <Badge variant="secondary" className="text-xs">
                                 {item.type === 'band' ? <Users className="h-3 w-3" /> : 
-                                 item.type === 'setlist' ? <ListMusic className="h-3 w-3" /> :
                                  item.type === 'bandLore' ? <BookOpen className="h-3 w-3" /> :
                                  item.type === 'lyricJam' ? <Sparkles className="h-3 w-3" /> :
                                  <Music className="h-3 w-3" />}
