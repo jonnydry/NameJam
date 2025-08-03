@@ -25,8 +25,9 @@ export class OptimizedAINameGeneratorService extends AINameGeneratorService {
       
       const generationPromise = super.generateAIName(
         'band' as 'band' | 'song', // Type will be handled in prompt
-        model, 
-        temperature
+        undefined, // genre
+        undefined, // mood
+        wordCount
       );
       
       // Race between generation and timeout

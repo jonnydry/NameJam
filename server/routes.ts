@@ -132,6 +132,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       
       // Check if response was already sent (due to timeout)
       if (hasResponded || res.headersSent) {
+        secureLog.debug('Response already sent, skipping verification');
         return;
       }
       
