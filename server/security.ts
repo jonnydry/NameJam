@@ -5,6 +5,8 @@ import { body, validationResult, param, query } from 'express-validator';
 import type { Request, Response, NextFunction, Express } from 'express';
 import CryptoJS from 'crypto-js';
 import bcrypt from 'bcryptjs';
+import { DistributedRateLimiter } from './utils/sessionSecretRotation';
+import { InputSanitizer } from './utils/inputSanitizer';
 // Server-side HTML sanitization (simplified approach for security)
 const sanitizeHtml = (input: string): string => {
   if (!input || typeof input !== 'string') return '';
@@ -37,6 +39,20 @@ export const createRateLimiters = () => {
       return req.path.startsWith('/api/health') || 
              req.path.startsWith('/assets/') ||
              req.path.startsWith('/favicon');
+    }
+  });
+
+  // Distributed rate limiter for better protection
+  const distributedLimiter = new DistributedRateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    maxRequests: 100,
+    skipSuccessfulRequests: false,
+    keyGenerator: (req) => {
+      // Combine multiple factors for better distributed protection
+      const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      const fingerprint = req.headers['x-fingerprint'] || '';
+      return `${ip}-${userAgent}-${fingerprint}`;
     }
   });
 

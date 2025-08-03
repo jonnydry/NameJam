@@ -1,5 +1,6 @@
 // Using native fetch API (available in Node.js 18+)
 import { secureLog } from '../utils/secureLogger';
+import { withApiRetry, apiRetryConfigs } from '../utils/apiRetry';
 
 interface LastFmTag {
   name: string;
@@ -125,7 +126,12 @@ export class LastFmService {
       format: 'json'
     });
 
-    const response = await fetch(`${this.baseUrl}?${params}`);
+    const response = await withApiRetry(async () => {
+      const res = await fetch(`${this.baseUrl}?${params}`);
+      if (!res.ok) throw new Error(`Last.fm API error: ${res.status}`);
+      return res;
+    }, apiRetryConfigs.lastfm);
+    
     const data = await response.json() as any;
     return data.tag || null;
   }

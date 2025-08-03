@@ -10,7 +10,8 @@ import Home from "@/pages/home";
 import About from "@/pages/about";
 import NotFound from "@/pages/not-found";
 import { Landing } from "@/components/landing";
-import { ErrorBoundary } from "@/components/error-boundary";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -43,6 +44,7 @@ function App() {
         <StashProvider>
           <TooltipProvider>
             <Toaster />
+            <OfflineIndicator />
             <Router />
           </TooltipProvider>
         </StashProvider>

@@ -1,6 +1,7 @@
 import { spotifyRateLimiter, withRetry } from '../utils/rateLimiter';
 import { xaiFallbackService } from './xaiFallbackService';
 import { secureLog } from '../utils/secureLogger';
+import { withApiRetry, apiRetryConfigs } from '../utils/apiRetry';
 
 interface SpotifyTokenResponse {
   access_token: string;
@@ -61,18 +62,21 @@ export class SpotifyService {
     }
 
     try {
-      const response = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`
-        },
-        body: 'grant_type=client_credentials'
-      });
+      const response = await withApiRetry(async () => {
+        const res = await fetch('https://accounts.spotify.com/api/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`
+          },
+          body: 'grant_type=client_credentials'
+        });
 
-      if (!response.ok) {
-        throw new Error(`Spotify auth failed: ${response.status}`);
-      }
+        if (!res.ok) {
+          throw new Error(`Spotify auth failed: ${res.status}`);
+        }
+        return res;
+      }, apiRetryConfigs.spotify);
 
       const data: SpotifyTokenResponse = await response.json();
       this.accessToken = data.access_token;

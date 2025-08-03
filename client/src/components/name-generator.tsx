@@ -13,6 +13,7 @@ import { createMutationErrorHandler } from "@/lib/api-error-handler";
 import { useKeyboardShortcuts, KeyboardHint } from "@/hooks/use-keyboard-shortcuts";
 import { useDebouncedCallback } from "@/hooks/use-debounce";
 import { useLoadingProgress } from "@/hooks/use-loading-progress";
+import { ButtonLoader, InlineLoader, CardSkeleton } from "@/components/LoadingStates";
 
 interface GenerationResult {
   id: number;
@@ -326,8 +327,12 @@ export function NameGenerator() {
             className="inline-flex items-center px-8 py-3 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-primary generate-button-mobile"
             aria-label="Generate band or song names"
           >
-            <Lightbulb className="w-4 h-4 mr-2" />
-            Generate Names
+            <ButtonLoader isLoading={generateMutation.isPending || isGenerating}>
+              <>
+                <Lightbulb className="w-4 h-4 mr-2" />
+                Generate Names
+              </>
+            </ButtonLoader>
           </Button>
           <div className="mt-2 flex items-center justify-center gap-4 text-xs text-muted-foreground">
             <KeyboardHint keys={['Space']} />
@@ -375,17 +380,12 @@ export function NameGenerator() {
             className="inline-flex items-center btn-gradient text-primary-foreground font-medium search-button-mobile"
             aria-label="Check name availability"
           >
-            {searchMutation.isPending ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Checking...
-              </>
-            ) : (
+            <ButtonLoader isLoading={searchMutation.isPending}>
               <>
                 <Search className="w-4 h-4 mr-2" />
-                Check
+                {searchMutation.isPending ? 'Checking...' : 'Check'}
               </>
-            )}
+            </ButtonLoader>
           </Button>
         </div>
       </div>

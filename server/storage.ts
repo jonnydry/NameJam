@@ -8,6 +8,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
+import { withDatabaseRetry } from "./utils/errorHandling";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -81,66 +82,76 @@ export class MemStorage implements IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations (mandatory for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    return withDatabaseRetry(async () => {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    });
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
+    return withDatabaseRetry(async () => {
+      const [user] = await db
+        .insert(users)
+        .values(userData)
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            ...userData,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      return user;
+    });
   }
 
   async createGeneratedName(insertName: InsertGeneratedName): Promise<GeneratedName> {
-    const [name] = await db
-      .insert(generatedNames)
-      .values(insertName)
-      .returning();
-    return name;
+    return withDatabaseRetry(async () => {
+      const [name] = await db
+        .insert(generatedNames)
+        .values(insertName)
+        .returning();
+      return name;
+    });
   }
 
   async getGeneratedNames(userId?: string, limit: number = 50): Promise<GeneratedName[]> {
-    if (userId) {
-      return await db
-        .select()
-        .from(generatedNames)
-        .where(eq(generatedNames.userId, userId))
-        .orderBy(desc(generatedNames.createdAt))
-        .limit(limit);
-    } else {
-      return await db
-        .select()
-        .from(generatedNames)
-        .orderBy(desc(generatedNames.createdAt))
-        .limit(limit);
-    }
+    return withDatabaseRetry(async () => {
+      if (userId) {
+        return await db
+          .select()
+          .from(generatedNames)
+          .where(eq(generatedNames.userId, userId))
+          .orderBy(desc(generatedNames.createdAt))
+          .limit(limit);
+      } else {
+        return await db
+          .select()
+          .from(generatedNames)
+          .orderBy(desc(generatedNames.createdAt))
+          .limit(limit);
+      }
+    });
   }
 
   async getGeneratedNamesByType(type: string, userId?: string, limit: number = 50): Promise<GeneratedName[]> {
-    if (userId) {
-      return await db
-        .select()
-        .from(generatedNames)
-        .where(and(eq(generatedNames.type, type), eq(generatedNames.userId, userId)))
-        .orderBy(desc(generatedNames.createdAt))
-        .limit(limit);
-    } else {
-      return await db
-        .select()
-        .from(generatedNames)
-        .where(eq(generatedNames.type, type))
-        .orderBy(desc(generatedNames.createdAt))
-        .limit(limit);
-    }
+    return withDatabaseRetry(async () => {
+      if (userId) {
+        return await db
+          .select()
+          .from(generatedNames)
+          .where(and(eq(generatedNames.type, type), eq(generatedNames.userId, userId)))
+          .orderBy(desc(generatedNames.createdAt))
+          .limit(limit);
+      } else {
+        return await db
+          .select()
+          .from(generatedNames)
+          .where(eq(generatedNames.type, type))
+          .orderBy(desc(generatedNames.createdAt))
+          .limit(limit);
+      }
+    });
   }
 }
 

@@ -8,6 +8,7 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import { secureLog } from "./utils/secureLogger";
+import { SessionSecretManager } from "./utils/sessionSecretRotation";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -23,6 +24,9 @@ const getOidcConfig = memoize(
   { maxAge: 3600 * 1000 }
 );
 
+// Initialize session secret manager
+const sessionSecretManager = new SessionSecretManager(process.env.SESSION_SECRET);
+
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
@@ -32,8 +36,14 @@ export function getSession() {
     ttl: sessionTtl,
     tableName: "sessions",
   });
+  
+  const secrets = sessionSecretManager.getSecrets();
+  const sessionSecrets = secrets.previous 
+    ? [secrets.current, secrets.previous] 
+    : [secrets.current];
+  
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: sessionSecrets, // Support both new and old secrets during rotation
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
