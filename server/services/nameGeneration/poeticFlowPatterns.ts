@@ -101,13 +101,16 @@ export class PoeticFlowPatterns {
   private isNounLike(word: string): boolean {
     // Simple heuristic for noun detection
     const nounEndings = ['ness', 'ment', 'tion', 'sion', 'ity', 'age', 'ence', 'ance'];
-    return !this.isVerbLike(word) && !this.isAdjectiveLike(word) || 
+    return (!this.isVerbLike(word) && !this.isAdjectiveLike(word)) || 
            nounEndings.some(ending => word.endsWith(ending));
   }
 
   private isVerbLike(word: string): boolean {
     // Simple heuristic for verb detection
     const verbEndings = ['ing', 'ed', 'es', 'ize', 'ify', 'ate'];
+    // Don't classify common nouns ending in -ing as verbs
+    const nounExceptions = ['ring', 'sing', 'thing', 'king', 'wing', 'spring', 'string'];
+    if (nounExceptions.includes(word.toLowerCase())) return false;
     return verbEndings.some(ending => word.endsWith(ending));
   }
 
@@ -132,8 +135,14 @@ export class PoeticFlowPatterns {
     // Prevent malformed words like "gloaminging"
     const suffixPatterns = [
       /inging$/, /eded$/, /eses$/, /fulful$/, /lessless$/, /nessness$/,
-      /mentment$/, /tiontion$/, /iveive$/, /ousous$/, /alal$/, /icic$/
+      /mentment$/, /tiontion$/, /iveive$/, /ousous$/, /alal$/, /icic$/,
+      /inging$/, /lyly$/, /erness$/, /ousous$/, /ismism$/
     ];
+    // Also check for verbs that already end with -ing getting another -ing
+    if (word.match(/\w+ing$/i) && this.isVerbLike(word)) {
+      // If it's already a verb ending in -ing, flag it for filtering
+      return true;
+    }
     return suffixPatterns.some(pattern => pattern.test(word.toLowerCase()));
   }
 
@@ -183,9 +192,8 @@ export class PoeticFlowPatterns {
     });
     result = result.replace(/{verb}/g, () => {
       const word = this.selectPoeticWord('verb', sources, poetryContext);
-      // Prevent double -ing by checking if word already ends with -ing
-      const cleanWord = word.endsWith('ing') ? word.replace(/ing$/, '') : word;
-      return capitalize(cleanWord);
+      // Don't modify the verb - let word validation handle suffix issues
+      return capitalize(word);
     });
     result = result.replace(/{adjective}/g, () => {
       const word = this.selectPoeticWord('adjective', sources, poetryContext);
