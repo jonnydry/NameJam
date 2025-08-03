@@ -5,6 +5,13 @@ NameJam is a web application designed to generate unique band names and song tit
 
 ## Recent Updates (January 2025)
 
+### Feature Removal (January 4, 2025)
+- **Removed Set List Generator**: Completely removed the Set List Generator feature from the codebase
+  - Deleted setlist-generator.tsx component
+  - Removed all 'setlist' references from stash management system
+  - Cleaned up related UI elements, export functions, and type definitions
+  - Updated schema to remove 'setlist' from stash item types
+
 ### Performance Optimization Success (January 4, 2025)
 - **Achieved Sub-10 Second Response Times**: Successfully reduced average response time from 16+ seconds to 8.2 seconds (48% improvement)
   - Implemented OptimizedContextAggregatorService with caching (5-minute TTL)
@@ -132,7 +139,6 @@ Preferred communication style: Simple, everyday language.
 
 ### Key Features & Design Patterns
 - **Name Generation Service**: Generates band/song names using advanced grammatical patterns, poetic repetition, and thematic mood selection (12 moods). Supports precise word counts (1-3 words) and dynamic "4+" option (4-7 words) with varied grammatical patterns and enhanced humor. Incorporates advanced linguistic features for single, two, and three-word names, contextual connectors, and smart capitalization.
-- **Set List Generator Service**: Creates organized song lists (8 or 16 songs) using the name generation service, with mood and genre settings. Automatically structures sets and includes Spotify API verification for each song.
 - **AI Name Generation Service**: Provides AI-powered name generation using XAI's Grok models (grok-2-1212, grok-2-vision-1212, grok-3-mini) with intelligent fallback. Supports mood and genre filtering.
 - **Enhanced AI Lyric Generation Service**: Generates diverse lyrical starters with variable length (short, medium, long, couplet), poetic meter (Iambic, Trochaic, Anapestic, Dactylic, Free Verse), and authentic genre vocabulary. Uses a hybrid approach with Datamuse API and AI for enriched context.
 - **Name Verification Service**: Verifies name availability prioritizing Spotify Web API, then Spotify Similar Matches, Famous Names Database, and other APIs like Last.fm and MusicBrainz. Returns detailed availability with popularity scores and genre info.

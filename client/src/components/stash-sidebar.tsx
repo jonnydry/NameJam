@@ -26,8 +26,7 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
   const { stash, removeFromStash, clearStash, updateRating } = useStash();
   const { toast } = useToast();
   const { copyToClipboard } = useClipboard();
-  const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
-  const [categoryFilter, setCategoryFilter] = useState<'all' | 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'band' | 'song' | 'bandLore' | 'lyricJam'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'alphabetical'>('newest');
   const [showBioModal, setShowBioModal] = useState(false);
   const [selectedBandForBio, setSelectedBandForBio] = useState<{ name: string; genre?: string; mood?: string } | null>(null);
@@ -133,7 +132,6 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
     
     const bandNames = stash.filter(item => item.type === 'band');
     const songNames = stash.filter(item => item.type === 'song');
-    const setlists = stash.filter(item => item.type === 'setlist');
     const bandLore = stash.filter(item => item.type === 'bandLore');
     const lyrics = stash.filter(item => item.type === 'lyricJam');
     
@@ -149,27 +147,7 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
       content += '\n\n';
     }
     
-    if (setlists.length > 0) {
-      content += `SET LISTS (${setlists.length}):\n`;
-      setlists.forEach((item, index) => {
-        content += `\n${index + 1}. ${item.name}${item.rating ? ` (${item.rating}/5 stars)` : ''}\n`;
-        if (item.setlistData) {
-          content += `   Set One:\n`;
-          item.setlistData.setOne.forEach((song, i) => {
-            content += `     ${i + 1}. ${song.name}\n`;
-          });
-          content += `   Set Two:\n`;
-          item.setlistData.setTwo.forEach((song, i) => {
-            content += `     ${i + 1}. ${song.name}\n`;
-          });
-          content += `   Encore: ${item.setlistData.finale.name}\n`;
-          if (item.setlistData.bandName) {
-            content += `   Band Name: ${item.setlistData.bandName}\n`;
-          }
-        }
-      });
-      content += '\n';
-    }
+
     
     if (bandLore.length > 0) {
       content += `BAND LORE (${bandLore.length}):\n`;
@@ -212,7 +190,7 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
         total: stash.length,
         bandNames: stash.filter(item => item.type === 'band').length,
         songNames: stash.filter(item => item.type === 'song').length,
-        setlists: stash.filter(item => item.type === 'setlist').length,
+
         bandLore: stash.filter(item => item.type === 'bandLore').length,
         lyrics: stash.filter(item => item.type === 'lyricJam').length,
       },
@@ -244,7 +222,7 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
           h1 { color: #333; }
           h2 { color: #666; margin-top: 20px; }
           .item { margin: 10px 0; }
-          .setlist-content { margin-left: 20px; white-space: pre-line; }
+
           .bio-preview { margin-left: 20px; color: #666; font-style: italic; }
           @media print { body { margin: 20px; } }
         </style>
@@ -267,30 +245,7 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
           ).join('')}
         ` : ''}
         
-        ${stash.filter(item => item.type === 'setlist').length > 0 ? `
-          <h2>Set Lists (${stash.filter(item => item.type === 'setlist').length})</h2>
-          ${stash.filter(item => item.type === 'setlist').map((item, index) => {
-            let setlistContent = '';
-            if (item.setlistData) {
-              setlistContent += '<div class="setlist-content">Set One:<br/>';
-              item.setlistData.setOne.forEach((song, i) => {
-                setlistContent += `${i + 1}. ${song.name}<br/>`;
-              });
-              setlistContent += '<br/>Set Two:<br/>';
-              item.setlistData.setTwo.forEach((song, i) => {
-                setlistContent += `${i + 1}. ${song.name}<br/>`;
-              });
-              setlistContent += `<br/>Encore: ${item.setlistData.finale.name}</div>`;
-              if (item.setlistData.bandName) {
-                setlistContent += `<div class="setlist-content">Band Name: ${item.setlistData.bandName}</div>`;
-              }
-            }
-            return `<div class="item">
-              <strong>${index + 1}. ${item.name}</strong>${item.rating ? ` (${item.rating}/5 stars)` : ''}
-              ${setlistContent}
-            </div>`;
-          }).join('')}
-        ` : ''}
+
         
         ${stash.filter(item => item.type === 'bandLore').length > 0 ? `
           <h2>Band Lore (${stash.filter(item => item.type === 'bandLore').length})</h2>
@@ -319,17 +274,7 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
     printWindow.print();
   };
 
-  const toggleSetlist = (id: string) => {
-    setExpandedSetlists(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
+
 
   const handleBioRequest = (bandName: string, genre?: string, mood?: string) => {
     setSelectedBandForBio({ name: bandName, genre, mood });
@@ -380,7 +325,6 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
                     {categoryFilter === 'all' ? 'All Categories' : 
                      categoryFilter === 'band' ? 'Band Names' :
                      categoryFilter === 'song' ? 'Song Names' :
-                     categoryFilter === 'setlist' ? 'Set Lists' :
                      categoryFilter === 'bandLore' ? 'Band Lore' :
                      'Lyrics'}
                   </Button>
@@ -389,7 +333,6 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
                   <DropdownMenuItem onClick={() => setCategoryFilter('all')}>All Categories</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setCategoryFilter('band')}>Band Names</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setCategoryFilter('song')}>Song Names</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setCategoryFilter('setlist')}>Set Lists</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setCategoryFilter('bandLore')}>Band Lore</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setCategoryFilter('lyricJam')}>Lyrics</DropdownMenuItem>
                 </DropdownMenuContent>
@@ -495,38 +438,7 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
                             </div>
                           </div>
                           
-                          {/* Setlist Preview */}
-                          {item.type === 'setlist' && item.setlistData && (
-                            <div className="mt-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 p-0 text-xs text-muted-foreground hover:text-primary"
-                                onClick={() => toggleSetlist(item.id)}
-                              >
-                                {expandedSetlists.has(item.id) ? <ChevronDown className="h-3 w-3 mr-1" /> : <ChevronRight className="h-3 w-3 mr-1" />}
-                                {expandedSetlists.has(item.id) ? 'Hide' : 'Show'} set list
-                              </Button>
-                              {expandedSetlists.has(item.id) && (
-                                <div className="mt-2 text-xs text-muted-foreground border-l-2 border-muted pl-3">
-                                  <div className="font-medium mb-1">Set One:</div>
-                                  {item.setlistData.setOne.map((song, i) => (
-                                    <div key={i}>{i + 1}. {song.name}</div>
-                                  ))}
-                                  <div className="font-medium mt-2 mb-1">Set Two:</div>
-                                  {item.setlistData.setTwo.map((song, i) => (
-                                    <div key={i}>{i + 1}. {song.name}</div>
-                                  ))}
-                                  <div className="font-medium mt-2">Encore: {item.setlistData.finale.name}</div>
-                                  {item.setlistData.bandName && (
-                                    <div className="mt-2 font-medium">
-                                      Band Name: {item.setlistData.bandName}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
+
                           
                           {/* Band Lore Preview */}
                           {item.type === 'bandLore' && item.bandLoreData?.bio && (
