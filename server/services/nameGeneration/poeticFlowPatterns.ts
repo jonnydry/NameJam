@@ -3,6 +3,10 @@ import { getRandomWord, capitalize, singularize } from './generationHelpers';
 import { secureLog } from '../../utils/secureLogger';
 
 export class PoeticFlowPatterns {
+  // Track recently used templates to avoid repetition
+  private recentTemplates: string[] = [];
+  private maxRecentTemplates: number = 10;
+  
   // Natural language connectives for better flow
   private poeticConnectives = {
     prepositions: ['through', 'across', 'beneath', 'beyond', 'within', 'above', 'between', 'among', 'upon', 'under'],
@@ -20,7 +24,9 @@ export class PoeticFlowPatterns {
       '{adjective} {noun} {verb} {adverb}',
       '{noun} {conjunction} {adjective} {noun}',
       '{noun} {verb} {noun} {adverb}',
-      '{adjective} {adjective} {noun} {noun}'
+      '{adjective} {noun} {adjective} {noun}',  // Changed from double adjective at start
+      '{noun} {verb} {transition} {noun}',
+      '{article} {verb} {preposition} {noun}'
     ],
     fiveWord: [
       '{noun} {verb} {preposition} {article} {noun}',
@@ -37,8 +43,8 @@ export class PoeticFlowPatterns {
       '{noun} {verb} {conjunction} {noun} {verb} {adverb}',
       '{preposition} {article} {adjective} {noun} {verb} {noun}',
       '{adjective} {noun} {verb} {transition} {adjective} {noun}',
-      '{noun} {verb} {noun} {verb} {noun} {noun}',
-      '{adjective} {noun} {adjective} {noun} {verb} {adverb}'
+      '{noun} {verb} {noun} {preposition} {article} {noun}',  // Better flow than triple noun
+      '{adjective} {noun} {conjunction} {adjective} {noun} {verb}'  // Better balance
     ],
     sevenWord: [
       '{article} {adjective} {noun} {verb} {preposition} {adjective} {noun}',
@@ -46,8 +52,8 @@ export class PoeticFlowPatterns {
       '{noun} {verb} {preposition} {article} {noun} {transition} {adverb}',
       '{adjective} {noun} {conjunction} {adjective} {noun} {verb} {adverb}',
       '{verb} {article} {noun} {conjunction} {verb} {article} {noun}',
-      '{noun} {verb} {verb} {article} {adjective} {adjective} {noun}',
-      '{adjective} {adjective} {noun} {verb} {preposition} {article} {noun}'
+      '{noun} {verb} {article} {adjective} {noun} {preposition} {noun}',  // Better than double verb/adj
+      '{adjective} {noun} {verb} {preposition} {article} {adjective} {noun}'  // More balanced
     ],
     eightWord: [
       '{article} {adjective} {adjective} {noun} {verb} {preposition} {adjective} {noun}',
@@ -93,9 +99,19 @@ export class PoeticFlowPatterns {
     const filtered = wordPool
       .filter(w => w && w.length > 2 && w.length < 12)
       .filter(w => !this.isOverlyArchaic(w))
-      .filter(w => !this.hasDoubleSuffix(w));
+      .filter(w => !this.hasDoubleSuffix(w))
+      .filter(w => !this.isProblematicForMusic(w))
+      .filter(w => this.hasGoodPhonetics(w));
     
-    return getRandomWord(filtered) || this.getFallbackWord(type);
+    // Prefer words from music context when available
+    const musicWords = filtered.filter(w => 
+      sources.spotifyWords?.includes(w) || 
+      sources.lastfmWords?.includes(w) ||
+      sources.musicalTerms?.includes(w)
+    );
+    
+    const finalPool = musicWords.length > 0 && Math.random() > 0.3 ? musicWords : filtered;
+    return getRandomWord(finalPool) || this.getFallbackWord(type);
   }
 
   private isNounLike(word: string): boolean {
@@ -136,7 +152,7 @@ export class PoeticFlowPatterns {
     const suffixPatterns = [
       /inging$/, /eded$/, /eses$/, /fulful$/, /lessless$/, /nessness$/,
       /mentment$/, /tiontion$/, /iveive$/, /ousous$/, /alal$/, /icic$/,
-      /inging$/, /lyly$/, /erness$/, /ousous$/, /ismism$/
+      /lyly$/, /erness$/, /ismism$/
     ];
     // Also check for verbs that already end with -ing getting another -ing
     if (word.match(/\w+ing$/i) && this.isVerbLike(word)) {
@@ -144,6 +160,27 @@ export class PoeticFlowPatterns {
       return true;
     }
     return suffixPatterns.some(pattern => pattern.test(word.toLowerCase()));
+  }
+
+  private isProblematicForMusic(word: string): boolean {
+    // Filter words that don't work well in band/song names
+    const problematic = [
+      'algorithm', 'database', 'interface', 'syntax', 'compile', 'debug',
+      'parameter', 'variable', 'boolean', 'integer', 'namespace', 'struct',
+      'malloc', 'pointer', 'buffer', 'kernel', 'daemon', 'thread',
+      'gloaming', 'crepuscular', 'perspicacity', 'obstreperous', 'lugubrious'
+    ];
+    return problematic.includes(word.toLowerCase());
+  }
+
+  private hasGoodPhonetics(word: string): boolean {
+    // Avoid words with difficult consonant clusters
+    const difficultPatterns = [
+      /[^aeiou]{4,}/i,  // 4+ consonants in a row
+      /^[^aeiou]{3,}/i, // 3+ consonants at start
+      /[^aeiou]{3,}$/i  // 3+ consonants at end
+    ];
+    return !difficultPatterns.some(pattern => pattern.test(word));
   }
 
   private getFallbackWord(type: string): string {
@@ -175,8 +212,18 @@ export class PoeticFlowPatterns {
       return this.generateCustomPoeticPhrase(wordCount, sources, poetryContext);
     }
     
-    const template = getRandomWord(templates) || templates[0];
+    // Filter out recently used templates for variety
+    const availableTemplates = templates.filter(t => !this.recentTemplates.includes(t));
+    const templatePool = availableTemplates.length > 0 ? availableTemplates : templates;
+    
+    const template = getRandomWord(templatePool) || templatePool[0];
     if (!template) return this.generateCustomPoeticPhrase(wordCount, sources, poetryContext);
+    
+    // Track this template
+    this.recentTemplates.push(template);
+    if (this.recentTemplates.length > this.maxRecentTemplates) {
+      this.recentTemplates.shift();
+    }
     
     // Replace template placeholders with actual words
     let result = template;
@@ -216,46 +263,75 @@ export class PoeticFlowPatterns {
     
     // Start with article or conjunction for natural flow
     if (Math.random() > 0.3 && wordCount > 3) {
-      const starter = getRandomWord(['The', 'A', 'Where', 'When', 'As', 'If']) || 'The';
+      const starter = getRandomWord(['The', 'A', 'Where', 'When', 'As', 'If', 'Those', 'These']) || 'The';
       words.push(starter);
     }
     
-    // Build phrase with natural grammar
+    // Build phrase with natural grammar and better variety
     while (words.length < wordCount) {
       const remaining = wordCount - words.length;
+      const lastWord = words[words.length - 1]?.toLowerCase() || '';
       
-      if (remaining >= 3 && Math.random() > 0.5) {
-        // Add a noun phrase (adj + noun)
-        const adj = this.selectPoeticWord('adjective', sources, poetryContext);
-        const noun = this.selectPoeticWord('noun', sources, poetryContext);
-        words.push(capitalize(adj), capitalize(singularize(noun)));
-      } else if (remaining >= 2 && Math.random() > 0.5) {
-        // Add verb + adverb or noun + verb
+      // Avoid consecutive similar word types
+      const isLastWordConnective = [...this.poeticConnectives.prepositions, 
+                                   ...this.poeticConnectives.conjunctions,
+                                   ...this.poeticConnectives.articles].includes(lastWord);
+      
+      if (remaining >= 3 && Math.random() > 0.4) {
+        // Add a noun phrase (adj + noun) or verb phrase
         if (Math.random() > 0.5) {
-          const verb = this.selectPoeticWord('verb', sources, poetryContext);
-          const adverb = this.selectPoeticWord('adverb', sources, poetryContext);
-          words.push(capitalize(verb), capitalize(adverb));
-        } else {
+          const adj = this.selectPoeticWord('adjective', sources, poetryContext);
           const noun = this.selectPoeticWord('noun', sources, poetryContext);
+          words.push(capitalize(adj), capitalize(singularize(noun)));
+        } else {
           const verb = this.selectPoeticWord('verb', sources, poetryContext);
-          words.push(capitalize(singularize(noun)), capitalize(verb));
+          const prep = getRandomWord(this.poeticConnectives.prepositions) || 'through';
+          const noun = this.selectPoeticWord('noun', sources, poetryContext);
+          words.push(capitalize(verb), prep, capitalize(singularize(noun)));
+        }
+      } else if (remaining >= 2 && Math.random() > 0.4) {
+        // Add varied two-word combinations
+        const patterns = [
+          () => {
+            const noun = this.selectPoeticWord('noun', sources, poetryContext);
+            const verb = this.selectPoeticWord('verb', sources, poetryContext);
+            return [capitalize(singularize(noun)), capitalize(verb)];
+          },
+          () => {
+            const adj = this.selectPoeticWord('adjective', sources, poetryContext);
+            const noun = this.selectPoeticWord('noun', sources, poetryContext);
+            return [capitalize(adj), capitalize(singularize(noun))];
+          },
+          () => {
+            const verb = this.selectPoeticWord('verb', sources, poetryContext);
+            const adverb = this.selectPoeticWord('adverb', sources, poetryContext);
+            return [capitalize(verb), capitalize(adverb)];
+          }
+        ];
+        const selectedPattern = getRandomWord(patterns);
+        if (selectedPattern) {
+          words.push(...selectedPattern());
         }
       } else {
-        // Add single word
-        const type = getRandomWord(['noun', 'verb', 'adjective']) || 'noun';
-        const word = this.selectPoeticWord(type, sources, poetryContext);
-        words.push(capitalize(type === 'noun' ? singularize(word) : word));
-      }
-      
-      // Add connectives for flow
-      if (words.length < wordCount - 1 && Math.random() > 0.6) {
-        const connective = getRandomWord([...this.poeticConnectives.prepositions, ...this.poeticConnectives.conjunctions]) || 'and';
-        words.push(connective);
+        // Add single word with better variety
+        const types = isLastWordConnective ? ['noun', 'verb', 'adjective'] : 
+                      ['noun', 'verb', 'adjective', 'connective'];
+        const type = getRandomWord(types) || 'noun';
+        
+        if (type === 'connective' && words.length < wordCount - 1) {
+          const connective = getRandomWord([...this.poeticConnectives.prepositions, 
+                                          ...this.poeticConnectives.conjunctions]) || 'through';
+          words.push(connective);
+        } else {
+          const word = this.selectPoeticWord(type === 'connective' ? 'noun' : type, sources, poetryContext);
+          words.push(capitalize(type === 'noun' ? singularize(word) : word));
+        }
       }
     }
     
-    // Ensure we have exactly the right number of words
-    return words.slice(0, wordCount).join(' ');
+    // Ensure we have exactly the right number of words and clean up
+    const result = words.slice(0, wordCount).join(' ');
+    return this.cleanupPhrase(result);
   }
 
   private cleanupPhrase(phrase: string): string {
