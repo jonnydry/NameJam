@@ -5,88 +5,104 @@
 import type { GenerateNameRequest } from "@shared/schema";
 import { secureLog } from "../utils/secureLogger";
 import { unifiedWordFilter } from "./nameGeneration/unifiedWordFilter";
+import { NameGenerationPatterns } from "./nameGeneration/nameGenerationPatterns";
+import { WordSourceBuilder } from "./nameGeneration/wordSourceBuilder";
+import { datamuseService } from "./datamuseService";
+import { SpotifyService } from "./spotifyService";
 
-// Pre-generated fallback names for instant response
-const FALLBACK_NAMES = {
-  band: {
-    1: ['Apex', 'Vortex', 'Echo', 'Flux', 'Spark'],
-    2: ['Silver Waves', 'Thunder Road', 'Neon Dreams', 'Crystal Sky', 'Midnight Sun'],
-    3: ['The Electric Prophets', 'Wild Mountain Kings', 'Cosmic Rain Orchestra', 'Velvet Thunder Brigade'],
-    4: ['Dancing Through Electric Dreams', 'Beyond the Crystal Gates', 'Warriors of Eternal Sound', 'Legends Under Neon Stars']
-  },
-  song: {
-    1: ['Rise', 'Drift', 'Bloom', 'Glow', 'Pulse'],
-    2: ['Silent Storm', 'Golden Hour', 'Broken Mirror', 'Electric Heart', 'Cosmic Dance'],
-    3: ['Walking Through Fire', 'Dreams of Tomorrow', 'Echoes in Space', 'Dancing with Shadows'],
-    4: ['Beneath the Starlit Sky', 'Running from the Thunder', 'Whispers in the Dark', 'Journey to the Unknown']
-  }
-};
+// Dynamic name generation components
+const wordSourceBuilder = new WordSourceBuilder(datamuseService, new SpotifyService());
+const namePatterns = new NameGenerationPatterns(datamuseService);
 
 export class UltraOptimizedNameGeneratorService {
-  private attemptCount = 0;
+  private cachedWordSources: any = null;
+  private cacheTimestamp: number = 0;
+  private cacheTimeout: number = 5 * 60 * 1000; // 5 minutes
   
   async generateNames(request: GenerateNameRequest): Promise<any[]> {
     const generationId = unifiedWordFilter.startNewGeneration();
     secureLog.info(`🚀 Ultra-fast generation: ${generationId}`);
     
-    const { type, wordCount, count = 4 } = request;
+    const { type, wordCount, count = 4, genre, mood } = request;
     const names: any[] = [];
     
-    // Use pre-generated fallback names for instant response
-    const fallbackPool = FALLBACK_NAMES[type][wordCount] || FALLBACK_NAMES[type][2];
+    // Get or cache word sources for performance
+    const wordSources = await this.getWordSources(mood, genre, type);
     
-    // Shuffle and pick names
-    const shuffled = [...fallbackPool].sort(() => Math.random() - 0.5);
+    let attempts = 0;
+    const maxAttempts = count * 10; // Allow enough attempts to get unique names
     
-    for (let i = 0; i < count && i < shuffled.length; i++) {
-      const name = shuffled[i];
+    while (names.length < count && attempts < maxAttempts) {
+      attempts++;
       
-      // Simple word filter check (less strict for speed)
-      if (!unifiedWordFilter.shouldRejectName(name, generationId)) {
-        unifiedWordFilter.acceptName(name, generationId);
-        names.push({
-          name,
+      try {
+        // Generate a new unique name
+        const result = await namePatterns.generateContextualNameWithCount(
           type,
-          wordCount: name.split(' ').length,
-          isAiGenerated: false
-        });
+          wordCount || 2,
+          wordSources,
+          mood,
+          genre
+        );
+        
+        if (result && result.name) {
+          // Check if this exact name was already generated
+          if (names.some(n => n.name === result.name)) {
+            continue;
+          }
+          
+          // Check with word filter (but not too strict for current generation)
+          if (!unifiedWordFilter.shouldRejectName(result.name, generationId)) {
+            unifiedWordFilter.acceptName(result.name, generationId);
+            names.push({
+              name: result.name,
+              type,
+              wordCount: result.actualWordCount,
+              isAiGenerated: false
+            });
+            secureLog.debug(`✅ Accepted "${result.name}" - tracking ${result.actualWordCount} words`);
+          } else {
+            // If rejected, try again with a new name
+            secureLog.debug(`↻ Name rejected, generating new one...`);
+          }
+        }
+      } catch (error) {
+        secureLog.debug('Name generation error:', error);
       }
-    }
-    
-    // Fill remaining with variations
-    while (names.length < count) {
-      const baseName = shuffled[this.attemptCount % shuffled.length];
-      const variation = this.createVariation(baseName);
-      
-      if (!unifiedWordFilter.shouldRejectName(variation, generationId)) {
-        unifiedWordFilter.acceptName(variation, generationId);
-        names.push({
-          name: variation,
-          type,
-          wordCount: variation.split(' ').length,
-          isAiGenerated: false
-        });
-      }
-      
-      this.attemptCount++;
-      if (this.attemptCount > 20) break; // Prevent infinite loop
     }
     
     secureLog.info(`✅ Generated ${names.length} names in under 100ms`);
     return names;
   }
   
-  private createVariation(baseName: string): string {
-    const variations = [
-      'New', 'Neo', 'Ultra', 'Prime', 'Alpha', 'Omega', 'Quantum', 'Stellar'
-    ];
-    const suffix = variations[Math.floor(Math.random() * variations.length)];
+  private async getWordSources(mood?: string, genre?: string, type?: string): Promise<any> {
+    // Check cache first
+    const now = Date.now();
+    if (this.cachedWordSources && (now - this.cacheTimestamp < this.cacheTimeout)) {
+      return this.cachedWordSources;
+    }
     
-    // Simple variation - add prefix or suffix
-    if (Math.random() > 0.5) {
-      return `${suffix} ${baseName}`;
-    } else {
-      return `${baseName} ${suffix}`;
+    // Build minimal word sources for speed
+    try {
+      const sources = await wordSourceBuilder.buildContextualWordSources(mood, genre, type);
+      this.cachedWordSources = sources;
+      this.cacheTimestamp = now;
+      return sources;
+    } catch (error) {
+      secureLog.debug('Error building word sources, using defaults:', error);
+      // Return basic fallback word sources
+      return {
+        adjectives: ['cosmic', 'electric', 'neon', 'crystal', 'velvet', 'silver', 'quantum', 'mystic'],
+        nouns: ['dreams', 'echoes', 'waves', 'stars', 'vortex', 'phoenix', 'horizon', 'nexus'],
+        verbs: ['rise', 'drift', 'spark', 'flow', 'pulse', 'glow', 'soar', 'shine'],
+        musicalTerms: ['harmony', 'rhythm', 'melody', 'symphony', 'chord', 'beat', 'tempo', 'groove'],
+        contextualWords: [],
+        associatedWords: [],
+        genreTerms: [],
+        lastfmWords: [],
+        spotifyWords: [],
+        conceptNetWords: []
+      };
     }
   }
 }
