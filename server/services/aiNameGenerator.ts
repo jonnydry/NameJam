@@ -3,6 +3,7 @@ import { xaiRateLimiter, withRetry } from '../utils/rateLimiter';
 import { secureLog } from '../utils/secureLogger';
 import { nameQualityControl } from './nameQualityControl';
 import { MAX_RECENT_WORDS_AI } from './nameGeneration/constants';
+import { EnrichedContext } from './contextAggregator';
 
 export class AINameGeneratorService {
   private openai: OpenAI | null = null;
@@ -45,7 +46,7 @@ export class AINameGeneratorService {
     }
   }
 
-  async generateAIName(type: 'band' | 'song', genre?: string, mood?: string, wordCount?: number, contextExamples?: string[]): Promise<string> {
+  async generateAIName(type: 'band' | 'song', genre?: string, mood?: string, wordCount?: number, contextExamples?: string[], enrichedContext?: EnrichedContext): Promise<string> {
     // If OpenAI client is not available, use fallback
     if (!this.openai) {
       return this.generateFallbackName(type, genre, mood, wordCount);
@@ -126,22 +127,50 @@ export class AINameGeneratorService {
             genreInstructions = '\nIMPORTANT: The name must evoke country music. Think of rural life, trucks, whiskey, heartland values, and Southern culture.';
           }
           
+          // Build comprehensive API context from enriched context
+          let apiContext = 'null';
+          if (enrichedContext) {
+            const discoveredVocabulary = [
+              ...enrichedContext.spotifyArtists.slice(0, 5),
+              ...enrichedContext.spotifyTracks.slice(0, 5),
+              ...enrichedContext.lastfmTags.slice(0, 5),
+              ...enrichedContext.datamuseWords.related.slice(0, 5),
+              ...enrichedContext.poetryVocabulary.slice(0, 5),
+              ...enrichedContext.genreCharacteristics.slice(0, 5),
+              ...enrichedContext.moodDescriptors.slice(0, 5)
+            ].filter(Boolean).join(', ');
+            
+            apiContext = `{
+      "discovered_vocabulary": "${discoveredVocabulary}",
+      "sources": {
+        "spotify": "Real artists: ${enrichedContext.spotifyArtists.slice(0, 3).join(', ')}",
+        "datamuse": "Related words: ${enrichedContext.datamuseWords.related.slice(0, 5).join(', ')}",
+        "lastfm": "Genre tags: ${enrichedContext.lastfmTags.slice(0, 5).join(', ')}",
+        "conceptnet": "Associations: ${enrichedContext.conceptNetAssociations.slice(0, 5).join(', ')}",
+        "poetrydb": "Poetic terms: ${enrichedContext.poetryVocabulary.slice(0, 5).join(', ')}"
+      },
+      "instruction": "Transform these API discoveries into entirely new creative combinations. Use the vocabulary as inspiration but create something unique."
+    }`;
+          } else if (contextExamples && contextExamples.length > 0) {
+            apiContext = `{
+      "discovered_vocabulary": "${contextExamples.slice(0, 15).join(', ')}",
+      "sources": {
+        "datamuse": "Linguistic patterns, rhymes, semantic relationships",
+        "spotify": "Real ${genre || 'music'} artist naming trends",
+        "lastfm": "Genre-specific vocabulary and cultural references",
+        "conceptnet": "Conceptual associations and emotional connections"
+      },
+      "instruction": "Transform these API discoveries into entirely new creative combinations"
+    }`;
+          }
+          
           // Build user prompt with API context
           userPrompt = `{
   "request": {
     "mood_genre": "${context}",
     "word_count": ${dynamicWordCount || 2}
   },
-  "api_context": ${contextExamples && contextExamples.length > 0 ? `{
-    "discovered_vocabulary": "${contextExamples.slice(0, 15).join(', ')}",
-    "sources": {
-      "datamuse": "Linguistic patterns, rhymes, semantic relationships",
-      "spotify": "Real ${genre || 'music'} artist naming trends",
-      "lastfm": "Genre-specific vocabulary and cultural references",
-      "conceptnet": "Conceptual associations and emotional connections"
-    },
-    "instruction": "Transform these API discoveries into entirely new creative combinations"
-  }` : 'null'}
+  "api_context": ${apiContext}
 }${genreInstructions}${examplesText}`;
         } else {
           // For songs, use the exact JSON prompt structure requested
@@ -195,22 +224,50 @@ export class AINameGeneratorService {
             genreInstructions = '\nIMPORTANT: The name must evoke country music. Think of rural life, trucks, whiskey, heartland values, and Southern culture.';
           }
           
+          // Build comprehensive API context from enriched context for songs
+          let apiContext = 'null';
+          if (enrichedContext) {
+            const discoveredVocabulary = [
+              ...enrichedContext.spotifyTracks.slice(0, 5),
+              ...enrichedContext.lastfmTags.slice(0, 5),
+              ...enrichedContext.datamuseWords.related.slice(0, 5),
+              ...enrichedContext.datamuseWords.rhymes.slice(0, 3),
+              ...enrichedContext.poetryVocabulary.slice(0, 5),
+              ...enrichedContext.moodDescriptors.slice(0, 5),
+              ...enrichedContext.musicalTerms.slice(0, 3)
+            ].filter(Boolean).join(', ');
+            
+            apiContext = `{
+      "discovered_vocabulary": "${discoveredVocabulary}",
+      "sources": {
+        "spotify": "Real tracks: ${enrichedContext.spotifyTracks.slice(0, 3).join(', ')}",
+        "datamuse": "Rhymes: ${enrichedContext.datamuseWords.rhymes.slice(0, 5).join(', ')}",
+        "lastfm": "Musical terms: ${enrichedContext.musicalTerms.slice(0, 5).join(', ')}",
+        "conceptnet": "Emotions: ${enrichedContext.moodDescriptors.slice(0, 5).join(', ')}",
+        "poetrydb": "Lyrical imagery: ${enrichedContext.poetryVocabulary.slice(0, 5).join(', ')}"
+      },
+      "instruction": "Transform these API discoveries into emotionally evocative song titles"
+    }`;
+          } else if (contextExamples && contextExamples.length > 0) {
+            apiContext = `{
+      "discovered_vocabulary": "${contextExamples.slice(0, 15).join(', ')}",
+      "sources": {
+        "datamuse": "Linguistic patterns, rhymes, semantic relationships for songs",
+        "spotify": "Real ${genre || 'music'} song title patterns and trends",
+        "lastfm": "Genre-specific lyrical vocabulary and themes",
+        "conceptnet": "Emotional associations and conceptual connections"
+      },
+      "instruction": "Transform these API discoveries into emotionally evocative song titles"
+    }`;
+          }
+          
           // Build user prompt with API context for songs
           userPrompt = `{
   "request": {
     "mood_genre": "${context}",
     "word_count": ${dynamicWordCount || 3}
   },
-  "api_context": ${contextExamples && contextExamples.length > 0 ? `{
-    "discovered_vocabulary": "${contextExamples.slice(0, 15).join(', ')}",
-    "sources": {
-      "datamuse": "Linguistic patterns, rhymes, semantic relationships for songs",
-      "spotify": "Real ${genre || 'music'} song title patterns and trends",
-      "lastfm": "Genre-specific lyrical vocabulary and themes",
-      "conceptnet": "Emotional associations and conceptual connections"
-    },
-    "instruction": "Transform these API discoveries into emotionally evocative song titles"
-  }` : 'null'}
+  "api_context": ${apiContext}
 }${genreInstructions}${examplesText}`;
         }
         
