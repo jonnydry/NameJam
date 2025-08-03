@@ -64,6 +64,13 @@ export class ContextAggregatorService {
 
   async aggregateContext(params: GenerationParams): Promise<EnrichedContext> {
     const { genre, mood } = params;
+    
+    // Skip context aggregation for "general" genre to improve performance
+    if (genre === 'general') {
+      secureLog.info('⚡ Using minimal context for general genre');
+      return this.getMinimalContext(mood);
+    }
+    
     secureLog.info(`🔄 Aggregating context for ${genre}/${mood}`);
 
     // Parallel API calls for all context
