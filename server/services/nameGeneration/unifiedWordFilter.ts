@@ -14,12 +14,24 @@ export class UnifiedWordFilter {
   private recentWords: Map<string, WordTrackingEntry> = new Map();
   private currentGenerationWords: Set<string> = new Set(); // Track words in current generation
   private generationId = 0; // Track generation sessions
+  private cleanupInterval: NodeJS.Timeout | null = null;
 
   static getInstance(): UnifiedWordFilter {
     if (!UnifiedWordFilter.instance) {
       UnifiedWordFilter.instance = new UnifiedWordFilter();
+      // Start periodic cleanup every 2 minutes
+      UnifiedWordFilter.instance.startPeriodicCleanup();
     }
     return UnifiedWordFilter.instance;
+  }
+
+  private startPeriodicCleanup(): void {
+    // Run cleanup every 2 minutes
+    this.cleanupInterval = setInterval(() => {
+      this.cleanupOldWords();
+    }, 2 * 60 * 1000);
+    
+    secureLog.debug('🔄 Started periodic word filter cleanup (every 2 minutes)');
   }
 
   // Start a new generation session

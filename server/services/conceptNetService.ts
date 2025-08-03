@@ -1,4 +1,5 @@
 import { secureLog } from '../utils/secureLogger';
+import { withApiRetry, apiRetryConfigs } from '../utils/apiRetry';
 
 interface ConceptNetEdge {
   start: { label: string; language: string };
@@ -45,15 +46,19 @@ export class ConceptNetService {
 
       const allConcepts: ConceptNetWord[] = [];
 
-      // Execute queries in parallel for better performance
+      // Execute queries in parallel for better performance with retry logic
       const responses = await Promise.allSettled(
         queries.map(url => 
-          fetch(url, {
-            headers: {
-              'Accept': 'application/json',
-              'User-Agent': 'NameJam/1.0'
-            }
-          }).then(res => res.ok ? res.json() : null)
+          withApiRetry(async () => {
+            const res = await fetch(url, {
+              headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'NameJam/1.0'
+              }
+            });
+            if (!res.ok) throw new Error(`ConceptNet API error: ${res.status}`);
+            return res.json();
+          }, apiRetryConfigs.conceptnet).catch(() => null)
         )
       );
 

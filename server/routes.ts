@@ -26,6 +26,7 @@ import { validationRules, handleValidationErrors } from "./security";
 import { performanceCache } from "./services/performanceCache";
 import { secureLog, sanitizeApiResponse } from "./utils/secureLogger";
 import type { Request, Response, NextFunction } from "express";
+import { InputSanitizer } from "./utils/inputSanitizer";
 
 import { cacheHeaders } from "./middleware/cacheHeaders";
 import { 
@@ -125,7 +126,17 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     };
 
     try {
-      const request = generateNameRequestSchema.parse(req.body);
+      // Sanitize inputs
+      const sanitizedBody = {
+        ...req.body,
+        type: req.body.type,
+        wordCount: req.body.wordCount,
+        count: req.body.count,
+        mood: req.body.mood ? InputSanitizer.sanitizeMoodInput(req.body.mood) : undefined,
+        genre: req.body.genre ? InputSanitizer.sanitizeGenreInput(req.body.genre) : undefined
+      };
+      
+      const request = generateNameRequestSchema.parse(sanitizedBody);
       
       // Generate names using new routing system (AI + Datamuse)
       const names = await nameGenerator.generateNames(request);
@@ -238,24 +249,26 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
     handleValidationErrors, 
     async (req: Request, res: Response) => {
     try {
-      const { name, type } = req.body;
+      // Sanitize inputs
+      const sanitizedName = InputSanitizer.sanitizeNameInput(req.body.name);
+      const type = req.body.type;
       
-      if (!name || !type || !['band', 'song'].includes(type)) {
+      if (!sanitizedName || !type || !['band', 'song'].includes(type)) {
         return res.status(400).json({ error: "Name and valid type (band/song) are required" });
       }
 
       // Check cache first
-      const cached = performanceCache.getCachedVerification(name, type);
+      const cached = performanceCache.getCachedVerification(sanitizedName, type);
       if (cached) {
-        secureLog.debug(`Cache hit for ${type}: ${name}`);
+        secureLog.debug(`Cache hit for ${type}: ${sanitizedName}`);
         return res.json({ verification: cached });
       }
 
       // If not cached, verify normally
-      const verification = await nameVerifier.verifyName(name, type);
+      const verification = await nameVerifier.verifyName(sanitizedName, type);
       
       // Store in cache
-      performanceCache.setCachedVerification(name, type, verification);
+      performanceCache.setCachedVerification(sanitizedName, type, verification);
       
       res.json({ verification });
     } catch (error) {
