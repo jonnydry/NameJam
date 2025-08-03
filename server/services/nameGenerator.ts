@@ -87,14 +87,12 @@ export class NameGeneratorService {
     // Start new generation session for word filtering
     const generationId = unifiedWordFilter.startNewGeneration();
 
-    // Check if we should use ultra-optimized mode for instant response
-    if (!request.genre) {
-      secureLog.info(`⚡ Using ultra-optimized mode for no specific genre`);
-      const { UltraOptimizedNameGeneratorService } = await import('./ultraOptimizedNameGenerator');
-      const ultraGenerator = new UltraOptimizedNameGeneratorService();
-      const names = await ultraGenerator.generateNames(request);
-      return names.map(n => ({ ...n, source: 'ultra' }));
-    }
+    // Use new smart generator for all requests - test the new approach
+    secureLog.info(`🧠 Using smart pattern-based generation for ${request.genre || 'general'} genre`);
+    const { SmartNameGeneratorService } = await import('./smartNameGenerator');
+    const smartGenerator = new SmartNameGeneratorService();
+    const names = await smartGenerator.generateNames(request);
+    return names;
 
     secureLog.info(`🎯 Generating ${count} names with minimal context for speed`);
 
