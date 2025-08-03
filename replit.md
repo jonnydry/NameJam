@@ -6,6 +6,7 @@ NameJam is a web application designed to generate unique band names and song tit
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Authentication approach: Non-authenticated users have full access to all features except server-side stash persistence. Only the stash feature requires login for server storage.
+Name generation approach: Dynamic API-driven context (no static lists) feeding structured prompts to XAI for creative, contextual results.
 
 ## System Architecture
 
@@ -29,8 +30,8 @@ Authentication approach: Non-authenticated users have full access to all feature
 - `migrations/`: Database migration files
 
 ### Key Features & Design Patterns
-- **Name Generation Service**: Generates band/song names using advanced grammatical patterns, poetic repetition, and thematic mood selection. Supports precise word counts (1-3 words) and dynamic "4+" option (4-7 words) with varied grammatical patterns and humor. Incorporates advanced linguistic features, contextual connectors, and smart capitalization.
-- **AI Name Generation Service**: Provides AI-powered name generation exclusively using XAI's Grok 3 model. Supports mood and genre filtering.
+- **Intelligent Name Generation Service**: API-driven name generation using dynamic context from Datamuse (word associations), Spotify (genre artists), and Last.fm (genre vocabulary) feeding into structured XAI prompts. Eliminates static word lists in favor of live API data for fresh, contextual results.
+- **Legacy AI Name Generation Service**: Provides fallback AI-powered name generation using XAI's Grok 2 model with minimal context.
 - **Enhanced AI Lyric Generation Service**: Generates diverse lyrical starters with variable length, poetic meter, and authentic genre vocabulary, utilizing a hybrid approach with Datamuse API and AI for enriched context.
 - **Name Verification Service**: Verifies name availability prioritizing Spotify, then Spotify Similar Matches, Famous Names Database, and other APIs like Last.fm and MusicBrainz, returning detailed availability with popularity scores and genre info.
 - **ConceptNet Integration Service**: Enhances name generation with semantic knowledge, emotional, genre, and cultural associations.

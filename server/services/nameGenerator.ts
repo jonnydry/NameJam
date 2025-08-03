@@ -87,11 +87,11 @@ export class NameGeneratorService {
     // Start new generation session for word filtering
     const generationId = unifiedWordFilter.startNewGeneration();
 
-    // Use new smart generator for all requests - test the new approach
-    secureLog.info(`🧠 Using smart pattern-based generation for ${request.genre || 'general'} genre`);
-    const { SmartNameGeneratorService } = await import('./smartNameGenerator');
-    const smartGenerator = new SmartNameGeneratorService();
-    const names = await smartGenerator.generateNames(request);
+    // Use new intelligent API-driven generator with XAI
+    secureLog.info(`🎯 Using intelligent API-driven generation for ${request.genre || 'general'} genre`);
+    const { IntelligentNameGeneratorService } = await import('./intelligentNameGenerator');
+    const intelligentGenerator = new IntelligentNameGeneratorService();
+    const names = await intelligentGenerator.generateNames(request);
     return names;
 
     secureLog.info(`🎯 Generating ${count} names with minimal context for speed`);
