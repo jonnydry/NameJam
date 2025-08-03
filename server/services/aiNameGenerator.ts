@@ -52,13 +52,11 @@ export class AINameGeneratorService {
       return this.generateFallbackName(type, genre, mood, wordCount);
     }
 
-    // Use the best performing model for consistent quality
-    // grok-3 has full parameter support including frequency/presence penalties for variety
-    const primaryModel = "grok-3";
-    const fallbackModels = ["grok-4", "grok-3-mini"]; // Fallback options if primary fails
+    // Use only Grok 3 for consistent quality and simplicity
+    const model = "grok-3";
     
     try {
-      secureLog.debug(`Using primary model: ${primaryModel}`);
+      secureLog.debug(`Using Grok 3 model`);
       // Add randomization to force variety
       const randomSeed = Math.random().toString(36).substring(7);
       const timestamp = Date.now() % 10000;
@@ -276,7 +274,7 @@ export class AINameGeneratorService {
 
         // Configure parameters based on model capabilities
         const requestParams: any = {
-          model: primaryModel,
+          model: model,
           messages: [
             {
               role: "system",

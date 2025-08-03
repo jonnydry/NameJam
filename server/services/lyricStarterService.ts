@@ -40,10 +40,10 @@ export class LyricStarterService {
     // Get comprehensive context from all APIs for enhanced lyric generation
     const apiContext = await this.getComprehensiveAPIContext(genre);
     
-    const models = ["grok-3", "grok-4", "grok-3-mini"];
+    // Use only Grok 3 for consistent quality and simplicity
+    const model = "grok-3";
     
-    for (const model of models) {
-      try {
+    try {
         secureLog.debug(`Attempting lyric generation with model: ${model}`);
         const timestamp = Date.now();
         
@@ -217,10 +217,8 @@ QUALITY STANDARDS:
         };
 
         // Add frequency penalties for Grok 3
-        if (model === 'grok-3' || model === 'grok-3-mini') {
-          requestParams.frequency_penalty = 0.6; // Higher to avoid repetition
-          requestParams.presence_penalty = 0.5; // Encourage diverse vocabulary
-        }
+        requestParams.frequency_penalty = 0.6; // Higher to avoid repetition
+        requestParams.presence_penalty = 0.5; // Encourage diverse vocabulary
 
         const completion = await xaiRateLimiter.execute(async () => {
           return withRetry(async () => {
@@ -266,12 +264,12 @@ QUALITY STANDARDS:
             }
           }
         }
-      } catch (error: any) {
-        secureLog.error(`Model ${model} failed:`, error.message);
-      }
+    } catch (error: any) {
+      secureLog.error(`Grok 3 model failed:`, error.message);
+      // Fall through to fallback
     }
 
-    // If all models fail, return fallback
+    // If Grok 3 fails, return fallback
     return this.generateFallbackLyric(genre);
   }
 
