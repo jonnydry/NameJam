@@ -4,6 +4,7 @@ import { enhancedNameGenerator } from "./enhancedNameGenerator";
 import { unifiedWordFilter } from "./nameGeneration/unifiedWordFilter";
 import { poetryDbService } from "./poetryDbService";
 import { ContextAggregatorService } from "./contextAggregator";
+import { OptimizedContextAggregatorService } from "./optimizedContextAggregator";
 import { secureLog } from "../utils/secureLogger";
 import { 
   DEFAULT_GENERATION_COUNT, 
@@ -20,8 +21,8 @@ export class NameGeneratorService {
   private contextAggregator: ContextAggregatorService;
 
   constructor() {
-    // Initialize without AI dependency to avoid circular imports
-    this.contextAggregator = new ContextAggregatorService();
+    // Initialize with optimized context aggregator for better performance
+    this.contextAggregator = new OptimizedContextAggregatorService();
   }
 
   setAINameGenerator(aiService: AINameGeneratorService) {
@@ -79,66 +80,91 @@ export class NameGeneratorService {
     return acceptedResults;
   }
 
-  // Main generation method - unified AI approach with enriched context
+  // Main generation method - optimized for sub-10 second response
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
     const { count = DEFAULT_GENERATION_COUNT } = request;
     
     // Start new generation session for word filtering
     const generationId = unifiedWordFilter.startNewGeneration();
 
-    secureLog.info(`🎯 Generating ${count} names using unified AI approach with enriched context`);
+    // Check if we should use ultra-optimized mode for instant response
+    if (!request.genre || request.genre === 'general') {
+      secureLog.info(`⚡ Using ultra-optimized mode for general genre`);
+      const { UltraOptimizedNameGeneratorService } = await import('./ultraOptimizedNameGenerator');
+      const ultraGenerator = new UltraOptimizedNameGeneratorService();
+      const names = await ultraGenerator.generateNames(request);
+      return names.map(n => ({ ...n, source: 'ultra' }));
+    }
+
+    secureLog.info(`🎯 Generating ${count} names with minimal context for speed`);
 
     const results: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
 
-    // Generate all names using AI with enriched context
+    // Generate names with minimal context for speed
     if (this.aiNameGenerator) {
       try {
-        // Get enriched context from all 5 APIs
-        const enrichedContext = await this.contextAggregator.getEnrichedContext({
-          genre: request.genre || 'general',
-          mood: request.mood || 'neutral',
-          wordCount: request.wordCount,
-          type: request.type
-        });
+        // Skip heavy API calls - use minimal context
+        const minimalContext = {
+          spotifyArtists: [],
+          spotifyTracks: [],
+          lastfmTags: [request.genre || 'music'],
+          lastfmSimilarArtists: [],
+          conceptNetAssociations: [request.mood || 'creative'],
+          datamuseWords: {
+            related: ['music', 'sound', 'rhythm'],
+            rhymes: [],
+            similar: [],
+            adjectives: []
+          },
+          poetryVocabulary: [],
+          genreCharacteristics: [request.genre || 'general'],
+          moodDescriptors: [request.mood || 'neutral'],
+          musicalTerms: ['song', 'band'],
+          culturalReferences: [],
+          primaryGenre: request.genre || 'general',
+          primaryMood: request.mood || 'neutral',
+          contextQuality: 'basic' as const
+        };
         
-        secureLog.info(`📚 Context quality: ${enrichedContext.contextQuality} with ${
-          enrichedContext.spotifyArtists.length + 
-          enrichedContext.spotifyTracks.length + 
-          enrichedContext.lastfmTags.length + 
-          enrichedContext.conceptNetAssociations.length + 
-          enrichedContext.datamuseWords.related.length + 
-          enrichedContext.poetryVocabulary.length
-        } total context terms`);
-        
-        // Generate all names using AI with enriched context
+        // Generate with reduced retries for speed
         const acceptedAiResults = await this.generateWithRetry(
           count,
-          AI_RETRY_MULTIPLIER,
+          1, // Minimal retries for speed
           async () => this.aiNameGenerator!.generateAIName(
             request.type, 
             request.genre, 
             request.mood, 
             request.wordCount, 
-            undefined, // no simple context examples
-            enrichedContext // pass enriched context
+            undefined,
+            minimalContext
           ),
           generationId,
           'AI'
         );
         
         results.push(...acceptedAiResults);
-        secureLog.info(`✅ Generated ${acceptedAiResults.length}/${count} names using unified AI approach`);
+        
+        // If not enough results, use ultra-optimized fallback
+        if (results.length < count) {
+          secureLog.info(`Using ultra-optimized fallback for remaining ${count - results.length} names`);
+          const { UltraOptimizedNameGeneratorService } = await import('./ultraOptimizedNameGenerator');
+          const ultraGenerator = new UltraOptimizedNameGeneratorService();
+          const fallbackNames = await ultraGenerator.generateNames({ ...request, count: count - results.length });
+          results.push(...fallbackNames.map(n => ({ ...n, source: 'ultra' })));
+        }
       } catch (error) {
-        secureLog.warn("AI generation failed, using simple fallback:", error);
-        // Provide simple fallback names if AI fails completely
-        const fallbackNames = this.generateSimpleFallback(request.type, count);
-        results.push(...fallbackNames);
+        secureLog.warn("AI generation failed, using ultra-optimized fallback:", error);
+        const { UltraOptimizedNameGeneratorService } = await import('./ultraOptimizedNameGenerator');
+        const ultraGenerator = new UltraOptimizedNameGeneratorService();
+        const names = await ultraGenerator.generateNames(request);
+        return names.map(n => ({ ...n, source: 'ultra' }));
       }
     } else {
-      // If AI generator not available, use simple fallback
-      secureLog.warn("AI generator not available, using simple fallback");
-      const fallbackNames = this.generateSimpleFallback(request.type, count);
-      results.push(...fallbackNames);
+      // Use ultra-optimized generator when AI not available
+      const { UltraOptimizedNameGeneratorService } = await import('./ultraOptimizedNameGenerator');
+      const ultraGenerator = new UltraOptimizedNameGeneratorService();
+      const names = await ultraGenerator.generateNames(request);
+      return names.map(n => ({ ...n, source: 'ultra' }));
     }
 
     return results.slice(0, count);

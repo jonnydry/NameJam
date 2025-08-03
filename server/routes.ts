@@ -7,6 +7,7 @@ import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGeneratorService } from "./services/bandBioGenerator";
 import { AINameGeneratorService } from "./services/aiNameGenerator";
+import { OptimizedAINameGeneratorService } from "./services/optimizedAINameGenerator";
 import { LyricStarterService } from "./services/lyricStarterService";
 import { db } from "./db";
 import { users, errorLogs } from "@shared/schema";
@@ -52,10 +53,11 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   let lyricStarterService: LyricStarterService;
 
   try {
-    aiNameGenerator = new AINameGeneratorService();
-    secureLog.info("✓ AINameGeneratorService initialized");
+    // Use optimized AI generator for better performance
+    aiNameGenerator = new OptimizedAINameGeneratorService();
+    secureLog.info("✓ OptimizedAINameGeneratorService initialized");
   } catch (error) {
-    secureLog.error("✗ Failed to initialize AINameGeneratorService:", error);
+    secureLog.error("✗ Failed to initialize OptimizedAINameGeneratorService:", error);
     throw error;
   }
 
