@@ -26,11 +26,10 @@ export class BandBioGeneratorService {
       return this.generateFallbackBio(bandName, genre, mood);
     }
 
-    // Try different models in order of preference (Grok 3 prioritized for reliability)
-    const models = ["grok-3", "grok-4", "grok-3-mini"];
+    // Use only Grok 3 for consistent quality and simplicity
+    const model = "grok-3";
     
-    for (const model of models) {
-      try {
+    try {
         const genreInfo = genre ? ` ${genre}` : 'rock';
         const moodInfo = mood ? ` ${mood}` : 'energetic';
         
@@ -136,8 +135,8 @@ export class BandBioGeneratorService {
           prompt = `Based on these requirements, write a hilarious band biography:\n\n${JSON.stringify(jsonPrompt, null, 2)}\n\nIMPORTANT: Generate ONLY the biography text itself, not the JSON structure. Write the actual funny biography story in the requested style!`;
           
         } else {
-          // Use original edgy prompts
-          if (model === 'grok-3-mini' || model === 'grok-3-mini-fast') {
+          // Use original edgy prompts - always use the enhanced JSON version for grok-3
+          if (false) { // Disabled mini model logic
             // Edgy humor-focused simple prompts
             const humorPrompts = [
               `Write a wickedly funny biography for "${bandName}", a ${genreInfo} band. Include their chaotic origin involving ${randomElement}, questionable life choices, member drama, and their most cringe-worthy public moment. Be EDGY, irreverent, and brutally honest! Under 150 words. Timestamp: ${timestamp}`,
@@ -190,29 +189,14 @@ export class BandBioGeneratorService {
               content: prompt
             }
           ],
-          max_tokens: model === 'grok-3-mini' ? 500 : 300,
+          max_tokens: 300,
           temperature: 1.2 // Increased for maximum creativity
         };
 
-        // Model-specific parameter configuration optimized for humor and uniqueness
-        if (model === 'grok-4') {
-          // Grok 4 - minimal parameters for maximum compatibility
-          requestParams.top_p = 0.98; // Higher for more randomness
-        } else if (model === 'grok-3') {
-          // Grok 3 full - supports all parameters, optimize for creativity
-          requestParams.top_p = 0.95;
-          requestParams.frequency_penalty = 0.6; // Higher to avoid repetition
-          requestParams.presence_penalty = 0.4; // Higher to encourage new topics
-        } else if (model === 'grok-3-mini') {
-          // Grok 3 mini - limited parameter support but maximize creativity
-          requestParams.top_p = 0.95;
-          // No frequency_penalty or presence_penalty for mini
-        } else {
-          // Other models - optimize for uniqueness
-          requestParams.top_p = 0.95;
-          requestParams.frequency_penalty = 0.4;
-          requestParams.presence_penalty = 0.3;
-        }
+        // Grok 3 parameters - optimized for creativity and humor
+        requestParams.top_p = 0.95;
+        requestParams.frequency_penalty = 0.6; // Higher to avoid repetition
+        requestParams.presence_penalty = 0.4; // Higher to encourage new topics
 
         const response = await xaiRateLimiter.execute(async () => {
           return withRetry(async () => {
@@ -234,8 +218,8 @@ export class BandBioGeneratorService {
             
             // Check if this looks like the prompt structure being returned
             if (parsed.task && parsed.band_info && parsed.style_requirements) {
-              secureLog.warn(`AI returned prompt structure instead of biography for ${bandName}, attempting next model`);
-              continue; // Try next model
+              secureLog.warn(`AI returned prompt structure instead of biography for ${bandName}`);
+              throw new Error('Invalid response format');
             }
             
             // Extract biography text from various possible formats
@@ -261,16 +245,15 @@ export class BandBioGeneratorService {
         }
         
         // If we get here, the model returned empty content
-        secureLog.info(`Model ${model} returned empty content, trying next model...`);
+        throw new Error('Empty content returned');
         
       } catch (error: any) {
-        secureLog.info(`Model ${model} failed:`, error.message);
-        // Continue to next model
+        secureLog.info(`Grok 3 model failed:`, error.message);
+        // Fall through to fallback
       }
-    }
     
-    // If all models fail, use fallback
-    secureLog.info("All Grok models failed, using fallback bio generator");
+    // If Grok 3 fails, use fallback
+    secureLog.info("Grok 3 failed, using fallback bio generator");
     const fallbackBio = this.generateFallbackBio(bandName, genre, mood);
     return JSON.stringify({
       bio: fallbackBio,

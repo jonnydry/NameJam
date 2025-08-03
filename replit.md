@@ -5,6 +5,21 @@ NameJam is a web application designed to generate unique band names and song tit
 
 ## Recent Updates (January 2025)
 
+### XAI Model Simplification (January 4, 2025)
+- **Simplified to Grok 3 Only**: Removed model rotation and fallback logic to use only Grok 3 for all AI generation
+  - Removed grok-2-1212, grok-2-vision-1212, grok-4, and grok-3-mini references
+  - Updated AINameGeneratorService, BandBioGeneratorService, and LyricStarterService to use only grok-3
+  - Eliminated complex model selection and retry logic for simpler, more consistent performance
+  - All AI services now use unified Grok 3 parameters optimized for creativity
+
+### Bug Fixes for Consistent Results (January 4, 2025)
+- **Fixed Inconsistent Name Generation**: Resolved issues causing less than 4 results
+  - Increased retry multipliers from 3-4x to 10x for better generation success
+  - Made word filter less aggressive - now only blocks exact name duplicates within current generation
+  - Reduced word timeout from 2 minutes to 30 seconds for better variety
+  - Added guaranteed fallback mechanism to always ensure exactly 4 results
+  - Made fallback names unique with timestamps to avoid "taken" status
+
 ### Feature Removal (January 4, 2025)
 - **Removed Set List Generator**: Completely removed the Set List Generator feature from the codebase
   - Deleted setlist-generator.tsx component
@@ -139,7 +154,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Key Features & Design Patterns
 - **Name Generation Service**: Generates band/song names using advanced grammatical patterns, poetic repetition, and thematic mood selection (12 moods). Supports precise word counts (1-3 words) and dynamic "4+" option (4-7 words) with varied grammatical patterns and enhanced humor. Incorporates advanced linguistic features for single, two, and three-word names, contextual connectors, and smart capitalization.
-- **AI Name Generation Service**: Provides AI-powered name generation using XAI's Grok models (grok-2-1212, grok-2-vision-1212, grok-3-mini) with intelligent fallback. Supports mood and genre filtering.
+- **AI Name Generation Service**: Provides AI-powered name generation using XAI's Grok 3 model exclusively for consistent quality. Supports mood and genre filtering.
 - **Enhanced AI Lyric Generation Service**: Generates diverse lyrical starters with variable length (short, medium, long, couplet), poetic meter (Iambic, Trochaic, Anapestic, Dactylic, Free Verse), and authentic genre vocabulary. Uses a hybrid approach with Datamuse API and AI for enriched context.
 - **Name Verification Service**: Verifies name availability prioritizing Spotify Web API, then Spotify Similar Matches, Famous Names Database, and other APIs like Last.fm and MusicBrainz. Returns detailed availability with popularity scores and genre info.
 - **ConceptNet Integration Service**: Enhances name generation with semantic knowledge, emotional, genre, and cultural associations.
@@ -159,7 +174,7 @@ Preferred communication style: Simple, everyday language.
     - MusicBrainz API
     - ConceptNet API
     - PoetryDB API (for classical poetry context)
-    - XAI Grok models (for AI name and lyric generation)
+    - XAI Grok 3 model (for AI name and lyric generation)
 - **UI Libraries**: Radix UI (primitives), shadcn/ui
 - **Forms**: React Hook Form with Zod validation
 - **Icons**: Lucide React
