@@ -88,8 +88,8 @@ export class NameGeneratorService {
     const generationId = unifiedWordFilter.startNewGeneration();
 
     // Check if we should use ultra-optimized mode for instant response
-    if (!request.genre || request.genre === 'general') {
-      secureLog.info(`⚡ Using ultra-optimized mode for general genre`);
+    if (!request.genre) {
+      secureLog.info(`⚡ Using ultra-optimized mode for no specific genre`);
       const { UltraOptimizedNameGeneratorService } = await import('./ultraOptimizedNameGenerator');
       const ultraGenerator = new UltraOptimizedNameGeneratorService();
       const names = await ultraGenerator.generateNames(request);
@@ -126,10 +126,10 @@ export class NameGeneratorService {
           contextQuality: 'basic' as const
         };
         
-        // Generate with reduced retries for speed
+        // Generate with proper retries
         const acceptedAiResults = await this.generateWithRetry(
           count,
-          1, // Minimal retries for speed
+          AI_RETRY_MULTIPLIER,
           async () => this.aiNameGenerator!.generateAIName(
             request.type, 
             request.genre, 
@@ -167,14 +167,29 @@ export class NameGeneratorService {
       return names.map(n => ({ ...n, source: 'ultra' }));
     }
 
+    // Final check: ensure we have exactly the requested number of results
+    if (results.length < count) {
+      secureLog.warn(`Only generated ${results.length}/${count} names, adding simple fallback`);
+      const remaining = count - results.length;
+      const fallbackResults = this.generateSimpleFallback(request.type, remaining);
+      results.push(...fallbackResults);
+    }
+    
     return results.slice(0, count);
   }
 
   // Simple fallback when both AI and Datamuse fail
   private generateSimpleFallback(type: string, count: number): Array<{name: string, isAiGenerated: boolean, source: string}> {
+    // Generate unique fallback names with timestamp to avoid "taken" status
+    const timestamp = Date.now();
+    const uniqueSuffix = timestamp.toString().slice(-4);
+    
+    const baseFallbackBand = ['Mystic Echoes', 'Quantum Drift', 'Nebula Rising', 'Astral Void', 'Cosmic Flux'];
+    const baseFallbackSong = ['Stellar Dreams', 'Quantum Leap', 'Nebula Dance', 'Astral Light', 'Cosmic Wave'];
+    
     const fallbackNames = type === 'band' 
-      ? ['The Phoenix', 'Storm Rising', 'Electric Dreams', 'Shadow Fire', 'Crystal Echo']
-      : ['Rising Storm', 'Electric Night', 'Shadow Dance', 'Crystal Light', 'Phoenix Song'];
+      ? baseFallbackBand.map(name => `${name} ${uniqueSuffix}`)
+      : baseFallbackSong.map(name => `${name} ${uniqueSuffix}`);
     
     return Array.from({ length: count }, (_, i) => ({
       name: fallbackNames[i % fallbackNames.length],

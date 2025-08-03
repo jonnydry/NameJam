@@ -37,21 +37,15 @@ export class UnifiedWordFilter {
     const words = this.extractWords(name);
     const stems = words.map(w => this.getWordStem(w));
     
-    // 1. Check for words already used in current generation (within the 4 results)
-    for (const word of words) {
-      if (this.currentGenerationWords.has(word.toLowerCase())) {
-        secureLog.debug(`❌ Rejected "${name}" - word "${word}" already used in current generation`);
-        return true;
-      }
+    // 1. Check for exact name match in current generation
+    const lowerName = name.toLowerCase();
+    if (this.currentGenerationWords.has(lowerName)) {
+      secureLog.debug(`❌ Rejected "${name}" - exact name already used in current generation`);
+      return true;
     }
     
-    // 2. Check for stems already used in current generation
-    for (const stem of stems) {
-      if (this.currentGenerationWords.has(stem)) {
-        secureLog.debug(`❌ Rejected "${name}" - stem "${stem}" already used in current generation`);
-        return true;
-      }
-    }
+    // 2. Skip word/stem checking for current generation - too restrictive for only 4 results
+    // Allow some word reuse within the 4 results for better generation success
     
     // 3. Check against recent words from previous generations (weighted by recency)
     const recentThreshold = Date.now() - RECENT_WORD_TIMEOUT;
