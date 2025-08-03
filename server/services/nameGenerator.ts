@@ -3,6 +3,7 @@ import type { AINameGeneratorService } from "./aiNameGenerator";
 import { enhancedNameGenerator } from "./enhancedNameGenerator";
 import { unifiedWordFilter } from "./nameGeneration/unifiedWordFilter";
 import { poetryDbService } from "./poetryDbService";
+import { ContextAggregatorService } from "./contextAggregator";
 import { secureLog } from "../utils/secureLogger";
 import { 
   DEFAULT_GENERATION_COUNT, 
@@ -16,9 +17,11 @@ import {
 
 export class NameGeneratorService {
   private aiNameGenerator: AINameGeneratorService | null = null;
+  private contextAggregator: ContextAggregatorService;
 
   constructor() {
     // Initialize without AI dependency to avoid circular imports
+    this.contextAggregator = new ContextAggregatorService();
   }
 
   setAINameGenerator(aiService: AINameGeneratorService) {
@@ -76,101 +79,66 @@ export class NameGeneratorService {
     return acceptedResults;
   }
 
-  // Main generation method - routes between AI and Datamuse API
+  // Main generation method - unified AI approach with enriched context
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
     const { count = DEFAULT_GENERATION_COUNT } = request;
     
     // Start new generation session for word filtering
     const generationId = unifiedWordFilter.startNewGeneration();
-    
-    // Calculate AI vs Datamuse split
-    const aiCount = Math.floor(count * AI_GENERATION_SPLIT);
-    const datamuseCount = count - aiCount;
 
-    secureLog.info(`🎯 Generating ${count} names: ${aiCount} AI + ${datamuseCount} Datamuse`);
+    secureLog.info(`🎯 Generating ${count} names using unified AI approach with enriched context`);
 
     const results: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
 
-    // Generate AI names if available and requested
-    if (aiCount > 0 && this.aiNameGenerator) {
+    // Generate all names using AI with enriched context
+    if (this.aiNameGenerator) {
       try {
-        // Get context examples from Spotify/Last.fm if genre is specified
-        let contextExamples: string[] = [];
-        if (request.genre) {
-          // Get real examples from enhanced name generator's API sources
-          const generationContext = await enhancedNameGenerator.getGenerationContext(request.mood, request.genre);
-          // Combine artist names from Spotify, Last.fm, ConceptNet, and Poetry for context
-          contextExamples = [...generationContext.spotifyContext, ...generationContext.lastfmContext, ...generationContext.conceptNetContext, ...generationContext.poetryContext]
-            .filter(w => w.length > MIN_WORD_LENGTH_FOR_CONTEXT && !w.includes(' ')) // Filter for quality
-            .slice(0, MAX_CONTEXT_EXAMPLES);
-        }
+        // Get enriched context from all 5 APIs
+        const enrichedContext = await this.contextAggregator.getEnrichedContext({
+          genre: request.genre || 'general',
+          mood: request.mood || 'neutral',
+          wordCount: request.wordCount,
+          type: request.type
+        });
         
-        // Generate AI names with retry logic
+        secureLog.info(`📚 Context quality: ${enrichedContext.contextQuality} with ${
+          enrichedContext.spotifyArtists.length + 
+          enrichedContext.spotifyTracks.length + 
+          enrichedContext.lastfmTags.length + 
+          enrichedContext.conceptNetAssociations.length + 
+          enrichedContext.datamuseWords.related.length + 
+          enrichedContext.poetryVocabulary.length
+        } total context terms`);
+        
+        // Generate all names using AI with enriched context
         const acceptedAiResults = await this.generateWithRetry(
-          aiCount,
+          count,
           AI_RETRY_MULTIPLIER,
           async () => this.aiNameGenerator!.generateAIName(
             request.type, 
             request.genre, 
             request.mood, 
             request.wordCount, 
-            contextExamples
+            undefined, // no simple context examples
+            enrichedContext // pass enriched context
           ),
           generationId,
           'AI'
         );
         
         results.push(...acceptedAiResults);
-        secureLog.info(`✅ Generated ${acceptedAiResults.length}/${aiCount} AI names`);
+        secureLog.info(`✅ Generated ${acceptedAiResults.length}/${count} names using unified AI approach`);
       } catch (error) {
-        secureLog.warn("AI generation failed, using Datamuse fallback:", error);
-        // Fallback to Datamuse if AI fails
-        const fallbackResults = await enhancedNameGenerator.generateEnhancedNames({
-          ...request,
-          count: aiCount
-        });
-        results.push(...fallbackResults);
-      }
-    }
-
-    // Generate Datamuse names for the remainder
-    if (datamuseCount > 0) {
-      try {
-        // Get context for Datamuse generation too
-        let datamuseContext: string[] = [];
-        if (request.genre || request.mood) {
-          const generationContext = await enhancedNameGenerator.getGenerationContext(request.mood, request.genre);
-          datamuseContext = [
-            ...generationContext.spotifyContext, 
-            ...generationContext.lastfmContext, 
-            ...generationContext.conceptNetContext,
-            ...generationContext.poetryContext
-          ].filter(w => w.length > 2);
-          secureLog.debug(`📚 Datamuse using context: ${datamuseContext.length} words`);
-        }
-        
-        // Generate Datamuse names with retry logic
-        const acceptedDatamuseResults = await this.generateWithRetry(
-          datamuseCount,
-          DATAMUSE_RETRY_MULTIPLIER,
-          async () => {
-            const results = await enhancedNameGenerator.generateEnhancedNames({
-              ...request,
-              count: 1 // Generate one at a time for better filtering control
-            }, datamuseContext);
-            return results[0] || null;
-          },
-          generationId,
-          'Datamuse'
-        );
-        
-        results.push(...acceptedDatamuseResults);
-      } catch (error) {
-        secureLog.warn("Datamuse generation failed:", error);
-        // Provide simple fallback names if both systems fail
-        const fallbackNames = this.generateSimpleFallback(request.type, datamuseCount);
+        secureLog.warn("AI generation failed, using simple fallback:", error);
+        // Provide simple fallback names if AI fails completely
+        const fallbackNames = this.generateSimpleFallback(request.type, count);
         results.push(...fallbackNames);
       }
+    } else {
+      // If AI generator not available, use simple fallback
+      secureLog.warn("AI generator not available, using simple fallback");
+      const fallbackNames = this.generateSimpleFallback(request.type, count);
+      results.push(...fallbackNames);
     }
 
     return results.slice(0, count);
