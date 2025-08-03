@@ -93,7 +93,7 @@ export class BandBioGeneratorService {
         let selectedStyle;
         let systemPromptOverride;
         
-        if (useJournalisticStyle && model !== 'grok-3-mini') {
+        if (useJournalisticStyle) {
           // Use new journalistic style with detailed JSON prompt
           selectedStyle = journalisticStyles[Math.floor(Math.random() * journalisticStyles.length)];
           systemPromptOverride = selectedStyle.systemPrompt;

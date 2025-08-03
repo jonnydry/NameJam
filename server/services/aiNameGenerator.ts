@@ -355,18 +355,18 @@ export class AINameGeneratorService {
                 
               if (isValidWordCount) {
                 // Skip quality check for performance - just track the words
-                secureLog.info(`Successfully generated name "${cleanName}" using model: ${primaryModel}`);
+                secureLog.info(`Successfully generated name "${cleanName}" using model: ${model}`);
                 this.trackRecentWords(cleanName);
                 return cleanName;
               }
             }
           } catch (parseError) {
-            secureLog.error(`Failed to parse JSON response from model ${primaryModel}:`, generatedContent);
+            secureLog.error(`Failed to parse JSON response from model ${model}:`, generatedContent);
           }
         }
         
     } catch (error: any) {
-      secureLog.error(`Model ${primaryModel} failed with error:`, error.message);
+      secureLog.error(`Model ${model} failed with error:`, error.message);
       secureLog.debug(`Error details:`, error.response?.data || error.code || 'No additional details');
     }
 
