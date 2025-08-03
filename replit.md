@@ -17,6 +17,13 @@ NameJam is a web application designed to generate unique band names and song tit
   - Implemented smart word selection that categorizes words by type (noun, verb, adjective) for proper placement
   - 4+ word names now resemble natural language while maintaining metaphorical excitement
   - Poetry context is passed through all generation methods including fallback generation
+- **4+ Word Generation Improvements (January 2025)**:
+  - Fixed malformed word generation (prevented issues like "gloaminging")
+  - Added filters to avoid overly archaic/academic vocabulary while preserving poetic quality
+  - Expanded word count range from 4-6 to 4-8 words for more surprising variety
+  - Added more template patterns including 8-word templates
+  - Improved capitalization for more natural flow (articles/prepositions lowercase except at start/end)
+  - Prevented double suffixes and enhanced word quality filters
 
 ## Recent Updates (January 2025)
 - Implemented comprehensive 5-step API synergy enhancement plan:

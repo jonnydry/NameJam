@@ -62,9 +62,9 @@ export class AINameGeneratorService {
       const randomSeed = Math.random().toString(36).substring(7);
       const timestamp = Date.now() % 10000;
           
-          // For "4+" option (wordCount >= 4), use dynamic range of 4-6 words
+          // For "4+" option (wordCount >= 4), use dynamic range of 4-8 words for more surprise
           const dynamicWordCount = wordCount && wordCount >= 4 ? 
-            Math.floor(Math.random() * 3) + 4 : // 4-6 words for "4+" option
+            Math.floor(Math.random() * 5) + 4 : // 4-8 words for "4+" option with more variety
             wordCount;
           
           // Dynamic temperature based on word count
