@@ -52,7 +52,7 @@ Name generation approach: Dynamic API-driven context (no static lists) feeding s
     - MusicBrainz API
     - ConceptNet API
     - PoetryDB API
-    - XAI Grok 3 model
+    - XAI Grok 3 model (updated from Grok-2-1212)
 - **UI Libraries**: Radix UI, shadcn/ui
 - **Forms**: React Hook Form with Zod validation
 - **Icons**: Lucide React
