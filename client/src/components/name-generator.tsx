@@ -37,11 +37,18 @@ export function NameGenerator() {
   const [wordCount, setWordCount] = useState<number | '4+'>(2);
   const [mood, setMood] = useState<string>('none');
   const [genre, setGenre] = useState<string>('none');
-  const [results, setResults] = useState<GenerationResult[]>([]);
+  
+  // Separate result caches for bands and songs
+  const [bandResults, setBandResults] = useState<GenerationResult[]>([]);
+  const [songResults, setSongResults] = useState<GenerationResult[]>([]);
+  
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Computed property to show the right cached results
+  const currentResults = nameType === 'band' ? bandResults : songResults;
 
   const { toast } = useToast();
   const { copyToClipboard } = useClipboard();
@@ -81,7 +88,14 @@ export function NameGenerator() {
     },
     onSuccess: (data) => {
       generateProgress.completeLoading(); // Complete progress
-      setResults(data.results);
+      
+      // Store results in the appropriate cache based on current nameType
+      if (nameType === 'band') {
+        setBandResults(data.results);
+      } else {
+        setSongResults(data.results);
+      }
+      
       setSearchResult(null); // Clear search result when generating new names
       setIsGenerating(false); // Reset generating state
       
@@ -130,7 +144,12 @@ export function NameGenerator() {
         verification: data.verification
       };
       setSearchResult(searchResult);
-      setResults([]); // Clear generated results when searching
+      // Clear the appropriate cached results when searching
+      if (nameType === 'band') {
+        setBandResults([]);
+      } else {
+        setSongResults([]);
+      }
       toast({
         title: "Name verified!",
         description: `Checked availability of "${searchInput.trim()}".`,
@@ -431,10 +450,10 @@ export function NameGenerator() {
 
 
       {/* Generated Results */}
-      {results.length > 0 && !generateMutation.isPending && (
+      {currentResults.length > 0 && !generateMutation.isPending && (
         <div className="space-y-4" aria-live="polite" aria-atomic="true">
           <div className="flex flex-col gap-4">
-            {results.map((result, index) => (
+            {currentResults.map((result, index) => (
               <div
                 key={`result-${index}-${result.name.replace(/\s+/g, '-').toLowerCase()}`}
                 className="animate-slide-up"
@@ -467,7 +486,7 @@ export function NameGenerator() {
       )}
 
       {/* Empty State */}
-      {results.length === 0 && !searchResult && !generateMutation.isPending && !searchMutation.isPending && (
+      {currentResults.length === 0 && !searchResult && !generateMutation.isPending && !searchMutation.isPending && (
         <div className="text-center py-12">
           <div className="text-neutral-600 mb-4">
             <Music className="w-16 h-16 text-neutral-200 mx-auto" />
