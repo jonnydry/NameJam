@@ -215,7 +215,16 @@ export const validationRules = {
   // Name generation request validation
   generateNames: [
     body('type').isIn(['band', 'song']).withMessage('Type must be band or song'),
-    body('wordCount').isInt({ min: 1, max: 6 }).withMessage('Word count must be 1-6'),
+    body('wordCount').custom((value) => {
+      // Allow numbers 1-3 or the special "4+" string
+      if (typeof value === 'number' && value >= 1 && value <= 3) {
+        return true;
+      }
+      if (value === '4+') {
+        return true;
+      }
+      throw new Error('Word count must be 1, 2, 3, or "4+"');
+    }),
     body('count').optional().isInt({ min: 1, max: 10 }).withMessage('Count must be 1-10'),
     body('mood').optional().isIn([
       'dark', 'bright', 'mysterious', 'energetic', 'melancholy', 'ethereal',

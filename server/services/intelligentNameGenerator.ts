@@ -33,7 +33,7 @@ export class IntelligentNameGeneratorService {
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
     const { type, genre, mood, count = 4, wordCount } = request;
     
-    secureLog.info(`🧠 Intelligent generation: ${count} ${type} names for ${genre || 'general'} genre, ${mood || 'neutral'} mood, ${wordCount || 'any'} words`);
+    secureLog.info(`🧠 Intelligent generation: ${count} ${type} names for ${genre || 'general'} genre, ${mood || 'neutral'} mood, ${this.formatWordCount(wordCount)} words`);
     
     try {
       // 1. Gather context from APIs in parallel
@@ -135,7 +135,7 @@ export class IntelligentNameGeneratorService {
     return context;
   }
 
-  private buildXAIPrompt(context: GenerationContext, type: string, genre?: string, mood?: string, count: number = 4, wordCount?: number): string {
+  private buildXAIPrompt(context: GenerationContext, type: string, genre?: string, mood?: string, count: number = 4, wordCount?: number | string): string {
     const isband = type === 'band';
     
     return `You are an expert music industry creative who generates ${isband ? 'band' : 'song'} names that sound natural, memorable, and genre-appropriate.
@@ -155,14 +155,15 @@ ${isband ? this.getBandNamePatterns(genre) : this.getSongNamePatterns(genre)}
 
 REQUIREMENTS:
 1. Generate exactly ${count} unique ${type} names
-2. ${wordCount ? `Each name must be EXACTLY ${wordCount} words (count carefully!)` : 'Use 1-3 words for bands, 2-4 words for songs'}
-3. Names must sound natural and convincing
+2. ${this.getWordCountRequirement(wordCount)}
+3. Names must sound natural and convincing with proper grammar
 4. Reflect the ${genre || 'general'} genre and ${mood || 'neutral'} mood
 5. Use the API context words naturally, not forced
 6. Follow successful real-world naming patterns
 7. Be memorable and distinctive
 8. Vary the patterns/structures across the ${count} names
 9. NO repetition - each name must be completely different
+10. For longer names (4+ words), use natural phrases with proper connectors
 
 STYLE NOTES:
 - ${genre === 'rock' ? 'Rock names can be edgy, powerful, energetic' : ''}
@@ -174,7 +175,29 @@ STYLE NOTES:
 
 OUTPUT FORMAT:
 Generate exactly ${count} names, one per line, no numbering or extra text:
-${wordCount ? `CRITICAL: Count words carefully - each name must have exactly ${wordCount} words!` : ''}`;
+${this.getWordCountReminder(wordCount)}`;
+  }
+
+  private formatWordCount(wordCount?: number | string): string {
+    if (!wordCount) return 'any';
+    if (wordCount === '4+' || wordCount === 4.1) return '4-10';
+    return wordCount.toString();
+  }
+
+  private getWordCountRequirement(wordCount?: number | string): string {
+    if (!wordCount) return 'Use 1-3 words for bands, 2-4 words for songs';
+    if (wordCount === '4+' || wordCount === 4.1) {
+      return 'Each name must be 4-10 words (use natural phrases, proper grammar, and connectors like "and", "of", "the", "in")';
+    }
+    return `Each name must be EXACTLY ${wordCount} words (count carefully!)`;
+  }
+
+  private getWordCountReminder(wordCount?: number | string): string {
+    if (!wordCount) return '';
+    if (wordCount === '4+' || wordCount === 4.1) {
+      return 'CRITICAL: Names must be 4-10 words with natural grammar and proper sentence structure!';
+    }
+    return `CRITICAL: Count words carefully - each name must have exactly ${wordCount} words!`;
   }
 
   private getBandNamePatterns(genre?: string): string {
@@ -258,7 +281,7 @@ ${wordCount ? `CRITICAL: Count words carefully - each name must have exactly ${w
     return cultural.slice(0, 5);
   }
 
-  private async generateWithXAI(prompt: string, count: number, wordCount?: number): Promise<string[]> {
+  private async generateWithXAI(prompt: string, count: number, wordCount?: number | string): Promise<string[]> {
     try {
       const response = await this.openai.chat.completions.create({
         model: "grok-2-1212",
@@ -282,11 +305,11 @@ ${wordCount ? `CRITICAL: Count words carefully - each name must have exactly ${w
       if (wordCount) {
         const validNames = names.filter(name => {
           const actualWordCount = name.split(/\s+/).length;
-          return actualWordCount === wordCount;
+          return this.isValidWordCount(actualWordCount, wordCount);
         });
 
         if (validNames.length < count) {
-          secureLog.warn(`Word count mismatch: requested ${wordCount} words, got ${names.length - validNames.length} invalid names`);
+          secureLog.warn(`Word count mismatch: requested ${this.formatWordCount(wordCount)} words, got ${names.length - validNames.length} invalid names`);
           names = validNames;
         } else {
           names = validNames;
@@ -307,6 +330,14 @@ ${wordCount ? `CRITICAL: Count words carefully - each name must have exactly ${w
       secureLog.error('XAI generation error:', error);
       throw error;
     }
+  }
+
+  private isValidWordCount(actualCount: number, requestedCount: number | string): boolean {
+    if (!requestedCount) return true;
+    if (requestedCount === '4+' || requestedCount === 4.1) {
+      return actualCount >= 4 && actualCount <= 10;
+    }
+    return actualCount === Number(requestedCount);
   }
 
   private generateFallbackNames(type: string, genre?: string, mood?: string, count: number = 4): Array<{name: string, isAiGenerated: boolean, source: string}> {
