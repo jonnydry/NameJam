@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, jsonb, index, foreignKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -45,6 +45,12 @@ export const generatedNames = pgTable("generated_names", {
   index("idx_generated_names_user_created").on(table.userId, table.createdAt),
   // Composite index for type + user + created queries
   index("idx_generated_names_type_user_created").on(table.type, table.userId, table.createdAt),
+  // Foreign key constraint for data integrity
+  foreignKey({
+    columns: [table.userId],
+    foreignColumns: [users.id],
+    name: "fk_generated_names_user_id"
+  }).onDelete("set null"), // Set userId to null if user is deleted
 ]);
 
 export type UpsertUser = typeof users.$inferInsert;

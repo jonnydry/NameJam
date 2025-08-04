@@ -110,23 +110,31 @@ Understand subtle semantic relationships and cultural connotations.`
 
           const content = response.choices[0]?.message?.content;
           if (content) {
-            const parsed = JSON.parse(content);
-            const words = parsed.words || parsed.results || parsed.data || parsed;
-            
-            if (Array.isArray(words)) {
-              const results = words.map((item: any, index: number) => ({
-                word: typeof item === 'string' ? item : item.word,
-                score: item.score || (100 - index * 5) // Use provided score or simulate
-              })).filter((item: any) => 
-                item.word && 
-                item.word.length > 2 && 
-                item.word.length < 20 &&
-                /^[a-zA-Z]+$/.test(item.word)
-              );
+            try {
+              const parsed = JSON.parse(content);
+              const words = parsed?.words || parsed?.results || parsed?.data || parsed;
               
-              // Cache successful results
-              this.setCache(cacheKey, results);
-              return results;
+              if (Array.isArray(words) && words.length > 0) {
+                const results = words.map((item: any, index: number) => {
+                  const word = typeof item === 'string' ? item : (item?.word || '');
+                  const score = item?.score || (100 - index * 5);
+                  return { word, score };
+                }).filter((item: any) => 
+                  item.word && 
+                  typeof item.word === 'string' &&
+                  item.word.length > 2 && 
+                  item.word.length < 20 &&
+                  /^[a-zA-Z]+$/.test(item.word)
+                );
+                
+                if (results.length > 0) {
+                  // Cache successful results
+                  this.setCache(cacheKey, results);
+                  return results;
+                }
+              }
+            } catch (jsonError) {
+              secureLog.debug(`Failed to parse XAI JSON response: ${jsonError}`);
             }
           }
         } catch (error) {

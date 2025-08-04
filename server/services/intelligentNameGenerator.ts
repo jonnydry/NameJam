@@ -361,7 +361,7 @@ Be inventive and let the context spark wild ideas!`;
             secureLog.debug(`Parsed ${names.length} song titles from JSON: ${names.join(', ')}`);
           }
         } catch (error) {
-          secureLog.debug(`Failed to parse JSON (${error.message}), falling back to line parsing`);
+          secureLog.debug(`Failed to parse JSON (${error instanceof Error ? error.message : 'Unknown error'}), falling back to line parsing`);
         }
       }
       

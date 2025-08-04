@@ -3,6 +3,11 @@
 ## Overview
 NameJam is a web application designed to generate unique band names and song titles with real-time availability verification against music databases. The project aims to provide a creative tool that also ensures the practical usability of generated names, combining creative name generation with web-powered checking for musicians and artists.
 
+## Recent Changes (January 2025)
+- **Comprehensive Bug Fixes**: Fixed critical TypeScript errors, improved input validation, enhanced auth token handling, and strengthened database integrity with foreign key constraints.
+- **Enhanced Error Handling**: Added robust validation for user inputs, auth tokens, and AI response parsing to prevent runtime errors.
+- **Creative Generation Enhancement**: Updated both band and song generation to use humorous, punny, and entertaining prompts with clean JSON output format.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Authentication approach: Non-authenticated users have full access to all features except server-side stash persistence. Only the stash feature requires login for server storage.

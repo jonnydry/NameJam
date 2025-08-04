@@ -252,7 +252,13 @@ export function NameGenerator() {
             if (value === '4+') {
               setWordCount('4+' as any); // Handle 4+ as special case
             } else {
-              setWordCount(parseInt(value));
+              const parsedValue = parseInt(value, 10);
+              if (!isNaN(parsedValue) && parsedValue >= 1 && parsedValue <= 3) {
+                setWordCount(parsedValue);
+              } else {
+                console.warn('Invalid word count value:', value);
+                setWordCount(2); // Default fallback
+              }
             }
           }}>
             <SelectTrigger className="w-32 select-mobile select-trigger-mobile select-container-mobile">
