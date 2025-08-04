@@ -63,22 +63,41 @@ function updateUserSession(
   user: any,
   tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
 ) {
-  user.claims = tokens.claims();
-  user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
+  try {
+    const claims = tokens.claims();
+    if (!claims || typeof claims !== 'object') {
+      throw new Error('Invalid or missing claims in token response');
+    }
+    
+    user.claims = claims;
+    user.access_token = tokens.access_token;
+    user.refresh_token = tokens.refresh_token;
+    user.expires_at = claims.exp;
+  } catch (error) {
+    secureLog.error('Error updating user session:', error);
+    throw new Error('Failed to process authentication tokens');
+  }
 }
 
 async function upsertUser(
   claims: any,
 ) {
-  await storage.upsertUser({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
-  });
+  try {
+    if (!claims || typeof claims !== 'object' || !claims.sub) {
+      throw new Error('Invalid claims object - missing required fields');
+    }
+    
+    await storage.upsertUser({
+      id: claims["sub"],
+      email: claims["email"] || null,
+      firstName: claims["first_name"] || null,
+      lastName: claims["last_name"] || null,
+      profileImageUrl: claims["profile_image_url"] || null,
+    });
+  } catch (error) {
+    secureLog.error('Error upserting user:', error);
+    throw new Error('Failed to save user data');
+  }
 }
 
 export async function setupAuth(app: Express) {
@@ -122,11 +141,16 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     try {
-      // Use the first configured domain for authentication
+      // Use the current request's host to determine the correct auth domain
+      const requestHost = req.get('host');
       const domains = process.env.REPLIT_DOMAINS!.split(",");
-      const authDomain = domains[0]; // Use first domain as primary
       
-      secureLog.info("Starting authentication for domain:", authDomain);
+      // Find the matching domain or fall back to the first one
+      const authDomain = domains.find(domain => 
+        requestHost?.includes(domain.replace(/^https?:\/\//, ''))
+      ) || domains[0];
+      
+      secureLog.info("Starting authentication for domain:", authDomain, "from request host:", requestHost);
       
       passport.authenticate(`replitauth:${authDomain}`, {
         prompt: "login consent",
