@@ -153,6 +153,8 @@ CONTEXT FROM MUSIC APIS:
 SUCCESSFUL ${type.toUpperCase()} NAME PATTERNS:
 ${isband ? this.getBandNamePatterns(genre) : this.getSongNamePatterns(genre)}
 
+${wordCount === '4+' || wordCount === 4.1 ? this.getLongerNameExamples(isband) : ''}
+
 REQUIREMENTS:
 1. Generate exactly ${count} unique ${type} names
 2. ${this.getWordCountRequirement(wordCount)}
@@ -174,7 +176,12 @@ STYLE NOTES:
 - ${mood === 'romantic' ? 'Romantic mood: use emotional, intimate language' : ''}
 
 OUTPUT FORMAT:
-Generate exactly ${count} names, one per line, no numbering or extra text:
+${wordCount === '4+' || wordCount === 4.1 ? 
+`Generate exactly ${count} names in this specific mix:
+- ${Math.ceil(count/2)} names with 7-10 words (use phrases like "The Story of How We..." or "When the [Thing] [Action] Through the [Place]")
+- ${Math.floor(count/2)} names with 4-6 words
+One name per line, no numbering:` :
+`Generate exactly ${count} names, one per line, no numbering or extra text:`}
 ${this.getWordCountReminder(wordCount)}`;
   }
 
@@ -187,7 +194,7 @@ ${this.getWordCountReminder(wordCount)}`;
   private getWordCountRequirement(wordCount?: number | string): string {
     if (!wordCount) return 'Use 1-3 words for bands, 2-4 words for songs';
     if (wordCount === '4+' || wordCount === 4.1) {
-      return 'Each name must be 4-10 words (use natural phrases, proper grammar, and connectors like "and", "of", "the", "in")';
+      return 'Each name must be 4-10 words. IMPORTANT: Generate at least half the names with 7-10 words using descriptive phrases like "The Story of [Something]", "When We [Action] Through the [Place]", "[Person] Who [Action] with [Thing]". Use natural connectors: and, of, the, in, with, from, through, where, when, who, that.';
     }
     return `Each name must be EXACTLY ${wordCount} words (count carefully!)`;
   }
@@ -195,7 +202,7 @@ ${this.getWordCountReminder(wordCount)}`;
   private getWordCountReminder(wordCount?: number | string): string {
     if (!wordCount) return '';
     if (wordCount === '4+' || wordCount === 4.1) {
-      return 'CRITICAL: Names must be 4-10 words with natural grammar and proper sentence structure!';
+      return 'CRITICAL: Generate names with these word counts - AT LEAST HALF must be 7-10 words long! Use story-like phrases for longer names.';
     }
     return `CRITICAL: Count words carefully - each name must have exactly ${wordCount} words!`;
   }
@@ -286,8 +293,8 @@ ${this.getWordCountReminder(wordCount)}`;
       const response = await this.openai.chat.completions.create({
         model: "grok-2-1212",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.9, // High creativity
-        max_tokens: 200
+        temperature: 1.1, // Higher creativity for longer names
+        max_tokens: 300 // More space for longer names
       });
 
       const content = response.choices[0].message.content?.trim();
@@ -338,6 +345,22 @@ ${this.getWordCountReminder(wordCount)}`;
       return actualCount >= 4 && actualCount <= 10;
     }
     return actualCount === Number(requestedCount);
+  }
+
+  private getLongerNameExamples(isband: boolean): string {
+    if (isband) {
+      return `LONGER BAND NAME EXAMPLES (7-10 words):
+- "The Wild Feathers and the Stormy Night"
+- "Brothers Who Dance with Fire and Stone"
+- "Children of the Mountain Valley Below"
+- "We Are the Voices from Tomorrow's Dream"`;
+    } else {
+      return `LONGER SONG NAME EXAMPLES (7-10 words):
+- "When the Stars Fall Down from Heaven Above"
+- "I Remember the Day We Lost Our Way Home" 
+- "Dancing Through the Fields of Golden Summer Light"
+- "The Story of How We Found Our Hearts Again"`;
+    }
   }
 
   private generateFallbackNames(type: string, genre?: string, mood?: string, count: number = 4): Array<{name: string, isAiGenerated: boolean, source: string}> {
