@@ -33,6 +33,7 @@ Name generation approach: Dynamic API-driven context (no static lists) feeding s
 - **Intelligent Name Generation Service**: API-driven name generation using dynamic context from Datamuse (word associations), Spotify (genre artists), and Last.fm (genre vocabulary) feeding into structured XAI prompts. Eliminates static word lists in favor of live API data for fresh, contextual results.
 - **Legacy AI Name Generation Service**: Provides fallback AI-powered name generation using XAI's Grok 2 model with minimal context.
 - **Enhanced AI Lyric Generation Service**: Generates diverse lyrical starters with variable length, poetic meter, and authentic genre vocabulary, utilizing a hybrid approach with Datamuse API and AI for enriched context.
+- **Flexible Word Count System**: "4+" option now generates names ranging from 4-10 words with proper distribution across the full range, using structured prompts to ensure both shorter (4-6 words) and longer (7-10 words) name variations.
 - **Name Verification Service**: Verifies name availability prioritizing Spotify, then Spotify Similar Matches, Famous Names Database, and other APIs like Last.fm and MusicBrainz, returning detailed availability with popularity scores and genre info.
 - **ConceptNet Integration Service**: Enhances name generation with semantic knowledge, emotional, genre, and cultural associations.
 - **UI Components**: Includes Generator Interface, Result Display, Loading Animations, and Stash Management with rating and sorting.
