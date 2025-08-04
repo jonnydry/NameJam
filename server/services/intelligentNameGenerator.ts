@@ -177,76 +177,42 @@ Output in strict JSON format for easy parsing:
   "band_names": ["Best Band Name 1", "Best Band Name 2", "Best Band Name 3", "Best Band Name 4"]
 }
 
+CRITICAL: Return ONLY the JSON object above, no additional text, explanations, or evaluation details. Just the pure JSON.
+
 Be inventive and let the context spark wild ideas!`;
     } else {
-      // Keep existing song name generation approach
-      return `You are an expert music industry creative who generates song names that sound natural, memorable, and genre-appropriate.
+      // Creative, humorous song title generation
+      return `You are a wildly creative and humorous AI specializing in generating unique, entertaining, and fun song titles. Your goal is to craft titles that are clever, punny, absurd, or delightfully unexpected, while tying into the specified genre and mood. Ensure all titles are original and not direct copies of existing songs—use inspiration from the provided context to remix ideas in fresh ways.
 
-CONTEXT FROM MUSIC APIS:
-- Genre: ${genre || 'general'}
-- Mood: ${mood || 'neutral'}
-- Related Artists: ${context.relatedArtists.join(', ')}
-- Genre Keywords: ${context.genreKeywords.join(', ')}
-- Mood Words: ${context.moodWords.join(', ')}
-- Word Associations: ${context.wordAssociations.join(', ')}
-- Genre Tags: ${context.genreTags.join(', ')}
-- Audio Style: ${context.audioCharacteristics.join(', ')}
+User inputs:
+- Genre: ${genre || 'general'} (infuse the titles with elements typical of this genre)
+- Mood: ${mood || 'neutral'} (make the titles evoke this emotion through word choice, alliteration, or imagery)
+- Word count: ${this.formatWordCount(wordCount)} (strictly adhere to this)
 
-SUCCESSFUL SONG NAME PATTERNS:
-${this.getSongNamePatterns(genre)}
+Context for inspiration (drawn from Spotify and Last.fm):
+- Similar artists/bands in this genre: ${context.relatedArtists.join(', ')} (draw subtle influences like themes, styles, or wordplay from these)
+- Genre keywords and trends: ${[...context.genreKeywords, ...context.genreTags, ...context.moodWords].join(', ')} (remix elements into new, fun twists for song titles)
+- Word associations: ${context.wordAssociations.join(', ')} (use these for creative wordplay)
 
-${wordCount === '4+' || wordCount === 4.1 ? this.getLongerNameExamples(false) : ''}
+Task:
+1. Brainstorm and generate 8 unique song titles that fit the genre, mood, and word count. Make them entertaining—aim for humor, irony, or whimsy.
+2. Evaluate the 8 titles critically based on these criteria:
+   - Originality (not too similar to real songs or the context sources)
+   - Entertainment value (how fun, clever, or punny they are)
+   - Fit to genre and mood (evokes the right style and emotion)
+   - Adherence to word count (exact match to ${this.formatWordCount(wordCount)})
+   - Overall appeal (memorable and engaging, as if from a hit album)
+3. Select the top 4 best titles from the 8 based on your evaluation.
+4. Ensure everything is fun and engaging; avoid anything offensive or bland.
 
-REQUIREMENTS:
-1. Generate exactly ${count} unique song names - NO FEWER, NO MORE
-2. ${this.getWordCountRequirement(wordCount)}
-3. Names must sound natural and convincing with proper grammar
-4. Reflect the ${genre || 'general'} genre and ${mood || 'neutral'} mood
-5. Use the API context words naturally, not forced
-6. Follow successful real-world naming patterns
-7. Be memorable and distinctive
-8. CRITICAL: Each name must be unique and follow word count rules exactly
-8. Vary the patterns/structures across the ${count} names
-9. NO repetition - each name must be completely different
-10. For longer names (4+ words), use natural phrases with proper connectors
+Output in strict JSON format for easy parsing:
+{
+  "song_titles": ["Best Song Title 1", "Best Song Title 2", "Best Song Title 3", "Best Song Title 4"]
+}
 
-STYLE NOTES:
-- ${genre === 'rock' ? 'Rock songs can be edgy, powerful, energetic' : ''}
-- ${genre === 'pop' ? 'Pop songs should be catchy, accessible, memorable' : ''}
-- ${genre === 'indie' ? 'Indie songs can be quirky, literary, unexpected' : ''}
-- ${mood === 'dark' ? 'Dark mood: use deeper, more mysterious language' : ''}
-- ${mood === 'happy' ? 'Happy mood: use bright, uplifting language' : ''}
-- ${mood === 'romantic' ? 'Romantic mood: use emotional, intimate language' : ''}
+CRITICAL: Return ONLY the JSON object above, no additional text, explanations, or evaluation details. Just the pure JSON.
 
-OUTPUT FORMAT - CRITICAL INSTRUCTIONS:
-${wordCount === '4+' || wordCount === 4.1 ? 
-`YOU MUST GENERATE EXACTLY ${count} NAMES - COUNT THEM CAREFULLY!
-Format each name on its own line like this:
-Name 1
-Name 2  
-Name 3
-Name 4
-${count > 4 ? `Name 5\nName 6\nName 7\nName 8` : ''}
-
-WORD COUNT MIX REQUIRED:
-- ${Math.ceil(count/2)} names with 7-10 words (use descriptive phrases)
-- ${Math.floor(count/2)} names with 4-6 words (shorter, punchy names)` :
-`YOU MUST GENERATE EXACTLY ${count} NAMES WITH EXACTLY ${wordCount} WORDS EACH!
-
-CRITICAL: Each name must have exactly ${wordCount} words. Count each word carefully!
-
-EXAMPLES of exactly ${wordCount}-word song names:
-${wordCount === 1 ? `Thunder\nStorm\nFire\nDream` : 
-  wordCount === 2 ? `Electric Dreams\nNeon Lights\nGolden Hour\nSweet Dreams` :
-  wordCount === 3 ? `Song For You\nDance With Me\nLove Me Tonight\nWalk This Way` :
-  wordCount === 4 ? `Take Me Home Tonight\nDon't Stop Believing Now\nWe Are The Champions\nSweet Child Of Mine` :
-  `Names with exactly ${wordCount} words`}
-
-FORMAT: Just list the names, one per line, no numbering or bullets
-
-List each name on its own line:`}
-
-${this.getWordCountReminder(wordCount)}`;
+Be inventive and let the context spark wild ideas!`;
     }
   }
 
@@ -373,19 +339,29 @@ ${this.getWordCountReminder(wordCount)}`;
       // Parse the response - handle JSON format for bands, line format for songs
       let names: string[] = [];
       
-      // Check if this is a band generation (JSON format)
-      if (content.includes('"band_names"')) {
+      // Check if this is JSON format (bands or songs)
+      if (content.includes('"band_names"') || content.includes('"song_titles"')) {
         try {
-          const jsonMatch = content.match(/\{[\s\S]*"band_names"[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.band_names && Array.isArray(parsed.band_names)) {
-              names = parsed.band_names.map((name: string) => name.trim());
-              secureLog.debug(`Parsed ${names.length} band names from JSON: ${names.join(', ')}`);
-            }
+          // Find the JSON object more robustly
+          let jsonContent = content;
+          
+          // Try to extract just the JSON part if there's extra text
+          const jsonStart = content.indexOf('{');
+          const jsonEnd = content.lastIndexOf('}');
+          if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+            jsonContent = content.substring(jsonStart, jsonEnd + 1);
+          }
+          
+          const parsed = JSON.parse(jsonContent);
+          if (parsed.band_names && Array.isArray(parsed.band_names)) {
+            names = parsed.band_names.map((name: string) => name.trim());
+            secureLog.debug(`Parsed ${names.length} band names from JSON: ${names.join(', ')}`);
+          } else if (parsed.song_titles && Array.isArray(parsed.song_titles)) {
+            names = parsed.song_titles.map((name: string) => name.trim());
+            secureLog.debug(`Parsed ${names.length} song titles from JSON: ${names.join(', ')}`);
           }
         } catch (error) {
-          secureLog.debug('Failed to parse JSON, falling back to line parsing');
+          secureLog.debug(`Failed to parse JSON (${error.message}), falling back to line parsing`);
         }
       }
       
