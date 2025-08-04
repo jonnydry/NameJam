@@ -321,7 +321,7 @@ ${this.getWordCountReminder(wordCount)}`;
 
   private async generateWithXAI(prompt: string, count: number, wordCount?: number | string): Promise<string[]> {
     try {
-      secureLog.debug(`Sending prompt to XAI for ${wordCount || 'any'} word count: ${prompt.substring(0, 200)}...`);
+      secureLog.info(`📝 FULL XAI PROMPT FOR ${wordCount || 'any'} WORDS:\n${prompt}\n--- END PROMPT ---`);
       const response = await this.openai.chat.completions.create({
         model: "grok-3",
         messages: [{ role: "user", content: prompt }],
