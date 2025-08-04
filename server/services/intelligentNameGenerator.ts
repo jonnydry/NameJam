@@ -323,7 +323,7 @@ ${this.getWordCountReminder(wordCount)}`;
     try {
       secureLog.debug(`Sending prompt to XAI for ${wordCount || 'any'} word count: ${prompt.substring(0, 200)}...`);
       const response = await this.openai.chat.completions.create({
-        model: "grok-2-1212",
+        model: "grok-3",
         messages: [{ role: "user", content: prompt }],
         temperature: 1.1, // Higher creativity for longer names
         max_tokens: 300 // More space for longer names
