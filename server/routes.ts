@@ -177,10 +177,14 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
             
             try {
               // Make database storage non-blocking to speed up response
+              const dbWordCount = typeof request.wordCount === 'string' && request.wordCount === '4+' 
+                ? 4 
+                : (typeof request.wordCount === 'number' ? request.wordCount : nameResult.name.split(/\s+/).length);
+              
               storage.createGeneratedName({
                 name: nameResult.name,
                 type: request.type,
-                wordCount: request.wordCount === '4+' ? 4 : (request.wordCount || nameResult.name.split(/\s+/).length), // Convert "4+" to 4 for database storage
+                wordCount: dbWordCount, // Ensure integer for database storage
                 verificationStatus: verification.status,
                 verificationDetails: verification.details || null,
                 isAiGenerated: nameResult.isAiGenerated,
