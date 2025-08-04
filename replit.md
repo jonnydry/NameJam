@@ -7,6 +7,8 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Comprehensive Bug Fixes**: Fixed critical TypeScript errors, improved input validation, enhanced auth token handling, and strengthened database integrity with foreign key constraints.
 - **Enhanced Error Handling**: Added robust validation for user inputs, auth tokens, and AI response parsing to prevent runtime errors.
 - **Creative Generation Enhancement**: Updated both band and song generation to use humorous, punny, and entertaining prompts with clean JSON output format.
+- **Result Caching Between Tabs**: Implemented separate caching for band and song results. Users can now switch between tabs without losing their generated results - cached results persist until new generation is made for that specific type.
+- **UI Simplification**: Removed brain icons since all generation is now AI-powered, creating a cleaner interface.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
