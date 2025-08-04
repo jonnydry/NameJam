@@ -40,12 +40,17 @@ export class IntelligentNameGeneratorService {
       const context = await this.gatherContext(genre, mood, type);
       
       // 2. Build structured XAI prompt with word count constraints
-      const prompt = this.buildXAIPrompt(context, type, genre, mood, count, wordCount);
+      // Generate extra names for "4+" to account for potential filtering
+      const generateCount = (wordCount === '4+' || wordCount === 4.1) ? Math.max(count + 4, 8) : count;
+      const prompt = this.buildXAIPrompt(context, type, genre, mood, generateCount, wordCount);
       
       // 3. Generate names using XAI with validation
-      const names = await this.generateWithXAI(prompt, count, wordCount);
+      const names = await this.generateWithXAI(prompt, generateCount, wordCount);
       
-      return names.map(name => ({
+      // 4. Return only the requested count, taking the best ones first
+      const finalNames = names.slice(0, count);
+      
+      return finalNames.map(name => ({
         name,
         isAiGenerated: true,
         source: 'intelligent'
@@ -156,13 +161,14 @@ ${isband ? this.getBandNamePatterns(genre) : this.getSongNamePatterns(genre)}
 ${wordCount === '4+' || wordCount === 4.1 ? this.getLongerNameExamples(isband) : ''}
 
 REQUIREMENTS:
-1. Generate exactly ${count} unique ${type} names
+1. Generate exactly ${count} unique ${type} names - NO FEWER, NO MORE
 2. ${this.getWordCountRequirement(wordCount)}
 3. Names must sound natural and convincing with proper grammar
 4. Reflect the ${genre || 'general'} genre and ${mood || 'neutral'} mood
 5. Use the API context words naturally, not forced
 6. Follow successful real-world naming patterns
 7. Be memorable and distinctive
+8. CRITICAL: Each name must be unique and follow word count rules exactly
 8. Vary the patterns/structures across the ${count} names
 9. NO repetition - each name must be completely different
 10. For longer names (4+ words), use natural phrases with proper connectors
@@ -175,13 +181,22 @@ STYLE NOTES:
 - ${mood === 'happy' ? 'Happy mood: use bright, uplifting language' : ''}
 - ${mood === 'romantic' ? 'Romantic mood: use emotional, intimate language' : ''}
 
-OUTPUT FORMAT:
+OUTPUT FORMAT - CRITICAL INSTRUCTIONS:
 ${wordCount === '4+' || wordCount === 4.1 ? 
-`Generate exactly ${count} names in this specific mix:
-- ${Math.ceil(count/2)} names with 7-10 words (use phrases like "The Story of How We..." or "When the [Thing] [Action] Through the [Place]")
-- ${Math.floor(count/2)} names with 4-6 words
-One name per line, no numbering:` :
-`Generate exactly ${count} names, one per line, no numbering or extra text:`}
+`YOU MUST GENERATE EXACTLY ${count} NAMES - COUNT THEM CAREFULLY!
+Format each name on its own line like this:
+Name 1
+Name 2  
+Name 3
+Name 4
+${count > 4 ? `Name 5\nName 6\nName 7\nName 8` : ''}
+
+WORD COUNT MIX REQUIRED:
+- ${Math.ceil(count/2)} names with 7-10 words (use descriptive phrases)
+- ${Math.floor(count/2)} names with 4-6 words (shorter, punchy names)` :
+`YOU MUST GENERATE EXACTLY ${count} NAMES - NO MORE, NO LESS!
+List each name on its own line:`}
+
 ${this.getWordCountReminder(wordCount)}`;
   }
 
@@ -319,7 +334,25 @@ ${this.getWordCountReminder(wordCount)}`;
 
         if (validNames.length < count) {
           secureLog.warn(`Word count mismatch: requested ${this.formatWordCount(wordCount)} words, got ${names.length - validNames.length} invalid names`);
-          names = validNames;
+          
+          // For "4+" generation, try to salvage results by being more lenient
+          if (wordCount === '4+' || wordCount === 4.1) {
+            // Include names that are close to the range (3-11 words instead of strict 4-10)
+            const lenientNames = names.filter(name => {
+              const actualWordCount = name.split(/\s+/).length;
+              return actualWordCount >= 3 && actualWordCount <= 11;
+            });
+            
+            if (lenientNames.length >= count) {
+              names = lenientNames.slice(0, count);
+            } else if (lenientNames.length > validNames.length) {
+              names = lenientNames;
+            } else {
+              names = validNames;
+            }
+          } else {
+            names = validNames;
+          }
         } else {
           names = validNames;
         }
