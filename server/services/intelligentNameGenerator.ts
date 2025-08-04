@@ -31,19 +31,19 @@ export class IntelligentNameGeneratorService {
   }
 
   async generateNames(request: GenerateNameRequest): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
-    const { type, genre, mood, count = 4 } = request;
+    const { type, genre, mood, count = 4, wordCount } = request;
     
-    secureLog.info(`🧠 Intelligent generation: ${count} ${type} names for ${genre || 'general'} genre, ${mood || 'neutral'} mood`);
+    secureLog.info(`🧠 Intelligent generation: ${count} ${type} names for ${genre || 'general'} genre, ${mood || 'neutral'} mood, ${wordCount || 'any'} words`);
     
     try {
       // 1. Gather context from APIs in parallel
       const context = await this.gatherContext(genre, mood, type);
       
-      // 2. Build structured XAI prompt
-      const prompt = this.buildXAIPrompt(context, type, genre, mood, count);
+      // 2. Build structured XAI prompt with word count constraints
+      const prompt = this.buildXAIPrompt(context, type, genre, mood, count, wordCount);
       
-      // 3. Generate names using XAI
-      const names = await this.generateWithXAI(prompt, count);
+      // 3. Generate names using XAI with validation
+      const names = await this.generateWithXAI(prompt, count, wordCount);
       
       return names.map(name => ({
         name,
@@ -135,7 +135,7 @@ export class IntelligentNameGeneratorService {
     return context;
   }
 
-  private buildXAIPrompt(context: GenerationContext, type: string, genre?: string, mood?: string, count: number = 4): string {
+  private buildXAIPrompt(context: GenerationContext, type: string, genre?: string, mood?: string, count: number = 4, wordCount?: number): string {
     const isband = type === 'band';
     
     return `You are an expert music industry creative who generates ${isband ? 'band' : 'song'} names that sound natural, memorable, and genre-appropriate.
@@ -155,12 +155,14 @@ ${isband ? this.getBandNamePatterns(genre) : this.getSongNamePatterns(genre)}
 
 REQUIREMENTS:
 1. Generate exactly ${count} unique ${type} names
-2. Names must sound natural and convincing
-3. Reflect the ${genre || 'general'} genre and ${mood || 'neutral'} mood
-4. Use the API context words naturally, not forced
-5. Follow successful real-world naming patterns
-6. Be memorable and distinctive
-7. Vary the patterns/structures across the ${count} names
+2. ${wordCount ? `Each name must be EXACTLY ${wordCount} words (count carefully!)` : 'Use 1-3 words for bands, 2-4 words for songs'}
+3. Names must sound natural and convincing
+4. Reflect the ${genre || 'general'} genre and ${mood || 'neutral'} mood
+5. Use the API context words naturally, not forced
+6. Follow successful real-world naming patterns
+7. Be memorable and distinctive
+8. Vary the patterns/structures across the ${count} names
+9. NO repetition - each name must be completely different
 
 STYLE NOTES:
 - ${genre === 'rock' ? 'Rock names can be edgy, powerful, energetic' : ''}
@@ -171,7 +173,8 @@ STYLE NOTES:
 - ${mood === 'romantic' ? 'Romantic mood: use emotional, intimate language' : ''}
 
 OUTPUT FORMAT:
-Generate exactly ${count} names, one per line, no numbering or extra text:`;
+Generate exactly ${count} names, one per line, no numbering or extra text:
+${wordCount ? `CRITICAL: Count words carefully - each name must have exactly ${wordCount} words!` : ''}`;
   }
 
   private getBandNamePatterns(genre?: string): string {
@@ -255,7 +258,7 @@ Generate exactly ${count} names, one per line, no numbering or extra text:`;
     return cultural.slice(0, 5);
   }
 
-  private async generateWithXAI(prompt: string, count: number): Promise<string[]> {
+  private async generateWithXAI(prompt: string, count: number, wordCount?: number): Promise<string[]> {
     try {
       const response = await this.openai.chat.completions.create({
         model: "grok-2-1212",
@@ -270,18 +273,35 @@ Generate exactly ${count} names, one per line, no numbering or extra text:`;
       }
 
       // Parse the response into individual names
-      const names = content
+      let names = content
         .split('\n')
         .map(line => line.trim())
-        .filter(line => line.length > 0 && !line.match(/^\d+\./) && line.length < 100)
-        .slice(0, count);
+        .filter(line => line.length > 0 && !line.match(/^\d+\./) && line.length < 100);
 
-      if (names.length === 0) {
+      // Word count validation if specified
+      if (wordCount) {
+        const validNames = names.filter(name => {
+          const actualWordCount = name.split(/\s+/).length;
+          return actualWordCount === wordCount;
+        });
+
+        if (validNames.length < count) {
+          secureLog.warn(`Word count mismatch: requested ${wordCount} words, got ${names.length - validNames.length} invalid names`);
+          names = validNames;
+        } else {
+          names = validNames;
+        }
+      }
+
+      // Remove duplicates and take only what we need
+      const uniqueNames = [...new Set(names)].slice(0, count);
+
+      if (uniqueNames.length === 0) {
         throw new Error('No valid names parsed from XAI response');
       }
 
-      secureLog.info(`✅ XAI generated ${names.length} names: ${names.join(', ')}`);
-      return names;
+      secureLog.info(`✅ XAI generated ${uniqueNames.length} names: ${uniqueNames.join(', ')}`);
+      return uniqueNames;
 
     } catch (error) {
       secureLog.error('XAI generation error:', error);
