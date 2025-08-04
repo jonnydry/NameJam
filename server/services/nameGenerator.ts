@@ -124,7 +124,8 @@ export class NameGeneratorService {
           contextQuality: 'basic' as const
         };
         
-        // Generate with proper retries
+        // Generate with proper retries - handle "4+" string conversion
+        const wordCountForAI = request.wordCount === '4+' ? undefined : (typeof request.wordCount === 'string' ? undefined : request.wordCount);
         const acceptedAiResults = await this.generateWithRetry(
           count,
           AI_RETRY_MULTIPLIER,
@@ -132,7 +133,7 @@ export class NameGeneratorService {
             request.type, 
             request.genre, 
             request.mood, 
-            request.wordCount, 
+            wordCountForAI, 
             undefined,
             minimalContext
           ),
@@ -151,11 +152,9 @@ export class NameGeneratorService {
           results.push(...fallbackNames.map(n => ({ ...n, source: 'ultra' })));
         }
       } catch (error) {
-        secureLog.warn("AI generation failed, using ultra-optimized fallback:", error);
-        const { UltraOptimizedNameGeneratorService } = await import('./ultraOptimizedNameGenerator');
-        const ultraGenerator = new UltraOptimizedNameGeneratorService();
-        const names = await ultraGenerator.generateNames(request);
-        return names.map(n => ({ ...n, source: 'ultra' }));
+        secureLog.warn("AI generation failed, using simple word-count-respecting fallback:", error);
+        // Generate simple names that respect the requested word count
+        return this.generateSimpleFallback(request);
       }
     } else {
       // Use ultra-optimized generator when AI not available
