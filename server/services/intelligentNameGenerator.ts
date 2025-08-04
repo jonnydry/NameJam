@@ -147,7 +147,40 @@ export class IntelligentNameGeneratorService {
   private buildXAIPrompt(context: GenerationContext, type: string, genre?: string, mood?: string, count: number = 4, wordCount?: number | string): string {
     const isband = type === 'band';
     
-    return `You are an expert music industry creative who generates ${isband ? 'band' : 'song'} names that sound natural, memorable, and genre-appropriate.
+    if (isband) {
+      // Creative, humorous band name generation
+      return `You are a wildly creative and humorous AI specializing in generating unique, entertaining, and fun band names. Your goal is to craft names that are clever, punny, absurd, or delightfully unexpected, while tying into the specified genre and mood. Ensure all names are original and not direct copies of existing bands—use inspiration from the provided context to remix ideas in fresh ways.
+
+User inputs:
+- Genre: ${genre || 'general'} (infuse the names with elements typical of this genre)
+- Mood: ${mood || 'neutral'} (make the names evoke this emotion through word choice, alliteration, or imagery)
+- Word count: ${this.formatWordCount(wordCount)} (strictly adhere to this)
+
+Context for inspiration (drawn from Spotify and Last.fm):
+- Similar artists/bands in this genre: ${context.relatedArtists.join(', ')} (draw subtle influences like themes, styles, or wordplay from these)
+- Genre keywords and trends: ${[...context.genreKeywords, ...context.genreTags, ...context.moodWords].join(', ')} (remix elements into new, fun twists for band names)
+- Word associations: ${context.wordAssociations.join(', ')} (use these for creative wordplay)
+
+Task:
+1. Brainstorm and generate 8 unique band names that fit the genre, mood, and word count. Make them entertaining—aim for humor, irony, or whimsy.
+2. Evaluate the 8 names critically based on these criteria:
+   - Originality (not too similar to real bands or the context sources)
+   - Entertainment value (how fun, clever, or punny they are)
+   - Fit to genre and mood (evokes the right style and emotion)
+   - Adherence to word count (exact match to ${this.formatWordCount(wordCount)})
+   - Overall appeal (memorable and engaging)
+3. Select the top 4 best names from the 8 based on your evaluation.
+4. Ensure everything is fun and engaging; avoid anything offensive or bland.
+
+Output in strict JSON format for easy parsing:
+{
+  "band_names": ["Best Band Name 1", "Best Band Name 2", "Best Band Name 3", "Best Band Name 4"]
+}
+
+Be inventive and let the context spark wild ideas!`;
+    } else {
+      // Keep existing song name generation approach
+      return `You are an expert music industry creative who generates song names that sound natural, memorable, and genre-appropriate.
 
 CONTEXT FROM MUSIC APIS:
 - Genre: ${genre || 'general'}
@@ -159,13 +192,13 @@ CONTEXT FROM MUSIC APIS:
 - Genre Tags: ${context.genreTags.join(', ')}
 - Audio Style: ${context.audioCharacteristics.join(', ')}
 
-SUCCESSFUL ${type.toUpperCase()} NAME PATTERNS:
-${isband ? this.getBandNamePatterns(genre) : this.getSongNamePatterns(genre)}
+SUCCESSFUL SONG NAME PATTERNS:
+${this.getSongNamePatterns(genre)}
 
-${wordCount === '4+' || wordCount === 4.1 ? this.getLongerNameExamples(isband) : ''}
+${wordCount === '4+' || wordCount === 4.1 ? this.getLongerNameExamples(false) : ''}
 
 REQUIREMENTS:
-1. Generate exactly ${count} unique ${type} names - NO FEWER, NO MORE
+1. Generate exactly ${count} unique song names - NO FEWER, NO MORE
 2. ${this.getWordCountRequirement(wordCount)}
 3. Names must sound natural and convincing with proper grammar
 4. Reflect the ${genre || 'general'} genre and ${mood || 'neutral'} mood
@@ -178,9 +211,9 @@ REQUIREMENTS:
 10. For longer names (4+ words), use natural phrases with proper connectors
 
 STYLE NOTES:
-- ${genre === 'rock' ? 'Rock names can be edgy, powerful, energetic' : ''}
-- ${genre === 'pop' ? 'Pop names should be catchy, accessible, memorable' : ''}
-- ${genre === 'indie' ? 'Indie names can be quirky, literary, unexpected' : ''}
+- ${genre === 'rock' ? 'Rock songs can be edgy, powerful, energetic' : ''}
+- ${genre === 'pop' ? 'Pop songs should be catchy, accessible, memorable' : ''}
+- ${genre === 'indie' ? 'Indie songs can be quirky, literary, unexpected' : ''}
 - ${mood === 'dark' ? 'Dark mood: use deeper, more mysterious language' : ''}
 - ${mood === 'happy' ? 'Happy mood: use bright, uplifting language' : ''}
 - ${mood === 'romantic' ? 'Romantic mood: use emotional, intimate language' : ''}
@@ -202,7 +235,7 @@ WORD COUNT MIX REQUIRED:
 
 CRITICAL: Each name must have exactly ${wordCount} words. Count each word carefully!
 
-EXAMPLES of exactly ${wordCount}-word ${type} names:
+EXAMPLES of exactly ${wordCount}-word song names:
 ${wordCount === 1 ? `Thunder\nStorm\nFire\nDream` : 
   wordCount === 2 ? `Electric Dreams\nNeon Lights\nGolden Hour\nSweet Dreams` :
   wordCount === 3 ? `Song For You\nDance With Me\nLove Me Tonight\nWalk This Way` :
@@ -214,6 +247,7 @@ FORMAT: Just list the names, one per line, no numbering or bullets
 List each name on its own line:`}
 
 ${this.getWordCountReminder(wordCount)}`;
+    }
   }
 
   private formatWordCount(wordCount?: number | string): string {
@@ -336,15 +370,36 @@ ${this.getWordCountReminder(wordCount)}`;
         throw new Error('No content generated by XAI');
       }
 
-      // Parse the response into individual names  
-      let names = content
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0 && !line.match(/^\d+\./) && line.length < 150) // Allow longer names
-        .map(line => line.replace(/^[-•]\s*/, '')) // Remove bullet points
-        .filter(line => line.length > 0);
+      // Parse the response - handle JSON format for bands, line format for songs
+      let names: string[] = [];
       
-      secureLog.debug(`Parsed ${names.length} names from XAI response: ${names.join(', ')}`);
+      // Check if this is a band generation (JSON format)
+      if (content.includes('"band_names"')) {
+        try {
+          const jsonMatch = content.match(/\{[\s\S]*"band_names"[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.band_names && Array.isArray(parsed.band_names)) {
+              names = parsed.band_names.map((name: string) => name.trim());
+              secureLog.debug(`Parsed ${names.length} band names from JSON: ${names.join(', ')}`);
+            }
+          }
+        } catch (error) {
+          secureLog.debug('Failed to parse JSON, falling back to line parsing');
+        }
+      }
+      
+      // Fallback to line-by-line parsing for songs or failed JSON
+      if (names.length === 0) {
+        names = content
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0 && !line.match(/^\d+\./) && line.length < 150) // Allow longer names
+          .map(line => line.replace(/^[-•]\s*/, '')) // Remove bullet points
+          .filter(line => line.length > 0);
+        
+        secureLog.debug(`Parsed ${names.length} names from line format: ${names.join(', ')}`);
+      }
 
       // Word count validation if specified
       if (wordCount) {
