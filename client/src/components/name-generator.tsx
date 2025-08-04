@@ -34,7 +34,7 @@ interface GenerationResult {
 
 export function NameGenerator() {
   const [nameType, setNameType] = useState<'band' | 'song'>('band');
-  const [wordCount, setWordCount] = useState(2);
+  const [wordCount, setWordCount] = useState<number | '4+'>(2);
   const [mood, setMood] = useState<string>('none');
   const [genre, setGenre] = useState<string>('none');
   const [results, setResults] = useState<GenerationResult[]>([]);
@@ -50,7 +50,7 @@ export function NameGenerator() {
   
   // Dynamic loading progress tracking
   const generateProgress = useLoadingProgress({ 
-    estimatedDuration: wordCount >= 4 ? 12000 : 4000, // Longer for 4+ words
+    estimatedDuration: (wordCount === '4+' || (typeof wordCount === 'number' && wordCount >= 4)) ? 12000 : 4000, // Longer for 4+ words
     onComplete: () => {
       // Progress animation complete
     }
@@ -248,7 +248,13 @@ export function NameGenerator() {
           <label htmlFor="wordCount" className="text-responsive-sm font-medium text-muted-foreground">
             Number of words:
           </label>
-          <Select value={wordCount.toString()} onValueChange={(value) => setWordCount(parseInt(value))}>
+          <Select value={wordCount === 4.1 ? '4+' : wordCount.toString()} onValueChange={(value) => {
+            if (value === '4+') {
+              setWordCount('4+' as any); // Handle 4+ as special case
+            } else {
+              setWordCount(parseInt(value));
+            }
+          }}>
             <SelectTrigger className="w-32 select-mobile select-trigger-mobile select-container-mobile">
               <SelectValue />
             </SelectTrigger>
@@ -256,7 +262,7 @@ export function NameGenerator() {
               <SelectItem value="1">1 word</SelectItem>
               <SelectItem value="2">2 words</SelectItem>
               <SelectItem value="3">3 words</SelectItem>
-              <SelectItem value="4">4+ words</SelectItem>
+              <SelectItem value="4+">4+ words</SelectItem>
             </SelectContent>
           </Select>
         </div>
