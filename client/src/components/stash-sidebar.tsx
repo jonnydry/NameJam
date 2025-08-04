@@ -429,11 +429,6 @@ export function StashSidebar({ isOpen, onToggle }: StashSidebarProps) {
                                  item.type === 'lyricJam' ? <Sparkles className="h-3 w-3" /> :
                                  <Music className="h-3 w-3" />}
                               </Badge>
-                              {item.isAiGenerated && (
-                                <Badge variant="secondary" className="text-xs">
-                                  <Brain className="h-3 w-3 text-purple-500" />
-                                </Badge>
-                              )}
                             </div>
                           </div>
                           
