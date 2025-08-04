@@ -180,7 +180,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
               storage.createGeneratedName({
                 name: nameResult.name,
                 type: request.type,
-                wordCount: request.wordCount,
+                wordCount: request.wordCount === '4+' ? 4 : (request.wordCount || nameResult.name.split(/\s+/).length), // Convert "4+" to 4 for database storage
                 verificationStatus: verification.status,
                 verificationDetails: verification.details || null,
                 isAiGenerated: nameResult.isAiGenerated,
