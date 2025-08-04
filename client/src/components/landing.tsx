@@ -98,7 +98,7 @@ export function Landing() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8 landing-subtitle-mobile">AI-powered music creativity with 5-API synergy • Lightning-fast generation • Poetic flow</p>
+            <p className="text-responsive-xs md:text-responsive-sm text-muted-foreground font-medium subtitle-fade px-2 mb-8 landing-subtitle-mobile">Generate unique Band names, Song names, and lyrical inspiration.</p>
           </div>
 
           {/* Features Carousel */}
