@@ -427,8 +427,57 @@ Be inventive and let the context spark wild ideas!`;
         throw new Error('No valid names parsed from XAI response');
       }
 
-      secureLog.info(`✅ XAI generated ${uniqueNames.length} names: ${uniqueNames.join(', ')}`);
-      return uniqueNames;
+      // If we didn't get enough names, try a quick retry with a simpler prompt
+      if (uniqueNames.length < count) {
+        secureLog.warn(`Only got ${uniqueNames.length} names instead of ${count}, attempting quick retry...`);
+        try {
+          const retryPrompt = `Generate ${count - uniqueNames.length} more ${prompt.includes('band_names') ? 'band names' : 'song titles'} in the same style. Return only JSON format: ${prompt.includes('band_names') ? '{"band_names": ["Name1", "Name2"]}' : '{"song_titles": ["Title1", "Title2"]}'}`;
+          
+          const retryResponse = await this.openai.chat.completions.create({
+            model: "grok-3",
+            messages: [{ role: "user", content: retryPrompt }],
+            temperature: 0.9,
+            max_tokens: 150
+          });
+
+          const retryContent = retryResponse.choices[0].message.content?.trim();
+          if (retryContent) {
+            try {
+              const parsed = JSON.parse(retryContent);
+              const additionalNames = (parsed.band_names || parsed.song_titles || []).map((name: string) => name.trim());
+              
+              if (additionalNames.length > 0) {
+                uniqueNames.push(...additionalNames.slice(0, count - uniqueNames.length));
+                secureLog.info(`✅ Retry successful, added ${additionalNames.length} more names`);
+              }
+            } catch (retryError) {
+              secureLog.debug('Retry parsing failed, using fallback names');
+            }
+          }
+        } catch (retryError) {
+          secureLog.debug('Retry request failed, using fallback names');
+        }
+      }
+
+      // Final fallback: if we still don't have enough, add simple fallback names
+      if (uniqueNames.length < count) {
+        const neededCount = count - uniqueNames.length;
+        const fallbackNames = [
+          'Midnight Echo', 'Golden Hour', 'Electric Dreams', 'Silver Rain',
+          'Cosmic Light', 'Rising Storm', 'Ocean Waves', 'Mountain Peaks'
+        ];
+        
+        for (let i = 0; i < neededCount && i < fallbackNames.length; i++) {
+          if (!uniqueNames.includes(fallbackNames[i])) {
+            uniqueNames.push(fallbackNames[i]);
+          }
+        }
+        
+        secureLog.info(`Added ${neededCount} fallback names to reach ${count} total`);
+      }
+
+      secureLog.info(`✅ XAI returned ${uniqueNames.length} names for ${wordCount || 'any'} words`);
+      return uniqueNames.slice(0, count); // Ensure we don't exceed the requested count
 
     } catch (error) {
       secureLog.error('XAI generation error:', error);
