@@ -22,8 +22,8 @@ export function Landing() {
       bgColor: "bg-green-500/10",
       textColor: "text-green-500",
       customClass: "carousel-card-green",
-      title: "Smart Tab Caching",
-      description: "Switch between band and song names without losing your results - everything stays cached until you generate new ones"
+      title: "Multi-Genre Mastery",
+      description: "From jazz to metal to electronic - get perfect names for any genre with mood matching and flexible word counts"
     },
     {
       icon: Music,
