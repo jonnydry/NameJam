@@ -14,40 +14,40 @@ export function Landing() {
       bgColor: "bg-blue-500/10",
       textColor: "text-blue-500",
       customClass: "carousel-card-blue",
-      title: "5-API Musical Intelligence",
-      description: "Real music data from Spotify, Last.fm, and poetry sources creates authentic, genre-perfect names"
+      title: "Creative AI Generation",
+      description: "Humorous, punny, and entertaining names powered by XAI with real Spotify artist context for authentic results"
     },
     {
-      icon: NotebookPen,
+      icon: ListMusic,
       bgColor: "bg-green-500/10",
       textColor: "text-green-500",
       customClass: "carousel-card-green",
-      title: "Poetry-Enhanced Lyrics",
-      description: "Classical poetry meets modern AI for lyrical starters with authentic rhythm and flow"
+      title: "Smart Tab Caching",
+      description: "Switch between band and song names without losing your results - everything stays cached until you generate new ones"
     },
     {
-      icon: Brain,
+      icon: Music,
       bgColor: "bg-yellow-500/10",
       textColor: "text-yellow-500",
       customClass: "carousel-card-yellow",
-      title: "Natural Language Flow",
-      description: "4+ word names that read like natural speech while staying creative and memorable"
+      title: "Real-Time Availability",
+      description: "Instantly check if your names are available on Spotify, Google, and YouTube with direct links to verify"
     },
     {
       icon: Archive,
       bgColor: "bg-purple-500/10",
       textColor: "text-purple-500",
       customClass: "carousel-card-purple",
-      title: "Advanced Stash System",
-      description: "Save, rate, and organize your favorite names and lyrics with 5-star ratings and smart sorting"
+      title: "Personal Stash",
+      description: "Save your favorite names and lyrics with star ratings, then sort and organize them however you like"
     },
     {
-      icon: Music,
+      icon: NotebookPen,
       bgColor: "bg-red-500/10",
       textColor: "text-red-500",
       customClass: "carousel-card-red",
-      title: "Smart Quality Control",
-      description: "Intelligent filtering ensures every name sounds musical and avoids repetitive results"
+      title: "Lyric Starters",
+      description: "Get inspired with poetry-enhanced lyrical phrases that match your genre and mood perfectly"
     }
   ];
 
