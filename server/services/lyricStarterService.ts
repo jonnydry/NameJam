@@ -40,8 +40,8 @@ export class LyricStarterService {
     // Get comprehensive context from all APIs for enhanced lyric generation
     const apiContext = await this.getComprehensiveAPIContext(genre);
     
-    // Use Grok Beta for enhanced quality and latest capabilities
-    const model = "grok-beta";
+    // Use only Grok 3 for consistent quality and simplicity
+    const model = "grok-3";
     
     try {
         secureLog.debug(`Attempting lyric generation with model: ${model}`);
