@@ -6,8 +6,6 @@ import { enhancedNameGenerator } from "./services/enhancedNameGenerator";
 import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGeneratorService } from "./services/bandBioGenerator";
-import { AINameGeneratorService } from "./services/aiNameGenerator";
-import { OptimizedAINameGeneratorService } from "./services/optimizedAINameGenerator";
 import { LyricStarterService } from "./services/lyricStarterService";
 import { db } from "./db";
 import { users, errorLogs } from "@shared/schema";
@@ -50,21 +48,10 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
   let nameGenerator: NameGeneratorService;
   let nameVerifier: NameVerifierService;
   let bandBioGenerator: BandBioGeneratorService;
-  let aiNameGenerator: AINameGeneratorService;
   let lyricStarterService: LyricStarterService;
 
   try {
-    // Use optimized AI generator for better performance
-    aiNameGenerator = new OptimizedAINameGeneratorService();
-    secureLog.info("✓ OptimizedAINameGeneratorService initialized");
-  } catch (error) {
-    secureLog.error("✗ Failed to initialize OptimizedAINameGeneratorService:", error);
-    throw error;
-  }
-
-  try {
     nameGenerator = new NameGeneratorService();
-    nameGenerator.setAINameGenerator(aiNameGenerator);
     secureLog.info("✓ NameGeneratorService initialized");
   } catch (error) {
     secureLog.error("✗ Failed to initialize NameGeneratorService:", error);
@@ -474,75 +461,6 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       secureLog.error("Error generating band name from setlist:", error);
       res.status(500).json({ 
         error: "Failed to generate band name",
-        suggestion: "The AI service may be temporarily unavailable. Please try again later."
-      });
-    }
-  });
-
-  // Generate AI name endpoint (public with rate limiting and validation)
-  app.post("/api/generate-ai-name", 
-    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
-    validationRules.generateNames, 
-    handleValidationErrors, 
-    async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
-    try {
-      const { type, genre, mood } = req.body;
-      
-      if (!type || !['band', 'song'].includes(type)) {
-        return res.status(400).json({ error: "Valid type (band/song) is required" });
-      }
-
-      const aiNameResponse = await aiNameGenerator.generateAIName(type, genre, mood);
-      
-      // Parse the response
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(aiNameResponse);
-      } catch (error) {
-        // If parsing fails, create a simple fallback
-        const fallbackNames = type === 'band' 
-          ? ['The Electric Dreams', 'Midnight Echo', 'Digital Fire', 'Crystal Storm', 'Neon Shadows']
-          : ['Electric Heart', 'Midnight Rain', 'Digital Dreams', 'Crystal Light', 'Neon Nights'];
-        
-        parsedResponse = {
-          name: fallbackNames[Math.floor(Math.random() * fallbackNames.length)],
-          model: 'fallback',
-          source: 'fallback',
-          type: type
-        };
-      }
-      
-      // Verify the generated name
-      const verification = await nameVerifier.verifyName(parsedResponse.name, type);
-      
-      // Only store in database if user is authenticated
-      let storedName = null;
-      if (req.isAuthenticated && req.isAuthenticated()) {
-        const userId = req.user.claims.sub;
-        storedName = await storage.createGeneratedName({
-          name: parsedResponse.name,
-          type: type,
-          wordCount: parsedResponse.name.split(' ').length,
-          verificationStatus: verification.status,
-          verificationDetails: verification.details || null,
-          isAiGenerated: true,
-          userId: userId,
-        });
-      }
-
-      res.json({ 
-        id: storedName?.id || Date.now(),
-        name: parsedResponse.name,
-        type: type,
-        wordCount: parsedResponse.name.split(' ').length,
-        verification,
-        model: parsedResponse.model,
-        source: parsedResponse.source
-      });
-    } catch (error) {
-      secureLog.error("Error generating AI name:", error);
-      res.status(500).json({ 
-        error: "Failed to generate AI name",
         suggestion: "The AI service may be temporarily unavailable. Please try again later."
       });
     }
