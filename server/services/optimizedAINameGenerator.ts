@@ -16,7 +16,7 @@ export class OptimizedAINameGeneratorService extends AINameGeneratorService {
   ): Promise<string | null> {
     try {
       // Single attempt with primary model only (no retries)
-      const model = 'grok-3';
+      const model = 'grok-2-1212';
       
       // Add timeout to prevent long waits
       const timeoutPromise = new Promise<null>((resolve) => {
