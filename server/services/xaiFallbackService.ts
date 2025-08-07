@@ -9,7 +9,7 @@ interface FallbackOptions {
 
 export class XAIFallbackService {
   private openai: OpenAI;
-  private models = ['grok-3', 'grok-4', 'grok-3-mini'];
+  private models = ['grok-beta', 'grok-2-1212', 'grok-vision-beta'];
   private cache = new Map<string, { data: any, timestamp: number }>();
   private cacheExpiry = 1000 * 60 * 30; // 30 minute cache
   

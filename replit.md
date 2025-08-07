@@ -4,6 +4,7 @@
 NameJam is a web application designed to generate unique band names and song titles with real-time availability verification against music databases. The project aims to provide a creative tool that also ensures the practical usability of generated names, combining creative name generation with web-powered checking for musicians and artists.
 
 ## Recent Changes (January 2025)
+- **Upgraded to Grok Beta**: Updated all AI services to use XAI's latest Grok Beta model for improved quality and performance.
 - **Comprehensive Bug Fixes**: Fixed critical TypeScript errors, improved input validation, enhanced auth token handling, and strengthened database integrity with foreign key constraints.
 - **Enhanced Error Handling**: Added robust validation for user inputs, auth tokens, and AI response parsing to prevent runtime errors.
 - **Creative Generation Enhancement**: Updated both band and song generation to use humorous, punny, and entertaining prompts with clean JSON output format.
@@ -61,7 +62,7 @@ Name generation approach: Dynamic API-driven context (no static lists) feeding s
     - MusicBrainz API
     - ConceptNet API
     - PoetryDB API
-    - XAI Grok 3 model (updated from Grok-2-1212)
+    - XAI Grok Beta model (latest available model for enhanced quality)
 - **UI Libraries**: Radix UI, shadcn/ui
 - **Forms**: React Hook Form with Zod validation
 - **Icons**: Lucide React

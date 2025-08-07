@@ -323,7 +323,7 @@ Be inventive and let the context spark wild ideas!`;
     try {
       secureLog.info(`📝 FULL XAI PROMPT FOR ${wordCount || 'any'} WORDS:\n${prompt}\n--- END PROMPT ---`);
       const response = await this.openai.chat.completions.create({
-        model: "grok-3",
+        model: "grok-2-1212",
         messages: [{ role: "user", content: prompt }],
         temperature: 1.1, // Higher creativity for longer names
         max_tokens: 300 // More space for longer names
@@ -434,7 +434,7 @@ Be inventive and let the context spark wild ideas!`;
           const retryPrompt = `Generate ${count - uniqueNames.length} more ${prompt.includes('band_names') ? 'band names' : 'song titles'} in the same style. Return only JSON format: ${prompt.includes('band_names') ? '{"band_names": ["Name1", "Name2"]}' : '{"song_titles": ["Title1", "Title2"]}'}`;
           
           const retryResponse = await this.openai.chat.completions.create({
-            model: "grok-3",
+            model: "grok-2-1212",
             messages: [{ role: "user", content: retryPrompt }],
             temperature: 0.9,
             max_tokens: 150

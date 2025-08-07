@@ -26,8 +26,8 @@ export class BandBioGeneratorService {
       return this.generateFallbackBio(bandName, genre, mood);
     }
 
-    // Use only Grok 3 for consistent quality and simplicity
-    const model = "grok-3";
+    // Use Grok Beta for enhanced quality and latest capabilities
+    const model = "grok-beta";
     
     try {
         const genreInfo = genre ? ` ${genre}` : 'rock';
@@ -520,7 +520,7 @@ This ${moodText} ${genreText} quartet ${formation} in ${year} and haven't looked
       secureLog.info('Generating band name from setlist with songs:', songNames);
       
       // Try each Grok model in order (Grok 3 prioritized for reliability)
-      const models = ['grok-3', 'grok-4', 'grok-3-mini'];
+      const models = ['grok-beta', 'grok-2-1212', 'grok-vision-beta'];
       
       for (const model of models) {
         try {
