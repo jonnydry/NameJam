@@ -52,11 +52,11 @@ export class AINameGeneratorService {
       return this.generateFallbackName(type, genre, mood, wordCount);
     }
 
-    // Use Grok 2-1212 for improved quality and latest capabilities
-    const model = "grok-2-1212";
+    // Use only Grok 3 for consistent quality and simplicity
+    const model = "grok-3";
     
     try {
-      secureLog.debug(`Using Grok Beta model`);
+      secureLog.debug(`Using Grok 3 model`);
       // Add randomization to force variety
       const randomSeed = Math.random().toString(36).substring(7);
       const timestamp = Date.now() % 10000;
@@ -290,8 +290,8 @@ export class AINameGeneratorService {
           response_format: { type: "json_object" }
         };
 
-        // Configure parameters for grok-beta (our primary model)
-        // grok-beta supports all parameters for maximum variety
+        // Configure parameters for grok-3 (our primary model)
+        // grok-3 supports all parameters for maximum variety
         requestParams.top_p = 0.9;
         requestParams.frequency_penalty = 0.8;
         requestParams.presence_penalty = 0.6;
