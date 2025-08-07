@@ -52,8 +52,8 @@ export class AINameGeneratorService {
       return this.generateFallbackName(type, genre, mood, wordCount);
     }
 
-    // Use Grok Beta for improved quality and latest capabilities
-    const model = "grok-beta";
+    // Use Grok 2-1212 for improved quality and latest capabilities
+    const model = "grok-2-1212";
     
     try {
       secureLog.debug(`Using Grok Beta model`);
