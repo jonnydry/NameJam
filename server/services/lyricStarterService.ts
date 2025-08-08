@@ -149,11 +149,12 @@ Request: ${JSON.stringify(jsonPrompt, null, 2)}
 
 CRITICAL INSTRUCTIONS:
 1. Generate EXACTLY ${spec.lines} line(s) as specified in structure.lines
-2. Follow the poetic meter "${selectedMeter}" if not free_verse:
-   - iambic: da-DUM pattern (e.g., "I WALK a-LONE through STREETS of GOLD")
-   - trochaic: DUM-da pattern (e.g., "FIRE-light DANC-ing IN the DARK-ness")
-   - anapestic: da-da-DUM (e.g., "in the HEAT of the NIGHT we are FREE")
-   - dactylic: DUM-da-da (e.g., "BEAU-ti-ful MEM-o-ries FADE a-way")
+2. Follow the poetic meter "${selectedMeter}" internally for rhythm, but OUTPUT WITH NORMAL CAPITALIZATION:
+   - iambic: unstressed-stressed pattern (e.g., "I walk alone through streets of gold")
+   - trochaic: stressed-unstressed pattern (e.g., "Firelight dancing in the darkness")
+   - anapestic: two unstressed, one stressed (e.g., "In the heat of the night we are free")
+   - dactylic: stressed, two unstressed (e.g., "Beautiful memories fade away")
+   - IMPORTANT: DO NOT capitalize syllables to show stress. Use natural capitalization only.
 3. Implement rhyme scheme "${selectedRhyme}" (${spec.lines > 1 ? 'end rhymes for multi-line' : 'internal rhyme for single line'})
 4. Keep each line between ${spec.wordsPerLine[0]}-${spec.wordsPerLine[1]} words
 5. Total syllable count should be ${spec.totalSyllables[0]}-${spec.totalSyllables[1]}
@@ -164,6 +165,7 @@ CRITICAL INSTRUCTIONS:
    - ConceptNet: Semantic associations for deeper meaning
    - Poetry: Classical poetic vocabulary, imagery, and themes for elevated language
 7. Match the tone "${jsonPrompt.parameters.styleGuidelines.tone}" for ${currentSection}
+8. OUTPUT FORMAT: Use normal sentence capitalization. Never use CAPS to show syllable stress.
 
 FORMATTING:
 - For single line: {"lyric": "your single line here"}
@@ -199,6 +201,8 @@ OUTPUT RULES:
 - STRICTLY follow the line count specified in structure.lines
 - MAINTAIN word count per line as specified in wordsPerLine range
 - MATCH total syllable count to syllableRange specification
+- USE NORMAL CAPITALIZATION: Only capitalize first word of sentences and proper nouns
+- NEVER use ALL CAPS or unusual capitalization to show syllable stress or emphasis
 
 QUALITY STANDARDS:
 - Natural spoken rhythm that matches the specified meter
