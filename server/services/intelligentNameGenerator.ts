@@ -307,7 +307,8 @@ Be inventive and let the context spark wild ideas!`;
       hip_hop: ['strong beats', 'rhythmic vocals', 'urban culture', 'contemporary themes'],
       folk: ['acoustic instruments', 'storytelling', 'traditional roots', 'organic sound'],
       jazz: ['improvisation', 'complex harmonies', 'swing rhythms', 'instrumental focus'],
-      classical: ['orchestral arrangements', 'composed structure', 'formal precision', 'timeless elegance']
+      classical: ['orchestral arrangements', 'composed structure', 'formal precision', 'timeless elegance'],
+      'jam band': ['improvisation', 'extended jams', 'psychedelic elements', 'festival culture']
     };
     
     return characteristics[genre] || ['musical expression', 'creative sound', 'artistic vision'];
