@@ -153,8 +153,10 @@ export class IntelligentNameGeneratorService {
 
 User inputs:
 - Genre: ${genre || 'general'} (infuse the names with elements typical of this genre)
-- Mood: ${mood || 'neutral'} (make the names evoke this emotion through word choice, alliteration, or imagery)
+- Mood: ${mood || 'neutral'} (make the names evoke this emotion through word choice or imagery)
 - Word count: ${this.formatWordCount(wordCount)} (strictly adhere to this)
+
+IMPORTANT: Avoid excessive alliteration! Don't make all words start with the same letter. Mix different sounds for natural, varied names.
 
 Context for inspiration (drawn from Spotify and Last.fm):
 - Similar artists/bands in this genre: ${context.relatedArtists.join(', ')} (draw subtle influences like themes, styles, or wordplay from these)
@@ -186,8 +188,10 @@ Be inventive and let the context spark wild ideas!`;
 
 User inputs:
 - Genre: ${genre || 'general'} (infuse the titles with elements typical of this genre)
-- Mood: ${mood || 'neutral'} (make the titles evoke this emotion through word choice, alliteration, or imagery)
+- Mood: ${mood || 'neutral'} (make the titles evoke this emotion through word choice or imagery)
 - Word count: ${this.formatWordCount(wordCount)} (strictly adhere to this)
+
+IMPORTANT: Avoid excessive alliteration! Don't make all words start with the same letter. Mix different sounds for natural, varied titles.
 
 Context for inspiration (drawn from Spotify and Last.fm):
 - Similar artists/bands in this genre: ${context.relatedArtists.join(', ')} (draw subtle influences like themes, styles, or wordplay from these)
