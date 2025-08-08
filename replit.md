@@ -13,6 +13,7 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Lyric Generator Fix**: Fixed capitalization issue where lyrics were showing syllable stress patterns - now outputs lyrics with normal capitalization.
 - **Enhanced Stash Sidebar**: Complete redesign with search functionality, bulk selection/operations, visual categorization with icons/colors, collapsible categories, improved animations, enhanced item cards with preview information, and glass-like transparent effect matching the main interface.
 - **Alliteration Fix**: Updated AI prompts to explicitly avoid excessive alliteration in band and song name generation, especially for 4+ word names, creating more natural and varied results.
+- **Added Jam Band Genre**: Added "Jam Band" as a selectable genre option with appropriate vocabulary (groove, cosmic, festival, journey) and context for bands like Phish, Grateful Dead, etc. Works with Spotify and Last.fm APIs for contextual generation.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

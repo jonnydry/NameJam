@@ -38,7 +38,7 @@ export function LyricJam() {
   const genres = [
     "rock", "pop", "country", "hip-hop", "indie", "folk", 
     "metal", "jazz", "electronic", "blues", "punk", 
-    "alternative", "reggae", "classical"
+    "alternative", "reggae", "classical", "jam band"
   ];
 
   const loadingMessages = [
