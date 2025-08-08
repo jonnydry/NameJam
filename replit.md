@@ -10,6 +10,8 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Creative Generation Enhancement**: Updated both band and song generation to use humorous, punny, and entertaining prompts with clean JSON output format.
 - **Result Caching Between Tabs**: Implemented separate caching for band and song results. Users can now switch between tabs without losing their generated results - cached results persist until new generation is made for that specific type.
 - **UI Simplification**: Removed brain icons since all generation is now AI-powered, creating a cleaner interface.
+- **Lyric Generator Fix**: Fixed capitalization issue where lyrics were showing syllable stress patterns - now outputs lyrics with normal capitalization.
+- **Enhanced Stash Sidebar**: Complete redesign with search functionality, bulk selection/operations, visual categorization with icons/colors, collapsible categories, improved animations, and enhanced item cards with preview information.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
