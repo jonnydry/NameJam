@@ -442,7 +442,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
       <div
         id="stash-sidebar-enhanced"
         className={cn(
-          "fixed top-0 left-0 h-full bg-background/95 backdrop-blur-md border-r border-border z-50",
+          "fixed top-0 left-0 h-full bg-black/90 backdrop-blur-md border-r border-white/10 z-50",
           "transition-all duration-300 ease-in-out shadow-xl",
           "w-full sm:w-96 md:w-[420px]",
           isOpen ? "translate-x-0" : "-translate-x-full"
@@ -450,7 +450,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
       >
         <div className="h-full flex flex-col">
           {/* Enhanced Header */}
-          <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 border-b border-border/50 p-4">
+          <div className="bg-gradient-to-r from-black/50 to-gray-900/50 border-b border-white/10 p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Archive className="w-5 h-5 text-primary" />
@@ -471,21 +471,21 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
 
             {/* Search Bar */}
             <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
               <Input
                 id="stash-search"
                 type="text"
                 placeholder="Search your collection..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-9 h-9 bg-background/50"
+                className="pl-9 pr-9 h-9 bg-black/40 border-white/10 text-foreground placeholder:text-muted-foreground/50 focus:bg-black/50 focus:border-white/20 transition-all"
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-white/10"
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -502,7 +502,10 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
                   setIsSelectionMode(!isSelectionMode);
                   setSelectedItems(new Set());
                 }}
-                className="h-8"
+                className={cn(
+                  "h-8",
+                  !isSelectionMode && "bg-black/30 border-white/10 hover:bg-white/10"
+                )}
               >
                 <CheckSquare className="h-3 w-3 mr-1" />
                 Select
@@ -511,7 +514,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
               {/* Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
+                  <Button variant="outline" size="sm" className="h-8 bg-black/30 border-white/10 hover:bg-white/10">
                     <Filter className="h-3 w-3 mr-1" />
                     {categoryFilter === 'all' ? 'All' : TYPE_CONFIG[categoryFilter].label}
                   </Button>
@@ -536,7 +539,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
               {/* Sort */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
+                  <Button variant="outline" size="sm" className="h-8 bg-black/30 border-white/10 hover:bg-white/10">
                     <ChevronDown className="h-3 w-3 mr-1" />
                     Sort
                   </Button>
@@ -563,7 +566,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
               {/* More Actions */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
+                  <Button variant="outline" size="sm" className="h-8 bg-black/30 border-white/10 hover:bg-white/10">
                     <MoreVertical className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
