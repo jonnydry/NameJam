@@ -26,8 +26,8 @@ export class BandBioGeneratorService {
       return this.generateFallbackBio(bandName, genre, mood);
     }
 
-    // Use Grok 2-1212 for enhanced quality and latest capabilities
-    const model = "grok-2-1212";
+    // Use Grok-3 for enhanced quality and latest capabilities
+    const model = "grok-3";
     
     try {
         const genreInfo = genre ? ` ${genre}` : 'rock';
