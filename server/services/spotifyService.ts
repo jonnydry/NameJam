@@ -189,6 +189,17 @@ export class SpotifyService {
     });
   }
 
+  // Map non-standard genres to Spotify genre seeds
+  private mapGenreToSpotifySeeds(genre: string): string {
+    const genreMap: Record<string, string> = {
+      'jam band': 'jam funk psychedelic',
+      'hip-hop': 'hip hop',
+      // Add more mappings as needed
+    };
+    
+    return genreMap[genre.toLowerCase()] || genre;
+  }
+
   // Get genre-specific artists for vocabulary inspiration
   async getGenreArtists(genre: string, limit: number = 50): Promise<SpotifyArtist[]> {
     const token = await this.getAccessToken();
@@ -196,10 +207,13 @@ export class SpotifyService {
       return [];
     }
 
+    // Map genre to Spotify-compatible search terms
+    const mappedGenre = this.mapGenreToSpotifySeeds(genre);
+
     return spotifyRateLimiter.execute(async () => {
       return withRetry(async () => {
         // Search for artists by genre
-        const encodedGenre = encodeURIComponent(`genre:"${genre}"`);
+        const encodedGenre = encodeURIComponent(`genre:"${mappedGenre}"`);
         const response = await fetch(
           `https://api.spotify.com/v1/search?q=${encodedGenre}&type=artist&limit=${limit}`,
           {
@@ -210,9 +224,9 @@ export class SpotifyService {
         );
 
         if (!response.ok) {
-          // Fallback to searching by genre name
+          // Fallback to searching by mapped genre name
           const fallbackResponse = await fetch(
-            `https://api.spotify.com/v1/search?q=${encodeURIComponent(genre)}&type=artist&limit=${limit}`,
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(mappedGenre)}&type=artist&limit=${limit}`,
             {
               headers: {
                 'Authorization': `Bearer ${token}`

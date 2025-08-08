@@ -232,7 +232,7 @@ export const validationRules = {
     ]).withMessage('Invalid mood'),
     body('genre').optional().isIn([
       'rock', 'metal', 'jazz', 'electronic', 'folk', 'classical', 'hip-hop',
-      'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative'
+      'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative', 'jam band'
     ]).withMessage('Invalid genre'),
   ],
 
