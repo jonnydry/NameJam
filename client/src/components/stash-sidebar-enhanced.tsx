@@ -478,7 +478,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
                 placeholder="Search your collection..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-9 h-9 bg-background/60 backdrop-blur-sm border-border/50 text-foreground placeholder:text-muted-foreground focus:bg-background/80 focus:border-border transition-all"
+                className="pl-9 pr-9 h-9 bg-black/20 backdrop-blur-sm border-white/10 text-white placeholder:text-gray-500 focus:bg-black/30 focus:border-white/20 transition-all"
               />
               {searchQuery && (
                 <Button
