@@ -463,7 +463,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
                 variant="ghost"
                 size="sm"
                 onClick={onToggle}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 bg-transparent hover:bg-white/10 transition-all"
               >
                 <X className="h-4 w-4" />
               </Button>
