@@ -77,7 +77,7 @@ export const generateNameRequestSchema = z.object({
   ]).optional(),
   genre: z.enum([
     'rock', 'metal', 'jazz', 'electronic', 'folk', 'classical', 'hip-hop', 
-    'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative'
+    'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative', 'jam band'
   ]).optional(),
 });
 
