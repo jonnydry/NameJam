@@ -50,7 +50,8 @@ const GENRE_VOCABULARY: Record<string, Set<string>> = {
   folk: new Set(['willow', 'meadow', 'river', 'mountain', 'valley', 'harvest', 'prairie', 'oak']),
   jazz: new Set(['blue', 'smooth', 'cool', 'swing', 'groove', 'bebop', 'scat', 'riff']),
   country: new Set(['whiskey', 'bourbon', 'creek', 'pine', 'dusty', 'rusty', 'barn', 'field']),
-  punk: new Set(['anarchy', 'riot', 'clash', 'rage', 'rebel', 'chaos', 'noise', 'raw'])
+  punk: new Set(['anarchy', 'riot', 'clash', 'rage', 'rebel', 'chaos', 'noise', 'raw']),
+  'jam band': new Set(['groove', 'cosmic', 'flow', 'journey', 'festival', 'spiral', 'sunshine', 'tribe'])
 };
 
 // Common musical name patterns from real bands/songs

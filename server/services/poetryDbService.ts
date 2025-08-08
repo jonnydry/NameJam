@@ -63,7 +63,8 @@ export class PoetryDbService {
       'punk': ['rebel', 'chaos', 'break', 'scream'],
       'indie': ['wonder', 'dream', 'youth', 'lost'],
       'reggae': ['sun', 'island', 'peace', 'rhythm'],
-      'classical': ['beauty', 'eternity', 'grace', 'sublime']
+      'classical': ['beauty', 'eternity', 'grace', 'sublime'],
+      'jam band': ['journey', 'flow', 'cosmic', 'festival']
     };
     
     // Mood-based poetry mapping
