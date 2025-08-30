@@ -147,6 +147,9 @@ export class IntelligentNameGeneratorService {
   private buildXAIPrompt(context: GenerationContext, type: string, genre?: string, mood?: string, count: number = 4, wordCount?: number | string): string {
     const isband = type === 'band';
     
+    // Apply context improvements: rotation, weighting, and repetition avoidance
+    const processedContext = this.processContextForVariety(context, genre);
+    
     if (isband) {
       // Creative, humorous band name generation
       return `You are a wildly creative and humorous AI specializing in generating unique, entertaining, and fun band names. Your goal is to craft names that are clever, punny, absurd, or delightfully unexpected, while tying into the specified genre and mood. Ensure all names are original and not direct copies of existing bands—use inspiration from the provided context to remix ideas in fresh ways.
@@ -158,10 +161,12 @@ User inputs:
 
 IMPORTANT: Avoid excessive alliteration! Don't make all words start with the same letter. Mix different sounds for natural, varied names.
 
-Context for inspiration (drawn from Spotify and Last.fm):
-- Similar artists/bands in this genre: ${context.relatedArtists.join(', ')} (draw subtle influences like themes, styles, or wordplay from these)
-- Genre keywords and trends: ${[...context.genreKeywords, ...context.genreTags, ...context.moodWords].join(', ')} (remix elements into new, fun twists for band names)
-- Word associations: ${context.wordAssociations.join(', ')} (use these for creative wordplay)
+AVOID REPETITION: ${this.getRepetitionAvoidanceInstructions(genre)} Don't overuse obvious genre terms like "${this.getCommonGenreTerms(genre).join('", "')}" - use them sparingly if at all.
+
+Context for inspiration (curated selection):
+- Similar artists/bands in this genre: ${processedContext.artists} (draw subtle influences like themes, styles, or wordplay from these)
+- Creative keywords and trends: ${processedContext.keywords} (remix elements into new, fun twists for band names)
+- Word associations: ${processedContext.associations} (use these for creative wordplay)
 
 Task:
 1. Brainstorm and generate 8 unique band names that fit the genre, mood, and word count. Make them entertaining—aim for humor, irony, or whimsy.
@@ -193,10 +198,12 @@ User inputs:
 
 IMPORTANT: Avoid excessive alliteration! Don't make all words start with the same letter. Mix different sounds for natural, varied titles.
 
-Context for inspiration (drawn from Spotify and Last.fm):
-- Similar artists/bands in this genre: ${context.relatedArtists.join(', ')} (draw subtle influences like themes, styles, or wordplay from these)
-- Genre keywords and trends: ${[...context.genreKeywords, ...context.genreTags, ...context.moodWords].join(', ')} (remix elements into new, fun twists for song titles)
-- Word associations: ${context.wordAssociations.join(', ')} (use these for creative wordplay)
+AVOID REPETITION: ${this.getRepetitionAvoidanceInstructions(genre)} Don't overuse obvious genre terms like "${this.getCommonGenreTerms(genre).join('", "')}" - use them sparingly if at all.
+
+Context for inspiration (curated selection):
+- Similar artists/bands in this genre: ${processedContext.artists} (draw subtle influences like themes, styles, or wordplay from these)
+- Creative keywords and trends: ${processedContext.keywords} (remix elements into new, fun twists for song titles)
+- Word associations: ${processedContext.associations} (use these for creative wordplay)
 
 Task:
 1. Brainstorm and generate 8 unique song titles that fit the genre, mood, and word count. Make them entertaining—aim for humor, irony, or whimsy.
@@ -533,5 +540,63 @@ Be inventive and let the context spark wild ideas!`;
       isAiGenerated: false,
       source: 'fallback'
     }));
+  }
+
+  private processContextForVariety(context: GenerationContext, genre?: string): {artists: string, keywords: string, associations: string} {
+    // Shuffle and limit context to reduce repetition
+    const shuffleArray = <T>(array: T[]): T[] => {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+
+    // Weight context terms - deprioritize overly common genre terms
+    const allKeywords = [...context.genreKeywords, ...context.genreTags, ...context.moodWords];
+    const commonTerms = this.getCommonGenreTerms(genre);
+    
+    // Separate common from unique terms
+    const uniqueTerms = allKeywords.filter(term => !commonTerms.includes(term.toLowerCase()));
+    const someCommonTerms = shuffleArray(allKeywords.filter(term => commonTerms.includes(term.toLowerCase()))).slice(0, 2);
+    
+    // Prioritize unique terms, add only a few common ones
+    const weightedKeywords = [...shuffleArray(uniqueTerms).slice(0, 8), ...someCommonTerms];
+    
+    return {
+      artists: shuffleArray(context.relatedArtists).slice(0, 4).join(', '),
+      keywords: shuffleArray(weightedKeywords).slice(0, 10).join(', '),
+      associations: shuffleArray(context.wordAssociations).slice(0, 6).join(', ')
+    };
+  }
+
+  private getRepetitionAvoidanceInstructions(genre?: string): string {
+    const genreSpecific: { [key: string]: string } = {
+      blues: "Avoid overusing 'delta', 'mississippi', 'soul' repeatedly.",
+      rock: "Don't repeatedly use 'electric', 'thunder', 'metal'.",
+      jazz: "Avoid constantly using 'swing', 'bebop', 'smooth'.",
+      country: "Don't overuse 'nashville', 'honky', 'barn' in every name.",
+      folk: "Avoid repetitive use of 'acoustic', 'roots', 'mountain'.",
+      indie: "Don't constantly use 'alternative', 'underground', 'indie'."
+    };
+    
+    return genreSpecific[genre || ''] || "Avoid repetitive use of the most obvious genre keywords.";
+  }
+
+  private getCommonGenreTerms(genre?: string): string[] {
+    const commonTerms: { [key: string]: string[] } = {
+      blues: ['delta', 'mississippi', 'soul', 'deep', 'raw', 'authentic'],
+      rock: ['electric', 'thunder', 'metal', 'heavy', 'hard', 'wild'],
+      jazz: ['swing', 'bebop', 'smooth', 'cool', 'hot', 'blue'],
+      country: ['nashville', 'honky', 'barn', 'whiskey', 'highway', 'southern'],
+      folk: ['acoustic', 'roots', 'mountain', 'traditional', 'american', 'old'],
+      indie: ['alternative', 'underground', 'indie', 'hipster', 'cool', 'artsy'],
+      pop: ['radio', 'hit', 'chart', 'mainstream', 'catchy', 'commercial'],
+      hip_hop: ['urban', 'street', 'flow', 'beat', 'rap', 'hood'],
+      electronic: ['digital', 'synth', 'electronic', 'techno', 'beat', 'dance']
+    };
+    
+    return commonTerms[genre || ''] || [];
   }
 }
