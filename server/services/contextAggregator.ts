@@ -376,6 +376,35 @@ export class ContextAggregatorService {
     return allTerms.size;
   }
 
+  private getMinimalContext(mood: string): EnrichedContext {
+    return {
+      // Empty arrays for minimal context
+      spotifyArtists: [],
+      spotifyTracks: [],
+      lastfmTags: [],
+      lastfmSimilarArtists: [],
+      conceptNetAssociations: [],
+      datamuseWords: {
+        related: [],
+        rhymes: [],
+        similar: [],
+        adjectives: []
+      },
+      poetryVocabulary: [],
+      
+      // Basic mood descriptors only
+      genreCharacteristics: [],
+      moodDescriptors: [mood],
+      musicalTerms: [],
+      culturalReferences: [],
+      
+      // Meta information
+      primaryGenre: 'general',
+      primaryMood: mood,
+      contextQuality: 'basic'
+    };
+  }
+
   // Helper methods
   private isCommonWord(word: string): boolean {
     const common = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'];

@@ -308,7 +308,8 @@ export class PoeticFlowPatterns {
             return [capitalize(verb), capitalize(adverb)];
           }
         ];
-        const selectedPattern = getRandomWord(patterns);
+        const randomIndex = Math.floor(Math.random() * patterns.length);
+        const selectedPattern = patterns[randomIndex];
         if (selectedPattern) {
           words.push(...selectedPattern());
         }
