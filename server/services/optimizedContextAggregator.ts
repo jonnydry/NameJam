@@ -29,7 +29,7 @@ export class OptimizedContextAggregatorService extends ContextAggregatorService 
     // Skip heavy API calls for general genre
     if (!genre || genre === 'general') {
       secureLog.info('⚡ Using minimal context for general genre');
-      const minimalContext = this.getMinimalContext(mood || 'neutral');
+      const minimalContext = (this as any).getMinimalContext(mood || 'neutral');
       this.cache.set(cacheKey, minimalContext);
       return minimalContext;
     }
@@ -47,27 +47,4 @@ export class OptimizedContextAggregatorService extends ContextAggregatorService 
     return context;
   }
   
-  private getMinimalContext(mood: string): EnrichedContext {
-    return {
-      spotifyArtists: [],
-      spotifyTracks: [],
-      lastfmTags: ['music', 'band', 'song', 'artist'],
-      lastfmSimilarArtists: [],
-      conceptNetAssociations: ['creative', 'artistic', 'melodic', 'rhythmic'],
-      datamuseWords: {
-        related: ['sound', 'melody', 'harmony', 'rhythm'],
-        rhymes: [],
-        similar: ['tune', 'composition', 'piece'],
-        adjectives: ['musical', 'lyrical', 'harmonic']
-      },
-      poetryVocabulary: ['dream', 'soul', 'heart', 'light'],
-      genreCharacteristics: ['universal', 'diverse'],
-      moodDescriptors: [mood, 'expressive'],
-      musicalTerms: ['song', 'band', 'music', 'sound', 'rhythm', 'melody'],
-      culturalReferences: [],
-      primaryGenre: 'general',
-      primaryMood: mood,
-      contextQuality: 'basic'
-    };
-  }
 }

@@ -23,8 +23,11 @@ export class UltraOptimizedNameGeneratorService {
     const generationId = unifiedWordFilter.startNewGeneration();
     secureLog.info(`🚀 Ultra-fast generation: ${generationId}`);
     
-    const { type, wordCount, count = 4, genre, mood } = request;
+    const { type, wordCount: rawWordCount, count = 4, genre, mood } = request;
     const names: any[] = [];
+    
+    // Normalize wordCount - handle "4+" case and undefined
+    const wordCount = rawWordCount === "4+" ? 4 : (rawWordCount || 2);
     
     // Get or cache word sources for performance
     const wordSources = await this.getWordSources(mood, genre, type);
@@ -39,7 +42,7 @@ export class UltraOptimizedNameGeneratorService {
         // Generate a new unique name
         const result = await namePatterns.generateContextualNameWithCount(
           type,
-          wordCount || 2,
+          wordCount,
           wordSources,
           mood,
           genre

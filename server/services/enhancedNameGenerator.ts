@@ -150,10 +150,14 @@ export class EnhancedNameGeneratorService {
 
   // Enhanced generation using Datamuse API for contextual relationships
   async generateEnhancedNames(request: GenerateNameRequest, apiContext?: string[]): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
-    const { type, wordCount, count, mood, genre } = request;
+    const { type, wordCount: rawWordCount, count, mood, genre } = request;
     const names: Array<{name: string, isAiGenerated: boolean, source: string}> = [];
 
-    secureLog.debug(`🚀 Enhanced generation: ${count} ${type} names with ${wordCount} words`);
+    // Normalize wordCount - handle "4+" case and undefined
+    const wordCount = rawWordCount === "4+" ? 4 : (rawWordCount || 2);
+    const isVariableWordCount = rawWordCount === "4+";
+
+    secureLog.debug(`🚀 Enhanced generation: ${count} ${type} names with ${rawWordCount} words`);
     
     // Get full generation context including poetry
     const fullContext = await this.getGenerationContext(mood, genre);
@@ -220,7 +224,7 @@ export class EnhancedNameGeneratorService {
         for (const result of batchResults) {
           if (!result || !result.name) continue;
           
-          const isValidWordCount = wordCount >= 4 ? 
+          const isValidWordCount = isVariableWordCount ? 
             (result.actualWordCount >= 4 && result.actualWordCount <= 10) : 
             (result.actualWordCount === wordCount);
           
@@ -259,7 +263,7 @@ export class EnhancedNameGeneratorService {
     
     while (names.length < count && fallbackAttempts < maxFallbackAttempts) {
       fallbackAttempts++;
-      const fallbackWordCount = wordCount >= 4 ? Math.floor(Math.random() * 7) + 4 : wordCount;
+      const fallbackWordCount = isVariableWordCount ? Math.floor(Math.random() * 7) + 4 : wordCount;
       const fallbackName = generateFallbackName(wordSources, fallbackWordCount, fullContext.poetryContext);
       
       if (!names.find(n => n.name === fallbackName) && !this.hasRecentWords(fallbackName)) {

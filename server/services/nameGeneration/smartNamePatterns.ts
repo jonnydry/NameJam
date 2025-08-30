@@ -93,7 +93,7 @@ const SONG_PATTERNS = [
     generate: (words: any) => {
       const numbers = ['zero', 'seven', 'eleven', '404', '808', 'XIII', 'infinite', 'binary'];
       const emotions = ['heartbreak', 'sorrows', 'desires', 'whispers', 'echoes', 'memories'];
-      const number = getRandomWord(numbers);
+      const number = getRandomWord(numbers) || 'seven';
       const emotion = getRandomWord([...emotions, ...words.nouns.filter((n: string) => n.length > 5)]) || 'echoes';
       return `${capitalize(number)} ${capitalize(emotion)}`;
     }
