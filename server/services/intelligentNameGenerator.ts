@@ -578,7 +578,24 @@ Be inventive and let the context spark wild ideas!`;
       jazz: "Avoid constantly using 'swing', 'bebop', 'smooth'.",
       country: "Don't overuse 'nashville', 'honky', 'barn' in every name.",
       folk: "Avoid repetitive use of 'acoustic', 'roots', 'mountain'.",
-      indie: "Don't constantly use 'alternative', 'underground', 'indie'."
+      indie: "Don't constantly use 'alternative', 'underground', 'indie'.",
+      pop: "Avoid overusing 'radio', 'hit', 'chart', 'mainstream' repeatedly.",
+      hip_hop: "Don't constantly use 'urban', 'street', 'flow', 'beat'.",
+      electronic: "Avoid repetitive use of 'digital', 'synth', 'techno', 'beat'.",
+      metal: "Don't overuse 'heavy', 'death', 'black', 'thrash' in every name.",
+      punk: "Avoid constantly using 'anarchy', 'riot', 'rebel', 'dead'.",
+      reggae: "Don't repeatedly use 'rasta', 'island', 'jamaica', 'irie'.",
+      classical: "Avoid overusing 'symphony', 'orchestra', 'baroque', 'chamber'.",
+      r_b: "Don't constantly use 'smooth', 'soulful', 'rhythm', 'groove'.",
+      rnb: "Don't constantly use 'smooth', 'soulful', 'rhythm', 'groove'.",
+      gospel: "Avoid repetitive use of 'praise', 'holy', 'church', 'blessed'.",
+      'jam band': "Don't overuse 'cosmic', 'groove', 'festival', 'journey' repeatedly.",
+      'jam_band': "Don't overuse 'cosmic', 'groove', 'festival', 'journey' repeatedly.",
+      grunge: "Avoid constantly using 'dirty', 'seattle', 'flannel', 'angst'.",
+      alternative: "Don't repeatedly use 'alt', 'underground', 'indie', 'experimental'.",
+      ambient: "Avoid overusing 'atmospheric', 'ethereal', 'soundscape', 'drone'.",
+      house: "Don't constantly use 'club', 'dance', 'beat', 'underground'.",
+      dubstep: "Avoid repetitive use of 'bass', 'drop', 'wobble', 'electronic'."
     };
     
     return genreSpecific[genre || ''] || "Avoid repetitive use of the most obvious genre keywords.";
@@ -594,7 +611,21 @@ Be inventive and let the context spark wild ideas!`;
       indie: ['alternative', 'underground', 'indie', 'hipster', 'cool', 'artsy'],
       pop: ['radio', 'hit', 'chart', 'mainstream', 'catchy', 'commercial'],
       hip_hop: ['urban', 'street', 'flow', 'beat', 'rap', 'hood'],
-      electronic: ['digital', 'synth', 'electronic', 'techno', 'beat', 'dance']
+      electronic: ['digital', 'synth', 'electronic', 'techno', 'beat', 'dance'],
+      metal: ['heavy', 'death', 'black', 'thrash', 'brutal', 'core'],
+      punk: ['anarchy', 'riot', 'rebel', 'dead', 'chaos', 'raw'],
+      reggae: ['rasta', 'island', 'jamaica', 'irie', 'roots', 'one'],
+      classical: ['symphony', 'orchestra', 'baroque', 'chamber', 'opus', 'concerto'],
+      r_b: ['smooth', 'soulful', 'rhythm', 'groove', 'silky', 'velvet'],
+      rnb: ['smooth', 'soulful', 'rhythm', 'groove', 'silky', 'velvet'],
+      gospel: ['praise', 'holy', 'church', 'blessed', 'hallelujah', 'choir'],
+      'jam band': ['cosmic', 'groove', 'festival', 'journey', 'space', 'phish'],
+      'jam_band': ['cosmic', 'groove', 'festival', 'journey', 'space', 'phish'],
+      grunge: ['dirty', 'seattle', 'flannel', 'angst', 'nirvana', 'distorted'],
+      alternative: ['alt', 'underground', 'indie', 'experimental', 'different', 'unique'],
+      ambient: ['atmospheric', 'ethereal', 'soundscape', 'drone', 'floating', 'space'],
+      house: ['club', 'dance', 'beat', 'underground', 'bass', 'four'],
+      dubstep: ['bass', 'drop', 'wobble', 'electronic', 'heavy', 'skrillex']
     };
     
     return commonTerms[genre || ''] || [];
