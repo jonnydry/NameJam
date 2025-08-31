@@ -26,7 +26,7 @@ import {
   responseTimeMiddleware 
 } from "./middleware/performanceOptimization";
 
-export async function registerRoutes(app: Express, rateLimiters?: any): Promise<Server> {
+export async function registerRoutes(app: Express, middleware?: any): Promise<Server> {
   // Add performance optimization middleware
   app.use(compressionMiddleware);
   app.use(responseTimeMiddleware);
@@ -77,7 +77,7 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   // Auth routes (with rate limiting)
   app.get('/api/auth/user', 
-    rateLimiters?.auth || ((req: Request, res: Response, next: NextFunction) => next()), 
+    middleware?.auth || ((req: Request, res: Response, next: NextFunction) => next()), 
     isAuthenticated, 
     async (req: Request & { user?: any }, res: Response) => {
     try {
@@ -92,7 +92,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   // Generate names endpoint (public with optional auth for saving)
   app.post("/api/generate-names", 
-    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    middleware?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    middleware?.csrf?.validateToken || ((req: Request, res: Response, next: NextFunction) => next()),
     validationRules.generateNames, 
     handleValidationErrors, 
     async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
@@ -266,7 +267,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   // Generate band bio endpoint (public with rate limiting and validation)
   app.post("/api/generate-band-bio", 
-    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    middleware?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    middleware?.csrf?.validateToken || ((req: Request, res: Response, next: NextFunction) => next()),
     validationRules.generateBandBio, 
     handleValidationErrors, 
     async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
@@ -312,7 +314,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   // Generate lyric starter endpoint (public with optional auth for saving)  
   app.post("/api/generate-lyric-starter", 
-    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    middleware?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    middleware?.csrf?.validateToken || ((req: Request, res: Response, next: NextFunction) => next()),
     validationRules.generateLyricStarter, 
     handleValidationErrors, 
     async (req: Request, res: Response) => {
@@ -336,6 +339,18 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
         suggestion: "The AI service may be temporarily unavailable. Please try again later."
       });
     }
+  });
+
+  // CSRF token endpoint for client requests
+  app.get("/api/csrf-token", (req: Request & { session?: any }, res: Response) => {
+    const sessionId = req.session?.id || req.sessionID || 'anonymous';
+    const { csrfService } = require('./services/csrfService');
+    const token = csrfService.generateToken(sessionId);
+    
+    res.json({ 
+      csrfToken: token,
+      sessionId: sessionId.substring(0, 8) + '...' // Partial session ID for debugging
+    });
   });
 
   // Health check endpoint for deployment monitoring
