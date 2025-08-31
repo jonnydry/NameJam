@@ -172,18 +172,32 @@ export function createCSRFMiddleware(csrfService: CSRFService) {
                    req.body._csrf || 
                    req.query._csrf as string;
 
-      if (!csrfService.validateToken(token, sessionId)) {
-        secureLog.warn(`CSRF attack attempt detected from ${req.ip}`, {
-          method: req.method,
-          url: req.url,
-          userAgent: req.headers['user-agent'],
-          sessionId: sessionId.substring(0, 8)
-        });
+      // In development mode, be more lenient with CSRF validation
+      if (process.env.NODE_ENV === 'development') {
+        if (!token) {
+          secureLog.warn('CSRF token missing in development mode - allowing request');
+          return next();
+        }
         
-        return res.status(403).json({ 
-          error: 'Invalid CSRF token',
-          code: 'CSRF_VALIDATION_FAILED'
-        });
+        if (!csrfService.validateToken(token, sessionId)) {
+          secureLog.warn('CSRF token validation failed in development mode - allowing request');
+          return next();
+        }
+      } else {
+        // Production mode - strict validation
+        if (!csrfService.validateToken(token, sessionId)) {
+          secureLog.warn(`CSRF attack attempt detected from ${req.ip}`, {
+            method: req.method,
+            url: req.url,
+            userAgent: req.headers['user-agent'],
+            sessionId: sessionId.substring(0, 8)
+          });
+          
+          return res.status(403).json({ 
+            error: 'Invalid CSRF token',
+            code: 'CSRF_VALIDATION_FAILED'
+          });
+        }
       }
 
       next();

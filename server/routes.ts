@@ -342,15 +342,19 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
   });
 
   // CSRF token endpoint for client requests
-  app.get("/api/csrf-token", (req: Request & { session?: any }, res: Response) => {
-    const sessionId = req.session?.id || req.sessionID || 'anonymous';
-    const { csrfService } = require('./services/csrfService');
-    const token = csrfService.generateToken(sessionId);
-    
-    res.json({ 
-      csrfToken: token,
-      sessionId: sessionId.substring(0, 8) + '...' // Partial session ID for debugging
-    });
+  app.get("/api/csrf-token", async (req: Request & { session?: any }, res: Response) => {
+    try {
+      const sessionId = req.session?.id || req.sessionID || 'anonymous';
+      const { csrfService } = await import('./services/csrfService');
+      const token = csrfService.generateToken(sessionId);
+      
+      res.json({ 
+        csrfToken: token,
+        sessionId: sessionId.substring(0, 8) + '...' // Partial session ID for debugging
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to generate CSRF token' });
+    }
   });
 
   // Health check endpoint for deployment monitoring
@@ -428,7 +432,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
       };
 
       // Generate using enhanced Datamuse-powered method
-      const enhancedResults = await enhancedNameGenerator.generateEnhancedNames(request);
+      const enhancedResults = await nameGenerator.generateNames(request, GENERATION_STRATEGIES.QUALITY);
 
       res.json({
         request: request,
