@@ -9,6 +9,8 @@ import { unifiedWordFilter } from "./nameGeneration/unifiedWordFilter";
 import { datamuseService } from "./datamuseService";
 import { spotifyService } from "./spotifyService";
 import { lastfmService } from "./lastfmService";
+import { optimizedContextService, OptimizedContext } from "./optimizedContextService";
+import { performanceMonitor } from "./performanceMonitor";
 import OpenAI from "openai";
 
 // Strategy configuration
@@ -78,6 +80,12 @@ export class UnifiedNameGeneratorService {
   ): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
     const { type, genre, mood, count = 4, wordCount } = request;
     const generationId = unifiedWordFilter.startNewGeneration();
+    const operationId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Start performance monitoring
+    performanceMonitor.startOperation(operationId, 'unified_name_generation', {
+      type, genre, mood, count, wordCount, strategy: strategy.contextDepth
+    });
     
     secureLog.info(`🎯 Unified generation: ${count} ${type} names for ${genre || 'general'} genre using ${strategy.contextDepth} strategy`);
     
@@ -99,6 +107,9 @@ export class UnifiedNameGeneratorService {
       const finalNames = names.slice(0, count);
       const elapsedTime = Date.now() - startTime;
       
+      // End performance monitoring
+      performanceMonitor.endOperation(operationId);
+      
       secureLog.info(`✅ Generated ${finalNames.length} names in ${elapsedTime}ms using ${strategy.contextDepth} strategy`);
       
       return finalNames.map(name => ({
@@ -108,12 +119,40 @@ export class UnifiedNameGeneratorService {
       }));
       
     } catch (error) {
+      // End performance monitoring even on error
+      performanceMonitor.endOperation(operationId);
       secureLog.error('Unified generation error:', error);
       return this.generateFallbackNames(type, genre, mood, count);
     }
   }
 
   private async gatherContextWithStrategy(
+    genre: string | undefined, 
+    mood: string | undefined, 
+    type: string | undefined, 
+    strategy: GenerationStrategy
+  ): Promise<GenerationContext> {
+    // Use optimized context service for better performance
+    const priority = strategy.contextDepth === 'minimal' ? 'speed' : 'quality';
+    const maxWaitTime = strategy.maxResponseTime / 2; // Reserve half time for generation
+    
+    try {
+      const optimizedContext = await optimizedContextService.getContext(
+        genre, 
+        mood, 
+        priority, 
+        maxWaitTime
+      );
+      
+      // Convert to legacy format for compatibility
+      return this.convertToLegacyContext(optimizedContext);
+    } catch (error) {
+      secureLog.warn('Optimized context failed, falling back to legacy method:', error);
+      return this.gatherContextLegacy(genre, mood, type, strategy);
+    }
+  }
+
+  private async gatherContextLegacy(
     genre: string | undefined, 
     mood: string | undefined, 
     type: string | undefined, 
@@ -146,16 +185,21 @@ export class UnifiedNameGeneratorService {
       case 'comprehensive':
         // Full context gathering (like IntelligentNameGeneratorService)
         if (genre) {
+          // Parallel Datamuse calls instead of sequential
           promises.push(
             datamuseService.findSimilarWords(genre, 10)
               .then((words: any[]) => {
                 context.genreKeywords = words.map((w: any) => w.word);
-                return datamuseService.findAdjectivesForNoun(genre, 8);
               })
+              .catch((err: any) => secureLog.debug('Datamuse similar words error:', err))
+          );
+          
+          promises.push(
+            datamuseService.findAdjectivesForNoun(genre, 8)
               .then((adjectives: any[]) => {
                 context.wordAssociations = adjectives.map((a: any) => a.word);
               })
-              .catch((err: any) => secureLog.debug('Datamuse genre error:', err))
+              .catch((err: any) => secureLog.debug('Datamuse adjectives error:', err))
           );
           
           promises.push(
@@ -565,6 +609,18 @@ Return ONLY the JSON object above.`;
     const targetCount = Number(requestedCount);
     const tolerance = targetCount <= 3 ? 1 : 2;
     return Math.abs(actualCount - targetCount) <= tolerance;
+  }
+
+  private convertToLegacyContext(optimizedContext: OptimizedContext): GenerationContext {
+    return {
+      genreKeywords: optimizedContext.genreKeywords || [],
+      moodWords: optimizedContext.moodWords || [],
+      relatedArtists: optimizedContext.relatedArtists || [],
+      genreTags: optimizedContext.genreTags || [],
+      wordAssociations: optimizedContext.wordAssociations || [],
+      audioCharacteristics: optimizedContext.audioCharacteristics || [],
+      culturalReferences: optimizedContext.culturalReferences || []
+    };
   }
 
   private getSourceName(strategy: GenerationStrategy): string {
