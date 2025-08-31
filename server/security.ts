@@ -7,6 +7,7 @@ import CryptoJS from 'crypto-js';
 import bcrypt from 'bcryptjs';
 import { DistributedRateLimiter } from './utils/sessionSecretRotation';
 import { InputSanitizer } from './utils/inputSanitizer';
+import { csrfService, createCSRFMiddleware } from './services/csrfService';
 // Server-side HTML sanitization (simplified approach for security)
 const sanitizeHtml = (input: string): string => {
   if (!input || typeof input !== 'string') return '';
@@ -393,6 +394,7 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
  */
 export const setupSecurity = (app: Express) => {
   const rateLimiters = createRateLimiters();
+  const csrfMiddleware = createCSRFMiddleware(csrfService);
   
   // Apply security middleware in order
   app.use(createHelmetOptions());
@@ -401,5 +403,8 @@ export const setupSecurity = (app: Express) => {
   app.use(rateLimiters.general);
   app.use(sanitizeRequestData);
   
-  return rateLimiters;
+  // Add CSRF token generation to all routes (after session is available)
+  app.use(csrfMiddleware.generateToken);
+  
+  return { ...rateLimiters, csrf: csrfMiddleware };
 };
