@@ -10,8 +10,8 @@ import Home from "@/pages/home";
 import About from "@/pages/about";
 import NotFound from "@/pages/not-found";
 import { Landing } from "@/components/landing";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { ErrorBoundary } from "@/components/error-boundary-new";
+import { OfflineIndicator } from "@/components/offline-indicator";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
