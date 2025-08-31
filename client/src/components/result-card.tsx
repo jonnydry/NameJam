@@ -41,50 +41,11 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   const [showBioModal, setShowBioModal] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationType, setAnimationType] = useState<'add' | 'remove'>('add');
-  const [isHighlighted, setIsHighlighted] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   
   // Check if this is the easter egg
   const isEasterEgg = verification.details === 'We love you. Go to bed. <3';
-  
-  // Mobile scroll highlighting using Intersection Observer with debouncing
-  useEffect(() => {
-    if (!cardRef.current) return;
-    
-    const isMobile = window.innerWidth < 768;
-    if (!isMobile) return;
-    
-    let timeoutId: NodeJS.Timeout;
-    
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // Debounce the state change to prevent flickering
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
-              setIsHighlighted(true);
-            } else if (!entry.isIntersecting) {
-              setIsHighlighted(false);
-            }
-          }, 100);
-        });
-      },
-      {
-        root: null,
-        rootMargin: '-25% 0px -25% 0px',
-        threshold: [0, 0.6]
-      }
-    );
-    
-    observer.observe(cardRef.current);
-    
-    return () => {
-      clearTimeout(timeoutId);
-      observer.disconnect();
-    };
-  }, []);
 
   const handleAddToStash = () => {
     const isCurrentlyInStash = isInStash(name, nameType);
@@ -175,15 +136,19 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
       tabIndex={0}
       data-result-card
       onKeyDown={handleKeyDown}
-      onFocus={() => setIsFocused(true)}
+      onFocus={(e) => {
+        // Only set focus state for keyboard navigation, not mouse clicks
+        if (e.target === e.currentTarget) {
+          setIsFocused(true);
+        }
+      }}
       onBlur={() => setIsFocused(false)}
-      className={`relative p-responsive rounded-xl border transition-all duration-300 overflow-hidden result-card-mobile cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background ${
+      className={`relative p-responsive rounded-xl border overflow-hidden result-card-mobile cursor-pointer 
+        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background
+        transition-all duration-200 ${
       isEasterEgg 
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
-        : `bg-gradient-to-r from-black/90 to-gray-900/90 border-yellow-500/20 
-           hover:border-yellow-400/40 hover:shadow-lg hover:shadow-yellow-500/10 
-           ${isFocused ? 'ring-2 ring-blue-500 ring-offset-2' : ''} 
-           ${isHighlighted ? 'border-yellow-400/30 shadow-md shadow-yellow-500/5' : ''}`
+        : 'bg-gradient-to-r from-black/90 to-gray-900/90 border-yellow-500/20 hover:border-yellow-400/40 hover:shadow-lg hover:shadow-yellow-500/10'
     }`}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3">
         <StatusBadge status={verification.status} />
