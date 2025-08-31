@@ -14,6 +14,7 @@ import { useKeyboardShortcuts, KeyboardHint } from "@/hooks/use-keyboard-shortcu
 import { useDebouncedCallback } from "@/hooks/use-debounce";
 import { useLoadingProgress } from "@/hooks/use-loading-progress";
 import { ButtonLoader, InlineLoader, CardSkeleton } from "@/components/loading-states";
+import { useLiveAnnouncements } from "@/components/live-regions";
 
 interface GenerationResult {
   id: number;
@@ -52,6 +53,7 @@ export function NameGenerator() {
 
   const { toast } = useToast();
   const { copyToClipboard } = useClipboard();
+  const { announce, LiveAnnouncementsProvider } = useLiveAnnouncements();
   const loadingRef = useRef<HTMLDivElement>(null);
   const generateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -99,6 +101,9 @@ export function NameGenerator() {
       setSearchResult(null); // Clear search result when generating new names
       setIsGenerating(false); // Reset generating state
       
+      // Announce completion for screen readers
+      announce(`Generated ${data.results.length} ${nameType} names successfully. Results are now available.`, 'polite');
+      
       toast({
         title: "Names generated successfully!",
         description: `Generated ${data.results.length} unique ${nameType} names${data.cached ? ' (cached)' : ''}.`,
@@ -107,6 +112,10 @@ export function NameGenerator() {
     onError: (error) => {
       generateProgress.completeLoading(); // Complete progress even on error
       setIsGenerating(false); // Reset generating state on error
+      
+      // Announce error for screen readers
+      announce("Name generation failed. Please try again.", 'assertive');
+      
       createMutationErrorHandler("Generation failed", "Failed to generate names. Please try again.")(error);
     },
     onSettled: () => {
@@ -150,6 +159,10 @@ export function NameGenerator() {
       } else {
         setSongResults([]);
       }
+      
+      // Announce search completion for screen readers
+      announce(`Search completed for "${searchInput.trim()}". Status: ${data.verification.status}.`, 'polite');
+      
       toast({
         title: "Name verified!",
         description: `Checked availability of "${searchInput.trim()}".`,
@@ -157,6 +170,10 @@ export function NameGenerator() {
     },
     onError: (error) => {
       searchProgress.completeLoading(); // Complete progress even on error
+      
+      // Announce search error for screen readers
+      announce("Name verification failed. Please try again.", 'assertive');
+      
       createMutationErrorHandler("Verification failed", "Failed to verify name. Please try again.")(error);
     },
   });
@@ -223,7 +240,8 @@ export function NameGenerator() {
   }, [handleGenerate]);
 
   return (
-    <div className="space-y-6">
+    <LiveAnnouncementsProvider>
+      <div className="space-y-6">
       {/* Controls Panel */}
       <div className="bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 rounded-xl shadow-sm border p-6 control-panel-mobile">
         {/* Type Toggle */}
@@ -280,7 +298,7 @@ export function NameGenerator() {
               }
             }
           }}>
-            <SelectTrigger className="w-32 select-mobile select-trigger-mobile select-container-mobile">
+            <SelectTrigger className="w-32 select-mobile select-trigger-mobile select-container-mobile" aria-label="Select number of words for generated names">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -299,7 +317,7 @@ export function NameGenerator() {
             Mood:
           </label>
           <Select value={mood} onValueChange={setMood}>
-            <SelectTrigger className="w-40 select-mobile select-trigger-mobile select-container-mobile">
+            <SelectTrigger className="w-40 select-mobile select-trigger-mobile select-container-mobile" aria-label="Select mood style for generated names">
               <SelectValue placeholder="Any mood" />
             </SelectTrigger>
             <SelectContent>
@@ -327,7 +345,7 @@ export function NameGenerator() {
             Genre:
           </label>
           <Select value={genre} onValueChange={setGenre}>
-            <SelectTrigger className="w-40 select-mobile select-trigger-mobile select-container-mobile">
+            <SelectTrigger className="w-40 select-mobile select-trigger-mobile select-container-mobile" aria-label="Select music genre for generated names">
               <SelectValue placeholder="Any genre" />
             </SelectTrigger>
             <SelectContent>
@@ -452,7 +470,7 @@ export function NameGenerator() {
 
       {/* Generated Results */}
       {currentResults.length > 0 && !generateMutation.isPending && (
-        <div className="space-y-4" aria-live="polite" aria-atomic="true">
+        <div id="generated-results" className="space-y-4" aria-live="polite" aria-atomic="true" role="region" aria-label="Generated name results">
           <div className="flex flex-col gap-4">
             {currentResults.map((result, index) => (
               <div
@@ -496,6 +514,7 @@ export function NameGenerator() {
           <p className="text-sm text-neutral-600">Click "Generate Names" to start creating or search for a specific name</p>
         </div>
       )}
-    </div>
+      </div>
+    </LiveAnnouncementsProvider>
   );
 }
