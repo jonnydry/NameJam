@@ -80,13 +80,10 @@ export default function Home() {
       </div>
       
       {/* Main Content */}
-      <main 
-        id="main-content"
-        className={cn(
-          "flex-1 px-4 py-8 md:py-12 transition-all duration-300 mt-14",
-          isStashOpen && "md:ml-96"
-        )}
-      >
+      <main className={cn(
+        "flex-1 px-4 py-8 md:py-12 transition-all duration-300 mt-14",
+        isStashOpen && "md:ml-96"
+      )}>
         <div className="max-w-xl md:max-w-2xl mx-auto">
           {/* Logo and Title Section */}
           <div className="text-center mb-6 md:mb-8">
@@ -106,9 +103,9 @@ export default function Home() {
           </div>
 
           {/* Tabs Section */}
-          <div className="w-full" id="generator-controls" role="region" aria-label="Name and lyric generation tools">
+          <div className="w-full">
             <Tabs defaultValue="names" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 tabs-list-enhanced mb-4 md:mb-6" role="tablist" aria-label="Generator type selection">
+                <TabsList className="grid w-full grid-cols-2 tabs-list-enhanced mb-4 md:mb-6">
                   <TabsTrigger value="names" className="tabs-trigger-enhanced">
                     <span className="hidden sm:inline">NAME_JAM</span>
                     <span className="sm:hidden">Name_Jam</span>
@@ -118,10 +115,10 @@ export default function Home() {
                     <span className="sm:hidden">Lyric_Jam</span>
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="names" role="tabpanel" aria-label="Name generation panel">
+                <TabsContent value="names">
                   <NameGenerator />
                 </TabsContent>
-                <TabsContent value="lyric" role="tabpanel" aria-label="Lyric generation panel">
+                <TabsContent value="lyric">
                   <LyricJam />
                 </TabsContent>
               </Tabs>
