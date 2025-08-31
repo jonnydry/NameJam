@@ -1,6 +1,9 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 import { getUserFriendlyError } from '@/utils/errorMessages';
+import { gracefulDegradationService } from '@/services/gracefulDegradationService';
+import { errorTrackingService } from '@/services/errorTrackingService';
+import { ErrorSeverity, ErrorHandler } from '@shared/errorSchemas';
 
 // CSRF token management
 let csrfToken: string | null = null;
@@ -40,7 +43,12 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  try {
+  const startTime = Date.now();
+  
+  // Determine service name for degradation tracking
+  const serviceName = getServiceNameFromUrl(url);
+  
+  const executeRequest = async (): Promise<Response> => {
     const headers: Record<string, string> = {};
     
     if (data) {
@@ -64,13 +72,93 @@ export async function apiRequest(
 
     await throwIfResNotOk(res);
     return res;
+  };
+  
+  // Fallback operation for critical services
+  const fallbackOperation = serviceName ? getFallbackOperation(serviceName, url) : undefined;
+  
+  try {
+    if (serviceName) {
+      const result = await gracefulDegradationService.executeWithDegradation(
+        serviceName,
+        executeRequest,
+        fallbackOperation
+      );
+      
+      if (result.degraded && result.message) {
+        // Store degradation info for UI display
+        gracefulDegradationService.setFallbackState(`ui_message_${serviceName}`, result.message);
+      }
+      
+      if (!result.data) {
+        throw new Error(result.message || 'Service unavailable');
+      }
+      
+      return result.data;
+    } else {
+      return await executeRequest();
+    }
   } catch (error: any) {
+    const duration = Date.now() - startTime;
+    
+    // Track performance issues
+    errorTrackingService.trackPerformance(`${method} ${url}`, duration);
+    
+    // Track the error
+    errorTrackingService.trackError(
+      error,
+      { 
+        method, 
+        url, 
+        duration,
+        serviceName,
+        hasData: !!data 
+      },
+      ErrorHandler.getErrorSeverity(error)
+    );
+    
     // Network errors or other fetch failures
     if (error.message === 'Failed to fetch') {
       throw new Error('Connection error. Please check your internet and try again.');
     }
     throw error;
   }
+}
+
+function getServiceNameFromUrl(url: string): string | null {
+  if (url.includes('/api/generate-names')) return 'name-generation';
+  if (url.includes('/api/verify-name')) return 'name-verification';
+  if (url.includes('/api/generate-band-bio')) return 'name-generation';
+  if (url.includes('/api/generate-lyric-starter')) return 'name-generation';
+  return null;
+}
+
+function getFallbackOperation(serviceName: string, url: string): (() => Promise<Response>) | undefined {
+  // Define fallback operations for critical services
+  if (serviceName === 'name-generation') {
+    return async () => {
+      // Return a minimal response for name generation
+      const fallbackResponse = {
+        results: [{
+          id: Date.now(),
+          name: 'Fallback Name',
+          type: 'band',
+          wordCount: 2,
+          isAiGenerated: false,
+          verification: { isAvailable: true, popularity: 0 }
+        }],
+        degraded: true,
+        message: 'Using simplified name generation'
+      };
+      
+      return new Response(JSON.stringify(fallbackResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    };
+  }
+  
+  return undefined;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

@@ -11,6 +11,7 @@ import { users, errorLogs } from "@shared/schema";
 
 import { generateNameRequestSchema } from "@shared/schema";
 import { z } from "zod";
+import { ErrorHandler, ERROR_CODES, apiErrorSchema } from "@shared/errorSchemas";
 
 import { validationRules, handleValidationErrors } from "./security";
 import { performanceCache } from "./services/performanceCache";
@@ -412,6 +413,50 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
       res.json({ success: true });
     } catch (error) {
       // Silently fail - don't break the app if error logging fails
+      res.status(200).json({ success: false });
+    }
+  });
+
+  // Enhanced client error tracking endpoint
+  app.post("/api/client-errors", async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const { errors } = req.body;
+      
+      if (!Array.isArray(errors)) {
+        return res.status(400).json(
+          ErrorHandler.createApiError(
+            "Invalid request format",
+            ERROR_CODES.VALIDATION_ERROR,
+            "Errors must be provided as an array"
+          )
+        );
+      }
+      
+      // Process each error and store in database
+      const errorPromises = errors.map(async (error: any) => {
+        try {
+          await db.insert(errorLogs).values({
+            message: error.message,
+            stack: error.stack,
+            componentStack: error.componentStack,
+            userAgent: error.userAgent,
+            url: error.url,
+            userId: error.userId || (req.user?.claims?.sub),
+          });
+        } catch (dbError) {
+          secureLog.warn('Failed to store client error:', dbError);
+        }
+      });
+      
+      await Promise.allSettled(errorPromises);
+      
+      res.json({ 
+        success: true, 
+        processed: errors.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      secureLog.error('Client error reporting failed:', error);
       res.status(200).json({ success: false });
     }
   });
