@@ -297,63 +297,13 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
     const Icon = config.icon;
     const isSelected = selectedItems.has(item.id);
 
-    // Keyboard navigation handler for stash items
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-      switch (e.key) {
-        case 'Enter':
-        case ' ':
-          e.preventDefault();
-          if (isSelectionMode) {
-            const newSelection = new Set(selectedItems);
-            if (newSelection.has(item.id)) {
-              newSelection.delete(item.id);
-            } else {
-              newSelection.add(item.id);
-            }
-            setSelectedItems(newSelection);
-          } else {
-            copyToClipboard(item.name);
-          }
-          break;
-        case 'Delete':
-        case 'Backspace':
-          e.preventDefault();
-          handleRemove(item.id, item.name);
-          break;
-        case 'b':
-        case 'B':
-          if (item.type === 'band') {
-            e.preventDefault();
-            handleBioRequest(item.name, item.genre, item.mood);
-          }
-          break;
-        case 'ArrowDown':
-        case 'ArrowUp':
-          e.preventDefault();
-          // Navigate to next/previous stash item
-          const stashItems = document.querySelectorAll('[data-stash-item]');
-          const currentIndex = Array.from(stashItems).findIndex(card => card.contains(e.currentTarget as Node));
-          if (currentIndex !== -1) {
-            const nextIndex = e.key === 'ArrowDown' ? currentIndex + 1 : currentIndex - 1;
-            const nextItem = stashItems[nextIndex] as HTMLElement;
-            if (nextItem) {
-              nextItem.focus();
-            }
-          }
-          break;
-      }
-    };
-
     return (
       <div
         className={cn(
-          "group relative transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg",
+          "group relative transition-all duration-200",
           isSelectionMode && "cursor-pointer",
           isSelected && "scale-[0.98]"
         )}
-        tabIndex={0}
-        data-stash-item
-        onKeyDown={handleKeyDown}
         onClick={() => {
           if (isSelectionMode) {
             const newSelection = new Set(selectedItems);
@@ -365,7 +315,6 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
             setSelectedItems(newSelection);
           }
         }}
-        aria-label={`${config.label}: ${item.name}. ${item.genre ? `Genre: ${item.genre}. ` : ''}${item.mood ? `Mood: ${item.mood}. ` : ''}Rating: ${item.rating || 'unrated'}. ${isSelectionMode ? 'Press Enter to select or deselect' : 'Press Enter to copy, Delete to remove, B for bio if band'}.`}
       >
         <Card className={cn(
           "overflow-hidden transition-all duration-200",
