@@ -48,33 +48,40 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   // Check if this is the easter egg
   const isEasterEgg = verification.details === 'We love you. Go to bed. <3';
   
-  // Mobile scroll highlighting using Intersection Observer
+  // Mobile scroll highlighting using Intersection Observer with debouncing
   useEffect(() => {
     if (!cardRef.current) return;
     
     const isMobile = window.innerWidth < 768;
     if (!isMobile) return;
     
+    let timeoutId: NodeJS.Timeout;
+    
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            setIsHighlighted(true);
-          } else {
-            setIsHighlighted(false);
-          }
+          // Debounce the state change to prevent flickering
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+              setIsHighlighted(true);
+            } else if (!entry.isIntersecting) {
+              setIsHighlighted(false);
+            }
+          }, 100);
         });
       },
       {
         root: null,
-        rootMargin: '-20% 0px -20% 0px',
-        threshold: 0.5
+        rootMargin: '-25% 0px -25% 0px',
+        threshold: [0, 0.6]
       }
     );
     
     observer.observe(cardRef.current);
     
     return () => {
+      clearTimeout(timeoutId);
       observer.disconnect();
     };
   }, []);
@@ -175,7 +182,8 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
         ? 'bg-gradient-to-br from-pink-500/20 via-rose-400/20 to-purple-500/20 border-pink-400/50 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/20' 
         : `bg-gradient-to-r from-black/90 to-gray-900/90 border-yellow-500/20 
            hover:border-yellow-400/40 hover:shadow-lg hover:shadow-yellow-500/10 
-           ${isHighlighted || isFocused ? 'border-yellow-400/40 shadow-lg shadow-yellow-500/10' : ''}`
+           ${isFocused ? 'ring-2 ring-blue-500 ring-offset-2' : ''} 
+           ${isHighlighted ? 'border-yellow-400/30 shadow-md shadow-yellow-500/5' : ''}`
     }`}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3">
         <StatusBadge status={verification.status} />
