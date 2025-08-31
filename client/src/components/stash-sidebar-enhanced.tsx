@@ -53,7 +53,7 @@ const TYPE_CONFIG = {
     color: 'text-yellow-400', 
     bgColor: 'bg-yellow-400/10',
     borderColor: 'border-yellow-400/20',
-    label: 'Lyric'
+    label: 'Lyrics'
   }
 };
 
