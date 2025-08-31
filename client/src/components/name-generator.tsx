@@ -13,7 +13,7 @@ import { createMutationErrorHandler } from "@/lib/api-error-handler";
 import { useKeyboardShortcuts, KeyboardHint } from "@/hooks/use-keyboard-shortcuts";
 import { useDebouncedCallback } from "@/hooks/use-debounce";
 import { useLoadingProgress } from "@/hooks/use-loading-progress";
-import { ButtonLoader, InlineLoader, CardSkeleton } from "@/components/LoadingStates";
+import { ButtonLoader, InlineLoader, CardSkeleton } from "@/components/loading-states";
 
 interface GenerationResult {
   id: number;

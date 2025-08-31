@@ -2,8 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { enhancedNameGenerator } from "./services/enhancedNameGenerator";
-import { NameGeneratorService } from "./services/nameGenerator";
+import { UnifiedNameGeneratorService, GENERATION_STRATEGIES } from "./services/unifiedNameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGeneratorService } from "./services/bandBioGenerator";
 import { LyricStarterService } from "./services/lyricStarterService";
@@ -38,13 +37,13 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
 
   secureLog.info("Initializing services...");
   
-  let nameGenerator: NameGeneratorService;
+  let nameGenerator: UnifiedNameGeneratorService;
   let nameVerifier: NameVerifierService;
   let bandBioGenerator: BandBioGeneratorService;
   let lyricStarterService: LyricStarterService;
 
   try {
-    nameGenerator = new NameGeneratorService();
+    nameGenerator = new UnifiedNameGeneratorService();
     secureLog.info("✓ NameGeneratorService initialized");
   } catch (error) {
     secureLog.error("✗ Failed to initialize NameGeneratorService:", error);
@@ -118,8 +117,8 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
       
       const request = generateNameRequestSchema.parse(sanitizedBody);
       
-      // Generate names using new routing system (AI + Datamuse)
-      const names = await nameGenerator.generateNames(request);
+      // Generate names using unified service with quality strategy (default)
+      const names = await nameGenerator.generateNames(request, GENERATION_STRATEGIES.QUALITY);
       
       // Check if response was already sent (due to timeout)
       if (hasResponded || res.headersSent) {
