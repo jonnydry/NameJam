@@ -14,6 +14,7 @@ import { z } from "zod";
 
 import { validationRules, handleValidationErrors } from "./security";
 import { performanceCache } from "./services/performanceCache";
+import { performanceMonitor } from "./services/performanceMonitor";
 import { secureLog, sanitizeApiResponse } from "./utils/secureLogger";
 import type { Request, Response, NextFunction } from "express";
 import { InputSanitizer } from "./utils/inputSanitizer";
@@ -356,6 +357,21 @@ export async function registerRoutes(app: Express, rateLimiters?: any): Promise<
         database: "disconnected",
         error: "Database connection failed"
       });
+    }
+  });
+
+  // Performance monitoring endpoint (admin only in production)
+  app.get("/api/performance", async (req: Request, res: Response) => {
+    try {
+      const report = performanceMonitor.generateReport();
+      res.json({
+        ...report,
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV
+      });
+    } catch (error) {
+      secureLog.error("Performance report generation failed:", error);
+      res.status(500).json({ message: "Failed to generate performance report" });
     }
   });
 
