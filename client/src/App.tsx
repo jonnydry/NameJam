@@ -12,7 +12,6 @@ import NotFound from "@/pages/not-found";
 import { Landing } from "@/components/landing";
 import { ErrorBoundary } from "@/components/error-boundary-new";
 import { OfflineIndicator } from "@/components/offline-indicator";
-import { SkipLinks } from "@/components/skip-links";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -44,7 +43,6 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <StashProvider>
           <TooltipProvider>
-            <SkipLinks />
             <Toaster />
             <OfflineIndicator />
             <Router />
