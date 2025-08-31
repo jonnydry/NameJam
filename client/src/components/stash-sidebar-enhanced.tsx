@@ -32,21 +32,21 @@ const TYPE_CONFIG = {
     color: 'text-blue-400', 
     bgColor: 'bg-blue-400/10',
     borderColor: 'border-blue-400/20',
-    label: 'Band'
+    label: 'Band Names'
   },
   song: { 
     icon: Music, 
     color: 'text-green-400', 
     bgColor: 'bg-green-400/10',
     borderColor: 'border-green-400/20',
-    label: 'Song'
+    label: 'Song Names'
   },
   bandLore: { 
     icon: BookOpen, 
     color: 'text-purple-400', 
     bgColor: 'bg-purple-400/10',
     borderColor: 'border-purple-400/20',
-    label: 'Lore'
+    label: 'Band Lore'
   },
   lyricJam: { 
     icon: Mic, 
@@ -530,7 +530,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
                       onClick={() => setCategoryFilter(key as any)}
                     >
                       <config.icon className={cn("h-4 w-4 mr-2", config.color)} />
-                      {config.label} Names
+                      {config.label}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -670,7 +670,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
                           <ChevronDown className="w-4 h-4" />
                         )}
                         <Icon className={cn("w-4 h-4", config.color)} />
-                        <span className="font-medium text-sm">{config.label} Names</span>
+                        <span className="font-medium text-sm">{config.label}</span>
                         <Badge variant="secondary" className="ml-auto">
                           {items.length}
                         </Badge>
