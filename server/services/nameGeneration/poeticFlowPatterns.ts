@@ -26,7 +26,13 @@ export class PoeticFlowPatterns {
       '{noun} {verb} {noun} {adverb}',
       '{adjective} {noun} {adjective} {noun}',  // Changed from double adjective at start
       '{noun} {verb} {transition} {noun}',
-      '{article} {verb} {preposition} {noun}'
+      '{article} {verb} {preposition} {noun}',
+      // New diverse templates
+      '{temporal} {noun} {verb} {noun}',  // "Yesterday Dreams Become Tomorrow"
+      '{color} {noun} {preposition} {noun}',  // "Crimson Fire Through Glass"
+      '{number} {noun} {conjunction} {noun}',  // "Seven Stars and Moon"
+      '{emotion} {verb} {article} {noun}',  // "Sorrow Breaks the Chain"
+      '{element} {noun} {verb} {direction}'  // "Fire Heart Goes North"
     ],
     fiveWord: [
       '{noun} {verb} {preposition} {article} {noun}',
@@ -63,10 +69,52 @@ export class PoeticFlowPatterns {
     ]
   };
 
+  // Cultural and era-specific word pools
+  private culturalWords = {
+    '70s': ['groovy', 'psychedelic', 'cosmic', 'astral', 'karma', 'vibration', 'revolution'],
+    '80s': ['neon', 'chrome', 'laser', 'cyber', 'electric', 'synthetic', 'digital'],
+    '90s': ['grunge', 'alternative', 'raw', 'angst', 'flannel', 'distorted', 'underground'],
+    '00s': ['emo', 'screamo', 'indie', 'blog', 'myspace', 'ipod', 'ringtone'],
+    modern: ['viral', 'glitch', 'quantum', 'neo', 'meta', 'vapor', 'lo-fi'],
+    timeless: ['eternal', 'infinite', 'ancient', 'sacred', 'mystic', 'legendary', 'immortal']
+  };
+
+  private elementWords = {
+    fire: ['flame', 'ember', 'blaze', 'inferno', 'spark', 'ash', 'smoke'],
+    water: ['ocean', 'wave', 'tide', 'rain', 'river', 'stream', 'cascade'],
+    earth: ['stone', 'mountain', 'canyon', 'desert', 'forest', 'roots', 'clay'],
+    air: ['wind', 'storm', 'breeze', 'hurricane', 'whisper', 'breath', 'sky']
+  };
+
+  private emotionWords = {
+    joy: ['bliss', 'euphoria', 'delight', 'ecstasy', 'radiance', 'jubilation'],
+    sorrow: ['grief', 'melancholy', 'lament', 'mourning', 'ache', 'longing'],
+    anger: ['rage', 'fury', 'wrath', 'vengeance', 'riot', 'rebellion'],
+    fear: ['dread', 'terror', 'panic', 'anxiety', 'horror', 'nightmare'],
+    love: ['passion', 'devotion', 'romance', 'desire', 'affection', 'intimacy']
+  };
+
   // Enhanced word selection using all API contexts
   private selectPoeticWord(type: string, sources: EnhancedWordSource, poetryContext?: string[]): string {
     let wordPool: string[] = [];
     
+    // Add special word types for new templates
+    if (type === 'temporal') {
+      return getRandomWord(['yesterday', 'tomorrow', 'forever', 'never', 'always', 'sometimes', 'tonight']) || 'forever';
+    } else if (type === 'color') {
+      return getRandomWord(['crimson', 'azure', 'golden', 'silver', 'violet', 'emerald', 'obsidian']) || 'crimson';
+    } else if (type === 'number') {
+      return getRandomWord(['seven', 'thirteen', 'hundred', 'thousand', 'zero', 'infinite', 'binary']) || 'seven';
+    } else if (type === 'emotion') {
+      const emotionType = Object.keys(this.emotionWords)[Math.floor(Math.random() * Object.keys(this.emotionWords).length)] as keyof typeof this.emotionWords;
+      return getRandomWord(this.emotionWords[emotionType]) || 'passion';
+    } else if (type === 'element') {
+      const elementType = Object.keys(this.elementWords)[Math.floor(Math.random() * Object.keys(this.elementWords).length)] as keyof typeof this.elementWords;
+      return getRandomWord(this.elementWords[elementType]) || 'fire';
+    } else if (type === 'direction') {
+      return getRandomWord(['north', 'south', 'east', 'west', 'upward', 'downward', 'inward', 'outward']) || 'north';
+    }
+
     switch (type) {
       case 'noun':
         wordPool = [
@@ -95,6 +143,13 @@ export class PoeticFlowPatterns {
         break;
     }
     
+    // Add cultural/era words based on context (20% chance)
+    if (Math.random() < 0.2) {
+      const eras = Object.keys(this.culturalWords);
+      const selectedEra = eras[Math.floor(Math.random() * eras.length)] as keyof typeof this.culturalWords;
+      wordPool = [...wordPool, ...this.culturalWords[selectedEra]];
+    }
+
     // Filter and select best word
     const filtered = wordPool
       .filter(w => w && w.length > 2 && w.length < 12)
@@ -250,6 +305,13 @@ export class PoeticFlowPatterns {
       const word = this.selectPoeticWord('adverb', sources, poetryContext);
       return capitalize(word);
     });
+    // New placeholder types
+    result = result.replace(/{temporal}/g, () => capitalize(this.selectPoeticWord('temporal', sources, poetryContext)));
+    result = result.replace(/{color}/g, () => capitalize(this.selectPoeticWord('color', sources, poetryContext)));
+    result = result.replace(/{number}/g, () => capitalize(this.selectPoeticWord('number', sources, poetryContext)));
+    result = result.replace(/{emotion}/g, () => capitalize(this.selectPoeticWord('emotion', sources, poetryContext)));
+    result = result.replace(/{element}/g, () => capitalize(this.selectPoeticWord('element', sources, poetryContext)));
+    result = result.replace(/{direction}/g, () => capitalize(this.selectPoeticWord('direction', sources, poetryContext)));
     
     // Clean up the result
     result = this.cleanupPhrase(result);
