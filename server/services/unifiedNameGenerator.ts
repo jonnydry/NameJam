@@ -103,8 +103,15 @@ export class UnifiedNameGeneratorService {
         names = await this.generateWithPatterns(context, type, genre, mood, count, wordCount);
       }
       
-      // 3. Apply final filtering and formatting
-      const finalNames = names.slice(0, count);
+      // 3. Apply quality scoring and select best names
+      const scoredNames = names.map(name => ({
+        name,
+        score: this.scoreNameQuality(name, genre, mood)
+      }));
+      
+      // Sort by quality score and take the best ones
+      scoredNames.sort((a, b) => b.score - a.score);
+      const finalNames = scoredNames.slice(0, count).map(item => item.name);
       const elapsedTime = Date.now() - startTime;
       
       // End performance monitoring
@@ -401,7 +408,18 @@ User inputs:
 - Mood: ${mood || 'neutral'} (make the names evoke this emotion through word choice or imagery)
 - Word count: ${this.formatWordCount(wordCount)} (strictly adhere to this)
 
-IMPORTANT: Avoid excessive alliteration! Don't make all words start with the same letter. Mix different sounds for natural, varied names.`;
+${this.getMoodGuidelines(mood)}
+
+${this.getGenreExamples(genre, type)}
+
+IMPORTANT: Avoid excessive alliteration! Don't make all words start with the same letter. Mix different sounds for natural, varied names.
+
+ANTI-CLICHÉ RULES:
+- No direct references to obvious genre clichés (e.g., "Electric" + "Guitar" for rock)
+- Avoid overused patterns like "The [Adjective] [Plural Noun]" unless you give it a unique twist
+- Don't use tired combinations like "Dark Shadow", "Neon Dreams", "Crystal Heart"
+- Skip generic descriptors like "awesome", "cool", "amazing" in favor of specific, evocative words
+- If using humor, be clever and unexpected - avoid dad jokes and obvious puns`;
 
     if (strategy.enableVarietyOptimizations) {
       return basePrompt + `
@@ -551,17 +569,121 @@ Return ONLY the JSON object above.`;
     }
   }
 
+  // Quality scoring for generated names
+  private scoreNameQuality(name: string, genre?: string, mood?: string): number {
+    let score = 50; // Base score
+    
+    // Word count appropriateness
+    const wordCount = name.split(' ').length;
+    if (wordCount >= 2 && wordCount <= 4) score += 10;
+    else if (wordCount >= 5 && wordCount <= 7) score += 5;
+    
+    // Uniqueness of words
+    const words = name.toLowerCase().split(' ');
+    const uniqueWords = new Set(words);
+    if (uniqueWords.size === words.length) score += 10;
+    
+    // Avoid clichés
+    const clichePairs = ['dark shadow', 'neon dream', 'electric storm', 'crystal heart', 'golden hour'];
+    const nameLower = name.toLowerCase();
+    if (clichePairs.some(cliche => nameLower.includes(cliche))) score -= 15;
+    
+    // Genre alignment
+    if (genre) {
+      const genreTerms = this.getCommonGenreTerms(genre);
+      const hasGenreAlignment = words.some(word => genreTerms.includes(word));
+      if (hasGenreAlignment) score += 5;
+      
+      // But penalize if too obvious
+      const tooObvious = words.filter(word => genreTerms.slice(0, 3).includes(word)).length > 1;
+      if (tooObvious) score -= 10;
+    }
+    
+    // Mood alignment
+    if (mood) {
+      const moodWords = this.getStaticMoodWords(mood);
+      const hasMoodAlignment = words.some(word => 
+        moodWords.some(moodWord => word.includes(moodWord.toLowerCase()))
+      );
+      if (hasMoodAlignment) score += 5;
+    }
+    
+    // Phonetic quality
+    const hasGoodFlow = !name.match(/[^aeiou]{4,}/i); // No 4+ consonants in a row
+    if (hasGoodFlow) score += 5;
+    
+    // Alliteration penalty (if excessive)
+    const firstLetters = words.map(w => w[0].toLowerCase());
+    const mostCommonLetter = firstLetters.sort((a, b) => 
+      firstLetters.filter(l => l === b).length - firstLetters.filter(l => l === a).length
+    )[0];
+    const alliterationCount = firstLetters.filter(l => l === mostCommonLetter).length;
+    if (alliterationCount >= 3 && words.length >= 3) score -= 10;
+    
+    // Length penalty for overly long names
+    if (name.length > 40) score -= 10;
+    if (name.length > 50) score -= 20;
+    
+    // Bonus for clever wordplay or puns (basic detection)
+    const punIndicators = ['play', 'way', 'sound', 'beat', 'soul', 'bass', 'rock', 'wave'];
+    const hasPotentialPun = words.some(word => 
+      punIndicators.some(pun => word.includes(pun) && word !== pun)
+    );
+    if (hasPotentialPun) score += 8;
+    
+    return Math.max(0, Math.min(100, score));
+  }
+
   private generateFallbackNames(type: string, genre?: string, mood?: string, count: number = 4): Array<{name: string, isAiGenerated: boolean, source: string}> {
-    const fallbackNames = [
-      'Electric Dreams',
-      'Midnight Echo', 
-      'Golden Hour',
-      'Neon Lights',
-      'Silver Rain',
-      'Cosmic Light',
-      'Rising Storm',
-      'Ocean Waves'
-    ];
+    // Curated fallback database with genre/mood variants
+    const curatedFallbacks: { [key: string]: { [key: string]: string[] } } = {
+      general: {
+        neutral: ['Electric Dreams', 'Midnight Echo', 'Golden Hour', 'Neon Lights'],
+        happy: ['Sunshine Parade', 'Rainbow Bridge', 'Crystal Celebration', 'Joy Division'],
+        sad: ['Rain Shadows', 'Melancholy Moon', 'Broken Compass', 'Silent Rivers'],
+        dark: ['Shadow Puppets', 'Void Walkers', 'Obsidian Hearts', 'Phantom Limb'],
+        energetic: ['Voltage Spike', 'Kinetic Rush', 'Thunder Squad', 'Pulse Riders']
+      },
+      rock: {
+        neutral: ['Amplifier Gods', 'Distortion Theory', 'Feedback Loop', 'Power Surge'],
+        angry: ['Riot Act', 'Broken Chains', 'Rage Cage', 'Rebel Yell'],
+        energetic: ['Electric Mayhem', 'Sonic Boom', 'Thunder Strike', 'Velocity']
+      },
+      indie: {
+        neutral: ['Analog Kids', 'Vintage Future', 'Cassette Dreams', 'DIY Orchestra'],
+        sad: ['Rainy Day Committee', 'Melancholy Collective', 'Nostalgia Club', 'Fading Polaroids'],
+        mysterious: ['Secret Handshake', 'Hidden Tracks', 'Mystery Machine', 'Unknown Sender']
+      },
+      electronic: {
+        neutral: ['Circuit Breakers', 'Digital Natives', 'Pixel Pushers', 'Binary Stars'],
+        energetic: ['Bass Drops', 'Frequency Modulation', 'Sync Rate', 'Beat Grid'],
+        dark: ['Glitch Mob', 'Dark Web', 'System Error', 'Corrupted Data']
+      },
+      'jam band': {
+        neutral: ['Cosmic Voyage', 'Groove Merchants', 'Festival Circuit', 'Journey Home'],
+        happy: ['Sunshine Daydream', 'Good Vibes Tribe', 'Happy Accident', 'Color Wheel'],
+        mysterious: ['Space Oddity', 'Mystic Travelers', 'Astral Projection', 'Time Spiral']
+      }
+    };
+
+    // Select appropriate fallbacks
+    const genreFallbacks = curatedFallbacks[genre || 'general'] || curatedFallbacks.general;
+    const moodFallbacks = genreFallbacks[mood || 'neutral'] || genreFallbacks.neutral;
+    const fallbackNames = [...moodFallbacks];
+    
+    // Add some general fallbacks if needed
+    if (fallbackNames.length < count) {
+      fallbackNames.push(
+        'Velvet Revolution',
+        'Paper Tigers',
+        'Mirror Lake',
+        'Cloud Nine',
+        'Phoenix Rising',
+        'Aurora Borealis',
+        'Quantum Leap',
+        'Time Capsule'
+      );
+    }
 
     return fallbackNames.slice(0, count).map(name => ({
       name,
@@ -687,6 +809,64 @@ Return ONLY the JSON object above.`;
     return genreSpecific[genre || ''] || "Avoid repetitive use of the most obvious genre keywords.";
   }
 
+  private getMoodGuidelines(mood?: string): string {
+    const guidelines: { [key: string]: string } = {
+      happy: "HAPPY MOOD: Use bright, energetic words. Think celebration, sunshine, laughter. Examples: 'Kaleidoscope', 'Confetti', 'Carousel'. Avoid forced positivity - be genuinely uplifting.",
+      sad: "SAD MOOD: Evoke melancholy without being overly dramatic. Think rain, memories, longing. Examples: 'Fading', 'Echo', 'Willow'. Avoid clichéd sadness tropes.",
+      angry: "ANGRY MOOD: Channel raw energy and rebellion. Think fire, storms, breaking chains. Examples: 'Riot', 'Venom', 'Shatter'. Avoid gratuitous violence or aggression.",
+      dark: "DARK MOOD: Create atmospheric tension. Think shadows, mysteries, the unknown. Examples: 'Obsidian', 'Hollow', 'Cipher'. Avoid horror movie clichés.",
+      calm: "CALM MOOD: Suggest peace and tranquility. Think water, breath, gentle motion. Examples: 'Drift', 'Haven', 'Lotus'. Avoid being boring or too new-age.",
+      energetic: "ENERGETIC MOOD: Pulse with kinetic energy. Think lightning, racing, explosions. Examples: 'Voltage', 'Catalyst', 'Surge'. Avoid hyperactive randomness.",
+      mysterious: "MYSTERIOUS MOOD: Intrigue and enigma. Think fog, codes, hidden meanings. Examples: 'Paradox', 'Mirage', 'Enigma'. Avoid being pretentiously cryptic.",
+      romantic: "ROMANTIC MOOD: Passionate but not cheesy. Think chemistry, dance, stolen moments. Examples: 'Velvet', 'Constellation', 'Ember'. Avoid saccharine sweetness."
+    };
+    return guidelines[mood || ''] || '';
+  }
+
+  private getGenreExamples(genre?: string, type?: string): string {
+    const isband = type === 'band';
+    const examples: { [key: string]: { band: string[], song: string[] } } = {
+      rock: {
+        band: ["Queens of the Stone Age", "Arctic Monkeys", "The War on Drugs", "King Gizzard & the Lizard Wizard"],
+        song: ["Sympathy for the Devil", "Smells Like Teen Spirit", "Seven Nation Army", "Welcome to the Jungle"]
+      },
+      indie: {
+        band: ["Neutral Milk Hotel", "Car Seat Headrest", "Japanese Breakfast", "Vampire Weekend"],
+        song: ["Such Great Heights", "Float On", "Oxford Comma", "Time to Dance"]
+      },
+      electronic: {
+        band: ["Boards of Canada", "Crystal Castles", "Justice", "Moderat"],
+        song: ["Midnight City", "Digital Love", "Strobe", "Breathe"]
+      },
+      jazz: {
+        band: ["Weather Report", "Return to Forever", "Snarky Puppy", "The Bad Plus"],
+        song: ["Take Five", "Giant Steps", "Birdland", "Spain"]
+      },
+      folk: {
+        band: ["Fleet Foxes", "The Tallest Man on Earth", "Iron & Wine", "The Mountain Goats"],
+        song: ["The Boxer", "Suzanne", "Fast Car", "The Cave"]
+      },
+      'jam band': {
+        band: ["Widespread Panic", "String Cheese Incident", "Umphrey's McGee", "moe."],
+        song: ["Fire on the Mountain", "Scarlet Begonias", "Divided Sky", "You Enjoy Myself"]
+      },
+      pop: {
+        band: ["CHVRCHES", "Walk the Moon", "Foster the People", "Two Door Cinema Club"],
+        song: ["Blinding Lights", "Levitating", "good 4 u", "Heat Waves"]
+      },
+      hip_hop: {
+        band: ["Run the Jewels", "Flatbush Zombies", "Death Grips", "Injury Reserve"],
+        song: ["HUMBLE.", "Sicko Mode", "Money Trees", "All Caps"]
+      }
+    };
+    
+    const genreExamples = examples[genre || ''];
+    if (!genreExamples) return '';
+    
+    const selectedExamples = isband ? genreExamples.band : genreExamples.song;
+    return `\nEXAMPLES OF GREAT ${genre?.toUpperCase()} ${isband ? 'BAND NAMES' : 'SONG TITLES'} (for inspiration only - create something original):\n${selectedExamples.map(ex => `- ${ex}`).join('\n')}`;
+  }
+
   private getCommonGenreTerms(genre?: string): string[] {
     const commonTerms: { [key: string]: string[] } = {
       blues: ['delta', 'mississippi', 'soul', 'deep', 'raw', 'authentic'],
@@ -718,4 +898,54 @@ Return ONLY the JSON object above.`;
   }
 }
 
-export const unifiedNameGenerator = new UnifiedNameGeneratorService();
+// Singleton instance with aggressive caching configuration
+class CachedUnifiedNameGeneratorService extends UnifiedNameGeneratorService {
+  private aggressiveCache = new Map<string, { names: string[], timestamp: number }>();
+  private readonly AGGRESSIVE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+  async generateNames(
+    request: GenerateNameRequest, 
+    strategy: GenerationStrategy = GENERATION_STRATEGIES.QUALITY
+  ): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
+    // Create cache key from request parameters
+    const cacheKey = `${request.type}-${request.genre}-${request.mood}-${request.wordCount}-${request.count}`;
+    
+    // Check aggressive cache for speed mode
+    if (strategy.contextDepth === 'minimal') {
+      const cached = this.aggressiveCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < this.AGGRESSIVE_CACHE_TTL) {
+        secureLog.debug('Using aggressive cache for speed mode');
+        return cached.names.slice(0, request.count || 4).map(name => ({
+          name,
+          isAiGenerated: false,
+          source: 'cached'
+        }));
+      }
+    }
+    
+    // Generate names using parent method
+    const result = await super.generateNames(request, strategy);
+    
+    // Store in aggressive cache
+    if (result.length > 0) {
+      this.aggressiveCache.set(cacheKey, {
+        names: result.map(r => r.name),
+        timestamp: Date.now()
+      });
+      
+      // Clean old cache entries
+      if (this.aggressiveCache.size > 100) {
+        const now = Date.now();
+        for (const [key, value] of this.aggressiveCache.entries()) {
+          if (now - value.timestamp > this.AGGRESSIVE_CACHE_TTL) {
+            this.aggressiveCache.delete(key);
+          }
+        }
+      }
+    }
+    
+    return result;
+  }
+}
+
+export const unifiedNameGenerator = new CachedUnifiedNameGeneratorService();

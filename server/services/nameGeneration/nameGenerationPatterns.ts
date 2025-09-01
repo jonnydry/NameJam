@@ -16,6 +16,62 @@ import { poeticFlowPatterns } from './poeticFlowPatterns';
 export class NameGenerationPatterns {
   constructor(private datamuseService: DatamuseService) {}
 
+  // Humor injection patterns for puns and wordplay
+  private humorPatterns = {
+    puns: [
+      { base: 'beat', variations: ['beet', 'beats', 'beetz'] },
+      { base: 'soul', variations: ['sole', 'seoul', 'sol'] },
+      { base: 'bass', variations: ['base', 'bays'] },
+      { base: 'metal', variations: ['mettle', 'medal'] },
+      { base: 'rock', variations: ['roc', 'rok'] },
+      { base: 'wave', variations: ['waive', 'weigh'] },
+      { base: 'chord', variations: ['cord', 'cored'] },
+      { base: 'phase', variations: ['faze', 'phaze'] },
+      { base: 'cymbal', variations: ['symbol'] },
+      { base: 'suite', variations: ['sweet', 'swete'] }
+    ],
+    wordplay: [
+      (word: string) => word.split('').reverse().join(''), // Reverse
+      (word: string) => word.replace(/[aeiou]/g, match => match === match.toUpperCase() ? match.toLowerCase() : match.toUpperCase()), // Vowel case swap
+      (word: string) => word.charAt(0) + word.slice(1).replace(/[aeiou]/g, ''), // Remove inner vowels
+      (word: string) => word.replace(/s$/, 'z').replace(/c/g, 'k'), // Edgy spelling
+    ]
+  };
+
+  // Dynamic question templates
+  private questionTemplates = [
+    "Who {verb} the {noun}?",
+    "Where {verb} {noun} {verb}?",
+    "Why {verb} {noun}?",
+    "When {noun} {verb}?",
+    "What {verb} {preposition} {noun}?",
+    "How {adverb} {verb} {noun}?"
+  ];
+
+  // Narrative arc templates for longer names
+  private narrativeArcs = {
+    journey: [
+      "{noun} {verb} from {noun} to {noun}",
+      "The {adjective} {noun} {verb} through {adjective} {noun}",
+      "{verb} the {noun}, {verb} the {noun}, {verb} the {noun}"
+    ],
+    transformation: [
+      "When {noun} becomes {noun}",
+      "From {adjective} to {adjective}: A {noun}'s {noun}",
+      "The {noun} that {verb} into {noun}"
+    ],
+    conflict: [
+      "{noun} versus the {adjective} {noun}",
+      "The {noun} {verb} while {noun} {verb}",
+      "{adjective} {noun} against {adjective} {noun}"
+    ],
+    discovery: [
+      "Finding {noun} in {adjective} {noun}",
+      "The {noun} who {verb} {noun}",
+      "{verb} the {adjective} {noun} within"
+    ]
+  };
+
   async generateContextualName(
     sources: EnhancedWordSource, 
     type: string, 
@@ -151,6 +207,12 @@ export class NameGenerationPatterns {
   }
 
   private async generateTwoWordContextual(sources: EnhancedWordSource, type: string, genre?: string): Promise<string> {
+    // Add humor injection 30% of the time
+    if (Math.random() < 0.3) {
+      const humorousName = this.injectHumor(sources, 2);
+      if (humorousName) return humorousName;
+    }
+
     const patterns = [
       // Invented/Compound word patterns
       () => {
@@ -226,6 +288,17 @@ export class NameGenerationPatterns {
   }
 
   private async generateThreeWordContextual(sources: EnhancedWordSource, type: string, genre?: string): Promise<string> {
+    // Add question format 15% of the time for songs
+    if (type === 'song' && Math.random() < 0.15) {
+      const question = this.generateQuestion(sources, 3);
+      if (question) return question;
+    }
+
+    // Add humor injection 25% of the time
+    if (Math.random() < 0.25) {
+      const humorousName = this.injectHumor(sources, 3);
+      if (humorousName) return humorousName;
+    }
     // For bands, heavily favor "The [Adjective] [Noun]" pattern
     if (type === 'band') {
       const bandPatterns = [
@@ -323,6 +396,11 @@ export class NameGenerationPatterns {
   }
 
   private async generateLongFormContextual(sources: EnhancedWordSource, wordCount: number, type: string): Promise<string> {
+    // Use narrative arcs for longer names (6+ words) 40% of the time
+    if (wordCount >= 6 && Math.random() < 0.4) {
+      const narrative = this.generateNarrativeArc(sources, wordCount);
+      if (narrative) return narrative;
+    }
     switch (wordCount) {
       case 4:
         return this.generateFourWordPoetic(sources, type);
@@ -522,6 +600,54 @@ export class NameGenerationPatterns {
     return patterns[Math.floor(Math.random() * patterns.length)]();
   }
 
+  private generateNarrativeArc(sources: EnhancedWordSource, wordCount: number): string | null {
+    try {
+      const arcTypes = Object.keys(this.narrativeArcs);
+      const selectedArc = arcTypes[Math.floor(Math.random() * arcTypes.length)] as keyof typeof this.narrativeArcs;
+      const templates = this.narrativeArcs[selectedArc];
+      const template = templates[Math.floor(Math.random() * templates.length)];
+      
+      let result = template;
+      
+      // Replace placeholders with contextual words
+      result = result.replace(/{noun}/g, () => capitalize(singularize(getRandomWord(sources.nouns) || 'dream')));
+      result = result.replace(/{verb}/g, () => capitalize(getRandomWord(sources.verbs) || 'dance'));
+      result = result.replace(/{adjective}/g, () => capitalize(getRandomWord(sources.adjectives) || 'eternal'));
+      result = result.replace(/{adverb}/g, () => capitalize(getRandomWord(['slowly', 'quickly', 'endlessly']) || 'slowly'));
+      result = result.replace(/{preposition}/g, () => getRandomWord(['through', 'beyond', 'within', 'across']) || 'through');
+      
+      // Pad or trim to match word count
+      const words = result.split(' ');
+      
+      if (words.length < wordCount) {
+        // Add descriptive elements
+        while (words.length < wordCount) {
+          const insertPosition = Math.floor(Math.random() * words.length);
+          const insertWord = capitalize(getRandomWord([...sources.adjectives, ...sources.musicalTerms]) || 'sonic');
+          words.splice(insertPosition, 0, insertWord);
+        }
+      } else if (words.length > wordCount) {
+        // Remove less important words (articles, prepositions first)
+        const removable = ['the', 'a', 'an', 'of', 'in', 'to', 'from'];
+        for (const word of removable) {
+          const index = words.findIndex(w => w.toLowerCase() === word);
+          if (index !== -1 && words.length > wordCount) {
+            words.splice(index, 1);
+          }
+        }
+        // If still too long, truncate
+        if (words.length > wordCount) {
+          words.length = wordCount;
+        }
+      }
+      
+      return words.join(' ');
+    } catch (error) {
+      secureLog.debug('Narrative arc generation failed:', error);
+      return null;
+    }
+  }
+
   private generateStructuredPhrase(sources: EnhancedWordSource, wordCount: number): string {
     // Fallback for any word count
     const words: string[] = [];
@@ -552,6 +678,84 @@ export class NameGenerationPatterns {
     }
     
     return words.join(' ');
+  }
+
+  private injectHumor(sources: EnhancedWordSource, wordCount: number): string | null {
+    try {
+      const strategies = [
+        // Pun strategy
+        () => {
+          const punPattern = this.humorPatterns.puns[Math.floor(Math.random() * this.humorPatterns.puns.length)];
+          const variation = punPattern.variations[Math.floor(Math.random() * punPattern.variations.length)];
+          if (wordCount === 2) {
+            const companion = getRandomWord([...sources.nouns, ...sources.adjectives]) || 'club';
+            return `${capitalize(variation)} ${capitalize(companion)}`;
+          } else if (wordCount === 3) {
+            const adj = getRandomWord(sources.adjectives) || 'electric';
+            return `The ${capitalize(adj)} ${capitalize(variation)}`;
+          }
+          return null;
+        },
+        // Wordplay strategy
+        () => {
+          const word = getRandomWord([...sources.nouns, ...sources.musicalTerms]) || 'music';
+          const playFunc = this.humorPatterns.wordplay[Math.floor(Math.random() * this.humorPatterns.wordplay.length)];
+          const playedWord = playFunc(word);
+          if (wordCount === 2) {
+            const companion = getRandomWord(sources.nouns) || 'club';
+            return `${capitalize(playedWord)} ${capitalize(companion)}`;
+          } else if (wordCount === 3) {
+            const prep = getRandomWord(['of', 'and', 'for']) || 'of';
+            const noun = getRandomWord(sources.nouns) || 'sound';
+            return `${capitalize(playedWord)} ${prep} ${capitalize(noun)}`;
+          }
+          return null;
+        },
+        // Unexpected juxtaposition
+        () => {
+          const formal = ['Distinguished', 'Eloquent', 'Sophisticated', 'Refined', 'Dignified'];
+          const informal = ['Burrito', 'Pickle', 'Waffle', 'Noodle', 'Taco', 'Donut'];
+          const formalWord = getRandomWord(formal) || 'Distinguished';
+          const informalWord = getRandomWord(informal) || 'Burrito';
+          if (wordCount === 2) {
+            return `${formalWord} ${informalWord}`;
+          } else if (wordCount === 3) {
+            const connector = getRandomWord(['and the', 'meets', 'versus']) || 'and the';
+            return `${formalWord} ${connector} ${informalWord}`;
+          }
+          return null;
+        }
+      ];
+
+      const strategy = strategies[Math.floor(Math.random() * strategies.length)];
+      return strategy();
+    } catch (error) {
+      secureLog.debug('Humor injection failed:', error);
+      return null;
+    }
+  }
+
+  private generateQuestion(sources: EnhancedWordSource, wordCount: number): string | null {
+    try {
+      if (wordCount < 3) return null;
+      
+      const template = this.questionTemplates[Math.floor(Math.random() * this.questionTemplates.length)];
+      let result = template;
+      
+      result = result.replace(/{noun}/g, () => capitalize(singularize(getRandomWord(sources.nouns) || 'star')));
+      result = result.replace(/{verb}/g, () => capitalize(getRandomWord(sources.verbs) || 'dance'));
+      result = result.replace(/{adjective}/g, () => capitalize(getRandomWord(sources.adjectives) || 'wild'));
+      result = result.replace(/{adverb}/g, () => capitalize(getRandomWord(['softly', 'quickly', 'deeply']) || 'softly'));
+      result = result.replace(/{preposition}/g, () => getRandomWord(['through', 'beyond', 'within']) || 'through');
+      
+      const words = result.split(' ');
+      if (words.length !== wordCount) return null;
+      
+      return result;
+    } catch (error) {
+      secureLog.debug('Question generation failed:', error);
+      return null;
+    }
   }
 
   private getSimpleFallback(sources: EnhancedWordSource, wordCount: number): string {
