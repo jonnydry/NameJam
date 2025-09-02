@@ -242,6 +242,14 @@
     background-color: rgba(249, 115, 22, 0.03) !important;
   }
   
+  .carousel-card-purple:hover {
+    border-color: rgba(168, 85, 247, 0.8) !important;
+    box-shadow: 
+      0 0 15px rgba(168, 85, 247, 0.3),
+      0 0 30px rgba(168, 85, 247, 0.1);
+    background-color: rgba(168, 85, 247, 0.03) !important;
+  }
+  
   .carousel-card-red:hover {
     border-color: rgba(239, 68, 68, 0.8) !important;
     box-shadow: 
