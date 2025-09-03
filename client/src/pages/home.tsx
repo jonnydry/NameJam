@@ -13,11 +13,33 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Import the result interface
+interface GenerationResult {
+  id: number;
+  name: string;
+  type: string;
+  wordCount: number;
+  verification: {
+    status: 'available' | 'similar' | 'taken';
+    details?: string;
+    similarNames?: string[];
+    verificationLinks?: Array<{
+      name: string;
+      url: string;
+      source: string;
+    }>;
+  };
+}
+
 export default function Home() {
   const [copiedName, setCopiedName] = useState<string | null>(null);
   const [isStashOpen, setIsStashOpen] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  
+  // Shared state for name generation results to persist across tab switches
+  const [bandResults, setBandResults] = useState<GenerationResult[]>([]);
+  const [songResults, setSongResults] = useState<GenerationResult[]>([]);
 
   // No longer redirect automatically - mixed approach allows guest usage
 
@@ -116,7 +138,12 @@ export default function Home() {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="names">
-                  <NameGenerator />
+                  <NameGenerator 
+                    bandResults={bandResults}
+                    setBandResults={setBandResults}
+                    songResults={songResults}
+                    setSongResults={setSongResults}
+                  />
                 </TabsContent>
                 <TabsContent value="lyric">
                   <LyricJam />
