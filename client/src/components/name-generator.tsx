@@ -32,15 +32,21 @@ interface GenerationResult {
   };
 }
 
-export function NameGenerator() {
+interface NameGeneratorProps {
+  bandResults: GenerationResult[];
+  setBandResults: (results: GenerationResult[]) => void;
+  songResults: GenerationResult[];
+  setSongResults: (results: GenerationResult[]) => void;
+}
+
+export function NameGenerator({ bandResults, setBandResults, songResults, setSongResults }: NameGeneratorProps) {
   const [nameType, setNameType] = useState<'band' | 'song'>('band');
   const [wordCount, setWordCount] = useState<number | '4+'>(2);
   const [mood, setMood] = useState<string>('none');
   const [genre, setGenre] = useState<string>('none');
   
-  // Separate result caches for bands and songs
-  const [bandResults, setBandResults] = useState<GenerationResult[]>([]);
-  const [songResults, setSongResults] = useState<GenerationResult[]>([]);
+  // Note: bandResults and songResults are now passed as props from parent component
+  // This ensures state persists when switching between tabs
   
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
