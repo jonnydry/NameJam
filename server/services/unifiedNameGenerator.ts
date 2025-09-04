@@ -315,7 +315,14 @@ export class UnifiedNameGeneratorService {
     const generateCount = (wordCount === '4+' || wordCount === 4.1) ? Math.max(count + 4, 8) : count;
     const prompt = this.buildAIPrompt(processedContext, type, genre, mood, generateCount, wordCount, strategy);
     
-    return await this.generateWithXAI(prompt, generateCount, wordCount);
+    // Get temperature adjustment from genre-mood matrix
+    const { genreMoodMatrix } = require('./nameGeneration/genreMoodMatrix');
+    let temperatureAdjust = 0;
+    if (genre && mood) {
+      temperatureAdjust = genreMoodMatrix.getTemperatureAdjustment(genre, mood);
+    }
+    
+    return await this.generateWithXAI(prompt, generateCount, wordCount, temperatureAdjust);
   }
 
   private async generateWithPatterns(
@@ -397,6 +404,18 @@ export class UnifiedNameGeneratorService {
     wordCount?: number | string,
     strategy: GenerationStrategy = GENERATION_STRATEGIES.QUALITY
   ): string {
+    // Import genre-mood matrix for enhanced prompting
+    const { genreMoodMatrix } = require('./nameGeneration/genreMoodMatrix');
+    
+    // Get mood-aware vocabulary and temperature adjustment
+    let temperatureAdjust = 0;
+    let avoidWords: string[] = [];
+    if (genre && mood) {
+      const moodVocab = genreMoodMatrix.getWeightedVocabulary(genre, mood);
+      avoidWords = moodVocab.avoid;
+      temperatureAdjust = genreMoodMatrix.getTemperatureAdjustment(genre, mood);
+    }
+    
     const isband = type === 'band';
     const creativity = strategy.contextDepth === 'comprehensive' ? 'wildly creative and humorous' : 
                      strategy.contextDepth === 'standard' ? 'creative and entertaining' : 'creative';
@@ -417,9 +436,13 @@ IMPORTANT: Avoid excessive alliteration! Don't make all words start with the sam
 ANTI-CLICHÉ RULES:
 - No direct references to obvious genre clichés (e.g., "Electric" + "Guitar" for rock)
 - Avoid overused patterns like "The [Adjective] [Plural Noun]" unless you give it a unique twist
-- Don't use tired combinations like "Dark Shadow", "Neon Dreams", "Crystal Heart"
+- Don't use tired combinations like "Dark Shadow", "Neon Dreams", "Crystal Heart", "Eternal Flame"
 - Skip generic descriptors like "awesome", "cool", "amazing" in favor of specific, evocative words
-- If using humor, be clever and unexpected - avoid dad jokes and obvious puns`;
+- If using humor, be clever and unexpected - avoid dad jokes and obvious puns
+- For names with 4+ words: NO excessive alliteration (max 2 words can start with same letter)
+- Avoid these overused AI-generated words: "lunar", "celestial", "cosmic" (unless space-themed), "mystical", "ethereal"
+- ${avoidWords.length > 0 ? `Don't use these mood-inappropriate words: ${avoidWords.join(', ')}` : ''}
+- Mix consonant and vowel sounds for better phonetic flow`;
 
     if (strategy.enableVarietyOptimizations) {
       return basePrompt + `
@@ -505,12 +528,16 @@ Return ONLY the JSON object above.`;
     };
   }
 
-  private async generateWithXAI(prompt: string, count: number, wordCount?: number | string): Promise<string[]> {
+  private async generateWithXAI(prompt: string, count: number, wordCount?: number | string, temperatureAdjust: number = 0): Promise<string[]> {
     try {
+      // Apply dynamic temperature based on mood/genre (1.1 is base, adjust ±0.2)
+      const baseTemperature = 1.1;
+      const finalTemperature = Math.max(0.7, Math.min(1.5, baseTemperature + temperatureAdjust));
+      
       const response = await this.openai.chat.completions.create({
         model: "grok-3",
         messages: [{ role: "user", content: prompt }],
-        temperature: 1.1,
+        temperature: finalTemperature,
         max_tokens: 300
       });
 
