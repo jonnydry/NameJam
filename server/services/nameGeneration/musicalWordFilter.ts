@@ -30,13 +30,36 @@ const INAPPROPRIATE_WORDS = new Set([
 
 // Words that are overused in AI-generated names
 const CLICHE_WORDS = new Set([
+  // Space/cosmic clichés (unless specifically space-themed)
   'lunar', 'solar', 'celestial', 'cosmic', 'galactic', 'astral', 'ethereal',
+  'nebula', 'supernova', 'interstellar', 'stellar', 'planetary', 'orbital',
+  
+  // Fantasy/mystical clichés
   'mystical', 'mythical', 'legendary', 'ancient', 'timeless', 'eternal',
+  'enchanted', 'magical', 'arcane', 'supernatural', 'otherworldly',
+  
+  // Overused descriptors
   'infinite', 'boundless', 'limitless', 'endless', 'immortal', 'divine',
+  'ultimate', 'supreme', 'paramount', 'transcendent', 'omnipotent',
+  
+  // Religious/spiritual clichés
   'sacred', 'holy', 'blessed', 'cursed', 'damned', 'forsaken', 'forbidden',
+  'prophetic', 'apocalyptic', 'revelation', 'salvation', 'redemption',
+  
+  // Fantasy creatures (unless genre-appropriate)
   'dragon', 'phoenix', 'griffin', 'unicorn', 'pegasus', 'chimera', 'hydra',
+  'kraken', 'leviathan', 'basilisk', 'minotaur', 'centaur',
+  
+  // Overused visual descriptors
   'glimmering', 'shimmering', 'glistening', 'gleaming', 'glowing', 'radiant',
-  'dancing', 'floating', 'drifting', 'soaring', 'flying', 'gliding'
+  'luminous', 'incandescent', 'iridescent', 'phosphorescent', 'fluorescent',
+  
+  // Overused motion words
+  'dancing', 'floating', 'drifting', 'soaring', 'flying', 'gliding',
+  'ascending', 'descending', 'hovering', 'levitating', 'swirling',
+  
+  // Generic emotional descriptors
+  'melancholy', 'euphoric', 'serenity', 'tranquility', 'ecstasy', 'blissful'
 ]);
 
 // Genre-specific appropriate words
@@ -152,6 +175,32 @@ export function scoreMusicalName(name: string, type: 'band' | 'song', genre?: st
   // Band names can be more abstract than song names
   if (type === 'band') {
     score += 0.1;
+  }
+  
+  // Integrate phonetic flow analysis for better quality
+  try {
+    const { phoneticFlowAnalyzer } = require('./phoneticFlowAnalyzer');
+    const phoneticScore = phoneticFlowAnalyzer.analyzePhoneticFlow(name);
+    
+    // Weight phonetic score (25% of final score)
+    const phoneticWeight = phoneticScore.overall / 100 * 0.25;
+    score = score * 0.75 + phoneticWeight;
+    
+    // Additional penalties for specific phonetic issues
+    if (phoneticScore.pronunciation < 50) {
+      score -= 0.1; // Hard to pronounce
+    }
+    if (phoneticScore.memorability < 40) {
+      score -= 0.05; // Hard to remember  
+    }
+    
+    // Penalize excessive alliteration based on phonetic analysis
+    if (phoneticScore.issues.some((issue: string) => issue.includes('Excessive alliteration'))) {
+      score -= 0.15;
+    }
+  } catch (error) {
+    // If phonetic analyzer fails, continue with base scoring
+    secureLog.debug('Phonetic analysis skipped:', error);
   }
   
   // Ensure score is between 0 and 1
