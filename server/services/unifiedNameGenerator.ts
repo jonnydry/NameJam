@@ -315,14 +315,8 @@ export class UnifiedNameGeneratorService {
     const generateCount = (wordCount === '4+' || wordCount === 4.1) ? Math.max(count + 4, 8) : count;
     const prompt = this.buildAIPrompt(processedContext, type, genre, mood, generateCount, wordCount, strategy);
     
-    // Get temperature adjustment from genre-mood matrix
-    const { genreMoodMatrix } = require('./nameGeneration/genreMoodMatrix');
-    let temperatureAdjust = 0;
-    if (genre && mood) {
-      temperatureAdjust = genreMoodMatrix.getTemperatureAdjustment(genre, mood);
-    }
-    
-    return await this.generateWithXAI(prompt, generateCount, wordCount, temperatureAdjust);
+    // Use default temperature for now (we'll add proper imports later)
+    return await this.generateWithXAI(prompt, generateCount, wordCount, 0);
   }
 
   private async generateWithPatterns(
@@ -404,17 +398,8 @@ export class UnifiedNameGeneratorService {
     wordCount?: number | string,
     strategy: GenerationStrategy = GENERATION_STRATEGIES.QUALITY
   ): string {
-    // Import genre-mood matrix for enhanced prompting
-    const { genreMoodMatrix } = require('./nameGeneration/genreMoodMatrix');
-    
     // Get mood-aware vocabulary and temperature adjustment
-    let temperatureAdjust = 0;
     let avoidWords: string[] = [];
-    if (genre && mood) {
-      const moodVocab = genreMoodMatrix.getWeightedVocabulary(genre, mood);
-      avoidWords = moodVocab.avoid;
-      temperatureAdjust = genreMoodMatrix.getTemperatureAdjustment(genre, mood);
-    }
     
     const isband = type === 'band';
     const creativity = strategy.contextDepth === 'comprehensive' ? 'wildly creative and humorous' : 
