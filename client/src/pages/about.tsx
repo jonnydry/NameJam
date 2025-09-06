@@ -52,21 +52,15 @@ export default function About() {
                 <div className="p-4 border border-solid border-border/30 rounded-lg bg-card/60 backdrop-blur-sm">
                   <h3 className="font-medium mb-3">Key Features</h3>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• <strong>5-API Synergy System:</strong> Revolutionary integration of Spotify, Last.fm, ConceptNet, Datamuse, and PoetryDB APIs working together to create contextually rich, genre-authentic names</li>
-                    <li>• <strong>PoetryDB Integration:</strong> Classical poetry context enhances generation with poetic vocabulary, imagery, and themes mapped to genres/moods (e.g., jazz → moon/night/smoke, metal → darkness/rage)</li>
-                    <li>• <strong>Enhanced 4+ Word Generation:</strong> Natural language patterns using PoeticFlowPatterns class with linguistic templates, grammatical connectives, and smart word categorization for poetic flow</li>
-                    <li>• <strong>Optimized Performance:</strong> Sub-10 second response times achieved through modular architecture, circuit breaker patterns, memory caching with TTL, and parallel API processing</li>
-                    <li>• <strong>Advanced AI Integration:</strong> XAI Grok-3 model with dynamic temperature control, forbidden word filtering, and guaranteed 4-result generation with fallback mechanisms</li>
-                    <li>• <strong>Musical Word Filter:</strong> Comprehensive filtering excludes inappropriate terms, overused AI clichés, and non-musical vocabulary while integrating genre-specific terminology</li>
-                    <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, enhanced with popularity scores, genres, and direct search links</li>
-                    <li>• <strong>Refactored Lyric Generation:</strong> Clean modular architecture with LyricOrchestrator, LyricContextGatherer, and LyricGenerator services. Features circuit breaker patterns, memory caching, and comprehensive TypeScript type safety</li>
-                    <li>• <strong>Advanced Stash System:</strong> Save names, lyrics, and band bios with 5-star ratings, category filtering, and comprehensive export options (text/JSON/print)</li>
-                    <li>• <strong>Quality Control System:</strong> Semantic coherence checks, pronunciation validation, anti-repetition with 30-minute word memory, and poetic quality assessment</li>
-                    <li>• <strong>Set List Generator:</strong> Create organized song lists (8 or 16 songs) with mood/genre settings, automatic structuring, and Spotify verification for each song</li>
-                    <li>• <strong>Band Bio Generator:</strong> Create engaging band biographies with sophisticated humor, authentic backstories, and genre-appropriate narrative styles</li>
-                    <li>• <strong>Smart Name Patterns:</strong> Pattern-based generation following real band/song naming conventions with compound words, personal statements, and genre-specific structures</li>
-                    <li>• <strong>Reliable Name Generation:</strong> Enhanced AI generation with automatic retry mechanisms, fallback generation, and guaranteed 4-name results. Fixed filtering issues that previously caused incomplete result sets</li>
-                    <li>• <strong>Modern Typography:</strong> Optimized monospace design with JetBrains Mono font, typing animations, and responsive text scaling using CSS clamp() functions</li>
+                    <li>• <strong>AI-Powered Name Generation:</strong> XAI Grok-3 model generates creative band and song names with humor, wordplay, and genre-specific context</li>
+                    <li>• <strong>Real-Time Music Verification:</strong> Spotify integration checks name availability and provides popularity scores with direct search links</li>
+                    <li>• <strong>Multi-API Context System:</strong> Combines Spotify, Last.fm, Datamuse, ConceptNet, and PoetryDB for rich, genre-authentic vocabulary</li>
+                    <li>• <strong>Lyric Generation:</strong> AI-powered lyrical starters with genre-specific vocabulary, poetic themes, and variable length options</li>
+                    <li>• <strong>Band Biography Generator:</strong> Creates entertaining band backstories with humor and genre-appropriate narratives</li>
+                    <li>• <strong>Enhanced Stash System:</strong> Save and organize your favorites with ratings, search, bulk operations, and export options</li>
+                    <li>• <strong>Jam Band Genre Support:</strong> Specialized vocabulary and context for jam band, psychedelic, and improvisational music styles</li>
+                    <li>• <strong>Reliable Performance:</strong> Circuit breaker patterns, memory caching, and fallback systems ensure consistent results</li>
+                    <li>• <strong>Guest-Friendly Design:</strong> Full functionality available without login, with optional account features for enhanced stash management</li>
                   </ul>
                 </div>
                 
@@ -76,58 +70,46 @@ export default function About() {
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Frontend</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• React 18 with TypeScript for complete type safety and modern development</li>
-                        <li>• Tailwind CSS with shadcn/ui components, optimized CSS clamp() responsive scaling</li>
-                        <li>• JetBrains Mono typography with custom formatting utilities</li>
-                        <li>• Wouter for lightweight client-side routing</li>
-                        <li>• TanStack React Query v5 with intelligent caching and error handling</li>
-                        <li>• Vite with optimized build process, hot reload, and Service Worker caching</li>
-                        <li>• React Context for global stash state with local storage persistence</li>
-                        <li>• Custom hooks for clipboard operations, loading progress, and debounced callbacks</li>
+                        <li>• React 18 with TypeScript for type safety and modern development</li>
+                        <li>• Tailwind CSS with shadcn/ui components for responsive design</li>
+                        <li>• TanStack React Query v5 for state management and caching</li>
+                        <li>• Vite for fast development and optimized builds</li>
+                        <li>• JetBrains Mono typography for clean monospace aesthetics</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Backend</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• Node.js 20 with Express.js, ES modules, and production-optimized logging</li>
-                        <li>• PostgreSQL with Drizzle ORM for type-safe database operations and migrations</li>
-                        <li>• Neon Database serverless PostgreSQL with edge compatibility and WebSocket support</li>
-                        <li>• Unified performance caching system with NodeCache for intelligent data storage</li>
-                        <li>• Comprehensive security with rate limiting, CORS, Helmet headers, and input sanitization</li>
-                        <li>• TSX for TypeScript execution, parallel verification services, and timeout handling</li>
-                        <li>• Authentication system with mixed approach supporting guest users and signed-in features</li>
+                        <li>• Node.js with Express.js and TypeScript for robust API development</li>
+                        <li>• PostgreSQL with Drizzle ORM for type-safe database operations</li>
+                        <li>• Neon Database for serverless PostgreSQL hosting</li>
+                        <li>• Memory caching with TTL for optimized API performance</li>
+                        <li>• Security features including rate limiting, CORS, and input sanitization</li>
+                        <li>• Replit OpenID Connect for optional user authentication</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">AI & External APIs</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• XAI Grok-3 model with enhanced reliability, circuit breaker patterns, automatic fallback generation, and intelligent retry logic for consistent results</li>
-                        <li>• PoetryDB API for classical poetry context - vocabulary, imagery, themes, and phrases mapped to musical genres and moods</li>
-                        <li>• Datamuse API for authentic linguistic relationships, multi-query strategies, and contextual word chains (300,000+ words)</li>
-                        <li>• ConceptNet API for semantic knowledge, emotional associations, and cultural context with 30-minute response caching</li>
-                        <li>• Spotify Web API (priority) for authoritative music verification with popularity scores, genre data, and artist/track vocabulary extraction</li>
-                        <li>• Last.fm API for genre vocabulary, descriptive words, and related genre discovery with confidence scoring</li>
-                        <li>• MusicBrainz API for additional music database coverage and artist verification</li>
-                        <li>• Famous Names Database with 60+ well-known artists for playful easter egg responses</li>
-                        <li>• Unified caching system with 15-minute timeouts for poetry/context data and 30-minute timeouts for ConceptNet responses</li>
-                        <li>• Cross-generation anti-repetition system with stem tracking, time-weighted penalties, and 30-minute word memory</li>
+                        <li>• XAI Grok-3 model for creative name and lyric generation with reliability patterns</li>
+                        <li>• Spotify Web API for music verification, popularity scoring, and genre data</li>
+                        <li>• Last.fm API for genre vocabulary and music metadata</li>
+                        <li>• Datamuse API for linguistic relationships and word associations</li>
+                        <li>• ConceptNet API for semantic knowledge and cultural context</li>
+                        <li>• PoetryDB API for classical poetry vocabulary and thematic content</li>
+                        <li>• Intelligent caching system with configurable timeouts for optimal performance</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Core Architecture</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• 5-API Synergy System integrating Spotify, Last.fm, ConceptNet, Datamuse, and PoetryDB for comprehensive context</li>
-                        <li>• PoeticFlowPatterns class for natural language generation with linguistic templates and grammatical connectives</li>
-                        <li>• Advanced word categorization system (noun, verb, adjective) for proper placement in multi-word names</li>
-                        <li>• Parallel processing architecture reducing response times from 50+ to 7-10 seconds</li>
-                        <li>• Real-time name verification with Spotify-priority checking, popularity scoring, and direct search links</li>
-                        <li>• Comprehensive quality control with semantic coherence checks and pronunciation validation</li>
-                        <li>• Unified caching system with intelligent timeouts (15-minute for context, 30-minute for API responses)</li>
-                        <li>• Musical word filtering system excluding 30+ overused terms and inappropriate vocabulary</li>
-                        <li>• Pattern-based name generation following real band/song naming conventions</li>
-                        <li>• Enhanced retry mechanisms with secondary AI generation and fallback systems ensuring guaranteed 4-name results</li>
-                        <li>• Non-blocking database storage for improved API response times</li>
-                        <li>• Complete TypeScript type safety with centralized configuration, modular service architecture, and comprehensive error handling with custom error types</li>
+                        <li>• Modular service architecture with clean separation of concerns</li>
+                        <li>• Circuit breaker patterns for reliable external API integration</li>
+                        <li>• Memory caching with TTL for performance optimization</li>
+                        <li>• TypeScript throughout for complete type safety</li>
+                        <li>• Parallel processing for sub-10 second response times</li>
+                        <li>• Retry mechanisms with fallback generation ensuring consistent results</li>
+                        <li>• Centralized configuration management for easy maintenance</li>
                       </ul>
                     </div>
                   </div>
