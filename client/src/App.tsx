@@ -8,7 +8,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import Home from "@/pages/home";
 import About from "@/pages/about";
-import LogoDemo from "@/pages/logo-demo";
 import NotFound from "@/pages/not-found";
 import { Landing } from "@/components/landing";
 import { ErrorBoundary } from "@/components/error-boundary-new";
@@ -32,7 +31,6 @@ function Router() {
           <Route path="/" component={isAuthenticated ? Home : Landing} />
           <Route path="/app" component={Home} />
           <Route path="/about" component={About} />
-          <Route path="/logo-demo" component={LogoDemo} />
         </>
       )}
       <Route component={NotFound} />
