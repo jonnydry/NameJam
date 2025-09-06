@@ -111,7 +111,12 @@ export class LyricConfig {
 export const getLyricConfig = () => LyricConfig.getInstance();
 
 // Genre-specific configurations
-export const GENRE_CONFIG = {
+export const GENRE_CONFIG: {
+  seeds: Record<string, string[]>;
+  emotions: Record<string, string[]>;
+  moods: Record<string, string[]>;
+  themes: Record<string, string[]>;
+} = {
   seeds: {
     rock: ['electric', 'loud', 'rebel', 'guitar', 'anthem', 'power'],
     pop: ['catchy', 'bright', 'dance', 'radio', 'summer', 'love'],
@@ -163,7 +168,13 @@ export const GENRE_CONFIG = {
 };
 
 // Word validation configuration
-export const WORD_VALIDATION_CONFIG = {
+export const WORD_VALIDATION_CONFIG: {
+  minLength: number;
+  maxLength: number;
+  excludePatterns: RegExp[];
+  excludeCommonWords: string[];
+  imageryKeywords: string[];
+} = {
   minLength: 2,
   maxLength: 15,
   excludePatterns: [
