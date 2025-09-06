@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FermataLogo } from "@/components/fermata-logo";
+import { ModernLogo } from "@/components/modern-logo";
 import { Link } from "wouter";
 import { LogIn, Zap, ListMusic, NotebookPen, Brain, Archive, Music, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -89,7 +89,7 @@ export function Landing() {
             <div className="flex flex-col items-center">
               {/* Logo */}
               <div className="mb-4 logo-mobile">
-                <FermataLogo size="xl" />
+                <ModernLogo size="xl" variant="full" />
               </div>
               {/* Title with special alignment */}
               <div className="relative">
