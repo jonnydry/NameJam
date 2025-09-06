@@ -572,8 +572,87 @@ Return ONLY the JSON object above.`;
         }
       }
 
-      const uniqueNames = [...new Set(names)].slice(0, count);
-      return uniqueNames;
+      let uniqueNames = [...new Set(names)];
+      
+      // If we don't have enough unique names, try to generate more
+      if (uniqueNames.length < count) {
+        secureLog.debug(`Only got ${uniqueNames.length}/${count} names, attempting to generate more`);
+        
+        // Try a second generation with slightly different parameters
+        try {
+          const secondPrompt = prompt.replace('Generate', 'Create additional unique').replace('creative', 'wildly creative and diverse');
+          const secondResponse = await this.openai.chat.completions.create({
+            model: "grok-3",
+            messages: [{ role: "user", content: secondPrompt }],
+            temperature: Math.min(1.5, finalTemperature + 0.2),
+            max_tokens: 300
+          });
+
+          const secondContent = secondResponse.choices[0].message.content?.trim();
+          if (secondContent) {
+            let additionalNames: string[] = [];
+            
+            if (secondContent.includes('"band_names"') || secondContent.includes('"song_titles"')) {
+              try {
+                const jsonStart = secondContent.indexOf('{');
+                const jsonEnd = secondContent.lastIndexOf('}');
+                if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+                  const jsonContent = secondContent.substring(jsonStart, jsonEnd + 1);
+                  const parsed = JSON.parse(jsonContent);
+                  if (parsed.band_names && Array.isArray(parsed.band_names)) {
+                    additionalNames = parsed.band_names.map((name: string) => name.trim());
+                  } else if (parsed.song_titles && Array.isArray(parsed.song_titles)) {
+                    additionalNames = parsed.song_titles.map((name: string) => name.trim());
+                  }
+                }
+              } catch (error) {
+                secureLog.debug('Failed to parse second generation JSON');
+              }
+            }
+            
+            if (additionalNames.length === 0) {
+              additionalNames = secondContent
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0 && !line.match(/^\d+\./) && line.length < 150)
+                .map(line => line.replace(/^[-•]\s*/, ''))
+                .filter(line => line.length > 0);
+            }
+
+            // Filter additional names for word count if specified
+            if (wordCount) {
+              additionalNames = additionalNames.filter(name => {
+                const actualWordCount = name.split(/\s+/).length;
+                return this.isValidWordCount(actualWordCount, wordCount);
+              });
+            }
+
+            // Add new unique names
+            for (const name of additionalNames) {
+              if (!uniqueNames.some(existing => existing.toLowerCase() === name.toLowerCase())) {
+                uniqueNames.push(name);
+                if (uniqueNames.length >= count) break;
+              }
+            }
+            
+            secureLog.debug(`After second generation: ${uniqueNames.length}/${count} names`);
+          }
+        } catch (error) {
+          secureLog.debug('Second generation attempt failed:', error);
+        }
+      }
+      
+      // If still not enough, fill with fallback names
+      if (uniqueNames.length < count) {
+        const fallbackNames = this.generateBasicFallbackNames(count - uniqueNames.length);
+        for (const fallback of fallbackNames) {
+          if (!uniqueNames.some(existing => existing.toLowerCase() === fallback.toLowerCase())) {
+            uniqueNames.push(fallback);
+          }
+        }
+      }
+      
+      return uniqueNames.slice(0, count);
 
     } catch (error) {
       secureLog.error('XAI generation error:', error);
@@ -644,6 +723,16 @@ Return ONLY the JSON object above.`;
     if (hasPotentialPun) score += 8;
     
     return Math.max(0, Math.min(100, score));
+  }
+
+  private generateBasicFallbackNames(count: number): string[] {
+    const basicFallbacks = [
+      'Electric Dreams', 'Midnight Echo', 'Golden Hour', 'Neon Lights',
+      'Cosmic Voyage', 'Silver Thread', 'Azure Sky', 'Crimson Wave',
+      'Velvet Storm', 'Diamond Dust', 'Emerald City', 'Ruby Moon',
+      'Sapphire Sound', 'Crystal Vision', 'Amber Glow', 'Jade Wind'
+    ];
+    return basicFallbacks.slice(0, count);
   }
 
   private generateFallbackNames(type: string, genre?: string, mood?: string, count: number = 4): Array<{name: string, isAiGenerated: boolean, source: string}> {
