@@ -36,9 +36,9 @@ const TYPE_CONFIG = {
   },
   song: { 
     icon: Music, 
-    color: 'text-green-400', 
-    bgColor: 'bg-green-400/10',
-    borderColor: 'border-green-400/20',
+    color: 'text-purple-400', 
+    bgColor: 'bg-purple-400/10',
+    borderColor: 'border-purple-400/20',
     label: 'Song Names'
   },
   bandLore: { 
@@ -50,9 +50,9 @@ const TYPE_CONFIG = {
   },
   lyricJam: { 
     icon: Mic, 
-    color: 'text-yellow-400', 
-    bgColor: 'bg-yellow-400/10',
-    borderColor: 'border-yellow-400/20',
+    color: 'text-green-400', 
+    bgColor: 'bg-green-400/10',
+    borderColor: 'border-green-400/20',
     label: 'Lyrics'
   }
 };
