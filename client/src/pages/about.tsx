@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ModernLogo } from "@/components/modern-logo";
+import { FermataLogo } from "@/components/fermata-logo";
 
 export default function About() {
   return (
@@ -20,7 +20,7 @@ export default function About() {
           <div className="text-center mb-8">
             <div className="flex flex-col items-center">
               <div className="mb-4">
-                <ModernLogo size="xl" variant="icon-only" />
+                <FermataLogo size="xl" />
               </div>
               <h1 className="text-responsive-3xl md:text-responsive-4xl font-bold mb-2 uppercase tracking-wide font-mono title-gradient">&gt;ABOUT_NAME_JAM</h1>
             </div>
