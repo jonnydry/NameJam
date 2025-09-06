@@ -1,6 +1,6 @@
 import { NameGenerator } from "@/components/name-generator";
 import { LyricJam } from "@/components/lyric-jam";
-import { FermataLogo } from "@/components/fermata-logo";
+import { ModernLogo } from "@/components/modern-logo";
 import { StashSidebarEnhanced as StashSidebar } from "@/components/stash-sidebar-enhanced";
 import { UserMenu } from "@/components/user-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,7 +58,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <FermataLogo size="xl" />
+          <ModernLogo size="xl" variant="icon-only" />
           <p className="text-muted-foreground mt-4">Loading...</p>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function Home() {
             <div className="flex flex-col items-center">
               {/* Logo */}
               <div className="mb-3 md:mb-4">
-                <FermataLogo size="xl" />
+                <ModernLogo size="xl" variant="full" />
               </div>
               {/* Title with special alignment */}
               <div className="relative">
