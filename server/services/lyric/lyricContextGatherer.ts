@@ -13,6 +13,8 @@ import { conceptNetService } from '../conceptNetService';
 import { poetryDbService } from '../poetryDbService';
 import { apiContextCache } from '../cacheService';
 import { secureLog } from '../../utils/secureLogger';
+import { lyricCircuitBreakers } from '../../utils/circuitBreaker';
+import { getLyricConfig, GENRE_CONFIG, WORD_VALIDATION_CONFIG } from '../../config/lyricConfig';
 
 export class LyricContextGatherer {
   private datamuseService: DatamuseService;
@@ -108,10 +110,11 @@ export class LyricContextGatherer {
   }
 
   /**
-   * Fetch Datamuse context
+   * Fetch Datamuse context with circuit breaker
    */
   private async fetchDatamuseContext(genre: string, context: ComprehensiveAPIContext): Promise<void> {
     try {
+      await lyricCircuitBreakers.datamuse.execute(async () => {
       const genreSeeds = this.getGenreSeedWords(genre);
       const emotionalSeeds = this.getEmotionalSeeds(genre);
       
@@ -139,18 +142,19 @@ export class LyricContextGatherer {
         .filter(w => this.isGoodLyricWord(w.word))
         .map(w => w.word)
         .slice(0, 8);
-        
+      });
     } catch (error) {
       secureLog.error('Error fetching Datamuse context:', error);
     }
   }
 
   /**
-   * Fetch Spotify context
+   * Fetch Spotify context with circuit breaker
    */
   private async fetchSpotifyContext(genre: string, context: ComprehensiveAPIContext): Promise<void> {
     try {
-      if (await this.spotifyService.isAvailable()) {
+      await lyricCircuitBreakers.spotify.execute(async () => {
+        if (await this.spotifyService.isAvailable()) {
         // Get genre-specific artists
         const genreArtists = await this.spotifyService.getGenreArtists(genre);
         context.spotify.genreArtists = genreArtists.slice(0, 10).map(artist => artist.name);
@@ -178,16 +182,18 @@ export class LyricContextGatherer {
           context.spotify.audioFeatures = null;
         }
       }
+      });
     } catch (error) {
       secureLog.error('Error fetching Spotify context:', error);
     }
   }
 
   /**
-   * Fetch Last.fm context
+   * Fetch Last.fm context with circuit breaker
    */
   private async fetchLastFmContext(genre: string, context: ComprehensiveAPIContext): Promise<void> {
     try {
+      await lyricCircuitBreakers.lastfm.execute(async () => {
       // Get genre vocabulary which includes all the information we need
       const genreVocabulary = await lastfmService.getGenreVocabulary(genre);
       
@@ -205,17 +211,18 @@ export class LyricContextGatherer {
         // We don't have direct access to artists, but we can use descriptive words
         context.lastfm.topArtists = genreVocabulary.descriptiveWords?.slice(0, 10) || [];
       }
-      
+      });
     } catch (error) {
       secureLog.error('Error fetching Last.fm context:', error);
     }
   }
 
   /**
-   * Fetch ConceptNet context
+   * Fetch ConceptNet context with circuit breaker
    */
   private async fetchConceptNetContext(genre: string, context: ComprehensiveAPIContext): Promise<void> {
     try {
+      await lyricCircuitBreakers.conceptnet.execute(async () => {
       // Get genre-related concepts
       const genreConcepts = await conceptNetService.getRelatedConcepts(genre, 15);
       context.conceptnet.genreConcepts = genreConcepts
@@ -243,17 +250,18 @@ export class LyricContextGatherer {
       context.conceptnet.culturalAssociations = culturalConnections
         .filter(w => this.isGoodLyricWord(w))
         .slice(0, 8);
-        
+      });
     } catch (error) {
       secureLog.error('Error fetching ConceptNet context:', error);
     }
   }
 
   /**
-   * Fetch Poetry context
+   * Fetch Poetry context with circuit breaker
    */
   private async fetchPoetryContext(genre: string | undefined, context: ComprehensiveAPIContext): Promise<void> {
     try {
+      await lyricCircuitBreakers.poetry.execute(async () => {
       // Use the getPoetryContext method from poetryDbService
       const poetryContext = await poetryDbService.getPoetryContext(genre);
       
@@ -268,7 +276,7 @@ export class LyricContextGatherer {
       if (context.poetry.themes.length === 0) {
         context.poetry.themes = genre ? this.getPoetryThemes(genre) : ['love', 'nature', 'time'];
       }
-      
+      });
     } catch (error) {
       secureLog.error('Error fetching Poetry context:', error);
     }
@@ -277,90 +285,38 @@ export class LyricContextGatherer {
   // Helper methods (simplified versions from original service)
   
   private getGenreSeedWords(genre: string): string[] {
-    const genreSeeds: Record<string, string[]> = {
-      rock: ['electric', 'loud', 'rebel', 'guitar'],
-      pop: ['catchy', 'bright', 'dance', 'radio'],
-      country: ['home', 'road', 'heart', 'whiskey'],
-      'hip-hop': ['street', 'real', 'flow', 'truth'],
-      indie: ['dream', 'youth', 'city', 'night'],
-      folk: ['story', 'wood', 'river', 'home'],
-      metal: ['power', 'dark', 'rage', 'storm'],
-      electronic: ['pulse', 'light', 'wave', 'future'],
-      'jam band': ['groove', 'cosmic', 'journey', 'festival']
-    };
-    
-    return genreSeeds[genre] || ['music', 'song', 'melody', 'rhythm'];
+    return GENRE_CONFIG.seeds[genre] || GENRE_CONFIG.seeds.default;
   }
 
   private getEmotionalSeeds(genre: string): string[] {
-    const emotionalMap: Record<string, string[]> = {
-      rock: ['anger', 'freedom', 'passion'],
-      pop: ['love', 'joy', 'desire'],
-      country: ['heartbreak', 'nostalgia', 'pride'],
-      'hip-hop': ['struggle', 'success', 'respect'],
-      indie: ['longing', 'wonder', 'melancholy'],
-      folk: ['wisdom', 'peace', 'memory'],
-      metal: ['fury', 'power', 'darkness'],
-      electronic: ['euphoria', 'energy', 'transcendence'],
-      'jam band': ['bliss', 'unity', 'exploration']
-    };
-    
-    return emotionalMap[genre] || ['love', 'hope', 'dream'];
+    return GENRE_CONFIG.emotions[genre] || GENRE_CONFIG.emotions.default;
   }
 
   private getMoodKeywords(genre: string): string[] {
-    const moodMap: Record<string, string[]> = {
-      rock: ['energetic', 'rebellious', 'powerful'],
-      pop: ['upbeat', 'romantic', 'fun'],
-      country: ['heartfelt', 'nostalgic', 'honest'],
-      'hip-hop': ['confident', 'raw', 'authentic'],
-      indie: ['dreamy', 'introspective', 'alternative'],
-      folk: ['acoustic', 'storytelling', 'traditional'],
-      metal: ['aggressive', 'intense', 'heavy'],
-      electronic: ['atmospheric', 'rhythmic', 'futuristic'],
-      'jam band': ['psychedelic', 'improvisational', 'groovy']
-    };
-    
-    return moodMap[genre] || ['emotional', 'expressive', 'moving'];
+    return GENRE_CONFIG.moods[genre] || GENRE_CONFIG.moods.default;
   }
 
   private getPoetryThemes(genre: string): string[] {
-    const themeMap: Record<string, string[]> = {
-      rock: ['rebellion', 'youth', 'freedom'],
-      pop: ['love', 'dreams', 'celebration'],
-      country: ['home', 'loss', 'tradition'],
-      'hip-hop': ['struggle', 'identity', 'triumph'],
-      indie: ['solitude', 'discovery', 'change'],
-      folk: ['nature', 'wisdom', 'journey'],
-      metal: ['chaos', 'power', 'darkness'],
-      electronic: ['future', 'technology', 'transformation'],
-      'jam band': ['consciousness', 'universe', 'community']
-    };
-    
-    return themeMap[genre] || ['life', 'love', 'time'];
+    return GENRE_CONFIG.themes[genre] || GENRE_CONFIG.themes.default;
   }
 
   private isGoodLyricWord(word: string): boolean {
-    if (!word || word.length < 2) return false;
-    if (word.length > 15) return false;
-    if (/^\d+$/.test(word)) return false;
-    if (/[^a-z'-]/i.test(word)) return false;
+    if (!word || word.length < WORD_VALIDATION_CONFIG.minLength) return false;
+    if (word.length > WORD_VALIDATION_CONFIG.maxLength) return false;
     
-    const commonWords = ['the', 'and', 'but', 'for', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'does', 'did'];
-    if (commonWords.includes(word.toLowerCase())) return false;
+    // Check exclusion patterns
+    for (const pattern of WORD_VALIDATION_CONFIG.excludePatterns) {
+      if (pattern.test(word)) return false;
+    }
+    
+    // Check common words
+    if (WORD_VALIDATION_CONFIG.excludeCommonWords.includes(word.toLowerCase())) return false;
     
     return true;
   }
 
   private isImageryWord(word: string): boolean {
-    const imageryPatterns = [
-      'sun', 'moon', 'star', 'sky', 'cloud', 'rain', 'storm',
-      'fire', 'water', 'earth', 'wind', 'stone', 'mountain',
-      'tree', 'flower', 'rose', 'ocean', 'river', 'wave',
-      'light', 'dark', 'shadow', 'bright', 'color', 'gold'
-    ];
-    
-    return imageryPatterns.some(pattern => word.includes(pattern));
+    return WORD_VALIDATION_CONFIG.imageryKeywords.some(pattern => word.includes(pattern));
   }
 
   private countTotalVocabulary(context: ComprehensiveAPIContext): number {

@@ -13,6 +13,7 @@ import {
 import { xaiRateLimiter, withRetry } from '../../utils/rateLimiter';
 import { secureLog } from '../../utils/secureLogger';
 import { lyricGenerationCache } from '../cacheService';
+import { getLyricConfig } from '../../config/lyricConfig';
 
 export class LyricGenerator {
   private openai: OpenAI | null = null;
@@ -183,6 +184,7 @@ export class LyricGenerator {
   ): Promise<LyricGenerationResult | null> {
     if (!this.openai) return null;
 
+    const config = getLyricConfig().getOpenAIConfig();
     const systemPrompt = `You are a master lyricist who creates structurally diverse lyrics based on detailed JSON specifications.
 
 CORE COMPETENCIES:
@@ -218,22 +220,22 @@ Reply with ONLY the JSON object.`;
 
     try {
       const requestParams = {
-        model: "grok-3",
+        model: config.model,
         messages: [
           { role: "system" as const, content: systemPrompt },
           { role: "user" as const, content: userPrompt }
         ],
-        temperature: 1.2,
-        max_tokens: 200,
-        frequency_penalty: 0.6,
-        presence_penalty: 0.5
+        temperature: config.temperature,
+        max_tokens: config.maxTokens,
+        frequency_penalty: config.frequencyPenalty,
+        presence_penalty: config.presencePenalty
       };
 
       const completion = await xaiRateLimiter.execute(async () => {
         return withRetry(async () => {
           const resp = await this.openai!.chat.completions.create(requestParams);
           return resp;
-        }, 3, 2000);
+        }, config.retryAttempts, config.retryDelay);
       });
 
       const generatedResponse = completion.choices[0]?.message?.content?.trim();
