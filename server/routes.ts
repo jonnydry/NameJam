@@ -461,39 +461,6 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     }
   });
 
-  // Enhanced Datamuse-powered name generation test endpoint
-  app.post("/api/test-enhanced-generation", async (req: Request, res: Response) => {
-    try {
-      const { type = 'band', wordCount = 2, mood, genre, count = 3 } = req.body;
-      
-      secureLog.debug(`🧪 Testing enhanced generation: ${count} ${type} names with ${wordCount} words`);
-      
-      const request = {
-        type,
-        wordCount: parseInt(wordCount),
-        count: parseInt(count),
-        mood,
-        genre
-      };
-
-      // Generate using enhanced Datamuse-powered method
-      const enhancedResults = await nameGenerator.generateNames(request, GENERATION_STRATEGIES.QUALITY);
-
-      res.json({
-        request: request,
-        results: enhancedResults,
-        method: "Datamuse API with contextual word relationships",
-        info: "All non-AI results now use real linguistic data from Datamuse API"
-      });
-    } catch (error) {
-      secureLog.error("Error in enhanced generation test:", error);
-      res.status(500).json({ 
-        error: "Enhanced generation test failed",
-        details: error instanceof Error ? error.message : "Unknown error",
-        fallback: "Traditional generation is still available"
-      });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;
