@@ -347,9 +347,9 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
               </div>
 
               {/* Content */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 max-w-full">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     {item.type === 'lyricJam' ? (
                       <p className="text-sm italic leading-relaxed">"{item.name}"</p>
                     ) : (
