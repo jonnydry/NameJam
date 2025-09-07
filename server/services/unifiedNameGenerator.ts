@@ -116,8 +116,7 @@ export class UnifiedNameGeneratorService {
       scoredNames.sort((a: any, b: any) => b.score - a.score);
       const finalNames = scoredNames.slice(0, count).map((item: any) => item.name);
       
-      // 5. Track accepted names in the filter
-      finalNames.forEach((name: string) => unifiedWordFilter.acceptName(name, generationId));
+      // Names are already tracked during filtering, no need to track again
       const elapsedTime = Date.now() - startTime;
       
       // End performance monitoring
@@ -990,6 +989,8 @@ Return ONLY the JSON object above.`;
     for (const name of names) {
       if (!unifiedWordFilter.shouldRejectName(name, generationId)) {
         filteredNames.push(name);
+        // Track the name immediately when accepted to prevent future duplicates
+        unifiedWordFilter.acceptName(name, generationId);
       } else {
         secureLog.debug(`Filtered out repetitive name: "${name}"`);
       }
