@@ -1,0 +1,113 @@
+Here's a comprehensive refactoring plan to address all the issues I identified in the `bandBioGenerator.ts` file. The plan is organized into phases with specific, actionable steps:
+
+## Phase 1: Planning and Infrastructure Setup
+
+__1.1 Create Type Definitions and Interfaces__
+
+- Define TypeScript interfaces for JSON prompt structures
+- Create types for method parameters (band details, setlist data)
+- Define response format types for API calls
+- Add enum for prompt types and journalistic styles
+
+__1.2 Extract Configuration__
+
+- Create a separate `bandBioConfig.ts` file for all constants
+- Move arrays (journalisticStyles, formations, uniqueElements) to config
+- Add environment variable management for API settings
+- Define default values and validation rules
+
+__1.3 Remove Legacy Code__
+
+- Delete or deprecate the `generateBandBioWithDetailsOld` method
+- Clean up any unused imports or commented code
+
+## Phase 2: Refactor Core Methods (generateBandBio)
+
+__2.1 Break Down the Monster Method__
+
+- Extract `generatePromptStyle()`: Handles random journalistic style selection
+- Extract `buildJsonPrompt()`: Constructs JSON prompt objects
+- Extract `createRequestParams()`: Builds API request parameters
+- Extract `processAiResponse()`: Parses and validates AI responses
+- Refactor main method to orchestrate these smaller functions
+
+__2.2 Optimize Random Selection Logic__
+
+- Implement efficient random array picking (avoid repeated Math.random() calls)
+- Create helper functions for weighted random selection
+- Add seed-based randomization for consistent testing
+
+__2.3 Streamline Response Processing__
+
+- Simplify JSON parsing with utility functions
+- Add proper error handling for malformed responses
+- Implement response sanitization and validation
+
+## Phase 3: Enhance Fallback System
+
+__3.1 Improve generateFallbackBio Method__
+
+- Move static arrays to class properties for reuse
+- Add caching mechanism for expensive computations
+- Implement random seed management for variety
+- Optimize member selection algorithm
+
+__3.2 Add Input Validation__
+
+- Validate genre and mood parameters against allowed values
+- Implement length checks for band names
+- Add sanitization for user-provided content
+
+## Phase 4: Infrastructure Improvements
+
+__4.1 Configuration Management__
+
+- Replace hard-coded values with config-driven approach
+- Add runtime configuration validation
+- Implement feature flags for different AI models
+
+__4.2 Error Handling and Resilience__
+
+- Implement exponential backoff for API retries
+- Add circuit breaker pattern for API failures
+- Categorize errors (API limits, network issues, rate limits)
+- Improve fallback triggering logic
+
+__4.3 Logging Standardization__
+
+- Replace console.error with secureLog throughout
+- Add structured logging with context information
+- Implement log levels for different environments
+
+## Phase 5: Code Quality and Testing
+
+__5.1 Eliminate Code Duplication__
+
+- Extract common bio generation patterns
+- Create utility functions for shared logic
+- Implement builder pattern for bio construction
+
+__5.2 Add Comprehensive Tests__
+
+- Unit tests for prompt generation functions
+- Integration tests for API interaction
+- Mock tests for fallback scenarios
+- Test various input validation cases
+
+__5.3 Performance Optimization__
+
+- Profile memory usage of large arrays
+- Add memory-efficient alternatives for large datasets
+- Implement lazy loading for unused resources
+
+## Implementation Order and Dependencies
+
+__Primary Focus (High Impact, Low Risk):__
+
+1. Extract configuration (Phase 1.2)
+2. Create type definitions (Phase 1.1)
+3. Break down generateBandBio (Phase 2)
+
+__Secondary Focus:__ 4. Improve fallback system (Phase 3) 5. Infrastructure improvements (Phase 4)
+
+__Final Steps:__ 6. Testing and validation (Phase 5) 7. Code cleanup and documentation
