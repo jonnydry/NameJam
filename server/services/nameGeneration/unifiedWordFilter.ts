@@ -56,8 +56,23 @@ export class UnifiedWordFilter {
       return true;
     }
     
-    // 2. Skip word/stem checking for current generation - too restrictive for only 4 results
-    // Allow some word reuse within the 4 results for better generation success
+    // 2. Check for significant word overlap in current generation
+    const significantWords = this.getSignificantWords(name);
+    let currentGenerationOverlap = 0;
+    
+    for (const word of significantWords) {
+      if (this.currentGenerationWords.has(word.toLowerCase())) {
+        currentGenerationOverlap++;
+        secureLog.debug(`⚠️  Word overlap detected: "${word}" already used in current generation`);
+      }
+    }
+    
+    // Reject if too many significant words overlap (configurable threshold)
+    const maxSignificantOverlap = 2; // Allow max 1 significant word overlap per result set
+    if (currentGenerationOverlap >= maxSignificantOverlap) {
+      secureLog.debug(`❌ Rejected "${name}" - ${currentGenerationOverlap} significant words already used (max: ${maxSignificantOverlap-1})`);
+      return true;
+    }
     
     // 3. Check against recent words from previous generations (weighted by recency)
     const recentThreshold = Date.now() - RECENT_WORD_TIMEOUT;
@@ -96,8 +111,16 @@ export class UnifiedWordFilter {
     const words = this.extractWords(name);
     const stems = words.map(w => this.getWordStem(w));
     const timestamp = Date.now();
+    const lowerName = name.toLowerCase();
     
-    // Track in current generation
+    // Track full name and significant words in current generation
+    this.currentGenerationWords.add(lowerName);
+    
+    // Track significant words separately for overlap detection
+    const significantWords = this.getSignificantWords(name);
+    significantWords.forEach(word => this.currentGenerationWords.add(word.toLowerCase()));
+    
+    // Also track all words and stems for historical tracking
     words.forEach(word => this.currentGenerationWords.add(word.toLowerCase()));
     stems.forEach(stem => this.currentGenerationWords.add(stem));
     
@@ -147,7 +170,22 @@ export class UnifiedWordFilter {
 
   // Extract meaningful words from a name (excluding common function words)
   private extractWords(name: string): string[] {
-    // Common function words that should not be filtered
+    const allWords = this.getAllWords(name);
+    return allWords.filter(word => this.isSignificantWord(word));
+  }
+
+  // Get all words from a name
+  private getAllWords(name: string): string[] {
+    return name
+      .toLowerCase()
+      .split(/[\s\-_]+/)
+      .map(word => word.replace(/[^a-z]/g, ''))
+      .filter(word => word.length >= 2); // Include shorter words for analysis
+  }
+
+  // Determine if a word is significant for repetition filtering
+  private isSignificantWord(word: string): boolean {
+    // Function words that are not significant for repetition
     const functionWords = new Set([
       'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
       'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
@@ -159,14 +197,32 @@ export class UnifiedWordFilter {
       'my', 'your', 'his', 'her', 'its', 'our', 'their'
     ]);
     
-    return name
-      .toLowerCase()
-      .split(/[\s\-_]+/)
-      .map(word => word.replace(/[^a-z]/g, ''))
-      .filter(word => 
-        word.length >= 3 && // Only track meaningful words
-        !functionWords.has(word) // Exclude common function words
-      );
+    // Minor words that don't matter for uniqueness
+    const minorWords = new Set([
+      'on', 'in', 'at', 'by', 'for', 'with', 'from', 'up', 'down', 'out', 'off',
+      'all', 'any', 'some', 'each', 'every', 'many', 'much', 'few', 'little',
+      'one', 'two', 'three', 'first', 'last', 'next', 'old', 'new', 'big', 'small'
+    ]);
+    
+    return word.length >= 3 && 
+           !functionWords.has(word) && 
+           !minorWords.has(word);
+  }
+
+  // Get only the most significant words for overlap detection
+  private getSignificantWords(name: string): string[] {
+    const allWords = this.getAllWords(name);
+    return allWords.filter(word => {
+      // More restrictive - only content words that really matter for uniqueness
+      const veryMinorWords = new Set([
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+        'of', 'with', 'by', 'from', 'up', 'down', 'out', 'off', 'all', 'any', 'some',
+        'old', 'new', 'big', 'one', 'two', 'way', 'day', 'man', 'get', 'own', 'say',
+        'come', 'good', 'time', 'year', 'work', 'back', 'see', 'go', 'want', 'know'
+      ]);
+      
+      return word.length >= 4 && !veryMinorWords.has(word);
+    });
   }
 
   // Simple word stemming to catch variations
