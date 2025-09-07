@@ -293,7 +293,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
 
   // Enhanced item card component
   const ItemCard = ({ item }: { item: any }) => {
-    const config = TYPE_CONFIG[item.type as keyof typeof TYPE_CONFIG];
+    const config = TYPE_CONFIG[item.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.band; // fallback to band config
     const Icon = config.icon;
     const isSelected = selectedItems.has(item.id);
 
@@ -516,7 +516,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8 bg-background/60 backdrop-blur-sm border-border/50 hover:bg-background/80">
                     <Filter className="h-3 w-3 mr-1" />
-                    {categoryFilter === 'all' ? 'All' : TYPE_CONFIG[categoryFilter].label}
+                    {categoryFilter === 'all' ? 'All' : (TYPE_CONFIG[categoryFilter]?.label || 'Unknown')}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
@@ -654,7 +654,7 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
               categoryFilter === 'all' ? (
                 // Grouped view
                 Object.entries(groupedItems).map(([type, items]) => {
-                  const config = TYPE_CONFIG[type as keyof typeof TYPE_CONFIG];
+                  const config = TYPE_CONFIG[type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.band; // fallback to band config
                   const Icon = config.icon;
                   const isCollapsed = collapsedCategories.has(type);
 
