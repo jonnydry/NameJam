@@ -1,7 +1,7 @@
 import type { VerificationResult } from "@shared/schema";
 import { spotifyService } from "./spotifyService";
 import { performanceCache } from "./performanceCache";
-import { verificationRateLimiters } from "./parallelVerificationRateLimiter";
+// Removed dependency on parallelVerificationRateLimiter as it was unused
 import { secureLog } from "../utils/secureLogger";
 
 export class ParallelVerificationService {
@@ -73,44 +73,40 @@ export class ParallelVerificationService {
   }
 
   private async verifyNameFast(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
-    // Apply rate limiting to prevent overwhelming APIs
-    return verificationRateLimiters.combined.execute(async () => {
-      const verificationLinks = this.generateVerificationLinks(name, type);
+    const verificationLinks = this.generateVerificationLinks(name, type);
 
-      // Quick Spotify check only (skip other APIs for speed)
-      try {
-        if (await spotifyService.isAvailable()) {
-          const spotifyResults = await verificationRateLimiters.spotify.execute(async () => {
-            return type === 'band' 
-              ? await spotifyService.verifyBandName(name)
-              : await spotifyService.verifySongName(name);
-          });
+    // Quick Spotify check only (skip other APIs for speed)
+    try {
+      if (await spotifyService.isAvailable()) {
+        // Direct Spotify call without rate limiting for better performance
+        const spotifyResults = type === 'band' 
+          ? await spotifyService.verifyBandName(name)
+          : await spotifyService.verifySongName(name);
 
-          if (spotifyResults && spotifyResults.exists) {
-            const match = spotifyResults.matches[0];
-            const details = type === 'band' 
-              ? `Found on Spotify: "${match.name}" (${'genres' in match ? match.genres?.join(', ') || 'Various genres' : 'Band'})`
-              : `Found on Spotify: "${match.name}" ${'artist' in match ? `by ${match.artist}` : ''}`;
-            
-            return {
-              status: 'taken',
-              details,
-              verificationLinks
-            };
-          }
+        if (spotifyResults && spotifyResults.exists) {
+          const match = spotifyResults.matches[0];
+          const details = type === 'band' 
+            ? `Found on Spotify: "${match.name}" (${'genres' in match ? match.genres?.join(', ') || 'Various genres' : 'Band'})`
+            : `Found on Spotify: "${match.name}" ${'artist' in match ? `by ${match.artist}` : ''}`;
+          
+          return {
+            status: 'taken',
+            details,
+            verificationLinks
+          };
         }
-      } catch (error) {
-        secureLog.debug(`Spotify verification failed for "${name}":`, error);
-        // Continue to basic check if Spotify fails
       }
+    } catch (error) {
+      secureLog.debug(`Spotify verification failed for "${name}":`, error);
+      // Continue to basic check if Spotify fails
+    }
 
-      // Basic availability (no other API calls for speed)
-      return {
-        status: 'available',
-        details: 'No existing entries found in our databases.',
-        verificationLinks
-      };
-    });
+    // Basic availability (no other API calls for speed)
+    return {
+      status: 'available',
+      details: 'No existing entries found in our databases.',
+      verificationLinks
+    };
   }
 
   private isEasterEgg(name: string): boolean {
