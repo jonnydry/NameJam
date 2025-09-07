@@ -19,9 +19,9 @@ export function Landing() {
     },
     {
       icon: ListMusic,
-      bgColor: "bg-green-500/10",
-      textColor: "text-green-500",
-      customClass: "carousel-card-green",
+      bgColor: "bg-red-500/10",
+      textColor: "text-red-500",
+      customClass: "carousel-card-red",
       title: "Multi-Genre Mastery",
       description: "From jazz to metal to electronic - get perfect names for any genre with mood matching and flexible word counts"
     },
@@ -43,9 +43,9 @@ export function Landing() {
     },
     {
       icon: NotebookPen,
-      bgColor: "bg-red-500/10",
-      textColor: "text-red-500",
-      customClass: "carousel-card-red",
+      bgColor: "bg-green-500/10",
+      textColor: "text-green-500",
+      customClass: "carousel-card-green",
       title: "Lyric Starters",
       description: "Get inspired with poetry-enhanced lyrical phrases that match your genre and mood perfectly"
     }
