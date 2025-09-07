@@ -103,15 +103,21 @@ export class UnifiedNameGeneratorService {
         names = await this.generateWithPatterns(context, type, genre, mood, count, wordCount);
       }
       
-      // 3. Apply quality scoring and select best names
-      const scoredNames = names.map(name => ({
+      // 3. Apply repetition filtering first
+      const filteredNames = this.applyRepetitionFiltering(names, generationId); // Filter out repetitive names
+      
+      // 4. Apply quality scoring and select best names
+      const scoredNames = filteredNames.map((name: string) => ({
         name,
         score: this.scoreNameQuality(name, genre, mood)
       }));
       
       // Sort by quality score and take the best ones
-      scoredNames.sort((a, b) => b.score - a.score);
-      const finalNames = scoredNames.slice(0, count).map(item => item.name);
+      scoredNames.sort((a: any, b: any) => b.score - a.score);
+      const finalNames = scoredNames.slice(0, count).map((item: any) => item.name);
+      
+      // 5. Track accepted names in the filter
+      finalNames.forEach((name: string) => unifiedWordFilter.acceptName(name, generationId));
       const elapsedTime = Date.now() - startTime;
       
       // End performance monitoring
@@ -119,7 +125,7 @@ export class UnifiedNameGeneratorService {
       
       secureLog.info(`✅ Generated ${finalNames.length} names in ${elapsedTime}ms using ${strategy.contextDepth} strategy`);
       
-      return finalNames.map(name => ({
+      return finalNames.map((name: string) => ({
         name,
         isAiGenerated: strategy.useAI,
         source: this.getSourceName(strategy)
@@ -975,6 +981,22 @@ Return ONLY the JSON object above.`;
     
     const selectedExamples = isband ? genreExamples.band : genreExamples.song;
     return `\nEXAMPLES OF GREAT ${genre?.toUpperCase()} ${isband ? 'BAND NAMES' : 'SONG TITLES'} (for inspiration only - create something original):\n${selectedExamples.map(ex => `- ${ex}`).join('\n')}`;
+  }
+
+  // Apply repetition filtering to remove duplicate words across names
+  private applyRepetitionFiltering(names: string[], generationId: string): string[] {
+    const filteredNames: string[] = [];
+    
+    for (const name of names) {
+      if (!unifiedWordFilter.shouldRejectName(name, generationId)) {
+        filteredNames.push(name);
+      } else {
+        secureLog.debug(`Filtered out repetitive name: "${name}"`);
+      }
+    }
+    
+    secureLog.info(`Repetition filtering: ${names.length} → ${filteredNames.length} names (${names.length - filteredNames.length} filtered)`);
+    return filteredNames;
   }
 
   private getCommonGenreTerms(genre?: string): string[] {
