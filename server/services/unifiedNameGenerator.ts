@@ -416,7 +416,16 @@ ${this.getMoodGuidelines(mood)}
 
 ${this.getGenreExamples(genre, type)}
 
-IMPORTANT: Avoid excessive alliteration! Don't make all words start with the same letter. Mix different sounds for natural, varied names.
+CRITICAL RULE - NO WORD REPETITION: Each ${isband ? 'band name' : 'song title'} in your result set must use completely different significant words. 
+- NEVER repeat meaningful words across different names (e.g., don't have "Weeping Willow's Song" and "Weeping Willow's Dream")
+- Articles (the, a), conjunctions (and, or), and prepositions (in, on, of) are OK to repeat
+- But content words (nouns, adjectives, verbs) must be unique across all 4 results
+- Example BAD: "Midnight Train" and "Midnight Blues" (repeats "Midnight")
+- Example GOOD: "Midnight Train" and "Evening Blues" (different content words)
+
+ANTI-ALLITERATION & VARIETY RULES:
+- Avoid excessive alliteration! Don't make all words start with the same letter. Mix different sounds for natural, varied names
+- For names with 4+ words: NO excessive alliteration (max 2 words can start with same letter)
 
 ANTI-CLICHÉ RULES:
 - No direct references to obvious genre clichés (e.g., "Electric" + "Guitar" for rock)
@@ -424,7 +433,6 @@ ANTI-CLICHÉ RULES:
 - Don't use tired combinations like "Dark Shadow", "Neon Dreams", "Crystal Heart", "Eternal Flame"
 - Skip generic descriptors like "awesome", "cool", "amazing" in favor of specific, evocative words
 - If using humor, be clever and unexpected - avoid dad jokes and obvious puns
-- For names with 4+ words: NO excessive alliteration (max 2 words can start with same letter)
 - Avoid these overused AI-generated words: "lunar", "celestial", "cosmic" (unless space-themed), "mystical", "ethereal"
 - ${avoidWords.length > 0 ? `Don't use these mood-inappropriate words: ${avoidWords.join(', ')}` : ''}
 - Mix consonant and vowel sounds for better phonetic flow`;
@@ -442,12 +450,13 @@ Context for inspiration (curated selection):
 Task:
 1. Brainstorm and generate 8 unique ${isband ? 'band names' : 'song titles'} that fit the genre, mood, and word count. Make them entertaining—aim for humor, irony, or whimsy.
 2. Evaluate the 8 names critically based on these criteria:
+   - NO WORD REPETITION (most important): Reject any names that share significant words with others
    - Originality (not too similar to real ${isband ? 'bands' : 'songs'} or the context sources)
    - Entertainment value (how fun, clever, or punny they are)
    - Fit to genre and mood (evokes the right style and emotion)
    - Adherence to word count (exact match to ${this.formatWordCount(wordCount)})
    - Overall appeal (memorable and engaging)
-3. Select the top 4 best names from the 8 based on your evaluation.
+3. Select the top 4 best names from the 8 based on your evaluation. DOUBLE-CHECK: No two names should share significant words!
 4. Ensure everything is fun and engaging; avoid anything offensive or bland.
 
 Output in strict JSON format for easy parsing:
