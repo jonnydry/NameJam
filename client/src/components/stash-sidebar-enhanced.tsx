@@ -357,19 +357,23 @@ export function StashSidebarEnhanced({ isOpen, onToggle }: StashSidebarProps) {
                     )}
                     
                     {/* Meta info */}
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="secondary" className="text-xs">
+                    <div className="space-y-1.5 mt-1">
+                      <Badge variant="secondary" className="text-xs whitespace-nowrap flex-shrink-0">
                         {config.label}
                       </Badge>
-                      {item.genre && (
-                        <Badge variant="outline" className="text-xs">
-                          {item.genre}
-                        </Badge>
-                      )}
-                      {item.mood && (
-                        <Badge variant="outline" className="text-xs">
-                          {item.mood}
-                        </Badge>
+                      {(item.genre || item.mood) && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {item.genre && (
+                            <Badge variant="outline" className="text-xs whitespace-nowrap">
+                              {item.genre}
+                            </Badge>
+                          )}
+                          {item.mood && (
+                            <Badge variant="outline" className="text-xs whitespace-nowrap">
+                              {item.mood}
+                            </Badge>
+                          )}
+                        </div>
                       )}
                     </div>
 
