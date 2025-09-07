@@ -116,7 +116,8 @@ export class UnifiedNameGeneratorService {
       scoredNames.sort((a: any, b: any) => b.score - a.score);
       const finalNames = scoredNames.slice(0, count).map((item: any) => item.name);
       
-      // Names are already tracked during filtering, no need to track again
+      // Track only the final selected names in the filter
+      finalNames.forEach((name: string) => unifiedWordFilter.acceptName(name, generationId));
       const elapsedTime = Date.now() - startTime;
       
       // End performance monitoring
@@ -989,8 +990,6 @@ Return ONLY the JSON object above.`;
     for (const name of names) {
       if (!unifiedWordFilter.shouldRejectName(name, generationId)) {
         filteredNames.push(name);
-        // Track the name immediately when accepted to prevent future duplicates
-        unifiedWordFilter.acceptName(name, generationId);
       } else {
         secureLog.debug(`Filtered out repetitive name: "${name}"`);
       }
@@ -1048,7 +1047,15 @@ class CachedUnifiedNameGeneratorService extends UnifiedNameGeneratorService {
       const cached = this.aggressiveCache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp) < this.AGGRESSIVE_CACHE_TTL) {
         secureLog.debug('Using aggressive cache for speed mode');
-        return cached.names.slice(0, request.count || 4).map(name => ({
+        
+        // Start new generation to ensure proper word tracking
+        const generationId = unifiedWordFilter.startNewGeneration();
+        const cachedNames = cached.names.slice(0, request.count || 4);
+        
+        // Track cached names in the filter to maintain consistency
+        cachedNames.forEach(name => unifiedWordFilter.acceptName(name, generationId));
+        
+        return cachedNames.map(name => ({
           name,
           isAiGenerated: false,
           source: 'cached'
