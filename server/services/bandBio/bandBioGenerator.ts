@@ -18,11 +18,15 @@ import {
   buildRequestParams,
   parseAIResponse
 } from './bandBioUtils';
+import { FallbackBioGenerator } from './fallbackBioGenerator';
 
 export class BandBioGenerator {
   private openai: OpenAI | null = null;
+  private fallbackGenerator: FallbackBioGenerator;
 
   constructor() {
+    this.fallbackGenerator = new FallbackBioGenerator();
+    
     if (process.env.XAI_API_KEY) {
       try {
         this.openai = new OpenAI({
@@ -134,7 +138,11 @@ export class BandBioGenerator {
 
   private generateFallbackResponse(request: BandBioRequest): string {
     secureLog.info("Using fallback bio generator");
-    const fallbackBio = this.generateFallbackBio(request.bandName, request.genre, request.mood);
+    const fallbackBio = this.fallbackGenerator.generateFallbackBio(
+      request.bandName, 
+      request.genre, 
+      request.mood
+    );
     
     const response: BandBioResponse = {
       bio: fallbackBio,
@@ -145,20 +153,4 @@ export class BandBioGenerator {
     return JSON.stringify(response);
   }
 
-  private generateFallbackBio(bandName: string, genre?: string, mood?: string): string {
-    // This method will be refactored in the next task
-    const genreText = genre || 'rock';
-    const moodText = mood || 'energetic';
-    const year = 1995 + Math.floor(Math.random() * 28);
-    
-    const formations = [
-      "met at a late-night jam session in a abandoned subway tunnel",
-      "bonded over their shared love of vintage synthesizers at a pawn shop",
-      "were brought together by a mysterious Craigslist ad written in haiku"
-    ];
-    
-    const formation = formations[Math.floor(Math.random() * formations.length)];
-    
-    return `${bandName} formed in ${year} when three musicians ${formation}. This ${moodText} ${genreText} trio quickly gained attention for their unique sound and unpredictable performances. Known for blending traditional elements with modern innovation, they've carved out their own niche in the music scene.`;
-  }
 }
