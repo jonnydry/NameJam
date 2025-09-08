@@ -451,7 +451,7 @@ ANTI-CLICHÉ RULES:
 - If using humor, be clever and unexpected - avoid dad jokes and obvious puns
 - Avoid these overused AI-generated words: "lunar", "celestial", "cosmic" (unless space-themed), "mystical", "ethereal"
 - ${avoidWords.length > 0 ? `Don't use these mood-inappropriate words: ${avoidWords.join(', ')}` : ''}
-- Mix consonant and vowel sounds for better phonetic flow`;
+- Mix consonant and vowel sounds for better phonetic flow${!genre && !mood ? '\n- IMPORTANT: Avoid musical instruments (guitar, piano, banjo, violin, etc.) - explore diverse themes beyond music' : ''}`;
 
     if (strategy.enableVarietyOptimizations) {
       return basePrompt + `
