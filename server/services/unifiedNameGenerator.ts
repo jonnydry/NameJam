@@ -286,6 +286,16 @@ export class UnifiedNameGeneratorService {
 
     await Promise.all(promises);
     
+    // Add default diverse context when no genre/mood specified to prevent instrument bias
+    if (!genre && !mood) {
+      context.genreKeywords = ['adventure', 'mystery', 'celebration', 'journey', 'discovery'];
+      context.moodWords = ['vibrant', 'ethereal', 'bold', 'whimsical', 'magnetic'];
+      context.wordAssociations = ['ocean', 'mountain', 'starlight', 'forest', 'horizon'];
+      context.relatedArtists = ['The Lumineers', 'Imagine Dragons', 'OneRepublic', 'Coldplay'];
+      context.genreTags = ['uplifting', 'atmospheric', 'storytelling', 'cinematic', 'organic'];
+      secureLog.debug('Added default diverse context to prevent musical instrument bias');
+    }
+    
     // Cache the result if strategy allows it
     if (strategy.cacheTimeout > 0) {
       this.contextCache.set(cacheKey, {
