@@ -54,8 +54,7 @@ export class iTunesService {
 
       const response = await withApiRetry(
         () => fetch(`${this.baseUrl}?${params}`),
-        apiRetryConfigs.standard,
-        'iTunes Artists Search'
+        apiRetryConfigs.spotify
       );
 
       if (!response.ok) {
@@ -92,8 +91,7 @@ export class iTunesService {
 
       const response = await withApiRetry(
         () => fetch(`${this.baseUrl}?${params}`),
-        apiRetryConfigs.standard,
-        'iTunes Tracks Search'
+        apiRetryConfigs.spotify
       );
 
       if (!response.ok) {

@@ -86,8 +86,7 @@ export class SoundCloudService {
 
       const response = await withApiRetry(
         () => fetch(`${this.baseUrl}/users?${params}`),
-        apiRetryConfigs.conservative, // SoundCloud has stricter rate limits
-        'SoundCloud Artists Search'
+        apiRetryConfigs.musicbrainz // More conservative config
       );
 
       if (!response.ok) {
@@ -124,8 +123,7 @@ export class SoundCloudService {
 
       const response = await withApiRetry(
         () => fetch(`${this.baseUrl}/tracks?${params}`),
-        apiRetryConfigs.conservative,
-        'SoundCloud Tracks Search'
+        apiRetryConfigs.musicbrainz
       );
 
       if (!response.ok) {
