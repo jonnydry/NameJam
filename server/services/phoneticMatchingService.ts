@@ -4,7 +4,7 @@
  */
 
 import { metaphone } from 'metaphone';
-import { PorterStemmer, SoundEx } from 'natural';
+import natural from 'natural';
 import { secureLog } from '../utils/secureLogger';
 
 export interface PhoneticMatch {
@@ -26,7 +26,7 @@ export interface NormalizedName {
 
 export class PhoneticMatchingService {
   private static instance: PhoneticMatchingService;
-  private soundEx = new SoundEx();
+  private soundEx = new natural.SoundEx();
   
   // Common articles and prepositions to normalize
   private readonly articles = new Set(['the', 'a', 'an']);
@@ -76,7 +76,7 @@ export class PhoneticMatchingService {
     const soundexKeys = tokens.map(token => this.soundEx.process(token)).filter(key => key !== '0000');
     
     // Generate stems for morphological matching
-    const stems = tokens.map(token => PorterStemmer.stem(token));
+    const stems = tokens.map(token => natural.PorterStemmer.stem(token));
     
     // Create canonical form
     const canonicalForm = tokens.join(' ');
