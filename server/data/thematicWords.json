@@ -1,0 +1,22 @@
+{
+  "description": "Thematic word groups for generating intelligent name suggestions",
+  "themes": {
+    "dark": ["Shadow", "Midnight", "Eclipse", "Noir", "Obsidian", "Raven", "Onyx"],
+    "light": ["Aurora", "Dawn", "Radiant", "Solar", "Bright", "Luminous", "Stellar"],
+    "nature": ["Forest", "Ocean", "Mountain", "River", "Storm", "Thunder", "Wildfire"],
+    "music": ["Echo", "Harmony", "Rhythm", "Melody", "Chord", "Resonance", "Cadence"],
+    "mystical": ["Crystal", "Mystic", "Arcane", "Phoenix", "Oracle", "Ethereal", "Cosmic"],
+    "urban": ["Neon", "Metro", "City", "Electric", "Digital", "Chrome", "Steel"],
+    "emotional": ["Velvet", "Crimson", "Golden", "Silver", "Gentle", "Wild", "Serene"]
+  },
+  "connectors": ["and the", "of the", "&", "meets"],
+  "musicalSuffixes": ["Collective", "Ensemble", "Project", "Sound", "Music"],
+  "themeAnalysis": {
+    "dark": ["dark", "black", "shadow", "night", "midnight", "death", "doom", "void"],
+    "light": ["light", "bright", "sun", "dawn", "gold", "silver", "white", "shine"],
+    "nature": ["forest", "ocean", "mountain", "river", "storm", "fire", "earth", "sky"],
+    "music": ["sound", "music", "song", "beat", "rhythm", "harmony", "melody", "note"],
+    "mystical": ["magic", "mystic", "crystal", "spirit", "soul", "dream", "vision", "cosmic"],
+    "urban": ["city", "street", "neon", "electric", "digital", "metro", "steel", "chrome"]
+  }
+}
