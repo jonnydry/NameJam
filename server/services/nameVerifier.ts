@@ -1,5 +1,6 @@
 import type { VerificationResult } from "@shared/schema";
 import { spotifyService } from "./spotifyService";
+import { phoneticMatchingService } from "./phoneticMatchingService";
 import { lastFmRateLimiter, musicBrainzRateLimiter, withRetry } from '../utils/rateLimiter';
 import { secureLog } from '../utils/secureLogger';
 
@@ -518,21 +519,9 @@ export class NameVerifierService {
   }
 
   private calculateSimilarity(str1: string, str2: string): number {
-    // Simple similarity calculation based on common words and length
-    if (str1 === str2) return 1.0;
-    
-    const words1 = str1.split(' ').filter(w => w.length > 2);
-    const words2 = str2.split(' ').filter(w => w.length > 2);
-    
-    let commonWords = 0;
-    words1.forEach(word1 => {
-      if (words2.some(word2 => word1.includes(word2) || word2.includes(word1))) {
-        commonWords++;
-      }
-    });
-    
-    const totalWords = Math.max(words1.length, words2.length);
-    return totalWords > 0 ? commonWords / totalWords : 0;
+    // Enhanced similarity calculation using phonetic matching
+    const phoneticMatch = phoneticMatchingService.calculateSimilarity(str1, str2);
+    return phoneticMatch.similarity;
   }
 
   private calculateUniquenessScore(name: string): number {
