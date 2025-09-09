@@ -9,14 +9,17 @@ import { lastFmRateLimiter, musicBrainzRateLimiter, withRetry } from '../utils/r
 import { secureLog } from '../utils/secureLogger';
 import { FamousNamesRepository } from './famousNamesRepository';
 import { EasterEggService } from './easterEggService';
+import { NameSuggestionService } from './nameSuggestionService';
 
 export class NameVerifierService {
   private famousNamesRepo: FamousNamesRepository;
   private easterEggService: EasterEggService;
+  private nameSuggestionService: NameSuggestionService;
 
   constructor() {
     this.famousNamesRepo = FamousNamesRepository.getInstance();
     this.easterEggService = EasterEggService.getInstance();
+    this.nameSuggestionService = NameSuggestionService.getInstance();
   }
 
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
@@ -31,15 +34,15 @@ export class NameVerifierService {
       const famousArtist = this.easterEggService.checkFamousArtist(
         name, 
         type,
-        (n, t) => this.generateVerificationLinks(n, t),
-        (n) => this.generateSimilarNames(n)
+        (n, t) => this.nameSuggestionService.generateVerificationLinks(n, t),
+        (n) => this.nameSuggestionService.generateSimilarNames(n)
       );
       if (famousArtist) {
         return famousArtist;
       }
 
       // Generate verification links that users can actually use
-      const verificationLinks = this.generateVerificationLinks(name, type);
+      const verificationLinks = this.nameSuggestionService.generateVerificationLinks(name, type);
 
       // PARALLEL API VERIFICATION - Check all major platforms simultaneously
       let spotifyResults: any = null;
@@ -119,7 +122,7 @@ export class NameVerifierService {
       // Check Spotify exact matches first (highest priority)
       if (spotifyResults && spotifyResults.exists) {
         const match = spotifyResults.matches[0];
-        const similarNames = this.generateSimilarNames(name);
+        const similarNames = this.nameSuggestionService.generateSimilarNames(name);
         
         // Calculate confidence for this taken result
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
@@ -153,7 +156,7 @@ export class NameVerifierService {
       // Check Spotify similar matches (second priority)
       if (spotifyResults && spotifyResults.matches && spotifyResults.matches.length > 0 && !spotifyResults.exists) {
         const match = spotifyResults.matches[0];
-        const similarNames = this.generateSimilarNames(name);
+        const similarNames = this.nameSuggestionService.generateSimilarNames(name);
         
         // Calculate confidence for similar matches
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
@@ -187,7 +190,7 @@ export class NameVerifierService {
       // Famous names database check (third priority)
       const famousMatch = this.famousNamesRepo.checkFamousName(name, type);
       if (famousMatch && famousMatch.found) {
-        const similarNames = this.generateSimilarNames(name);
+        const similarNames = this.nameSuggestionService.generateSimilarNames(name);
         // Calculate confidence for famous matches
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
           name, undefined, undefined, undefined, [name], itunesResults, soundcloudResults, bandcampResults
@@ -238,7 +241,7 @@ export class NameVerifierService {
         // Exact match found = Name is taken
         const match = exactMatches[0];
         const artistInfo = match.artist ? ` by ${match.artist}` : '';
-        const similarNames = this.generateSimilarNames(name);
+        const similarNames = this.nameSuggestionService.generateSimilarNames(name);
         secureLog.debug(`Exact match found for "${name}": ${match.name} by ${match.artist || 'Unknown'}`);
         
         // Calculate confidence for exact matches from other sources
@@ -290,7 +293,7 @@ export class NameVerifierService {
 
       if (closeMatches.length > 0) {
         // Close matches found = Similar
-        const similarNames = this.generateSimilarNames(name);
+        const similarNames = this.nameSuggestionService.generateSimilarNames(name);
         secureLog.debug(`Close matches found for "${name}":`, closeMatches.slice(0, 2));
         
         // Calculate confidence for similar matches
@@ -347,118 +350,22 @@ export class NameVerifierService {
         confidenceLevel: 'medium',
         explanation: 'Verification incomplete due to technical issues',
         details: 'Verification temporarily unavailable - name appears to be available.',
-        verificationLinks: this.generateVerificationLinks(name, type)
+        verificationLinks: this.nameSuggestionService.generateVerificationLinks(name, type)
       };
     }
   }
 
-  private generateVerificationLinks(name: string, type: 'band' | 'song'): Array<{name: string, url: string, source: string}> {
-    const encodedName = encodeURIComponent(`"${name}"`);
-    const encodedNameType = encodeURIComponent(`"${name}" ${type}`);
-    
-    const links = [
-      {
-        name: 'Spotify Search',
-        url: `https://open.spotify.com/search/${encodedName}`,
-        source: 'Spotify'
-      },
-      {
-        name: 'Google Search',
-        url: `https://www.google.com/search?q=${encodedNameType}`,
-        source: 'Google'
-      }
-    ];
+  // Method removed - now using NameSuggestionService.generateVerificationLinks()
 
-    // Add different third link based on type
-    if (type === 'band') {
-      links.push({
-        name: 'Bandcamp Search',
-        url: `https://bandcamp.com/search?q=${encodedName}`,
-        source: 'Bandcamp'
-      });
-    } else {
-      links.push({
-        name: 'YouTube Search',
-        url: `https://www.youtube.com/results?search_query=${encodedName}`,
-        source: 'YouTube'
-      });
-    }
-
-    return links;
-  }
-
-  private generateSimilarNames(name: string): string[] {
-    const words = name.split(' ');
-    const variations: string[] = [];
-
-    // Analyze the original name for themes using repository
-    const nameTheme = this.famousNamesRepo.analyzeNameTheme(name);
-    const themeWords = this.famousNamesRepo.getThematicWords(nameTheme);
-
-    if (words.length > 1) {
-      // Multi-word names: replace one word with thematic alternative
-      const firstWord = words[0];
-      const lastWord = words[words.length - 1];
-      
-      variations.push(`${themeWords[Math.floor(Math.random() * themeWords.length)]} ${lastWord}`);
-      variations.push(`${firstWord} ${themeWords[Math.floor(Math.random() * themeWords.length)]}`);
-      
-      // Add connecting words for flow
-      const connectors = this.famousNamesRepo.getConnectors();
-      if (words.length === 2 && connectors.length > 0) {
-        variations.push(`${firstWord} ${connectors[Math.floor(Math.random() * connectors.length)]} ${themeWords[Math.floor(Math.random() * themeWords.length)]}`);
-      }
-    } else {
-      // Single word: add thematic prefixes/suffixes
-      variations.push(`${themeWords[Math.floor(Math.random() * themeWords.length)]} ${name}`);
-      variations.push(`${name} ${themeWords[Math.floor(Math.random() * themeWords.length)]}`);
-      
-      // Musical suffixes for bands
-      const musicalSuffixes = this.famousNamesRepo.getMusicalSuffixes();
-      if (musicalSuffixes.length > 0) {
-        variations.push(`${name} ${musicalSuffixes[Math.floor(Math.random() * musicalSuffixes.length)]}`);
-      }
-    }
-
-    // Add some creative variations
-    if (name.includes('the ')) {
-      variations.push(name.replace('the ', ''));
-    } else if (!name.toLowerCase().startsWith('the ')) {
-      variations.push(`The ${name}`);
-    }
-
-    // Return unique suggestions
-    const uniqueVariations = variations.filter((item, index) => variations.indexOf(item) === index);
-    return uniqueVariations.slice(0, 4);
-  }
+  // Method removed - now using NameSuggestionService.generateSimilarNames()
 
   // Method removed - now using FamousNamesRepository.analyzeNameTheme()
 
-  private generateExistingInfo(name: string, type: string): string {
-    const years = ['2015', '2018', '2019', '2021', '2022'];
-    const sources = [
-      'Independent artist',
-      'Local band',
-      'Indie release',
-      'Underground artist',
-      'Regional musician'
-    ];
+  // Method removed - now using NameSuggestionService.generateExistingInfo()
 
-    const year = years[Math.floor(Math.random() * years.length)];
-    const source = sources[Math.floor(Math.random() * sources.length)];
+  // Method removed - now using NameSuggestionService.getRandomSuffix()
 
-    return `${source} (${year})`;
-  }
-
-  private getRandomSuffix(): string {
-    const suffixes = ['Band', 'Collective', 'Project', 'Music', 'Sound', 'Group'];
-    return suffixes[Math.floor(Math.random() * suffixes.length)];
-  }
-
-  private getRandomPrefix(): string {
-    const prefixes = ['The', 'New', 'Young', 'Modern', 'Electric', 'Digital'];
-    return prefixes[Math.floor(Math.random() * prefixes.length)];
-  }
+  // Method removed - now using NameSuggestionService.getRandomPrefix()
 
   // Method removed - now using FamousNamesRepository.checkFamousName()
 
