@@ -5,9 +5,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import { BandBioModal } from "./band-bio-modal";
 import { StatusBadge } from "./status-badge";
+import { ConfidenceIndicator } from "./confidence-indicator";
 
 interface VerificationResult {
   status: 'available' | 'similar' | 'taken';
+  confidence?: number; // 0-1 confidence score
+  confidenceLevel?: 'very-high' | 'high' | 'medium' | 'low' | 'very-low';
+  explanation?: string; // Human-readable confidence explanation
   details?: string;
   similarNames?: string[];
   verificationLinks?: Array<{
@@ -131,7 +135,15 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
            ${isHighlighted ? 'border-purple-400/40 shadow-lg shadow-purple-500/10' : ''}`
     }`}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3">
-        <StatusBadge status={verification.status} />
+        <div className="flex flex-col gap-2">
+          <StatusBadge status={verification.status} />
+          <ConfidenceIndicator 
+            confidence={verification.confidence}
+            confidenceLevel={verification.confidenceLevel}
+            explanation={verification.explanation}
+            status={verification.status}
+          />
+        </div>
         <div className="flex items-center justify-end space-x-2">
           <Button
             variant="ghost"
