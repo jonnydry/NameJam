@@ -8,56 +8,34 @@ import { confidenceCalculator } from "./confidenceCalculator";
 import { lastFmRateLimiter, musicBrainzRateLimiter, withRetry } from '../utils/rateLimiter';
 import { secureLog } from '../utils/secureLogger';
 import { FamousNamesRepository } from './famousNamesRepository';
+import { EasterEggService } from './easterEggService';
 
 export class NameVerifierService {
   private famousNamesRepo: FamousNamesRepository;
+  private easterEggService: EasterEggService;
 
   constructor() {
     this.famousNamesRepo = FamousNamesRepository.getInstance();
+    this.easterEggService = EasterEggService.getInstance();
   }
 
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
     try {
-      // Easter eggs - check these FIRST before any real verification
-      
-      // Easter egg for Name Jam variations
-      const normalizedName = name.toLowerCase().replace(/[^a-z]/g, '');
-      if (normalizedName === 'namejam') {
-        return {
-          status: 'available',
-          confidence: 1.0,
-          confidenceLevel: 'very-high',
-          explanation: 'Special easter egg - 100% confidence this name is perfect!',
-          details: 'We love you. Go to bed. <3',
-          verificationLinks: []
-        };
+      // Check for easter eggs first
+      const easterEgg = this.easterEggService.checkEasterEgg(name, type);
+      if (easterEgg) {
+        return easterEgg;
       }
 
-      // Check for easter egg artists first (100% confidence + joke message)
-      if (this.famousNamesRepo.isEasterEggArtist(name)) {
-        return {
-          status: 'available',
-          confidence: 1.0,
-          confidenceLevel: 'very-high',
-          explanation: 'Special easter egg for famous artists - 100% confidence this name is perfect!',
-          details: 'We love you. Go to bed. <3',
-          verificationLinks: []
-        };
-      }
-      
-      // Check for famous artists (95-98% confidence + realistic message)
-      if (this.famousNamesRepo.isFamousArtist(name)) {
-        const verificationLinks = this.generateVerificationLinks(name, type);
-        const similarNames = this.generateSimilarNames(name);
-        return {
-          status: 'taken',
-          confidence: 0.96, // 96% confidence - very high but not easter egg level
-          confidenceLevel: 'very-high',
-          explanation: 'Found exact match for highly popular artist on Spotify with millions of listeners',
-          details: `This is a famous ${type} name with massive popularity. Try these alternatives:`,
-          similarNames,
-          verificationLinks
-        };
+      // Check for famous artists (high confidence but realistic verification)
+      const famousArtist = this.easterEggService.checkFamousArtist(
+        name, 
+        type,
+        (n, t) => this.generateVerificationLinks(n, t),
+        (n) => this.generateSimilarNames(n)
+      );
+      if (famousArtist) {
+        return famousArtist;
       }
 
       // Generate verification links that users can actually use
