@@ -6,25 +6,36 @@ import { FamousNamesRepository } from './famousNamesRepository';
 import { EasterEggService } from './easterEggService';
 import { NameSuggestionService } from './nameSuggestionService';
 import { VerificationOrchestrator } from './verificationOrchestrator';
+import { VerificationCache } from './verificationCache';
 
 export class NameVerifierService {
   private famousNamesRepo: FamousNamesRepository;
   private easterEggService: EasterEggService;
   private nameSuggestionService: NameSuggestionService;
   private verificationOrchestrator: VerificationOrchestrator;
+  private cache: VerificationCache;
 
   constructor() {
     this.famousNamesRepo = FamousNamesRepository.getInstance();
     this.easterEggService = EasterEggService.getInstance();
     this.nameSuggestionService = NameSuggestionService.getInstance();
     this.verificationOrchestrator = VerificationOrchestrator.getInstance();
+    this.cache = VerificationCache.getInstance();
   }
 
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
     try {
-      // Check for easter eggs first
+      // Check cache first
+      const cachedResult = this.cache.get(name, type);
+      if (cachedResult) {
+        secureLog.debug(`Using cached result for ${type}: "${name}"`);
+        return cachedResult;
+      }
+
+      // Check for easter eggs
       const easterEgg = this.easterEggService.checkEasterEgg(name, type);
       if (easterEgg) {
+        // Don't cache easter eggs - they're special responses
         return easterEgg;
       }
 
@@ -36,6 +47,8 @@ export class NameVerifierService {
         (n) => this.nameSuggestionService.generateSimilarNames(n)
       );
       if (famousArtist) {
+        // Cache famous artist results with longer TTL (2 hours)
+        this.cache.set(name, type, famousArtist, 7200);
         return famousArtist;
       }
 
@@ -61,28 +74,27 @@ export class NameVerifierService {
           name, spotifyResults, undefined, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
         );
         
-        if (type === 'band') {
-          const genreInfo = match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : '';
-          return {
-            status: 'taken',
-            confidence: confidenceResult.confidence,
-            confidenceLevel: confidenceResult.confidenceLevel,
-            explanation: confidenceResult.explanation,
-            details: `This band name exists on Spotify${genreInfo}. Popularity: ${match.popularity}/100. Try these alternatives:`,
-            similarNames,
-            verificationLinks
-          };
-        } else {
-          return {
-            status: 'taken',
-            confidence: confidenceResult.confidence,
-            confidenceLevel: confidenceResult.confidenceLevel,
-            explanation: confidenceResult.explanation,
-            details: `This song exists on Spotify by ${match.artist} (${match.album}). Try these alternatives:`,
-            similarNames,
-            verificationLinks
-          };
-        }
+        const result: VerificationResult = type === 'band' ? {
+          status: 'taken',
+          confidence: confidenceResult.confidence,
+          confidenceLevel: confidenceResult.confidenceLevel,
+          explanation: confidenceResult.explanation,
+          details: `This band name exists on Spotify${match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : ''}. Popularity: ${match.popularity}/100. Try these alternatives:`,
+          similarNames,
+          verificationLinks
+        } : {
+          status: 'taken',
+          confidence: confidenceResult.confidence,
+          confidenceLevel: confidenceResult.confidenceLevel,
+          explanation: confidenceResult.explanation,
+          details: `This song exists on Spotify by ${match.artist} (${match.album}). Try these alternatives:`,
+          similarNames,
+          verificationLinks
+        };
+        
+        // Cache the result
+        this.cache.set(name, type, result);
+        return result;
       }
 
       // Check Spotify similar matches (second priority)
@@ -95,28 +107,27 @@ export class NameVerifierService {
           name, spotifyResults, undefined, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
         );
         
-        if (type === 'band') {
-          const genreInfo = match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : '';
-          return {
-            status: 'similar',
-            confidence: confidenceResult.confidence,
-            confidenceLevel: confidenceResult.confidenceLevel,
-            explanation: confidenceResult.explanation,
-            details: `Similar band names found on Spotify${genreInfo}. Consider these alternatives:`,
-            similarNames,
-            verificationLinks
-          };
-        } else {
-          return {
-            status: 'similar',
-            confidence: confidenceResult.confidence,
-            confidenceLevel: confidenceResult.confidenceLevel,
-            explanation: confidenceResult.explanation,
-            details: `Similar song titles found on Spotify by various artists. Consider these alternatives:`,
-            similarNames,
-            verificationLinks
-          };
-        }
+        const similarResult: VerificationResult = type === 'band' ? {
+          status: 'similar',
+          confidence: confidenceResult.confidence,
+          confidenceLevel: confidenceResult.confidenceLevel,
+          explanation: confidenceResult.explanation,
+          details: `Similar band names found on Spotify${match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : ''}. Consider these alternatives:`,
+          similarNames,
+          verificationLinks
+        } : {
+          status: 'similar',
+          confidence: confidenceResult.confidence,
+          confidenceLevel: confidenceResult.confidenceLevel,
+          explanation: confidenceResult.explanation,
+          details: `Similar song titles found on Spotify by various artists. Consider these alternatives:`,
+          similarNames,
+          verificationLinks
+        };
+        
+        // Cache similar matches with shorter TTL (30 minutes)
+        this.cache.set(name, type, similarResult, 1800);
+        return similarResult;
       }
 
       // Famous names database check (third priority)
@@ -127,7 +138,7 @@ export class NameVerifierService {
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
           name, undefined, undefined, undefined, [name], itunesResults, soundcloudResults, bandcampResults
         );
-        return {
+        const famousResult: VerificationResult = {
           status: 'taken',
           confidence: confidenceResult.confidence,
           confidenceLevel: confidenceResult.confidenceLevel,
@@ -136,6 +147,10 @@ export class NameVerifierService {
           similarNames,
           verificationLinks
         };
+        
+        // Cache famous name results with longer TTL (2 hours)
+        this.cache.set(name, type, famousResult, 7200);
+        return famousResult;
       }
 
       // Use otherSearchResults from orchestrator (Last.fm, MusicBrainz)
@@ -163,7 +178,7 @@ export class NameVerifierService {
           name, spotifyResults, searchResults, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
         );
         
-        return {
+        const takenResult: VerificationResult = {
           status: 'taken',
           confidence: confidenceResult.confidence,
           confidenceLevel: confidenceResult.confidenceLevel,
@@ -172,6 +187,10 @@ export class NameVerifierService {
           similarNames,
           verificationLinks
         };
+        
+        // Cache taken results
+        this.cache.set(name, type, takenResult);
+        return takenResult;
       }
 
 
@@ -215,7 +234,7 @@ export class NameVerifierService {
           name, spotifyResults, searchResults, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
         );
         
-        return {
+        const closeMatchResult: VerificationResult = {
           status: 'similar',
           confidence: confidenceResult.confidence,
           confidenceLevel: confidenceResult.confidenceLevel,
@@ -224,6 +243,10 @@ export class NameVerifierService {
           similarNames,
           verificationLinks
         };
+        
+        // Cache similar results with shorter TTL
+        this.cache.set(name, type, closeMatchResult, 1800);
+        return closeMatchResult;
       }
 
       // Only mark as available if we have fewer than 5 very weak results
@@ -234,28 +257,27 @@ export class NameVerifierService {
         name, spotifyResults, searchResults, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
       );
       
-      if (searchResults.length <= 5) {
+      const availableResult: VerificationResult = searchResults.length <= 5 ? {
         // Few or no relevant matches - marking as available
-        return {
-          status: 'available',
-          confidence: confidenceResult.confidence,
-          confidenceLevel: confidenceResult.confidenceLevel,
-          explanation: confidenceResult.explanation,
-          details: `No existing ${type} found with this name in our databases.`,
-          verificationLinks
-        };
-      } else {
+        status: 'available',
+        confidence: confidenceResult.confidence,
+        confidenceLevel: confidenceResult.confidenceLevel,
+        explanation: confidenceResult.explanation,
+        details: `No existing ${type} found with this name in our databases.`,
+        verificationLinks
+      } : {
         // Many results but none are close matches - still available but note the search volume
-        // No close matches found - marking as available
-        return {
-          status: 'available',
-          confidence: confidenceResult.confidence,
-          confidenceLevel: confidenceResult.confidenceLevel,
-          explanation: confidenceResult.explanation,
-          details: `No existing ${type} found with this exact name in our databases.`,
-          verificationLinks
-        };
-      }
+        status: 'available',
+        confidence: confidenceResult.confidence,
+        confidenceLevel: confidenceResult.confidenceLevel,
+        explanation: confidenceResult.explanation,
+        details: `No existing ${type} found with this exact name in our databases.`,
+        verificationLinks
+      };
+      
+      // Cache available results
+      this.cache.set(name, type, availableResult);
+      return availableResult;
     } catch (error) {
       console.error('Name verification error:', error);
       return {
