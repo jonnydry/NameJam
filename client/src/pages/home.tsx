@@ -13,7 +13,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Import the result interface
+// Import the result interfaces
 interface GenerationResult {
   id: number;
   name: string;
@@ -31,6 +31,15 @@ interface GenerationResult {
   };
 }
 
+interface LyricResult {
+  id: number;
+  lyric: string;
+  genre?: string;
+  songSection?: string;
+  model?: string;
+  generatedAt: string;
+}
+
 export default function Home() {
   const [copiedName, setCopiedName] = useState<string | null>(null);
   const [isStashOpen, setIsStashOpen] = useState(false);
@@ -40,6 +49,9 @@ export default function Home() {
   // Shared state for name generation results to persist across tab switches
   const [bandResults, setBandResults] = useState<GenerationResult[]>([]);
   const [songResults, setSongResults] = useState<GenerationResult[]>([]);
+  
+  // Shared state for lyric generation results to persist across tab switches
+  const [lyricResult, setLyricResult] = useState<LyricResult | null>(null);
 
   // No longer redirect automatically - mixed approach allows guest usage
 
@@ -146,7 +158,10 @@ export default function Home() {
                   />
                 </TabsContent>
                 <TabsContent value="lyric">
-                  <LyricJam />
+                  <LyricJam 
+                    lyricResult={lyricResult}
+                    setLyricResult={setLyricResult}
+                  />
                 </TabsContent>
               </Tabs>
           </div>
