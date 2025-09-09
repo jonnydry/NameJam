@@ -46,6 +46,8 @@
     "helmet": "^8.1.0",
     "lucide-react": "^0.453.0",
     "memoizee": "^0.4.17",
+    "metaphone": "^2.0.1",
+    "natural": "^8.1.0",
     "node-cache": "^5.1.2",
     "openai": "^5.11.0",
     "openid-client": "^6.6.2",

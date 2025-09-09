@@ -1,6 +1,7 @@
 import { spotifyRateLimiter, withRetry } from '../utils/rateLimiter';
 import { xaiFallbackService } from './xaiFallbackService';
 import { secureLog } from '../utils/secureLogger';
+import { phoneticMatchingService } from './phoneticMatchingService';
 import { withApiRetry, apiRetryConfigs } from '../utils/apiRetry';
 
 interface SpotifyTokenResponse {
@@ -448,15 +449,9 @@ export class SpotifyService {
   }
 
   private calculateSimilarity(str1: string, str2: string): number {
-    const longer = str1.length > str2.length ? str1 : str2;
-    const shorter = str1.length > str2.length ? str2 : str1;
-    
-    if (longer.length === 0) {
-      return 1.0;
-    }
-    
-    const editDistance = this.levenshteinDistance(longer, shorter);
-    return (longer.length - editDistance) / longer.length;
+    // Enhanced similarity calculation using phonetic matching
+    const phoneticMatch = phoneticMatchingService.calculateSimilarity(str1, str2);
+    return phoneticMatch.similarity;
   }
 
   private levenshteinDistance(str1: string, str2: string): number {
