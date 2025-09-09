@@ -36,6 +36,9 @@ export class ConfidenceCalculatorService {
   // Source reliability weights (higher = more reliable)
   private readonly sourceWeights = {
     spotify: 1.0,        // Most reliable - official streaming platform
+    itunes: 0.9,         // Apple Music - major platform, comprehensive catalog
+    soundcloud: 0.7,     // Good for emerging/independent artists
+    bandcamp: 0.8,       // High reliability for indie/underground music
     lastfm: 0.8,         // Good community data
     musicbrainz: 0.7,    // Good metadata but less complete
     famous: 0.9,         // Known famous artists database
@@ -47,7 +50,10 @@ export class ConfidenceCalculatorService {
     spotifyResults?: any,
     lastfmResults?: any,
     musicbrainzResults?: any,
-    famousMatches?: string[]
+    famousMatches?: string[],
+    itunesResults?: any,
+    soundcloudResults?: any,
+    bandcampResults?: any
   ): ConfidenceResult {
     try {
       // Initialize factors
@@ -113,6 +119,76 @@ export class ConfidenceCalculatorService {
           }
         }
         totalWeight += this.sourceWeights.famous;
+      }
+
+      // Check iTunes/Apple Music results
+      if (itunesResults && itunesResults.exists) {
+        const match = itunesResults.matches[0];
+        const similarity = phoneticMatchingService.calculateSimilarity(searchName, match.name);
+        
+        factors.exactMatch = factors.exactMatch || similarity.similarity > 0.95;
+        factors.phoneticSimilarity = Math.max(factors.phoneticSimilarity, similarity.phoneticSimilarity);
+        factors.resultCount += itunesResults.matches.length;
+        factors.sourceReliability = Math.max(factors.sourceReliability, this.sourceWeights.itunes);
+
+        if (similarity.similarity > 0.95) {
+          confidence += 0.8 * this.sourceWeights.itunes;
+          if (!explanation) {
+            explanation = `Found exact match on Apple Music: "${match.name}"`;
+          }
+        } else if (similarity.phoneticSimilarity > 0.8) {
+          confidence += 0.6 * this.sourceWeights.itunes;
+          if (!explanation) {
+            explanation = `Found similar match on Apple Music: "${match.name}"`;
+          }
+        }
+        totalWeight += this.sourceWeights.itunes;
+      }
+
+      // Check SoundCloud results
+      if (soundcloudResults && soundcloudResults.exists) {
+        const match = soundcloudResults.matches[0];
+        const similarity = phoneticMatchingService.calculateSimilarity(searchName, match.name || match.username);
+        
+        factors.phoneticSimilarity = Math.max(factors.phoneticSimilarity, similarity.phoneticSimilarity);
+        factors.resultCount += soundcloudResults.matches.length;
+        factors.sourceReliability = Math.max(factors.sourceReliability, this.sourceWeights.soundcloud);
+
+        if (similarity.similarity > 0.95 && !factors.exactMatch) {
+          confidence += 0.6 * this.sourceWeights.soundcloud;
+          if (!explanation) {
+            explanation = `Found exact match on SoundCloud: "${match.name || match.username}"`;
+          }
+        } else if (similarity.phoneticSimilarity > 0.8 && factors.matchQuality === 'none') {
+          confidence += 0.4 * this.sourceWeights.soundcloud;
+          if (!explanation) {
+            explanation = `Found similar match on SoundCloud: "${match.name || match.username}"`;
+          }
+        }
+        totalWeight += this.sourceWeights.soundcloud;
+      }
+
+      // Check Bandcamp results
+      if (bandcampResults && bandcampResults.exists) {
+        const match = bandcampResults.matches[0];
+        const similarity = phoneticMatchingService.calculateSimilarity(searchName, match.name);
+        
+        factors.phoneticSimilarity = Math.max(factors.phoneticSimilarity, similarity.phoneticSimilarity);
+        factors.resultCount += bandcampResults.matches.length;
+        factors.sourceReliability = Math.max(factors.sourceReliability, this.sourceWeights.bandcamp);
+
+        if (similarity.similarity > 0.95 && !factors.exactMatch) {
+          confidence += 0.7 * this.sourceWeights.bandcamp;
+          if (!explanation) {
+            explanation = `Found exact match on Bandcamp: "${match.name}"`;
+          }
+        } else if (similarity.phoneticSimilarity > 0.8 && factors.matchQuality === 'none') {
+          confidence += 0.5 * this.sourceWeights.bandcamp;
+          if (!explanation) {
+            explanation = `Found similar match on Bandcamp: "${match.name}"`;
+          }
+        }
+        totalWeight += this.sourceWeights.bandcamp;
       }
 
       // Check Last.fm results

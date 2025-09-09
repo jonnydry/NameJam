@@ -1,5 +1,8 @@
 import type { VerificationResult } from "@shared/schema";
 import { spotifyService } from "./spotifyService";
+import { itunesService } from "./itunesService";
+import { soundcloudService } from "./soundcloudService";
+import { bandcampService } from "./bandcampService";
 import { phoneticMatchingService } from "./phoneticMatchingService";
 import { confidenceCalculator } from "./confidenceCalculator";
 import { lastFmRateLimiter, musicBrainzRateLimiter, withRetry } from '../utils/rateLimiter';
@@ -100,20 +103,79 @@ export class NameVerifierService {
       // Generate verification links that users can actually use
       const verificationLinks = this.generateVerificationLinks(name, type);
 
-      // SPOTIFY API VERIFICATION - TOP PRIORITY
+      // PARALLEL API VERIFICATION - Check all major platforms simultaneously
       let spotifyResults: any = null;
+      let itunesResults: any = null;
+      let soundcloudResults: any = null;
+      let bandcampResults: any = null;
       
       try {
-        // Check Spotify first - most authoritative source
+        // Run all major platform checks in parallel for speed
+        const promises = [];
+        
+        // Spotify (highest priority)
         if (await spotifyService.isAvailable()) {
-          if (type === 'band') {
-            spotifyResults = await spotifyService.verifyBandName(name);
-          } else {
-            spotifyResults = await spotifyService.verifySongName(name);
-          }
+          promises.push(
+            type === 'band' 
+              ? spotifyService.verifyBandName(name).then(result => ({ source: 'spotify', result }))
+              : spotifyService.verifySongName(name).then(result => ({ source: 'spotify', result }))
+          );
         }
+        
+        // iTunes/Apple Music (no auth needed)
+        if (await itunesService.isAvailable()) {
+          promises.push(
+            type === 'band'
+              ? itunesService.verifyBandName(name).then(result => ({ source: 'itunes', result }))
+              : itunesService.verifySongName(name).then(result => ({ source: 'itunes', result }))
+          );
+        }
+        
+        // SoundCloud (if API key available)
+        if (await soundcloudService.isAvailable()) {
+          promises.push(
+            type === 'band'
+              ? soundcloudService.verifyArtistName(name).then(result => ({ source: 'soundcloud', result }))
+              : soundcloudService.verifySongName(name).then(result => ({ source: 'soundcloud', result }))
+          );
+        }
+        
+        // Bandcamp (if API available)
+        if (await bandcampService.isAvailable()) {
+          promises.push(
+            type === 'band'
+              ? bandcampService.verifyArtistName(name).then(result => ({ source: 'bandcamp', result }))
+              : bandcampService.verifySongName(name).then(result => ({ source: 'bandcamp', result }))
+          );
+        }
+        
+        // Execute all platform checks in parallel
+        const results = await Promise.allSettled(promises);
+        
+        // Process results
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            const { source, result: data } = result.value;
+            switch (source) {
+              case 'spotify':
+                spotifyResults = data;
+                break;
+              case 'itunes':
+                itunesResults = data;
+                break;
+              case 'soundcloud':
+                soundcloudResults = data;
+                break;
+              case 'bandcamp':
+                bandcampResults = data;
+                break;
+            }
+          }
+        });
+        
       } catch (error) {
-        // Continue to other sources if Spotify fails
+        // Continue to other sources if platform checks fail
+        secureLog.error('Platform verification error', { error: error instanceof Error ? error.message : String(error), name });
       }
 
       // Check Spotify exact matches first (highest priority)
@@ -123,7 +185,7 @@ export class NameVerifierService {
         
         // Calculate confidence for this taken result
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
-          name, spotifyResults, undefined, undefined, undefined
+          name, spotifyResults, undefined, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
         );
         
         if (type === 'band') {
@@ -157,7 +219,7 @@ export class NameVerifierService {
         
         // Calculate confidence for similar matches
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
-          name, spotifyResults, undefined, undefined, undefined
+          name, spotifyResults, undefined, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
         );
         
         if (type === 'band') {
@@ -190,7 +252,7 @@ export class NameVerifierService {
         const similarNames = this.generateSimilarNames(name);
         // Calculate confidence for famous matches
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
-          name, undefined, undefined, undefined, [name]
+          name, undefined, undefined, undefined, [name], itunesResults, soundcloudResults, bandcampResults
         );
         return {
           status: 'taken',
@@ -243,7 +305,7 @@ export class NameVerifierService {
         
         // Calculate confidence for exact matches from other sources
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
-          name, undefined, searchResults, undefined, undefined
+          name, spotifyResults, searchResults, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
         );
         
         return {
@@ -295,7 +357,7 @@ export class NameVerifierService {
         
         // Calculate confidence for similar matches
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
-          name, undefined, searchResults, undefined, undefined
+          name, spotifyResults, searchResults, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
         );
         
         return {
@@ -314,7 +376,7 @@ export class NameVerifierService {
       
       // Calculate confidence for available results
       const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
-        name, spotifyResults, searchResults, undefined, undefined
+        name, spotifyResults, searchResults, undefined, undefined, itunesResults, soundcloudResults, bandcampResults
       );
       
       if (searchResults.length <= 5) {
