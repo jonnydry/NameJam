@@ -7,8 +7,15 @@ import { phoneticMatchingService } from "./phoneticMatchingService";
 import { confidenceCalculator } from "./confidenceCalculator";
 import { lastFmRateLimiter, musicBrainzRateLimiter, withRetry } from '../utils/rateLimiter';
 import { secureLog } from '../utils/secureLogger';
+import { FamousNamesRepository } from './famousNamesRepository';
 
 export class NameVerifierService {
+  private famousNamesRepo: FamousNamesRepository;
+
+  constructor() {
+    this.famousNamesRepo = FamousNamesRepository.getInstance();
+  }
+
   async verifyName(name: string, type: 'band' | 'song'): Promise<VerificationResult> {
     try {
       // Easter eggs - check these FIRST before any real verification
@@ -26,55 +33,8 @@ export class NameVerifierService {
         };
       }
 
-      // Easter egg for obviously famous artists (trolling people testing the app)
-      const easterEggArtists = [
-        'the beatles', 'rolling stones', 'the rolling stones', 'queen', 'led zeppelin',
-        'pink floyd', 'the doors', 'nirvana', 'metallica', 'ac dc', 'acdc', 'ac/dc',
-        'guns n roses', 'guns n\' roses', 'u2', 'radiohead', 'red hot chili peppers',
-        'the who', 'black sabbath', 'deep purple', 'eagles', 'fleetwood mac',
-        'bob dylan', 'elvis presley', 'michael jackson', 'madonna', 'prince',
-        'david bowie', 'elton john', 'john lennon', 'paul mccartney', 'mick jagger',
-        'freddie mercury', 'jimi hendrix', 'eric clapton', 'bruce springsteen',
-        'johnny cash', 'aretha franklin', 'stevie wonder', 'ray charles'
-      ];
-
-      // Famous artists that get high confidence but realistic verification (no easter egg)
-      const famousArtists = [
-        // Contemporary superstars
-        'taylor swift', 'beyonce', 'beyoncé', 'drake', 'adele', 'ed sheeran', 'ariana grande',
-        'justin bieber', 'billie eilish', 'the weeknd', 'dua lipa', 'olivia rodrigo',
-        'bad bunny', 'post malone', 'harry styles', 'doja cat', 'lizzo', 'lana del rey',
-        'kendrick lamar', 'kanye west', 'jay z', 'jay-z', 'eminem', 'rihanna',
-        
-        // Modern rock/alternative
-        'imagine dragons', 'twenty one pilots', 'maroon 5', 'onerepublic', 'fall out boy',
-        'panic at the disco', 'my chemical romance', 'green day', 'linkin park',
-        'arctic monkeys', 'the killers', 'muse', 'radiohead', 'foo fighters',
-        
-        // Electronic/Dance
-        'calvin harris', 'david guetta', 'skrillex', 'deadmau5', 'marshmello',
-        'the chainsmokers', 'daft punk', 'avicii', 'martin garrix',
-        
-        // Country/Folk
-        'carrie underwood', 'blake shelton', 'keith urban', 'luke bryan', 'florida georgia line',
-        'kacey musgraves', 'maren morris', 'chris stapleton',
-        
-        // Classic rock/legacy (not easter eggs)
-        'the kinks', 'the beach boys', 'simon and garfunkel', 'creedence clearwater revival',
-        'lynyrd skynyrd', 'aerosmith', 'kiss', 'van halen', 'def leppard',
-        'bon jovi', 'journey', 'foreigner', 'styx', 'toto', 'chicago',
-        'santana', 'grateful dead', 'jefferson airplane', 'janis joplin',
-        'the velvet underground', 'iggy pop', 'the stooges', 'ramones',
-        'sex pistols', 'the clash', 'pearl jam', 'soundgarden',
-        'alice in chains', 'stone temple pilots', 'smashing pumpkins',
-        'coldplay', 'oasis', 'blur', 'the cure', 'depeche mode', 'new order', 'joy division',
-        'talking heads', 'r.e.m.', 'rem', 'pixies', 'sonic youth'
-      ];
-
-      const lowerName = name.toLowerCase().trim();
-      
       // Check for easter egg artists first (100% confidence + joke message)
-      if (easterEggArtists.includes(lowerName)) {
+      if (this.famousNamesRepo.isEasterEggArtist(name)) {
         return {
           status: 'available',
           confidence: 1.0,
@@ -86,7 +46,7 @@ export class NameVerifierService {
       }
       
       // Check for famous artists (95-98% confidence + realistic message)
-      if (famousArtists.includes(lowerName)) {
+      if (this.famousNamesRepo.isFamousArtist(name)) {
         const verificationLinks = this.generateVerificationLinks(name, type);
         const similarNames = this.generateSimilarNames(name);
         return {
@@ -247,8 +207,8 @@ export class NameVerifierService {
       }
 
       // Famous names database check (third priority)
-      const famousMatch = this.checkFamousNames(name, type);
-      if (famousMatch) {
+      const famousMatch = this.famousNamesRepo.checkFamousName(name, type);
+      if (famousMatch && famousMatch.found) {
         const similarNames = this.generateSimilarNames(name);
         // Calculate confidence for famous matches
         const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
@@ -453,20 +413,9 @@ export class NameVerifierService {
     const words = name.split(' ');
     const variations: string[] = [];
 
-    // Thematic word groups for intelligent suggestions
-    const thematicWords: Record<string, string[]> = {
-      dark: ['Shadow', 'Midnight', 'Eclipse', 'Noir', 'Obsidian', 'Raven', 'Onyx'],
-      light: ['Aurora', 'Dawn', 'Radiant', 'Solar', 'Bright', 'Luminous', 'Stellar'],
-      nature: ['Forest', 'Ocean', 'Mountain', 'River', 'Storm', 'Thunder', 'Wildfire'],
-      music: ['Echo', 'Harmony', 'Rhythm', 'Melody', 'Chord', 'Resonance', 'Cadence'],
-      mystical: ['Crystal', 'Mystic', 'Arcane', 'Phoenix', 'Oracle', 'Ethereal', 'Cosmic'],
-      urban: ['Neon', 'Metro', 'City', 'Electric', 'Digital', 'Chrome', 'Steel'],
-      emotional: ['Velvet', 'Crimson', 'Golden', 'Silver', 'Gentle', 'Wild', 'Serene']
-    };
-
-    // Analyze the original name for themes
-    const nameTheme = this.analyzeNameTheme(name.toLowerCase());
-    const themeWords = thematicWords[nameTheme] || thematicWords.music;
+    // Analyze the original name for themes using repository
+    const nameTheme = this.famousNamesRepo.analyzeNameTheme(name);
+    const themeWords = this.famousNamesRepo.getThematicWords(nameTheme);
 
     if (words.length > 1) {
       // Multi-word names: replace one word with thematic alternative
@@ -477,8 +426,8 @@ export class NameVerifierService {
       variations.push(`${firstWord} ${themeWords[Math.floor(Math.random() * themeWords.length)]}`);
       
       // Add connecting words for flow
-      const connectors = ['and the', 'of the', '&', 'meets'];
-      if (words.length === 2) {
+      const connectors = this.famousNamesRepo.getConnectors();
+      if (words.length === 2 && connectors.length > 0) {
         variations.push(`${firstWord} ${connectors[Math.floor(Math.random() * connectors.length)]} ${themeWords[Math.floor(Math.random() * themeWords.length)]}`);
       }
     } else {
@@ -487,8 +436,10 @@ export class NameVerifierService {
       variations.push(`${name} ${themeWords[Math.floor(Math.random() * themeWords.length)]}`);
       
       // Musical suffixes for bands
-      const musicalSuffixes = ['Collective', 'Ensemble', 'Project', 'Sound', 'Music'];
-      variations.push(`${name} ${musicalSuffixes[Math.floor(Math.random() * musicalSuffixes.length)]}`);
+      const musicalSuffixes = this.famousNamesRepo.getMusicalSuffixes();
+      if (musicalSuffixes.length > 0) {
+        variations.push(`${name} ${musicalSuffixes[Math.floor(Math.random() * musicalSuffixes.length)]}`);
+      }
     }
 
     // Add some creative variations
@@ -503,23 +454,7 @@ export class NameVerifierService {
     return uniqueVariations.slice(0, 4);
   }
 
-  private analyzeNameTheme(name: string): string {
-    const darkWords = ['dark', 'black', 'shadow', 'night', 'midnight', 'death', 'doom', 'void'];
-    const lightWords = ['light', 'bright', 'sun', 'dawn', 'gold', 'silver', 'white', 'shine'];
-    const natureWords = ['forest', 'ocean', 'mountain', 'river', 'storm', 'fire', 'earth', 'sky'];
-    const musicWords = ['sound', 'music', 'song', 'beat', 'rhythm', 'harmony', 'melody', 'note'];
-    const mysticalWords = ['magic', 'mystic', 'crystal', 'spirit', 'soul', 'dream', 'vision', 'cosmic'];
-    const urbanWords = ['city', 'street', 'neon', 'electric', 'digital', 'metro', 'steel', 'chrome'];
-
-    if (darkWords.some(word => name.includes(word))) return 'dark';
-    if (lightWords.some(word => name.includes(word))) return 'light';
-    if (natureWords.some(word => name.includes(word))) return 'nature';
-    if (musicWords.some(word => name.includes(word))) return 'music';
-    if (mysticalWords.some(word => name.includes(word))) return 'mystical';
-    if (urbanWords.some(word => name.includes(word))) return 'urban';
-    
-    return 'emotional'; // Default theme
-  }
+  // Method removed - now using FamousNamesRepository.analyzeNameTheme()
 
   private generateExistingInfo(name: string, type: string): string {
     const years = ['2015', '2018', '2019', '2021', '2022'];
@@ -547,63 +482,7 @@ export class NameVerifierService {
     return prefixes[Math.floor(Math.random() * prefixes.length)];
   }
 
-  private checkFamousNames(name: string, type: 'band' | 'song'): { name: string; artist?: string } | null {
-    const lowercaseName = name.toLowerCase().trim();
-    
-    // Database of famous bands
-    const famousBands = [
-      'the beatles', 'queen', 'led zeppelin', 'pink floyd', 'the rolling stones', 
-      'nirvana', 'radiohead', 'metallica', 'ac/dc', 'guns n roses', 'u2', 
-      'the who', 'black sabbath', 'deep purple', 'rush', 'yes', 'genesis',
-      'the doors', 'jimi hendrix experience', 'cream', 'the police', 'sting',
-      'red hot chili peppers', 'pearl jam', 'soundgarden', 'alice in chains',
-      'foo fighters', 'green day', 'blink-182', 'linkin park', 'coldplay',
-      'muse', 'the strokes', 'the white stripes', 'arctic monkeys', 'oasis',
-      'blur', 'pulp', 'suede', 'the smiths', 'joy division', 'new order',
-      'depeche mode', 'the cure', 'siouxsie and the banshees', 'bauhaus',
-      'iron maiden', 'judas priest', 'motorhead', 'slayer', 'megadeth',
-      'anthrax', 'pantera', 'tool', 'system of a down', 'rage against the machine',
-      'nine inch nails', 'marilyn manson', 'rob zombie', 'white zombie',
-      'smashing pumpkins', 'jane\'s addiction', 'faith no more', 'primus',
-      'deftones', 'korn', 'limp bizkit', 'creed', 'nickelback', 'disturbed'
-    ];
-
-    // Database of famous songs with artists
-    const famousSongs = [
-      { name: 'bohemian rhapsody', artist: 'Queen' },
-      { name: 'stairway to heaven', artist: 'Led Zeppelin' },
-      { name: 'imagine', artist: 'John Lennon' },
-      { name: 'hey jude', artist: 'The Beatles' },
-      { name: 'yesterday', artist: 'The Beatles' },
-      { name: 'let it be', artist: 'The Beatles' },
-      { name: 'smells like teen spirit', artist: 'Nirvana' },
-      { name: 'sweet child o mine', artist: 'Guns N\' Roses' },
-      { name: 'hotel california', artist: 'Eagles' },
-      { name: 'another brick in the wall', artist: 'Pink Floyd' },
-      { name: 'comfortably numb', artist: 'Pink Floyd' },
-      { name: 'wish you were here', artist: 'Pink Floyd' },
-      { name: 'paranoid', artist: 'Black Sabbath' },
-      { name: 'smoke on the water', artist: 'Deep Purple' },
-      { name: 'highway to hell', artist: 'AC/DC' },
-      { name: 'thunderstruck', artist: 'AC/DC' },
-      { name: 'enter sandman', artist: 'Metallica' },
-      { name: 'master of puppets', artist: 'Metallica' },
-      { name: 'one', artist: 'Metallica' }
-    ];
-
-    if (type === 'band') {
-      if (famousBands.includes(lowercaseName)) {
-        return { name: lowercaseName };
-      }
-    } else {
-      const songMatch = famousSongs.find(song => song.name === lowercaseName);
-      if (songMatch) {
-        return { name: songMatch.name, artist: songMatch.artist };
-      }
-    }
-
-    return null;
-  }
+  // Method removed - now using FamousNamesRepository.checkFamousName()
 
   private async searchLastFm(name: string, type: 'band' | 'song'): Promise<any[]> {
     const apiKey = process.env.LASTFM_API_KEY;
