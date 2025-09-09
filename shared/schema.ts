@@ -85,6 +85,9 @@ export type GenerateNameRequest = z.infer<typeof generateNameRequestSchema>;
 
 export const verificationResult = z.object({
   status: z.enum(['available', 'similar', 'taken']),
+  confidence: z.number().min(0).max(1).optional(), // 0-1 confidence score
+  confidenceLevel: z.enum(['very-high', 'high', 'medium', 'low', 'very-low']).optional(),
+  explanation: z.string().optional(), // Human-readable confidence explanation
   details: z.string().optional(),
   similarNames: z.array(z.string()).optional(),
   verificationLinks: z.array(z.object({
