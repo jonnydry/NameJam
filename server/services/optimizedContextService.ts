@@ -107,6 +107,25 @@ export class OptimizedContextService {
     mood: string | undefined,
     strategy: ContextPriority
   ): Promise<OptimizedContext> {
+    // Randomize genre/mood when none specified for context diversity
+    let actualGenre = genre;
+    let actualMood = mood;
+    
+    if (!genre && !mood) {
+      const availableGenres = ['indie', 'alternative', 'pop', 'electronic', 'folk', 'ambient'];
+      const availableMoods = ['energetic', 'dreamy', 'uplifting', 'mysterious', 'nostalgic'];
+      
+      // Randomly pick genre or mood to ensure variety while maintaining API context richness
+      const shouldUseGenre = Math.random() > 0.5;
+      if (shouldUseGenre) {
+        actualGenre = availableGenres[Math.floor(Math.random() * availableGenres.length)];
+        secureLog.debug(`[OptimizedContext] Randomized to genre: ${actualGenre} for diversity`);
+      } else {
+        actualMood = availableMoods[Math.floor(Math.random() * availableMoods.length)];
+        secureLog.debug(`[OptimizedContext] Randomized to mood: ${actualMood} for diversity`);
+      }
+    }
+
     const context: OptimizedContext = {
       genreKeywords: [],
       moodWords: [],
@@ -119,21 +138,21 @@ export class OptimizedContextService {
     // Phase 1: Critical context (parallel, must complete)
     const criticalPromises = [];
     
-    if (genre && strategy.critical.includes('genreKeywords')) {
+    if (actualGenre && strategy.critical.includes('genreKeywords')) {
       criticalPromises.push(
-        this.batchDatamuseCall('findSimilarWords', [genre, 8])
+        this.batchDatamuseCall('findSimilarWords', [actualGenre, 8])
           .then((words: any[]) => {
             context.genreKeywords = words.map((w: any) => w.word || w);
           })
           .catch(() => {
-            context.genreKeywords = this.getFallbackGenreKeywords(genre);
+            context.genreKeywords = this.getFallbackGenreKeywords(actualGenre);
           })
       );
     }
     
-    if (genre && strategy.critical.includes('relatedArtists')) {
+    if (actualGenre && strategy.critical.includes('relatedArtists')) {
       criticalPromises.push(
-        spotifyService.getGenreArtists(genre, 4)
+        spotifyService.getGenreArtists(actualGenre, 4)
           .then((artists: any[]) => {
             context.relatedArtists = artists.map((a: any) => a.name);
           })
@@ -143,14 +162,14 @@ export class OptimizedContextService {
       );
     }
     
-    if (mood && strategy.critical.includes('moodWords')) {
+    if (actualMood && strategy.critical.includes('moodWords')) {
       criticalPromises.push(
-        this.batchDatamuseCall('findSimilarWords', [mood, 6])
+        this.batchDatamuseCall('findSimilarWords', [actualMood, 6])
           .then((words: any[]) => {
             context.moodWords = words.map((w: any) => w.word || w);
           })
           .catch(() => {
-            context.moodWords = this.getFallbackMoodWords(mood);
+            context.moodWords = this.getFallbackMoodWords(actualMood);
           })
       );
     }
@@ -161,9 +180,9 @@ export class OptimizedContextService {
     // Phase 2: Important context (parallel, best effort)
     const importantPromises = [];
     
-    if (genre && strategy.important.includes('wordAssociations')) {
+    if (actualGenre && strategy.important.includes('wordAssociations')) {
       importantPromises.push(
-        this.batchDatamuseCall('findAdjectivesForNoun', [genre, 6])
+        this.batchDatamuseCall('findAdjectivesForNoun', [actualGenre, 6])
           .then((adjectives: any[]) => {
             context.wordAssociations = adjectives.map((a: any) => a.word || a);
           })
@@ -173,9 +192,9 @@ export class OptimizedContextService {
       );
     }
     
-    if (genre && strategy.important.includes('genreTags')) {
+    if (actualGenre && strategy.important.includes('genreTags')) {
       importantPromises.push(
-        lastfmService.getGenreVocabulary(genre)
+        lastfmService.getGenreVocabulary(actualGenre)
           .then((vocabulary: any) => {
             context.genreTags = vocabulary.descriptiveWords.slice(0, 6);
           })
@@ -196,7 +215,7 @@ export class OptimizedContextService {
     }
     
     // Phase 3: Optional context (lazy loaded separately if needed)
-    this.lazyLoadOptionalContext(context, genre, mood, strategy.optional);
+    this.lazyLoadOptionalContext(context, actualGenre, actualMood, strategy.optional);
     
     return context;
   }
