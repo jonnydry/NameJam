@@ -7,6 +7,7 @@ interface WordTrackingEntry {
   stem: string;
   timestamp: number;
   generationId: string; // Track which generation session
+  nameType?: string; // Track name type (band/song) for cross-type filtering
 }
 
 export class UnifiedWordFilter {
@@ -45,7 +46,7 @@ export class UnifiedWordFilter {
   }
 
   // Check if a name should be rejected due to word repetition
-  shouldRejectName(name: string, generationId: string): boolean {
+  shouldRejectName(name: string, generationId: string, nameType?: string): boolean {
     const words = this.extractWords(name);
     const stems = words.map(w => this.getWordStem(w));
     
@@ -81,13 +82,26 @@ export class UnifiedWordFilter {
     for (const word of words) {
       const entry = this.recentWords.get(word.toLowerCase());
       if (entry) {
-        // Very recent words (last 2 minutes) = automatic rejection
+        // Check if this is a cross-type situation (band vs song)
+        const isCrossType = nameType && entry.nameType && nameType !== entry.nameType;
+        
+        // Very recent words (last 2 minutes) = automatic rejection, UNLESS it's cross-type
         if (entry.timestamp > veryRecentThreshold) {
-          secureLog.debug(`❌ Rejected "${name}" - word "${word}" used very recently`);
-          return true;
+          if (isCrossType) {
+            // Be more lenient for cross-type: only 25% chance of rejection
+            if (Math.random() < 0.25) {
+              secureLog.debug(`❌ Rejected "${name}" - word "${word}" used very recently in different name type (cross-type rejection)`);
+              return true;
+            } else {
+              secureLog.debug(`✅ Allowed "${name}" - word "${word}" used very recently but different name type (cross-type allowance)`);
+            }
+          } else {
+            secureLog.debug(`❌ Rejected "${name}" - word "${word}" used very recently`);
+            return true;
+          }
         }
         // Recent words (last 10 minutes) = partial rejection (50% chance)
-        if (entry.timestamp > recentThreshold && Math.random() < 0.5) {
+        else if (entry.timestamp > recentThreshold && Math.random() < 0.5) {
           secureLog.debug(`❌ Rejected "${name}" - word "${word}" used recently (random rejection)`);
           return true;
         }
@@ -98,8 +112,21 @@ export class UnifiedWordFilter {
     for (const stem of stems) {
       const entry = this.recentWords.get(stem);
       if (entry && entry.timestamp > veryRecentThreshold) {
-        secureLog.debug(`❌ Rejected "${name}" - stem "${stem}" used very recently`);
-        return true;
+        // Check if this is a cross-type situation (band vs song)
+        const isCrossType = nameType && entry.nameType && nameType !== entry.nameType;
+        
+        if (isCrossType) {
+          // Be more lenient for cross-type: only 25% chance of rejection  
+          if (Math.random() < 0.25) {
+            secureLog.debug(`❌ Rejected "${name}" - stem "${stem}" used very recently in different name type (cross-type rejection)`);
+            return true;
+          } else {
+            secureLog.debug(`✅ Allowed "${name}" - stem "${stem}" used very recently but different name type (cross-type allowance)`);
+          }
+        } else {
+          secureLog.debug(`❌ Rejected "${name}" - stem "${stem}" used very recently`);
+          return true;
+        }
       }
     }
     
@@ -107,7 +134,7 @@ export class UnifiedWordFilter {
   }
 
   // Accept a name and track its words
-  acceptName(name: string, generationId: string): void {
+  acceptName(name: string, generationId: string, nameType?: string): void {
     const words = this.extractWords(name);
     const stems = words.map(w => this.getWordStem(w));
     const timestamp = Date.now();
@@ -130,7 +157,8 @@ export class UnifiedWordFilter {
         word: word.toLowerCase(),
         stem: this.getWordStem(word),
         timestamp,
-        generationId
+        generationId,
+        nameType
       });
     });
     
