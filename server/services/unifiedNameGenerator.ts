@@ -104,7 +104,7 @@ export class UnifiedNameGeneratorService {
       }
       
       // 3. Apply repetition filtering first
-      const filteredNames = this.applyRepetitionFiltering(names, generationId); // Filter out repetitive names
+      const filteredNames = this.applyRepetitionFiltering(names, generationId, type); // Filter out repetitive names
       
       // 4. Apply quality scoring and select best names
       const scoredNames = filteredNames.map((name: string) => ({
@@ -117,7 +117,7 @@ export class UnifiedNameGeneratorService {
       const finalNames = scoredNames.slice(0, count).map((item: any) => item.name);
       
       // Track only the final selected names in the filter
-      finalNames.forEach((name: string) => unifiedWordFilter.acceptName(name, generationId));
+      finalNames.forEach((name: string) => unifiedWordFilter.acceptName(name, generationId, type));
       const elapsedTime = Date.now() - startTime;
       
       // End performance monitoring
@@ -1024,11 +1024,11 @@ Return ONLY the JSON object above.`;
   }
 
   // Apply repetition filtering to remove duplicate words across names
-  private applyRepetitionFiltering(names: string[], generationId: string): string[] {
+  private applyRepetitionFiltering(names: string[], generationId: string, nameType?: string): string[] {
     const filteredNames: string[] = [];
     
     for (const name of names) {
-      if (!unifiedWordFilter.shouldRejectName(name, generationId)) {
+      if (!unifiedWordFilter.shouldRejectName(name, generationId, nameType)) {
         filteredNames.push(name);
       } else {
         secureLog.debug(`Filtered out repetitive name: "${name}"`);
