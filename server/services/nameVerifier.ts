@@ -24,7 +24,7 @@ export class NameVerifierService {
       }
 
       // Easter egg for obviously famous artists (trolling people testing the app)
-      const obviousFamousArtists = [
+      const easterEggArtists = [
         'the beatles', 'rolling stones', 'the rolling stones', 'queen', 'led zeppelin',
         'pink floyd', 'the doors', 'nirvana', 'metallica', 'ac dc', 'acdc', 'ac/dc',
         'guns n roses', 'guns n\' roses', 'u2', 'radiohead', 'red hot chili peppers',
@@ -32,21 +32,46 @@ export class NameVerifierService {
         'bob dylan', 'elvis presley', 'michael jackson', 'madonna', 'prince',
         'david bowie', 'elton john', 'john lennon', 'paul mccartney', 'mick jagger',
         'freddie mercury', 'jimi hendrix', 'eric clapton', 'bruce springsteen',
-        'johnny cash', 'aretha franklin', 'stevie wonder', 'ray charles',
+        'johnny cash', 'aretha franklin', 'stevie wonder', 'ray charles'
+      ];
+
+      // Famous artists that get high confidence but realistic verification (no easter egg)
+      const famousArtists = [
+        // Contemporary superstars
+        'taylor swift', 'beyonce', 'beyoncé', 'drake', 'adele', 'ed sheeran', 'ariana grande',
+        'justin bieber', 'billie eilish', 'the weeknd', 'dua lipa', 'olivia rodrigo',
+        'bad bunny', 'post malone', 'harry styles', 'doja cat', 'lizzo', 'lana del rey',
+        'kendrick lamar', 'kanye west', 'jay z', 'jay-z', 'eminem', 'rihanna',
+        
+        // Modern rock/alternative
+        'imagine dragons', 'twenty one pilots', 'maroon 5', 'onerepublic', 'fall out boy',
+        'panic at the disco', 'my chemical romance', 'green day', 'linkin park',
+        'arctic monkeys', 'the killers', 'muse', 'radiohead', 'foo fighters',
+        
+        // Electronic/Dance
+        'calvin harris', 'david guetta', 'skrillex', 'deadmau5', 'marshmello',
+        'the chainsmokers', 'daft punk', 'avicii', 'martin garrix',
+        
+        // Country/Folk
+        'carrie underwood', 'blake shelton', 'keith urban', 'luke bryan', 'florida georgia line',
+        'kacey musgraves', 'maren morris', 'chris stapleton',
+        
+        // Classic rock/legacy (not easter eggs)
         'the kinks', 'the beach boys', 'simon and garfunkel', 'creedence clearwater revival',
         'lynyrd skynyrd', 'aerosmith', 'kiss', 'van halen', 'def leppard',
         'bon jovi', 'journey', 'foreigner', 'styx', 'toto', 'chicago',
         'santana', 'grateful dead', 'jefferson airplane', 'janis joplin',
         'the velvet underground', 'iggy pop', 'the stooges', 'ramones',
-        'sex pistols', 'the clash', 'green day', 'pearl jam', 'soundgarden',
+        'sex pistols', 'the clash', 'pearl jam', 'soundgarden',
         'alice in chains', 'stone temple pilots', 'smashing pumpkins',
-        'foo fighters', 'linkin park', 'coldplay', 'oasis', 'blur',
-        'the cure', 'depeche mode', 'new order', 'joy division',
+        'coldplay', 'oasis', 'blur', 'the cure', 'depeche mode', 'new order', 'joy division',
         'talking heads', 'r.e.m.', 'rem', 'pixies', 'sonic youth'
       ];
 
       const lowerName = name.toLowerCase().trim();
-      if (obviousFamousArtists.includes(lowerName)) {
+      
+      // Check for easter egg artists first (100% confidence + joke message)
+      if (easterEggArtists.includes(lowerName)) {
         return {
           status: 'available',
           confidence: 1.0,
@@ -54,6 +79,21 @@ export class NameVerifierService {
           explanation: 'Special easter egg for famous artists - 100% confidence this name is perfect!',
           details: 'We love you. Go to bed. <3',
           verificationLinks: []
+        };
+      }
+      
+      // Check for famous artists (95-98% confidence + realistic message)
+      if (famousArtists.includes(lowerName)) {
+        const verificationLinks = this.generateVerificationLinks(name, type);
+        const similarNames = this.generateSimilarNames(name);
+        return {
+          status: 'taken',
+          confidence: 0.96, // 96% confidence - very high but not easter egg level
+          confidenceLevel: 'very-high',
+          explanation: 'Found exact match for highly popular artist on Spotify with millions of listeners',
+          details: `This is a famous ${type} name with massive popularity. Try these alternatives:`,
+          similarNames,
+          verificationLinks
         };
       }
 
