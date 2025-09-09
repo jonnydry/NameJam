@@ -1,6 +1,7 @@
 import type { VerificationResult } from "@shared/schema";
 import { spotifyService } from "./spotifyService";
 import { phoneticMatchingService } from "./phoneticMatchingService";
+import { confidenceCalculator } from "./confidenceCalculator";
 import { lastFmRateLimiter, musicBrainzRateLimiter, withRetry } from '../utils/rateLimiter';
 import { secureLog } from '../utils/secureLogger';
 
@@ -14,6 +15,9 @@ export class NameVerifierService {
       if (normalizedName === 'namejam') {
         return {
           status: 'available',
+          confidence: 1.0,
+          confidenceLevel: 'very-high',
+          explanation: 'Special easter egg - 100% confidence this name is perfect!',
           details: 'We love you. Go to bed. <3',
           verificationLinks: []
         };
@@ -45,6 +49,9 @@ export class NameVerifierService {
       if (obviousFamousArtists.includes(lowerName)) {
         return {
           status: 'available',
+          confidence: 1.0,
+          confidenceLevel: 'very-high',
+          explanation: 'Special easter egg for famous artists - 100% confidence this name is perfect!',
           details: 'We love you. Go to bed. <3',
           verificationLinks: []
         };
@@ -74,10 +81,18 @@ export class NameVerifierService {
         const match = spotifyResults.matches[0];
         const similarNames = this.generateSimilarNames(name);
         
+        // Calculate confidence for this taken result
+        const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
+          name, spotifyResults, undefined, undefined, undefined
+        );
+        
         if (type === 'band') {
           const genreInfo = match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : '';
           return {
             status: 'taken',
+            confidence: confidenceResult.confidence,
+            confidenceLevel: confidenceResult.confidenceLevel,
+            explanation: confidenceResult.explanation,
             details: `This band name exists on Spotify${genreInfo}. Popularity: ${match.popularity}/100. Try these alternatives:`,
             similarNames,
             verificationLinks
@@ -85,6 +100,9 @@ export class NameVerifierService {
         } else {
           return {
             status: 'taken',
+            confidence: confidenceResult.confidence,
+            confidenceLevel: confidenceResult.confidenceLevel,
+            explanation: confidenceResult.explanation,
             details: `This song exists on Spotify by ${match.artist} (${match.album}). Try these alternatives:`,
             similarNames,
             verificationLinks
@@ -97,10 +115,18 @@ export class NameVerifierService {
         const match = spotifyResults.matches[0];
         const similarNames = this.generateSimilarNames(name);
         
+        // Calculate confidence for similar matches
+        const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
+          name, spotifyResults, undefined, undefined, undefined
+        );
+        
         if (type === 'band') {
           const genreInfo = match.genres && match.genres.length > 0 ? ` (${match.genres.slice(0, 2).join(', ')})` : '';
           return {
             status: 'similar',
+            confidence: confidenceResult.confidence,
+            confidenceLevel: confidenceResult.confidenceLevel,
+            explanation: confidenceResult.explanation,
             details: `Similar band names found on Spotify${genreInfo}. Consider these alternatives:`,
             similarNames,
             verificationLinks
@@ -108,6 +134,9 @@ export class NameVerifierService {
         } else {
           return {
             status: 'similar',
+            confidence: confidenceResult.confidence,
+            confidenceLevel: confidenceResult.confidenceLevel,
+            explanation: confidenceResult.explanation,
             details: `Similar song titles found on Spotify by various artists. Consider these alternatives:`,
             similarNames,
             verificationLinks
@@ -119,8 +148,15 @@ export class NameVerifierService {
       const famousMatch = this.checkFamousNames(name, type);
       if (famousMatch) {
         const similarNames = this.generateSimilarNames(name);
+        // Calculate confidence for famous matches
+        const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
+          name, undefined, undefined, undefined, [name]
+        );
         return {
           status: 'taken',
+          confidence: confidenceResult.confidence,
+          confidenceLevel: confidenceResult.confidenceLevel,
+          explanation: confidenceResult.explanation,
           details: `This is a famous ${type}${famousMatch.artist ? ` by ${famousMatch.artist}` : ''}. Try these alternatives:`,
           similarNames,
           verificationLinks
@@ -164,8 +200,17 @@ export class NameVerifierService {
         const artistInfo = match.artist ? ` by ${match.artist}` : '';
         const similarNames = this.generateSimilarNames(name);
         secureLog.debug(`Exact match found for "${name}": ${match.name} by ${match.artist || 'Unknown'}`);
+        
+        // Calculate confidence for exact matches from other sources
+        const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
+          name, undefined, searchResults, undefined, undefined
+        );
+        
         return {
           status: 'taken',
+          confidence: confidenceResult.confidence,
+          confidenceLevel: confidenceResult.confidenceLevel,
+          explanation: confidenceResult.explanation,
           details: `Found existing ${type}${artistInfo}. Try these alternatives:`,
           similarNames,
           verificationLinks
@@ -207,8 +252,17 @@ export class NameVerifierService {
         // Close matches found = Similar
         const similarNames = this.generateSimilarNames(name);
         secureLog.debug(`Close matches found for "${name}":`, closeMatches.slice(0, 2));
+        
+        // Calculate confidence for similar matches
+        const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
+          name, undefined, searchResults, undefined, undefined
+        );
+        
         return {
           status: 'similar',
+          confidence: confidenceResult.confidence,
+          confidenceLevel: confidenceResult.confidenceLevel,
+          explanation: confidenceResult.explanation,
           details: `Similar names found in music databases. Consider these alternatives:`,
           similarNames,
           verificationLinks
@@ -217,10 +271,19 @@ export class NameVerifierService {
 
       // Only mark as available if we have fewer than 5 very weak results
       // This handles cases where APIs return tons of unrelated results
+      
+      // Calculate confidence for available results
+      const confidenceResult = confidenceCalculator.calculateAvailabilityConfidence(
+        name, spotifyResults, searchResults, undefined, undefined
+      );
+      
       if (searchResults.length <= 5) {
         // Few or no relevant matches - marking as available
         return {
           status: 'available',
+          confidence: confidenceResult.confidence,
+          confidenceLevel: confidenceResult.confidenceLevel,
+          explanation: confidenceResult.explanation,
           details: `No existing ${type} found with this name in our databases.`,
           verificationLinks
         };
@@ -229,6 +292,9 @@ export class NameVerifierService {
         // No close matches found - marking as available
         return {
           status: 'available',
+          confidence: confidenceResult.confidence,
+          confidenceLevel: confidenceResult.confidenceLevel,
+          explanation: confidenceResult.explanation,
           details: `No existing ${type} found with this exact name in our databases.`,
           verificationLinks
         };
@@ -237,6 +303,9 @@ export class NameVerifierService {
       console.error('Name verification error:', error);
       return {
         status: 'available',
+        confidence: 0.5,
+        confidenceLevel: 'medium',
+        explanation: 'Verification incomplete due to technical issues',
         details: 'Verification temporarily unavailable - name appears to be available.',
         verificationLinks: this.generateVerificationLinks(name, type)
       };
