@@ -284,17 +284,47 @@ export class UnifiedNameGeneratorService {
         break;
     }
 
-    await Promise.all(promises);
-    
-    // Add default diverse context when no genre/mood specified to prevent instrument bias
-    if (!genre && !mood) {
-      context.genreKeywords = ['adventure', 'mystery', 'celebration', 'journey', 'discovery'];
-      context.moodWords = ['vibrant', 'ethereal', 'bold', 'whimsical', 'magnetic'];
-      context.wordAssociations = ['ocean', 'mountain', 'starlight', 'forest', 'horizon'];
-      context.relatedArtists = ['The Lumineers', 'Imagine Dragons', 'OneRepublic', 'Coldplay'];
-      context.genreTags = ['uplifting', 'atmospheric', 'storytelling', 'cinematic', 'organic'];
-      secureLog.debug('Added default diverse context to prevent musical instrument bias');
+    // Randomize genre/mood when none specified to get varied API context
+    if (!genre && !mood && strategy.contextDepth !== 'minimal') {
+      const availableGenres = ['indie', 'alternative', 'pop', 'electronic', 'folk', 'ambient'];
+      const availableMoods = ['energetic', 'dreamy', 'uplifting', 'mysterious', 'nostalgic'];
+      
+      // Randomly pick one to ensure variety while maintaining API context richness
+      const shouldUseGenre = Math.random() > 0.5;
+      if (shouldUseGenre) {
+        const randomGenre = availableGenres[Math.floor(Math.random() * availableGenres.length)];
+        secureLog.debug(`Randomized to genre: ${randomGenre} for context diversity`);
+        
+        promises.push(
+          datamuseService.findSimilarWords(randomGenre, 6)
+            .then((words: any[]) => {
+              context.genreKeywords = words.map((w: any) => w.word);
+            })
+            .catch((err: any) => secureLog.debug('Random genre context error:', err))
+        );
+        
+        promises.push(
+          spotifyService.getGenreArtists(randomGenre, 3)
+            .then((artists: any[]) => {
+              context.relatedArtists = artists.map((a: any) => a.name);
+            })
+            .catch((err: any) => secureLog.debug('Random Spotify error:', err))
+        );
+      } else {
+        const randomMood = availableMoods[Math.floor(Math.random() * availableMoods.length)];
+        secureLog.debug(`Randomized to mood: ${randomMood} for context diversity`);
+        
+        promises.push(
+          datamuseService.findSimilarWords(randomMood, 4)
+            .then((words: any[]) => {
+              context.moodWords = words.map((w: any) => w.word);
+            })
+            .catch((err: any) => secureLog.debug('Random mood context error:', err))
+        );
+      }
     }
+
+    await Promise.all(promises);
     
     // Cache the result if strategy allows it
     if (strategy.cacheTimeout > 0) {
