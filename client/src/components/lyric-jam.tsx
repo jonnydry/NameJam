@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { NotebookPen, RefreshCw, Heart, Brain, Music } from "lucide-react";
+import LyricTypewriter from "./lyric-typewriter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -218,20 +219,11 @@ export function LyricJam({ lyricResult, setLyricResult }: LyricJamProps) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-4 flex-1 min-w-0">
                       <div className="space-y-2">
-                        {lyricResult.lyric.includes('\n') ? (
-                          lyricResult.lyric.split('\n').map((line: string, index: number) => (
-                            <div 
-                              key={index} 
-                              className={`text-lg sm:text-xl font-light leading-relaxed text-gray-100 ${index > 0 ? 'mt-2' : ''}`}
-                            >
-                              <span className="italic tracking-wide">{line}</span>
-                            </div>
-                          ))
-                        ) : (
-                          <span className="text-lg sm:text-xl font-light italic leading-relaxed text-gray-100 tracking-wide">
-                            {lyricResult.lyric}
-                          </span>
-                        )}
+                        <LyricTypewriter 
+                          text={lyricResult.lyric}
+                          speed={50}
+                          className="transition-opacity duration-200"
+                        />
                       </div>
                     </div>
                     <Button
