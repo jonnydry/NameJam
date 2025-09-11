@@ -46,6 +46,33 @@ export function LyricJam({ lyricResult, setLyricResult }: LyricJamProps) {
     "alternative", "reggae", "classical", "jam band"
   ];
 
+  const getGenreEmoji = (genre: string): string => {
+    const emojiMap: Record<string, string> = {
+      rock: "🎸",
+      pop: "💫", 
+      country: "🤠",
+      "hip-hop": "🎤",
+      indie: "🎨",
+      folk: "🪕",
+      metal: "🤘",
+      jazz: "🎺",
+      electronic: "🎛️",
+      blues: "🎵",
+      punk: "⚡",
+      alternative: "🌀",
+      reggae: "🌴",
+      classical: "🎼",
+      "jam band": "🌈"
+    };
+    return emojiMap[genre] || "🎵";
+  };
+
+  const formatGenreName = (genre: string): string => {
+    return genre.split('-').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join('-');
+  };
+
   const loadingMessages = [
     "One sec...",
     "Compiling Vibe",
@@ -156,20 +183,11 @@ export function LyricJam({ lyricResult, setLyricResult }: LyricJamProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Any genre</SelectItem>
-                  <SelectItem value="rock">🎸 Rock</SelectItem>
-                  <SelectItem value="pop">💫 Pop</SelectItem>
-                  <SelectItem value="country">🤠 Country</SelectItem>
-                  <SelectItem value="hip-hop">🎤 Hip-Hop</SelectItem>
-                  <SelectItem value="indie">🎨 Indie</SelectItem>
-                  <SelectItem value="folk">🪕 Folk</SelectItem>
-                  <SelectItem value="metal">🤘 Metal</SelectItem>
-                  <SelectItem value="jazz">🎺 Jazz</SelectItem>
-                  <SelectItem value="electronic">🎛️ Electronic</SelectItem>
-                  <SelectItem value="blues">🎵 Blues</SelectItem>
-                  <SelectItem value="punk">⚡ Punk</SelectItem>
-                  <SelectItem value="alternative">🌀 Alternative</SelectItem>
-                  <SelectItem value="reggae">🌴 Reggae</SelectItem>
-                  <SelectItem value="classical">🎼 Classical</SelectItem>
+                  {genres.map((genreOption) => (
+                    <SelectItem key={genreOption} value={genreOption}>
+                      {getGenreEmoji(genreOption)} {formatGenreName(genreOption)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
