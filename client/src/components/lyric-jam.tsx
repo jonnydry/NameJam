@@ -62,7 +62,7 @@ export function LyricJam({ lyricResult, setLyricResult }: LyricJamProps) {
       alternative: "🌀",
       reggae: "🌴",
       classical: "🎼",
-      "jam band": "🌈"
+      "jam band": "🪐"
     };
     return emojiMap[genre] || "🎵";
   };
