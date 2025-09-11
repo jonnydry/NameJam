@@ -15,6 +15,7 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Alliteration Fix**: Updated AI prompts to explicitly avoid excessive alliteration in band and song name generation, especially for 4+ word names, creating more natural and varied results.
 - **Added Jam Band Genre**: Added "Jam Band" as a selectable genre option with appropriate vocabulary (groove, cosmic, festival, journey) and context for bands like Phish, Grateful Dead, etc. Works with Spotify and Last.fm APIs for contextual generation.
 - **Band Bio Generation Refactoring**: Complete architectural overhaul of band bio generation system with modular design pattern. Extracted configuration constants, created dedicated utility functions, implemented proper TypeScript interfaces, and separated fallback generation logic. This mirrors the successful lyric generation architecture for improved maintainability, testability, and code quality while maintaining all existing creative features.
+- **Lyric Typing Animation**: Implemented smooth AI chat-style typing animation for lyric results using custom React hooks with requestAnimationFrame. Features character-by-character reveal, blinking cursor, click-to-complete functionality, multi-line support, intersection observer optimization, and accessibility compliance with reduced motion preferences. Enhances user experience with engaging visual feedback while maintaining performance.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
