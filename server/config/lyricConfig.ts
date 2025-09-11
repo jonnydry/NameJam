@@ -29,7 +29,7 @@ export class LyricConfig {
     return {
       openAI: {
         model: process.env.LYRIC_AI_MODEL || 'grok-3',
-        temperature: parseFloat(process.env.LYRIC_AI_TEMPERATURE || '1.2'),
+        temperature: parseFloat(process.env.LYRIC_AI_TEMPERATURE || '0.85'),
         maxTokens: parseInt(process.env.LYRIC_AI_MAX_TOKENS || '200'),
         frequencyPenalty: parseFloat(process.env.LYRIC_AI_FREQUENCY_PENALTY || '0.6'),
         presencePenalty: parseFloat(process.env.LYRIC_AI_PRESENCE_PENALTY || '0.5'),

@@ -63,9 +63,17 @@ interface CachedContext {
   strategy: GenerationStrategy;
 }
 
+interface RobustParsingOptions {
+  expectedFields: string[];
+  maxNameLength: number;
+  minNameLength: number;
+  expectedCount: number;
+}
+
 export class UnifiedNameGeneratorService {
   private openai: OpenAI;
   private contextCache = new Map<string, CachedContext>();
+  private parsingStats = new Map<string, { uses: number, totalExtracted: number, totalExpected: number }>();
 
   constructor() {
     this.openai = new OpenAI({ 
@@ -73,6 +81,456 @@ export class UnifiedNameGeneratorService {
       apiKey: process.env.XAI_API_KEY 
     });
   }
+
+  /**
+   * Robust JSON parsing utility with multiple extraction strategies
+   */
+  private parseAIResponseRobustly(
+    content: string, 
+    options: RobustParsingOptions
+  ): { names: string[], parseMethod: string, issues: string[] } {
+    const issues: string[] = [];
+    const { expectedFields, maxNameLength, minNameLength, expectedCount } = options;
+    
+    secureLog.debug('Attempting robust parsing on content length:', content.length);
+    
+    // Strategy 1: Clean JSON extraction with preprocessing
+    try {
+      const result = this.tryCleanJsonExtraction(content, expectedFields);
+      if (result.names.length > 0) {
+        const validatedNames = this.validateExtractedNames(result.names, { maxNameLength, minNameLength, expectedCount });
+        if (validatedNames.valid.length > 0) {
+          secureLog.debug(`Clean JSON extraction succeeded: ${validatedNames.valid.length} names`);
+          return { 
+            names: validatedNames.valid, 
+            parseMethod: 'clean_json', 
+            issues: validatedNames.issues 
+          };
+        }
+        issues.push('Clean JSON extracted but names failed validation');
+      }
+    } catch (error) {
+      issues.push(`Clean JSON failed: ${error}`);
+      secureLog.debug('Clean JSON extraction failed:', error);
+    }
+    
+    // Strategy 2: Loose JSON extraction (multiple attempts)
+    try {
+      const result = this.tryLooseJsonExtraction(content, expectedFields);
+      if (result.names.length > 0) {
+        const validatedNames = this.validateExtractedNames(result.names, { maxNameLength, minNameLength, expectedCount });
+        if (validatedNames.valid.length > 0) {
+          secureLog.debug(`Loose JSON extraction succeeded: ${validatedNames.valid.length} names`);
+          return { 
+            names: validatedNames.valid, 
+            parseMethod: 'loose_json', 
+            issues: [...issues, ...validatedNames.issues] 
+          };
+        }
+        issues.push('Loose JSON extracted but names failed validation');
+      }
+    } catch (error) {
+      issues.push(`Loose JSON failed: ${error}`);
+      secureLog.debug('Loose JSON extraction failed:', error);
+    }
+    
+    // Strategy 3: Structured text parsing (looking for patterns)
+    try {
+      const result = this.tryStructuredTextParsing(content);
+      if (result.names.length > 0) {
+        const validatedNames = this.validateExtractedNames(result.names, { maxNameLength, minNameLength, expectedCount });
+        if (validatedNames.valid.length > 0) {
+          secureLog.debug(`Structured text parsing succeeded: ${validatedNames.valid.length} names`);
+          return { 
+            names: validatedNames.valid, 
+            parseMethod: 'structured_text', 
+            issues: [...issues, ...validatedNames.issues] 
+          };
+        }
+        issues.push('Structured text extracted but names failed validation');
+      }
+    } catch (error) {
+      issues.push(`Structured text parsing failed: ${error}`);
+      secureLog.debug('Structured text parsing failed:', error);
+    }
+    
+    // Strategy 4: Enhanced line parsing (improved version of current fallback)
+    try {
+      const result = this.tryEnhancedLineParsing(content);
+      const validatedNames = this.validateExtractedNames(result.names, { maxNameLength, minNameLength, expectedCount });
+      secureLog.debug(`Enhanced line parsing: ${validatedNames.valid.length} valid names from ${result.names.length} extracted`);
+      return { 
+        names: validatedNames.valid, 
+        parseMethod: 'enhanced_line', 
+        issues: [...issues, ...validatedNames.issues] 
+      };
+    } catch (error) {
+      issues.push(`Enhanced line parsing failed: ${error}`);
+      secureLog.error('All parsing strategies failed:', error);
+      return { names: [], parseMethod: 'failed', issues: [...issues, `Final fallback failed: ${error}`] };
+    }
+  }
+  
+  /**
+   * Strategy 1: Clean JSON extraction with preprocessing
+   */
+  private tryCleanJsonExtraction(content: string, expectedFields: string[]): { names: string[] } {
+    // Preprocess content to clean common AI formatting issues
+    let cleanContent = content
+      .replace(/```json\s*/gi, '')  // Remove markdown JSON blocks
+      .replace(/```\s*/g, '')       // Remove remaining markdown blocks
+      .replace(/^[^{]*(?={)/, '')   // Remove text before first { (removed 's' flag)
+      .replace(/}[^}]*$/, '}')      // Remove text after last } (removed 's' flag)
+      .trim();
+    
+    // Try to find and extract the most complete JSON object
+    const jsonCandidates = this.findJsonCandidates(cleanContent);
+    
+    for (const candidate of jsonCandidates) {
+      try {
+        const parsed = JSON.parse(candidate);
+        const names = this.extractNamesFromParsedJson(parsed, expectedFields);
+        if (names.length > 0) {
+          return { names };
+        }
+      } catch (error) {
+        // Continue to next candidate
+        continue;
+      }
+    }
+    
+    throw new Error('No valid JSON candidates found');
+  }
+  
+  /**
+   * Strategy 2: Loose JSON extraction (handles malformed JSON)
+   */
+  private tryLooseJsonExtraction(content: string, expectedFields: string[]): { names: string[] } {
+    // More aggressive JSON boundary detection
+    const jsonPatterns = [
+      /{[^}]*}/g,                    // Any content between braces
+      /\{[\s\S]*?\}/g,               // Multiline JSON objects
+      /"(?:band_names|song_titles)"[\s\S]*?\]/g  // Specific field patterns
+    ];
+    
+    for (const pattern of jsonPatterns) {
+      const matches = content.match(pattern);
+      if (matches) {
+        for (const match of matches) {
+          try {
+            // Try to fix common JSON issues
+            const fixedJson = this.fixCommonJsonIssues(match);
+            const parsed = JSON.parse(fixedJson);
+            const names = this.extractNamesFromParsedJson(parsed, expectedFields);
+            if (names.length > 0) {
+              return { names };
+            }
+          } catch (error) {
+            // Try partial extraction even if JSON is malformed
+            const partialNames = this.extractNamesFromMalformedJson(match, expectedFields);
+            if (partialNames.length > 0) {
+              return { names: partialNames };
+            }
+          }
+        }
+      }
+    }
+    
+    throw new Error('No extractable JSON found in loose parsing');
+  }
+  
+  /**
+   * Strategy 3: Structured text parsing (pattern-based extraction)
+   */
+  private tryStructuredTextParsing(content: string): { names: string[] } {
+    const names: string[] = [];
+    
+    // Look for quoted strings that could be names
+    const quotedPatterns = [
+      /"([^"]+)"/g,           // Double quotes
+      /'([^']+)'/g,           // Single quotes  
+      /"([^"]{3,50})"/g       // Reasonable length quoted strings
+    ];
+    
+    for (const pattern of quotedPatterns) {
+      const matches = content.matchAll(pattern);
+      for (const match of matches) {
+        const candidate = match[1].trim();
+        if (this.looksLikeName(candidate)) {
+          names.push(candidate);
+        }
+      }
+    }
+    
+    // Look for list-like patterns
+    const listPatterns = [
+      /^\s*-\s*(.+)$/gm,       // Dash lists
+      /^\s*\*\s*(.+)$/gm,      // Asterisk lists
+      /^\s*\d+\.\s*(.+)$/gm    // Numbered lists
+    ];
+    
+    for (const pattern of listPatterns) {
+      const matches = content.matchAll(pattern);
+      for (const match of matches) {
+        const candidate = match[1].trim().replace(/["']/g, ''); // Remove quotes
+        if (this.looksLikeName(candidate)) {
+          names.push(candidate);
+        }
+      }
+    }
+    
+    return { names: [...new Set(names)] }; // Remove duplicates
+  }
+  
+  /**
+   * Strategy 4: Enhanced line parsing (improved fallback)
+   */
+  private tryEnhancedLineParsing(content: string): { names: string[] } {
+    const lines = content
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    const names: string[] = [];
+    
+    for (const line of lines) {
+      // Skip obvious non-name lines
+      if (this.shouldSkipLine(line)) {
+        continue;
+      }
+      
+      // Clean the line of common prefixes and formatting
+      let cleaned = line
+        .replace(/^[-•*]\s*/, '')           // Remove list markers
+        .replace(/^\d+\.\s*/, '')          // Remove numbers
+        .replace(/^["']|["']$/g, '')       // Remove outer quotes
+        .replace(/,$/, '')                 // Remove trailing comma
+        .trim();
+      
+      if (this.looksLikeName(cleaned) && cleaned.length >= 3 && cleaned.length <= 50) {
+        names.push(cleaned);
+      }
+    }
+    
+    return { names: [...new Set(names)] }; // Remove duplicates
+  }
+  
+  /**
+   * Helper: Find potential JSON candidates in content
+   */
+  private findJsonCandidates(content: string): string[] {
+    const candidates: string[] = [];
+    
+    // Find all potential JSON objects by brace matching
+    let braceCount = 0;
+    let start = -1;
+    
+    for (let i = 0; i < content.length; i++) {
+      if (content[i] === '{') {
+        if (braceCount === 0) {
+          start = i;
+        }
+        braceCount++;
+      } else if (content[i] === '}') {
+        braceCount--;
+        if (braceCount === 0 && start !== -1) {
+          candidates.push(content.substring(start, i + 1));
+          start = -1;
+        }
+      }
+    }
+    
+    // Sort by length descending (prefer longer, more complete JSON)
+    return candidates.sort((a, b) => b.length - a.length);
+  }
+  
+  /**
+   * Helper: Extract names from successfully parsed JSON
+   */
+  private extractNamesFromParsedJson(parsed: any, expectedFields: string[]): string[] {
+    const names: string[] = [];
+    
+    for (const field of expectedFields) {
+      if (parsed[field] && Array.isArray(parsed[field])) {
+        for (const item of parsed[field]) {
+          if (typeof item === 'string') {
+            names.push(item.trim());
+          }
+        }
+      }
+    }
+    
+    return names.filter(name => name.length > 0);
+  }
+  
+  /**
+   * Helper: Fix common JSON formatting issues
+   */
+  private fixCommonJsonIssues(jsonStr: string): string {
+    return jsonStr
+      .replace(/,\s*}/g, '}')           // Remove trailing commas
+      .replace(/,\s*\]/g, ']')         // Remove trailing commas in arrays
+      .replace(/([^"\s])\s*([}\]])/g, '$1$2')  // Remove spaces before closing
+      .replace(/([{\[])\s*([^"\s])/g, '$1"$2')  // Add missing quotes after opening
+      .replace(/([^"\s])\s*:/g, '"$1":')      // Fix unquoted keys
+      .trim();
+  }
+  
+  /**
+   * Helper: Extract names from malformed JSON using regex
+   */
+  private extractNamesFromMalformedJson(jsonStr: string, expectedFields: string[]): string[] {
+    const names: string[] = [];
+    
+    for (const field of expectedFields) {
+      // Look for the field pattern and extract array-like content
+      const fieldPattern = new RegExp(`"${field}"\s*:\s*\[([^\]]+)\]`, 'i');
+      const match = jsonStr.match(fieldPattern);
+      
+      if (match) {
+        // Extract quoted strings from the array content
+        const arrayContent = match[1];
+        const quotedStrings = arrayContent.match(/"([^"]+)"/g);
+        
+        if (quotedStrings) {
+          for (const quoted of quotedStrings) {
+            const name = quoted.replace(/"/g, '').trim();
+            if (name.length > 0) {
+              names.push(name);
+            }
+          }
+        }
+      }
+    }
+    
+    return names;
+  }
+  
+  /**
+   * Helper: Check if a string looks like a valid name
+   */
+  private looksLikeName(str: string): boolean {
+    // Basic heuristics for what looks like a band/song name
+    if (str.length < 2 || str.length > 100) return false;
+    
+    // Exclude obvious non-names
+    const excludePatterns = [
+      /^\s*(here|these|are|some|examples?|names?)\s*:?\s*$/i,
+      /^\s*(band|song)\s*(names?|titles?)\s*:?\s*$/i,
+      /^\s*\d+\s*$/, // Just numbers
+      /^\s*[{}\[\]()]+\s*$/, // Just brackets/braces
+      /^\s*[.,;:!?]+\s*$/, // Just punctuation
+      /^\s*(sure|okay|certainly|of course)\s*[.,!]*\s*$/i
+    ];
+    
+    for (const pattern of excludePatterns) {
+      if (pattern.test(str)) return false;
+    }
+    
+    // Must contain at least one letter
+    if (!/[a-zA-Z]/.test(str)) return false;
+    
+    // Check for reasonable character distribution
+    const alphaRatio = (str.match(/[a-zA-Z]/g) || []).length / str.length;
+    if (alphaRatio < 0.3) return false; // At least 30% letters
+    
+    return true;
+  }
+  
+  /**
+   * Helper: Check if a line should be skipped during line parsing
+   */
+  private shouldSkipLine(line: string): boolean {
+    const skipPatterns = [
+      /^\s*{.*}\s*$/,                    // JSON objects
+      /^\s*\[.*\]\s*$/,                  // JSON arrays
+      /^\s*(sure|okay|here|these)\s*:/i, // Conversational starters
+      /^\s*```/,                        // Code blocks
+      /^\s*#{1,6}\s/,                    // Markdown headers
+      /^\s*\*\*.*\*\*\s*$/,              // Bold markdown
+      /^\s*band[_\s]*names?\s*:?\s*$/i,  // Field labels
+      /^\s*song[_\s]*titles?\s*:?\s*$/i, // Field labels
+      /^\s*\{\s*$/,                      // Opening brace only
+      /^\s*\}\s*$/,                      // Closing brace only
+      /^\s*"?\s*:?\s*\[?\s*$/          // Incomplete JSON syntax
+    ];
+    
+    return skipPatterns.some(pattern => pattern.test(line));
+  }
+  
+  /**
+   * Helper: Validate extracted names
+   */
+  private validateExtractedNames(
+    names: string[], 
+    options: { maxNameLength: number, minNameLength: number, expectedCount: number }
+  ): { valid: string[], invalid: string[], issues: string[] } {
+    const valid: string[] = [];
+    const invalid: string[] = [];
+    const issues: string[] = [];
+    
+    const { maxNameLength, minNameLength, expectedCount } = options;
+    
+    for (const name of names) {
+      const trimmed = name.trim();
+      
+      // Length validation
+      if (trimmed.length < minNameLength) {
+        invalid.push(trimmed);
+        issues.push(`Name too short: "${trimmed}"`);
+        continue;
+      }
+      
+      if (trimmed.length > maxNameLength) {
+        invalid.push(trimmed);
+        issues.push(`Name too long: "${trimmed.substring(0, 20)}..."`);
+        continue;
+      }
+      
+      // Quality validation
+      if (!this.looksLikeName(trimmed)) {
+        invalid.push(trimmed);
+        issues.push(`Doesn't look like a name: "${trimmed}"`);
+        continue;
+      }
+      
+      valid.push(trimmed);
+    }
+    
+    // Check if we got reasonable coverage
+    if (valid.length < Math.ceil(expectedCount * 0.5)) {
+      issues.push(`Low extraction rate: ${valid.length}/${expectedCount} expected`);
+    }
+    
+    return { valid: [...new Set(valid)], invalid, issues };
+  }
+  
+  /**
+   * Helper: Log parsing method usage for monitoring and optimization
+   */
+  private logParsingMethodUsage(method: string, extractedCount: number, expectedCount: number): void {
+    const successRate = expectedCount > 0 ? (extractedCount / expectedCount * 100).toFixed(1) : '0.0';
+    
+    secureLog.info(`Parsing method: ${method}, extracted: ${extractedCount}/${expectedCount} (${successRate}%)`);
+    
+    // Track method effectiveness for future optimization
+    if (!this.parsingStats) {
+      this.parsingStats = new Map<string, { uses: number, totalExtracted: number, totalExpected: number }>();
+    }
+    
+    const stats = this.parsingStats.get(method) || { uses: 0, totalExtracted: 0, totalExpected: 0 };
+    stats.uses += 1;
+    stats.totalExtracted += extractedCount;
+    stats.totalExpected += expectedCount;
+    this.parsingStats.set(method, stats);
+    
+    // Log aggregated stats periodically
+    if (stats.uses % 10 === 0) {
+      const avgSuccessRate = stats.totalExpected > 0 ? (stats.totalExtracted / stats.totalExpected * 100).toFixed(1) : '0.0';
+      secureLog.info(`Parsing method ${method} stats: ${stats.uses} uses, ${avgSuccessRate}% avg success rate`);
+    }
+  }
+  
 
   async generateNames(
     request: GenerateNameRequest, 
@@ -444,134 +902,74 @@ export class UnifiedNameGeneratorService {
     wordCount?: number | string,
     strategy: GenerationStrategy = GENERATION_STRATEGIES.QUALITY
   ): string {
-    // Get mood-aware vocabulary and temperature adjustment
-    let avoidWords: string[] = [];
-    
     const isband = type === 'band';
-    const creativity = strategy.contextDepth === 'comprehensive' ? 'wildly creative and humorous' : 
-                     strategy.contextDepth === 'standard' ? 'creative and entertaining' : 'creative';
+    const creativity = strategy.contextDepth === 'comprehensive' ? 'wildly creative' : 'creative';
     
-    const basePrompt = `You are a ${creativity} AI specializing in generating unique, entertaining, and fun ${isband ? 'band names' : 'song titles'}. Your goal is to craft names that are clever, punny, absurd, or delightfully unexpected, while tying into the specified genre and mood. Ensure all names are original and not direct copies of existing ${isband ? 'bands' : 'songs'}—use inspiration from the provided context to remix ideas in fresh ways.
+    const basePrompt = `You are a ${creativity} AI that generates original ${isband ? 'band names' : 'song titles'}. Create names that are memorable, fun, and fit the given genre and mood.
 
-User inputs:
-- Genre: ${genre || 'general'} (infuse the names with elements typical of this genre)
-- Mood: ${mood || 'neutral'} (make the names evoke this emotion through word choice or imagery)
-- Word count: ${this.formatWordCount(wordCount)} (strictly adhere to this)
+Requirements:
+- Genre: ${genre || 'general'} 
+- Mood: ${mood || 'neutral'}
+- Word count: ${this.formatWordCount(wordCount)}
+- Make each name unique - don't repeat significant words across different names
+- Be original and creative, not copies of existing ${isband ? 'bands' : 'songs'}
 
-${this.getMoodGuidelines(mood)}
-
-${this.getGenreExamples(genre, type)}
-
-CRITICAL RULE - NO WORD REPETITION: Each ${isband ? 'band name' : 'song title'} in your result set must use completely different significant words. 
-- NEVER repeat meaningful words across different names (e.g., don't have "Weeping Willow's Song" and "Weeping Willow's Dream")
-- Articles (the, a), conjunctions (and, or), and prepositions (in, on, of) are OK to repeat
-- But content words (nouns, adjectives, verbs) must be unique across all 4 results
-- Example BAD: "Midnight Train" and "Midnight Blues" (repeats "Midnight")
-- Example GOOD: "Midnight Train" and "Evening Blues" (different content words)
-
-ANTI-ALLITERATION & VARIETY RULES:
-- Avoid excessive alliteration! Don't make all words start with the same letter. Mix different sounds for natural, varied names
-- For names with 4+ words: NO excessive alliteration (max 2 words can start with same letter)
-
-ANTI-CLICHÉ RULES:
-- No direct references to obvious genre clichés (e.g., "Electric" + "Guitar" for rock)
-- Avoid overused patterns like "The [Adjective] [Plural Noun]" unless you give it a unique twist
-- Don't use tired combinations like "Dark Shadow", "Neon Dreams", "Crystal Heart", "Eternal Flame"
-- Skip generic descriptors like "awesome", "cool", "amazing" in favor of specific, evocative words
-- If using humor, be clever and unexpected - avoid dad jokes and obvious puns
-- Avoid these overused AI-generated words: "lunar", "celestial", "cosmic" (unless space-themed), "mystical", "ethereal"
-- ${avoidWords.length > 0 ? `Don't use these mood-inappropriate words: ${avoidWords.join(', ')}` : ''}
-- Mix consonant and vowel sounds for better phonetic flow${!genre && !mood ? '\n- IMPORTANT: Avoid musical instruments (guitar, piano, banjo, violin, etc.) - explore diverse themes beyond music' : ''}`;
-
-    if (strategy.enableVarietyOptimizations) {
-      return basePrompt + `
-
-AVOID REPETITION: ${this.getRepetitionAvoidanceInstructions(genre)} Don't overuse obvious genre terms like "${this.getCommonGenreTerms(genre).join('", "')}" - use them sparingly if at all.
-
-Context for inspiration (curated selection):
-- Similar artists/bands in this genre: ${processedContext.artists} (draw subtle influences like themes, styles, or wordplay from these)
-- Creative keywords and trends: ${processedContext.keywords} (remix elements into new, fun twists for ${isband ? 'band names' : 'song titles'})
-- Word associations: ${processedContext.associations} (use these for creative wordplay)
-
-Task:
-1. Brainstorm and generate 8 unique ${isband ? 'band names' : 'song titles'} that fit the genre, mood, and word count. Make them entertaining—aim for humor, irony, or whimsy.
-2. Evaluate the 8 names critically based on these criteria:
-   - NO WORD REPETITION (most important): Reject any names that share significant words with others
-   - Originality (not too similar to real ${isband ? 'bands' : 'songs'} or the context sources)
-   - Entertainment value (how fun, clever, or punny they are)
-   - Fit to genre and mood (evokes the right style and emotion)
-   - Adherence to word count (exact match to ${this.formatWordCount(wordCount)})
-   - Overall appeal (memorable and engaging)
-3. Select the top 4 best names from the 8 based on your evaluation. DOUBLE-CHECK: No two names should share significant words!
-4. Ensure everything is fun and engaging; avoid anything offensive or bland.
-
-Output in strict JSON format for easy parsing:
-{
-  "${isband ? 'band_names' : 'song_titles'}": ["Best ${isband ? 'Band Name' : 'Song Title'} 1", "Best ${isband ? 'Band Name' : 'Song Title'} 2", "Best ${isband ? 'Band Name' : 'Song Title'} 3", "Best ${isband ? 'Band Name' : 'Song Title'} 4"]
-}
-
-CRITICAL: Return ONLY the JSON object above, no additional text, explanations, or evaluation details. Just the pure JSON.
-
-Be inventive and let the context spark wild ideas!`;
-    } else {
-      return basePrompt + `
+${this.getSimpleMoodGuidance(mood)}
 
 Context for inspiration:
-- Similar artists/bands in this genre: ${processedContext.artists}
-- Keywords and trends: ${processedContext.keywords}
-- Word associations: ${processedContext.associations}
+- Artists/bands: ${processedContext.artists}
+- Keywords: ${processedContext.keywords}
+- Associations: ${processedContext.associations}
 
-Generate ${count} ${isband ? 'band names' : 'song titles'} that fit the genre, mood, and word count.
+Generate ${count} creative ${isband ? 'band names' : 'song titles'} in JSON format:
 
-Output in strict JSON format:
 {
   "${isband ? 'band_names' : 'song_titles'}": ["Name 1", "Name 2", "Name 3", "Name 4"]
-}
+}`;
 
-Return ONLY the JSON object above.`;
-    }
+    return basePrompt;
   }
 
-  // Helper methods from IntelligentNameGeneratorService
-  private processContextForVariety(context: GenerationContext, genre?: string): {artists: string, keywords: string, associations: string} {
-    const shuffleArray = <T>(array: T[]): T[] => {
-      const shuffled = [...array];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      return shuffled;
+  private getSimpleMoodGuidance(mood?: string): string {
+    if (!mood) return '';
+    
+    const guidance: { [key: string]: string } = {
+      happy: 'Use bright, energetic words that evoke joy and celebration.',
+      sad: 'Use melancholic words that evoke longing or reflection.',
+      dark: 'Use mysterious, shadowy words that create atmosphere.',
+      angry: 'Use intense, powerful words that convey raw energy.',
+      calm: 'Use peaceful, gentle words that suggest tranquility.',
+      energetic: 'Use dynamic, high-energy words that pulse with movement.'
     };
+    
+    return guidance[mood] ? `Mood guidance: ${guidance[mood]}` : '';
+  }
 
-    const allKeywords = [...context.genreKeywords, ...context.genreTags, ...context.moodWords];
-    const commonTerms = this.getCommonGenreTerms(genre);
-    
-    const uniqueTerms = allKeywords.filter(term => !commonTerms.includes(term.toLowerCase()));
-    const someCommonTerms = shuffleArray(allKeywords.filter(term => commonTerms.includes(term.toLowerCase()))).slice(0, 2);
-    
-    const weightedKeywords = [...shuffleArray(uniqueTerms).slice(0, 8), ...someCommonTerms];
-    
-    return {
-      artists: shuffleArray(context.relatedArtists).slice(0, 4).join(', '),
-      keywords: shuffleArray(weightedKeywords).slice(0, 10).join(', '),
-      associations: shuffleArray(context.wordAssociations).slice(0, 6).join(', ')
-    };
+  // Simplified context processing methods
+  private processContextForVariety(context: GenerationContext, genre?: string): {artists: string, keywords: string, associations: string} {
+    return this.processContextBasic(context);
   }
 
   private processContextBasic(context: GenerationContext): {artists: string, keywords: string, associations: string} {
-    const allKeywords = [...context.genreKeywords, ...context.genreTags, ...context.moodWords];
+    // Combine all available keywords for variety
+    const allKeywords = [
+      ...context.genreKeywords,
+      ...context.genreTags, 
+      ...context.moodWords,
+      ...context.audioCharacteristics
+    ];
     
     return {
-      artists: context.relatedArtists.slice(0, 4).join(', '),
-      keywords: allKeywords.slice(0, 10).join(', '),
-      associations: context.wordAssociations.slice(0, 6).join(', ')
+      artists: context.relatedArtists.slice(0, 3).join(', '),
+      keywords: allKeywords.slice(0, 8).join(', '),
+      associations: context.wordAssociations.slice(0, 4).join(', ')
     };
   }
 
   private async generateWithXAI(prompt: string, count: number, wordCount?: number | string, temperatureAdjust: number = 0): Promise<string[]> {
     try {
-      // Apply dynamic temperature based on mood/genre (1.1 is base, adjust ±0.2)
-      const baseTemperature = 1.1;
+      // Apply dynamic temperature based on mood/genre (1.25 is base, adjust ±0.2)
+      const baseTemperature = 1.25;
       const finalTemperature = Math.max(0.7, Math.min(1.5, baseTemperature + temperatureAdjust));
       
       const response = await this.openai.chat.completions.create({
@@ -586,34 +984,25 @@ Return ONLY the JSON object above.`;
         throw new Error('No content generated by XAI');
       }
 
-      let names: string[] = [];
+      // Use robust parsing with comprehensive fallback strategies
+      const parsingOptions: RobustParsingOptions = {
+        expectedFields: ['band_names', 'song_titles'],
+        maxNameLength: 150,
+        minNameLength: 2,
+        expectedCount: count
+      };
       
-      if (content.includes('"band_names"') || content.includes('"song_titles"')) {
-        try {
-          const jsonStart = content.indexOf('{');
-          const jsonEnd = content.lastIndexOf('}');
-          if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-            const jsonContent = content.substring(jsonStart, jsonEnd + 1);
-            const parsed = JSON.parse(jsonContent);
-            if (parsed.band_names && Array.isArray(parsed.band_names)) {
-              names = parsed.band_names.map((name: string) => name.trim());
-            } else if (parsed.song_titles && Array.isArray(parsed.song_titles)) {
-              names = parsed.song_titles.map((name: string) => name.trim());
-            }
-          }
-        } catch (error) {
-          secureLog.debug('Failed to parse JSON, falling back to line parsing');
-        }
+      const parseResult = this.parseAIResponseRobustly(content, parsingOptions);
+      let names = parseResult.names;
+      
+      // Enhanced logging for parsing results
+      secureLog.info(`AI response parsing: ${parseResult.parseMethod} extracted ${names.length}/${count} names`);
+      if (parseResult.issues.length > 0) {
+        secureLog.debug('Parsing issues:', parseResult.issues);
       }
       
-      if (names.length === 0) {
-        names = content
-          .split('\n')
-          .map(line => line.trim())
-          .filter(line => line.length > 0 && !line.match(/^\d+\./) && line.length < 150)
-          .map(line => line.replace(/^[-•]\s*/, ''))
-          .filter(line => line.length > 0);
-      }
+      // Log parsing method distribution for monitoring
+      this.logParsingMethodUsage(parseResult.parseMethod, names.length, count);
 
       // Word count validation if specified
       if (wordCount) {
@@ -647,32 +1036,25 @@ Return ONLY the JSON object above.`;
           if (secondContent) {
             let additionalNames: string[] = [];
             
-            if (secondContent.includes('"band_names"') || secondContent.includes('"song_titles"')) {
-              try {
-                const jsonStart = secondContent.indexOf('{');
-                const jsonEnd = secondContent.lastIndexOf('}');
-                if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-                  const jsonContent = secondContent.substring(jsonStart, jsonEnd + 1);
-                  const parsed = JSON.parse(jsonContent);
-                  if (parsed.band_names && Array.isArray(parsed.band_names)) {
-                    additionalNames = parsed.band_names.map((name: string) => name.trim());
-                  } else if (parsed.song_titles && Array.isArray(parsed.song_titles)) {
-                    additionalNames = parsed.song_titles.map((name: string) => name.trim());
-                  }
-                }
-              } catch (error) {
-                secureLog.debug('Failed to parse second generation JSON');
-              }
+            // Use robust parsing for second generation as well
+            const secondParsingOptions: RobustParsingOptions = {
+              expectedFields: ['band_names', 'song_titles'],
+              maxNameLength: 150,
+              minNameLength: 2,
+              expectedCount: count - uniqueNames.length
+            };
+            
+            const secondParseResult = this.parseAIResponseRobustly(secondContent, secondParsingOptions);
+            additionalNames = secondParseResult.names;
+            
+            // Enhanced logging for second generation
+            secureLog.debug(`Second generation parsing: ${secondParseResult.parseMethod} extracted ${additionalNames.length} additional names`);
+            if (secondParseResult.issues.length > 0) {
+              secureLog.debug('Second generation parsing issues:', secondParseResult.issues);
             }
             
-            if (additionalNames.length === 0) {
-              additionalNames = secondContent
-                .split('\n')
-                .map(line => line.trim())
-                .filter(line => line.length > 0 && !line.match(/^\d+\./) && line.length < 150)
-                .map(line => line.replace(/^[-•]\s*/, ''))
-                .filter(line => line.length > 0);
-            }
+            // Log second generation parsing
+            this.logParsingMethodUsage(`second_${secondParseResult.parseMethod}`, additionalNames.length, count - uniqueNames.length);
 
             // Filter additional names for word count if specified
             if (wordCount) {
@@ -734,16 +1116,8 @@ Return ONLY the JSON object above.`;
     const nameLower = name.toLowerCase();
     if (clichePairs.some(cliche => nameLower.includes(cliche))) score -= 15;
     
-    // Genre alignment
-    if (genre) {
-      const genreTerms = this.getCommonGenreTerms(genre);
-      const hasGenreAlignment = words.some(word => genreTerms.includes(word));
-      if (hasGenreAlignment) score += 5;
-      
-      // But penalize if too obvious
-      const tooObvious = words.filter(word => genreTerms.slice(0, 3).includes(word)).length > 1;
-      if (tooObvious) score -= 10;
-    }
+    // Genre alignment (simplified)
+    if (genre && words.some(word => word.length >= 4)) score += 5;
     
     // Mood alignment
     if (mood) {
@@ -935,93 +1309,6 @@ Return ONLY the JSON object above.`;
     return cultural.slice(0, 5);
   }
 
-  private getRepetitionAvoidanceInstructions(genre?: string): string {
-    const genreSpecific: { [key: string]: string } = {
-      blues: "Avoid overusing 'delta', 'mississippi', 'soul' repeatedly.",
-      rock: "Don't repeatedly use 'electric', 'thunder', 'metal'.",
-      jazz: "Avoid constantly using 'swing', 'bebop', 'smooth'.",
-      country: "Don't overuse 'nashville', 'honky', 'barn' in every name.",
-      folk: "Avoid repetitive use of 'acoustic', 'roots', 'mountain'.",
-      indie: "Don't constantly use 'alternative', 'underground', 'indie'.",
-      pop: "Avoid overusing 'radio', 'hit', 'chart', 'mainstream' repeatedly.",
-      hip_hop: "Don't constantly use 'urban', 'street', 'flow', 'beat'.",
-      electronic: "Avoid repetitive use of 'digital', 'synth', 'techno', 'beat'.",
-      metal: "Don't overuse 'heavy', 'death', 'black', 'thrash' in every name.",
-      punk: "Avoid constantly using 'anarchy', 'riot', 'rebel', 'dead'.",
-      reggae: "Don't repeatedly use 'rasta', 'island', 'jamaica', 'irie'.",
-      classical: "Avoid overusing 'symphony', 'orchestra', 'baroque', 'chamber'.",
-      r_b: "Don't constantly use 'smooth', 'soulful', 'rhythm', 'groove'.",
-      rnb: "Don't constantly use 'smooth', 'soulful', 'rhythm', 'groove'.",
-      gospel: "Avoid repetitive use of 'praise', 'holy', 'church', 'blessed'.",
-      'jam band': "Don't overuse 'cosmic', 'groove', 'festival', 'journey' repeatedly.",
-      'jam_band': "Don't overuse 'cosmic', 'groove', 'festival', 'journey' repeatedly.",
-      grunge: "Avoid constantly using 'dirty', 'seattle', 'flannel', 'angst'.",
-      alternative: "Don't repeatedly use 'alt', 'underground', 'indie', 'experimental'.",
-      ambient: "Avoid overusing 'atmospheric', 'ethereal', 'soundscape', 'drone'.",
-      house: "Don't constantly use 'club', 'dance', 'beat', 'underground'.",
-      dubstep: "Avoid repetitive use of 'bass', 'drop', 'wobble', 'electronic'."
-    };
-    
-    return genreSpecific[genre || ''] || "Avoid repetitive use of the most obvious genre keywords.";
-  }
-
-  private getMoodGuidelines(mood?: string): string {
-    const guidelines: { [key: string]: string } = {
-      happy: "HAPPY MOOD: Use bright, energetic words. Think celebration, sunshine, laughter. Examples: 'Kaleidoscope', 'Confetti', 'Carousel'. Avoid forced positivity - be genuinely uplifting.",
-      sad: "SAD MOOD: Evoke melancholy without being overly dramatic. Think rain, memories, longing. Examples: 'Fading', 'Echo', 'Willow'. Avoid clichéd sadness tropes.",
-      angry: "ANGRY MOOD: Channel raw energy and rebellion. Think fire, storms, breaking chains. Examples: 'Riot', 'Venom', 'Shatter'. Avoid gratuitous violence or aggression.",
-      dark: "DARK MOOD: Create atmospheric tension. Think shadows, mysteries, the unknown. Examples: 'Obsidian', 'Hollow', 'Cipher'. Avoid horror movie clichés.",
-      calm: "CALM MOOD: Suggest peace and tranquility. Think water, breath, gentle motion. Examples: 'Drift', 'Haven', 'Lotus'. Avoid being boring or too new-age.",
-      energetic: "ENERGETIC MOOD: Pulse with kinetic energy. Think lightning, racing, explosions. Examples: 'Voltage', 'Catalyst', 'Surge'. Avoid hyperactive randomness.",
-      mysterious: "MYSTERIOUS MOOD: Intrigue and enigma. Think fog, codes, hidden meanings. Examples: 'Paradox', 'Mirage', 'Enigma'. Avoid being pretentiously cryptic.",
-      romantic: "ROMANTIC MOOD: Passionate but not cheesy. Think chemistry, dance, stolen moments. Examples: 'Velvet', 'Constellation', 'Ember'. Avoid saccharine sweetness."
-    };
-    return guidelines[mood || ''] || '';
-  }
-
-  private getGenreExamples(genre?: string, type?: string): string {
-    const isband = type === 'band';
-    const examples: { [key: string]: { band: string[], song: string[] } } = {
-      rock: {
-        band: ["Queens of the Stone Age", "Arctic Monkeys", "The War on Drugs", "King Gizzard & the Lizard Wizard"],
-        song: ["Sympathy for the Devil", "Smells Like Teen Spirit", "Seven Nation Army", "Welcome to the Jungle"]
-      },
-      indie: {
-        band: ["Neutral Milk Hotel", "Car Seat Headrest", "Japanese Breakfast", "Vampire Weekend"],
-        song: ["Such Great Heights", "Float On", "Oxford Comma", "Time to Dance"]
-      },
-      electronic: {
-        band: ["Boards of Canada", "Crystal Castles", "Justice", "Moderat"],
-        song: ["Midnight City", "Digital Love", "Strobe", "Breathe"]
-      },
-      jazz: {
-        band: ["Weather Report", "Return to Forever", "Snarky Puppy", "The Bad Plus"],
-        song: ["Take Five", "Giant Steps", "Birdland", "Spain"]
-      },
-      folk: {
-        band: ["Fleet Foxes", "The Tallest Man on Earth", "Iron & Wine", "The Mountain Goats"],
-        song: ["The Boxer", "Suzanne", "Fast Car", "The Cave"]
-      },
-      'jam band': {
-        band: ["Widespread Panic", "String Cheese Incident", "Umphrey's McGee", "moe."],
-        song: ["Fire on the Mountain", "Scarlet Begonias", "Divided Sky", "You Enjoy Myself"]
-      },
-      pop: {
-        band: ["CHVRCHES", "Walk the Moon", "Foster the People", "Two Door Cinema Club"],
-        song: ["Blinding Lights", "Levitating", "good 4 u", "Heat Waves"]
-      },
-      hip_hop: {
-        band: ["Run the Jewels", "Flatbush Zombies", "Death Grips", "Injury Reserve"],
-        song: ["HUMBLE.", "Sicko Mode", "Money Trees", "All Caps"]
-      }
-    };
-    
-    const genreExamples = examples[genre || ''];
-    if (!genreExamples) return '';
-    
-    const selectedExamples = isband ? genreExamples.band : genreExamples.song;
-    return `\nEXAMPLES OF GREAT ${genre?.toUpperCase()} ${isband ? 'BAND NAMES' : 'SONG TITLES'} (for inspiration only - create something original):\n${selectedExamples.map(ex => `- ${ex}`).join('\n')}`;
-  }
 
   // Apply repetition filtering to remove duplicate words across names
   private applyRepetitionFiltering(names: string[], generationId: string, nameType?: string): string[] {
@@ -1039,35 +1326,6 @@ Return ONLY the JSON object above.`;
     return filteredNames;
   }
 
-  private getCommonGenreTerms(genre?: string): string[] {
-    const commonTerms: { [key: string]: string[] } = {
-      blues: ['delta', 'mississippi', 'soul', 'deep', 'raw', 'authentic'],
-      rock: ['electric', 'thunder', 'metal', 'heavy', 'hard', 'wild'],
-      jazz: ['swing', 'bebop', 'smooth', 'cool', 'hot', 'blue'],
-      country: ['nashville', 'honky', 'barn', 'whiskey', 'highway', 'southern'],
-      folk: ['acoustic', 'roots', 'mountain', 'traditional', 'american', 'old'],
-      indie: ['alternative', 'underground', 'indie', 'hipster', 'cool', 'artsy'],
-      pop: ['radio', 'hit', 'chart', 'mainstream', 'catchy', 'commercial'],
-      hip_hop: ['urban', 'street', 'flow', 'beat', 'rap', 'hood'],
-      electronic: ['digital', 'synth', 'electronic', 'techno', 'beat', 'dance'],
-      metal: ['heavy', 'death', 'black', 'thrash', 'brutal', 'core'],
-      punk: ['anarchy', 'riot', 'rebel', 'dead', 'chaos', 'raw'],
-      reggae: ['rasta', 'island', 'jamaica', 'irie', 'roots', 'one'],
-      classical: ['symphony', 'orchestra', 'baroque', 'chamber', 'opus', 'concerto'],
-      r_b: ['smooth', 'soulful', 'rhythm', 'groove', 'silky', 'velvet'],
-      rnb: ['smooth', 'soulful', 'rhythm', 'groove', 'silky', 'velvet'],
-      gospel: ['praise', 'holy', 'church', 'blessed', 'hallelujah', 'choir'],
-      'jam band': ['cosmic', 'groove', 'festival', 'journey', 'space', 'phish'],
-      'jam_band': ['cosmic', 'groove', 'festival', 'journey', 'space', 'phish'],
-      grunge: ['dirty', 'seattle', 'flannel', 'angst', 'nirvana', 'distorted'],
-      alternative: ['alt', 'underground', 'indie', 'experimental', 'different', 'unique'],
-      ambient: ['atmospheric', 'ethereal', 'soundscape', 'drone', 'floating', 'space'],
-      house: ['club', 'dance', 'beat', 'underground', 'bass', 'four'],
-      dubstep: ['bass', 'drop', 'wobble', 'electronic', 'heavy', 'skrillex']
-    };
-    
-    return commonTerms[genre || ''] || [];
-  }
 }
 
 // Singleton instance with aggressive caching configuration

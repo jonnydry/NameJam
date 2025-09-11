@@ -6,10 +6,15 @@ import { UnifiedNameGeneratorService, GENERATION_STRATEGIES } from "./services/u
 import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGeneratorService } from "./services/bandBioGenerator";
 import { LyricStarterService } from "./services/lyricStarterService";
+import { qualityScoring } from "./services/qualityScoring";
 import { db } from "./db";
-import { users, errorLogs } from "@shared/schema";
+import { users, errorLogs, userFeedback, userPreferences, feedbackAnalytics } from "@shared/schema";
 
-import { generateNameRequestSchema } from "@shared/schema";
+import { 
+  generateNameRequestSchema, 
+  userFeedbackRequestSchema, 
+  userPreferencesUpdateSchema 
+} from "@shared/schema";
 import { z } from "zod";
 import { ErrorHandler, ERROR_CODES, apiErrorSchema } from "@shared/errorSchemas";
 
@@ -129,12 +134,62 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
         return;
       }
       
+      // Apply quality scoring to filter low-quality names
+      let qualityFilteredNames = names;
+      try {
+        const nameRequests = names.map(nameResult => ({
+          name: nameResult.name,
+          type: request.type as 'band' | 'song',
+          genre: request.genre,
+          mood: request.mood,
+          isAiGenerated: nameResult.isAiGenerated,
+          wordCount: typeof request.wordCount === 'number' ? request.wordCount : undefined
+        }));
+        
+        const qualityResult = await qualityScoring.scoreNames({
+          names: nameRequests,
+          thresholdMode: 'moderate', // Use moderate threshold for good balance
+          maxResults: request.count * 2 // Allow some extra results for filtering
+        });
+        
+        if (qualityResult.success && qualityResult.data) {
+          const { filtered, analytics } = qualityResult.data;
+          
+          if (filtered.length > 0) {
+            // Map quality results back to original format, prioritizing high-quality names
+            qualityFilteredNames = filtered
+              .sort((a, b) => b.score.overall - a.score.overall) // Sort by quality score
+              .slice(0, request.count) // Take requested number of top results
+              .map(qualityResult => {
+                const originalName = names.find(n => n.name === qualityResult.name);
+                return originalName || { name: qualityResult.name, isAiGenerated: true, source: 'quality-filtered' };
+              });
+            
+            secureLog.info(`Quality filtering: ${analytics.totalProcessed} names → ${filtered.length} passed → ${qualityFilteredNames.length} served`, {
+              avgScore: Math.round(analytics.averageScore * 100) / 100,
+              threshold: 'moderate',
+              passRate: Math.round((analytics.passedThreshold / analytics.totalProcessed) * 100)
+            });
+          } else {
+            // If no names pass quality threshold, use top original names but log warning
+            secureLog.warn('No names passed quality threshold, serving original results', {
+              totalScored: qualityResult.data.analytics.totalProcessed,
+              avgScore: Math.round(qualityResult.data.analytics.averageScore * 100) / 100
+            });
+          }
+        } else {
+          secureLog.warn('Quality scoring failed, serving original results:', qualityResult.error);
+        }
+      } catch (qualityError) {
+        secureLog.error('Quality scoring error, serving original results:', qualityError);
+      }
+      
       // Optimized parallel verification and storage
       const isUserAuthenticated = req.isAuthenticated && req.isAuthenticated();
       
       // Batch verification for better performance - use faster approach
       const { parallelVerificationService } = await import('./services/parallelVerification');
-      const namesToVerify = names.map(nameResult => ({
+      const namesToVerify = qualityFilteredNames.map(nameResult => ({
         name: nameResult.name,
         type: request.type as 'band' | 'song'
       }));
@@ -149,7 +204,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
       
       // Process results and handle database storage
       const results = await Promise.all(
-        names.map(async (nameResult, index) => {
+        qualityFilteredNames.map(async (nameResult, index) => {
           const verification = verificationResults[index];
           let storedName = null;
           
@@ -325,13 +380,66 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
       
       const lyricResult = await lyricStarterService.generateLyricStarter(genre);
       
+      // Apply quality scoring to evaluate the generated lyric
+      let finalLyricResult = lyricResult;
+      let qualityScore = null;
+      try {
+        const lyricRequest = {
+          lyric: lyricResult.lyric,
+          genre: genre,
+          songSection: lyricResult.songSection,
+          model: lyricResult.model
+        };
+        
+        const qualityResult = await qualityScoring.scoreLyric(lyricRequest, 'moderate');
+        
+        if (qualityResult.success && qualityResult.data) {
+          qualityScore = qualityResult.data.score;
+          
+          // Log quality information
+          secureLog.info(`Lyric quality scored: ${Math.round(qualityScore.overall * 100)}%`, {
+            genre: genre || 'unknown',
+            songSection: lyricResult.songSection,
+            model: lyricResult.model,
+            passedThreshold: qualityResult.data.passesThreshold,
+            breakdown: {
+              creativity: Math.round(qualityScore.breakdown.creativity * 100),
+              appropriateness: Math.round(qualityScore.breakdown.appropriateness * 100),
+              quality: Math.round(qualityScore.breakdown.quality * 100),
+              memorability: Math.round(qualityScore.breakdown.memorability * 100)
+            }
+          });
+          
+          // If quality is very low and we're not already generating a fallback, 
+          // we could attempt regeneration but for now just serve with quality info
+          if (!qualityResult.data.passesThreshold) {
+            secureLog.warn('Generated lyric below quality threshold', {
+              score: Math.round(qualityScore.overall * 100),
+              threshold: 'moderate',
+              recommendations: qualityResult.data.recommendations
+            });
+          }
+        } else {
+          secureLog.warn('Lyric quality scoring failed:', qualityResult.error);
+        }
+      } catch (qualityError) {
+        secureLog.error('Lyric quality scoring error:', qualityError);
+      }
+      
       res.json({ 
         id: Date.now(), // Simple ID generation
-        lyric: lyricResult.lyric,
+        lyric: finalLyricResult.lyric,
         genre: genre || null,
-        songSection: lyricResult.songSection,
-        model: lyricResult.model,
-        generatedAt: new Date().toISOString()
+        songSection: finalLyricResult.songSection,
+        model: finalLyricResult.model,
+        generatedAt: new Date().toISOString(),
+        // Include quality info if available (for debugging/analytics)
+        ...(qualityScore && { 
+          qualityScore: {
+            overall: Math.round(qualityScore.overall * 100) / 100,
+            passedThreshold: qualityScore.overall >= 0.60 // moderate threshold
+          }
+        })
       });
     } catch (error) {
       secureLog.error("Error generating lyric spark:", error);
@@ -394,6 +502,304 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
       res.status(500).json({ message: "Failed to generate performance report" });
     }
   });
+
+  // ===== FEEDBACK & PREFERENCES ENDPOINTS =====
+
+  // Submit user feedback (authenticated)
+  app.post("/api/feedback", 
+    middleware?.feedback || ((req: Request, res: Response, next: NextFunction) => next()),
+    isAuthenticated,
+    async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body
+      const feedbackData = userFeedbackRequestSchema.parse(req.body);
+      
+      // Sanitize inputs
+      const sanitizedFeedback = {
+        ...feedbackData,
+        contentName: InputSanitizer.sanitizeTextInput(feedbackData.contentName),
+        textComment: feedbackData.textComment ? InputSanitizer.sanitizeTextInput(feedbackData.textComment) : undefined,
+        genre: feedbackData.genre ? InputSanitizer.sanitizeGenreInput(feedbackData.genre) : undefined,
+        mood: feedbackData.mood ? InputSanitizer.sanitizeMoodInput(feedbackData.mood) : undefined,
+      };
+
+      // Create feedback record
+      const feedback = await storage.createUserFeedback({
+        userId,
+        ...sanitizedFeedback,
+        feedbackSource: "manual",
+        sessionId: req.headers['x-session-id'] as string || undefined,
+      });
+
+      secureLog.info("User feedback submitted", {
+        userId,
+        contentType: feedback.contentType,
+        starRating: feedback.starRating,
+        thumbsRating: feedback.thumbsRating,
+        hasComment: !!feedback.textComment
+      });
+
+      res.json({
+        success: true,
+        feedbackId: feedback.id,
+        message: "Feedback submitted successfully"
+      });
+
+    } catch (error) {
+      secureLog.error("Error submitting feedback:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          error: "Invalid feedback data", 
+          details: error.errors,
+          suggestion: "Please check your feedback data and try again."
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to submit feedback",
+          suggestion: "Please try again later."
+        });
+      }
+    }
+  });
+
+  // Get user's feedback history (authenticated)
+  app.get("/api/feedback/user", 
+    isAuthenticated,
+    async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const contentType = req.query.contentType as string;
+
+      let feedback;
+      if (contentType) {
+        // Filter by content type if specified
+        feedback = await storage.getUserFeedback(userId, limit);
+        feedback = feedback.filter(f => f.contentType === contentType);
+      } else {
+        feedback = await storage.getUserFeedback(userId, limit);
+      }
+
+      res.json({
+        success: true,
+        feedback: feedback.map(f => ({
+          id: f.id,
+          contentType: f.contentType,
+          contentName: f.contentName,
+          starRating: f.starRating,
+          thumbsRating: f.thumbsRating,
+          textComment: f.textComment,
+          genre: f.genre,
+          mood: f.mood,
+          creativityRating: f.creativityRating,
+          memorabilityRating: f.memorabilityRating,
+          relevanceRating: f.relevanceRating,
+          createdAt: f.createdAt
+        })),
+        totalCount: feedback.length
+      });
+
+    } catch (error) {
+      secureLog.error("Error fetching user feedback:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch feedback history",
+        suggestion: "Please try again later."
+      });
+    }
+  });
+
+  // Get feedback statistics (authenticated, optional content filtering)
+  app.get("/api/feedback/stats", 
+    isAuthenticated,
+    async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const contentType = req.query.contentType as string;
+      const genre = req.query.genre as string;
+      const timeframe = req.query.timeframe ? parseInt(req.query.timeframe as string) : undefined;
+
+      if (!contentType) {
+        return res.status(400).json({
+          error: "Content type is required",
+          suggestion: "Please specify contentType as 'name', 'lyric', or 'bandBio'"
+        });
+      }
+
+      const stats = await storage.getFeedbackStats(contentType, genre, timeframe);
+      
+      res.json({
+        success: true,
+        contentType,
+        genre: genre || "all",
+        timeframeDays: timeframe || "all",
+        stats: {
+          totalFeedbacks: stats.totalFeedbacks,
+          averageStarRating: Math.round(stats.averageStarRating * 100) / 100,
+          positiveThumbsPercentage: Math.round(stats.positiveThumbsPercentage * 100) / 100,
+          qualityBreakdown: {
+            creativity: Math.round(stats.averageCreativity * 100) / 100,
+            memorability: Math.round(stats.averageMemorability * 100) / 100,
+            relevance: Math.round(stats.averageRelevance * 100) / 100
+          }
+        }
+      });
+
+    } catch (error) {
+      secureLog.error("Error fetching feedback stats:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch feedback statistics",
+        suggestion: "Please try again later."
+      });
+    }
+  });
+
+  // Get user preferences (authenticated)
+  app.get("/api/preferences", 
+    isAuthenticated,
+    async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      const preferences = await storage.getUserPreferences(userId);
+
+      if (!preferences) {
+        // Return default preferences if none exist
+        res.json({
+          success: true,
+          preferences: {
+            preferredGenres: [],
+            preferredMoods: [],
+            preferredWordCounts: [],
+            creativityWeight: 5,
+            memorabilityWeight: 5,
+            relevanceWeight: 5,
+            availabilityWeight: 7,
+            feedbackFrequency: "normal",
+            qualityThreshold: "moderate"
+          },
+          isDefault: true
+        });
+      } else {
+        res.json({
+          success: true,
+          preferences: {
+            preferredGenres: preferences.preferredGenres || [],
+            preferredMoods: preferences.preferredMoods || [],
+            preferredWordCounts: preferences.preferredWordCounts || [],
+            creativityWeight: preferences.creativityWeight,
+            memorabilityWeight: preferences.memorabilityWeight,
+            relevanceWeight: preferences.relevanceWeight,
+            availabilityWeight: preferences.availabilityWeight,
+            feedbackFrequency: preferences.feedbackFrequency,
+            qualityThreshold: preferences.qualityThreshold
+          },
+          lastUpdated: preferences.lastUpdated,
+          isDefault: false
+        });
+      }
+
+    } catch (error) {
+      secureLog.error("Error fetching user preferences:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch preferences",
+        suggestion: "Please try again later."
+      });
+    }
+  });
+
+  // Update user preferences (authenticated)
+  app.put("/api/preferences", 
+    isAuthenticated,
+    async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body
+      const preferencesUpdate = userPreferencesUpdateSchema.parse(req.body);
+
+      // Update preferences
+      const updatedPreferences = await storage.upsertUserPreferences(userId, preferencesUpdate);
+
+      secureLog.info("User preferences updated", {
+        userId,
+        hasGenrePrefs: !!preferencesUpdate.preferredGenres,
+        hasMoodPrefs: !!preferencesUpdate.preferredMoods,
+        qualityThreshold: preferencesUpdate.qualityThreshold
+      });
+
+      res.json({
+        success: true,
+        preferences: {
+          preferredGenres: updatedPreferences.preferredGenres || [],
+          preferredMoods: updatedPreferences.preferredMoods || [],
+          preferredWordCounts: updatedPreferences.preferredWordCounts || [],
+          creativityWeight: updatedPreferences.creativityWeight,
+          memorabilityWeight: updatedPreferences.memorabilityWeight,
+          relevanceWeight: updatedPreferences.relevanceWeight,
+          availabilityWeight: updatedPreferences.availabilityWeight,
+          feedbackFrequency: updatedPreferences.feedbackFrequency,
+          qualityThreshold: updatedPreferences.qualityThreshold
+        },
+        lastUpdated: updatedPreferences.lastUpdated
+      });
+
+    } catch (error) {
+      secureLog.error("Error updating user preferences:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          error: "Invalid preferences data", 
+          details: error.errors,
+          suggestion: "Please check your preferences data and try again."
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to update preferences",
+          suggestion: "Please try again later."
+        });
+      }
+    }
+  });
+
+  // Get feedback analytics (authenticated - for insights)
+  app.get("/api/feedback/analytics", 
+    isAuthenticated,
+    async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const contentType = req.query.contentType as string;
+      const genre = req.query.genre as string;
+      const hours = req.query.hours ? parseInt(req.query.hours as string) : 24;
+
+      // Get recent feedback trends
+      const trends = await storage.getLatestFeedbackTrends(hours);
+      
+      // Get detailed analytics if contentType is specified
+      let detailedAnalytics = null;
+      if (contentType) {
+        detailedAnalytics = await storage.getFeedbackAnalytics(contentType, genre, undefined, 10);
+      }
+
+      res.json({
+        success: true,
+        timeframe: `${hours} hours`,
+        trends: trends.map(trend => ({
+          contentType: trend.contentType,
+          qualityTrend: trend.qualityTrend,
+          averageRating: Math.round(trend.averageRating * 100) / 100,
+          feedbackCount: trend.feedbackCount
+        })),
+        detailedAnalytics: detailedAnalytics || []
+      });
+
+    } catch (error) {
+      secureLog.error("Error fetching feedback analytics:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch feedback analytics",
+        suggestion: "Please try again later."
+      });
+    }
+  });
+
+  // ===== END FEEDBACK & PREFERENCES ENDPOINTS =====
 
   // Error logging endpoint
   app.post("/api/log-error", async (req: Request & { user?: any }, res: Response) => {

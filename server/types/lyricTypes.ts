@@ -70,13 +70,32 @@ export interface PoetryContext {
   themes: string[];
 }
 
-// Complete API context interface
+// Complete API context interface (legacy - kept for backward compatibility)
 export interface ComprehensiveAPIContext {
   datamuse: DatamuseContext;
   spotify: SpotifyContext;
   lastfm: LastFmContext;
   conceptnet: ConceptNetContext;
   poetry: PoetryContext;
+}
+
+// Streamlined context interface for focused lyric generation
+export interface StreamlinedCoreContext {
+  vocabulary: {
+    genreTerms: string[];
+    emotionalTerms: string[];
+  };
+  cultural: {
+    artists: string[];
+    relatedGenres: string[];
+  };
+  poetic: {
+    vocabulary: string[];
+    themes: string[];
+  };
+  backup: {
+    artists: string[];
+  };
 }
 
 // Lyric generation prompt structure
@@ -90,6 +109,20 @@ export interface LyricPromptStructure {
 }
 
 export interface LyricPromptParameters {
+  genre: string;
+  songSection: SongSection;
+  structure: LyricPromptStructure;
+  coreContext: StreamlinedCoreContext;
+  tone?: {
+    emotional?: string;
+    energy?: string;
+    style?: string;
+  };
+  requirements?: string[];
+}
+
+// Legacy interface for backward compatibility
+export interface LegacyLyricPromptParameters {
   genre: string;
   songSection: SongSection;
   structure: LyricPromptStructure;

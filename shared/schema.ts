@@ -132,6 +132,141 @@ export type StashItem = z.infer<typeof stashItem>;
 
 
 
+// User feedback table for content rating and improvement
+export const userFeedback = pgTable("user_feedback", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  contentType: text("content_type").notNull(), // 'name', 'lyric', 'bandBio'
+  contentId: text("content_id"), // Reference to generated content ID or name
+  contentName: text("content_name").notNull(), // The actual content being rated
+  
+  // Feedback types
+  thumbsRating: boolean("thumbs_rating"), // true = thumbs up, false = thumbs down
+  starRating: integer("star_rating"), // 1-5 star rating
+  textComment: text("text_comment"), // Optional text feedback
+  
+  // Context metadata
+  genre: text("genre"), // Genre context when feedback was given
+  mood: text("mood"), // Mood context when feedback was given
+  wordCount: integer("word_count"), // Word count of content
+  
+  // Quality dimensions (optional detailed feedback)
+  creativityRating: integer("creativity_rating"), // 1-5 rating for creativity
+  memorabilityRating: integer("memorability_rating"), // 1-5 rating for memorability
+  relevanceRating: integer("relevance_rating"), // 1-5 rating for genre relevance
+  
+  // Metadata
+  feedbackSource: text("feedback_source").default("manual"), // 'manual', 'implicit', 'batch'
+  sessionId: text("session_id"), // Optional session tracking
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  // Primary indexes
+  index("idx_user_feedback_user_id").on(table.userId),
+  index("idx_user_feedback_content_type").on(table.contentType),
+  index("idx_user_feedback_created_at").on(table.createdAt),
+  
+  // Composite indexes for analytics
+  index("idx_user_feedback_content_rating").on(table.contentType, table.starRating),
+  index("idx_user_feedback_genre_rating").on(table.genre, table.starRating),
+  index("idx_user_feedback_user_content").on(table.userId, table.contentType),
+  index("idx_user_feedback_thumbs").on(table.thumbsRating, table.contentType),
+  
+  // Foreign key constraints
+  foreignKey({
+    columns: [table.userId],
+    foreignColumns: [users.id],
+    name: "fk_user_feedback_user_id"
+  }).onDelete("cascade"), // Delete feedback when user is deleted
+]);
+
+// User preferences table for personalized quality scoring
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Preference categories
+  preferredGenres: text("preferred_genres").array(), // Array of preferred genres
+  preferredMoods: text("preferred_moods").array(), // Array of preferred moods
+  preferredWordCounts: integer("preferred_word_counts").array(), // Array of preferred word counts
+  
+  // Quality preferences (weights for different aspects)
+  creativityWeight: integer("creativity_weight").default(5), // 1-10 importance of creativity
+  memorabilityWeight: integer("memorability_weight").default(5), // 1-10 importance of memorability
+  relevanceWeight: integer("relevance_weight").default(5), // 1-10 importance of genre relevance
+  availabilityWeight: integer("availability_weight").default(7), // 1-10 importance of name availability
+  
+  // Behavioral preferences
+  feedbackFrequency: text("feedback_frequency").default("normal"), // 'low', 'normal', 'high'
+  qualityThreshold: text("quality_threshold").default("moderate"), // 'strict', 'moderate', 'lenient'
+  
+  // Metadata
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  // Unique constraint: one preference record per user
+  index("idx_user_preferences_unique").on(table.userId),
+  
+  // Indexes for preference queries
+  index("idx_user_preferences_genres").on(table.preferredGenres),
+  index("idx_user_preferences_threshold").on(table.qualityThreshold),
+  
+  // Foreign key constraints
+  foreignKey({
+    columns: [table.userId],
+    foreignColumns: [users.id],
+    name: "fk_user_preferences_user_id"
+  }).onDelete("cascade"), // Delete preferences when user is deleted
+]);
+
+// Feedback analytics table for aggregated patterns
+export const feedbackAnalytics = pgTable("feedback_analytics", {
+  id: serial("id").primaryKey(),
+  
+  // Aggregation dimensions
+  contentType: text("content_type").notNull(), // 'name', 'lyric', 'bandBio'
+  genre: text("genre"), // Genre category (null for cross-genre analytics)
+  mood: text("mood"), // Mood category (null for cross-mood analytics)
+  wordCount: integer("word_count"), // Word count category
+  
+  // Time period
+  periodType: text("period_type").notNull(), // 'daily', 'weekly', 'monthly'
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  
+  // Aggregated metrics
+  totalFeedbacks: integer("total_feedbacks").default(0),
+  positiveThumbsCount: integer("positive_thumbs_count").default(0),
+  negativeThumbsCount: integer("negative_thumbs_count").default(0),
+  averageStarRating: integer("average_star_rating"), // Multiplied by 100 for precision (e.g., 350 = 3.5 stars)
+  
+  // Quality dimension averages (multiplied by 100 for precision)
+  averageCreativity: integer("average_creativity"),
+  averageMemorability: integer("average_memorability"),
+  averageRelevance: integer("average_relevance"),
+  
+  // Statistical metrics
+  feedbackVariance: integer("feedback_variance"), // Variance in ratings (x100)
+  uniqueUsers: integer("unique_users"), // Number of unique users who provided feedback
+  
+  // Quality improvement metrics
+  qualityTrend: text("quality_trend"), // 'improving', 'stable', 'declining'
+  recommendedAdjustments: jsonb("recommended_adjustments"), // JSON of suggested quality scoring adjustments
+  
+  // Metadata
+  lastCalculated: timestamp("last_calculated").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  // Primary indexes
+  index("idx_feedback_analytics_content_type").on(table.contentType),
+  index("idx_feedback_analytics_period").on(table.periodType, table.periodStart),
+  index("idx_feedback_analytics_genre").on(table.genre),
+  
+  // Composite indexes for complex queries
+  index("idx_feedback_analytics_content_period").on(table.contentType, table.periodType, table.periodStart),
+  index("idx_feedback_analytics_genre_period").on(table.genre, table.periodType, table.periodStart),
+  index("idx_feedback_analytics_trend").on(table.qualityTrend, table.contentType),
+]);
+
 // Error logs table for simple error tracking
 export const errorLogs = pgTable("error_logs", {
   id: serial("id").primaryKey(),
@@ -151,7 +286,60 @@ export const errorLogs = pgTable("error_logs", {
   index("idx_error_logs_user_created").on(table.userId, table.createdAt),
 ]);
 
+// Types for feedback tables
+export type UserFeedback = typeof userFeedback.$inferSelect;
+export type InsertUserFeedback = typeof userFeedback.$inferInsert;
+
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = typeof userPreferences.$inferInsert;
+
+export type FeedbackAnalytics = typeof feedbackAnalytics.$inferSelect;
+export type InsertFeedbackAnalytics = typeof feedbackAnalytics.$inferInsert;
+
 export type ErrorLog = typeof errorLogs.$inferSelect;
 export type InsertErrorLog = typeof errorLogs.$inferInsert;
+
+// Zod schemas for feedback operations
+export const insertUserFeedbackSchema = createInsertSchema(userFeedback).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export const userFeedbackRequestSchema = z.object({
+  contentType: z.enum(['name', 'lyric', 'bandBio']),
+  contentName: z.string().min(1).max(500),
+  contentId: z.string().optional(),
+  thumbsRating: z.boolean().optional(),
+  starRating: z.number().min(1).max(5).optional(),
+  textComment: z.string().max(1000).optional(),
+  genre: z.string().optional(),
+  mood: z.string().optional(),
+  wordCount: z.number().optional(),
+  creativityRating: z.number().min(1).max(5).optional(),
+  memorabilityRating: z.number().min(1).max(5).optional(),
+  relevanceRating: z.number().min(1).max(5).optional(),
+  sessionId: z.string().optional(),
+});
+
+export const userPreferencesUpdateSchema = z.object({
+  preferredGenres: z.array(z.string()).optional(),
+  preferredMoods: z.array(z.string()).optional(),
+  preferredWordCounts: z.array(z.number()).optional(),
+  creativityWeight: z.number().min(1).max(10).optional(),
+  memorabilityWeight: z.number().min(1).max(10).optional(),
+  relevanceWeight: z.number().min(1).max(10).optional(),
+  availabilityWeight: z.number().min(1).max(10).optional(),
+  feedbackFrequency: z.enum(['low', 'normal', 'high']).optional(),
+  qualityThreshold: z.enum(['strict', 'moderate', 'lenient']).optional(),
+});
+
+export type UserFeedbackRequest = z.infer<typeof userFeedbackRequestSchema>;
+export type UserPreferencesUpdate = z.infer<typeof userPreferencesUpdateSchema>;
 
 
