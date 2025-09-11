@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { 
   ComprehensiveAPIContext, 
+  StreamlinedCoreContext,
   LyricGenerationResult, 
   LyricPrompt,
   SongSection,
@@ -34,7 +35,48 @@ export class LyricGenerator {
   }
 
   /**
-   * Generate a lyric starter using AI with comprehensive context
+   * Generate a lyric starter using AI with streamlined context (RECOMMENDED)
+   * Uses focused 3-4 essential context elements for better AI comprehension
+   */
+  async generateWithStreamlinedAI(
+    genre: string | undefined,
+    context: StreamlinedCoreContext
+  ): Promise<LyricGenerationResult | null> {
+    if (!this.openai) {
+      return null;
+    }
+
+    // Check cache first with streamlined context
+    const cacheKey = `streamlined-lyric:${genre || 'contemporary'}:${JSON.stringify(context).substring(0, 100)}`;
+    const cached = lyricGenerationCache.get(cacheKey) as LyricGenerationResult | null;
+    if (cached) {
+      secureLog.debug('Using cached streamlined lyric generation');
+      return cached;
+    }
+
+    try {
+      const lyricStructure = this.generateRandomStructure();
+      const prompt = this.buildStreamlinedPrompt(genre || 'contemporary', lyricStructure, context);
+      
+      const result = await this.callOpenAI(prompt, lyricStructure.songSection);
+      
+      if (result) {
+        // Cache the successful result
+        lyricGenerationCache.set(cacheKey, result, 1800); // Cache for 30 minutes
+        secureLog.debug(`✅ Streamlined AI lyric generated for ${genre || 'contemporary'}`);
+        return result;
+      }
+      
+      return null;
+    } catch (error) {
+      secureLog.error('Error in streamlined AI lyric generation:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate a lyric starter using AI with comprehensive context (LEGACY)
+   * @deprecated Use generateWithStreamlinedAI for better performance and quality
    */
   async generateWithAI(
     genre: string | undefined,
@@ -107,7 +149,50 @@ export class LyricGenerator {
   }
 
   /**
-   * Build the AI prompt
+   * Build streamlined AI prompt with focused context (RECOMMENDED)
+   */
+  private buildStreamlinedPrompt(
+    genre: string,
+    structure: ReturnType<typeof this.generateRandomStructure>,
+    context: StreamlinedCoreContext
+  ): LyricPrompt {
+    return {
+      task: "generate_lyric_starter",
+      parameters: {
+        genre,
+        songSection: structure.songSection,
+        structure: {
+          lengthType: structure.lengthType,
+          lines: structure.spec.lines,
+          wordsPerLine: structure.spec.wordsPerLine,
+          syllableRange: structure.spec.totalSyllables,
+          poeticMeter: structure.poeticMeter,
+          rhymeScheme: structure.rhymeScheme
+        },
+        // Streamlined context - focused on 4 essential elements for better AI comprehension
+        coreContext: context,
+        tone: {
+          emotional: this.getEmotionalTone(genre),
+          energy: this.getEnergyLevel(genre),
+          style: this.getStyleDescriptor(genre)
+        },
+        requirements: [
+          `Create a ${structure.songSection} for a ${genre} song`,
+          `Use exactly ${structure.spec.lines} line(s)`,
+          `Apply ${structure.poeticMeter} meter if not free verse`,
+          `Follow ${structure.rhymeScheme} rhyme scheme if applicable`,
+          'Use natural, conversational language',
+          'Incorporate core vocabulary naturally and sparingly',
+          'Focus on emotional resonance over technical complexity',
+          'Create something memorable and singable'
+        ]
+      }
+    };
+  }
+
+  /**
+   * Build the AI prompt (LEGACY - for comprehensive context)
+   * @deprecated Use buildStreamlinedPrompt for better performance
    */
   private buildPrompt(
     genre: string,
@@ -127,33 +212,26 @@ export class LyricGenerator {
           poeticMeter: structure.poeticMeter,
           rhymeScheme: structure.rhymeScheme
         },
-        apiContext: {
-          datamuse: {
-            genreWords: context.datamuse.genreWords.slice(0, 10),
-            emotionalWords: context.datamuse.emotionalWords.slice(0, 8),
-            rhymeWords: context.datamuse.rhymeWords.slice(0, 6),
-            sensoryWords: context.datamuse.sensoryWords.slice(0, 6)
+        // Streamlined context - focused on 4 essential elements for better AI comprehension
+        coreContext: {
+          // 1. Genre vocabulary (Datamuse) - fundamental genre terms and emotions
+          vocabulary: {
+            genreTerms: context.datamuse.genreWords.slice(0, 8),
+            emotionalTerms: context.datamuse.emotionalWords.slice(0, 6)
           },
-          spotify: {
-            genreArtists: context.spotify.genreArtists.slice(0, 8),
-            moodTracks: context.spotify.moodTracks.slice(0, 8),
-            audioFeatures: context.spotify.audioFeatures
+          // 2. Cultural context (Last.fm) - authentic genre artists and related styles
+          cultural: {
+            artists: context.lastfm.topArtists.slice(0, 4),
+            relatedGenres: context.lastfm.relatedGenres.slice(0, 3)
           },
-          lastfm: {
-            genreInfo: context.lastfm.genreInfo,
-            topArtists: context.lastfm.topArtists.slice(0, 5),
-            relatedGenres: context.lastfm.relatedGenres.slice(0, 5)
+          // 3. Poetic elements (Poetry) - sophisticated language and themes
+          poetic: {
+            vocabulary: context.poetry.vocabulary.slice(0, 8),
+            themes: context.poetry.themes.slice(0, 2)
           },
-          conceptnet: {
-            genreConcepts: context.conceptnet.genreConcepts.slice(0, 8),
-            emotionalConcepts: context.conceptnet.emotionalConcepts.slice(0, 6),
-            culturalAssociations: context.conceptnet.culturalAssociations.slice(0, 5)
-          },
-          poetry: {
-            poeticPhrases: context.poetry.poeticPhrases.slice(0, 5),
-            vocabulary: context.poetry.vocabulary.slice(0, 10),
-            imagery: context.poetry.imagery.slice(0, 6),
-            themes: context.poetry.themes.slice(0, 3)
+          // 4. Backup artists (Spotify) - additional cultural context if Last.fm limited
+          backup: {
+            artists: context.spotify.genreArtists.slice(0, 3)
           }
         },
         tone: {
@@ -214,7 +292,13 @@ QUALITY STANDARDS:
     const userPrompt = `Generate a lyric based on this specification:
 ${JSON.stringify(prompt, null, 2)}
 
-Consider the provided context from multiple APIs (Datamuse, Spotify, Last.fm, ConceptNet, Poetry) to create authentic, genre-appropriate lyrics.
+Focus on the streamlined coreContext which provides:
+1. Vocabulary: Essential genre and emotional terms for authentic feel
+2. Cultural: Key artists and related genres for style reference
+3. Poetic: Sophisticated vocabulary and themes for literary quality
+4. Backup: Additional artist context for inspiration
+
+Integrate these focused context elements naturally into your lyrics. Quality over quantity - use the most relevant terms that enhance the genre authenticity and emotional impact.
 
 Reply with ONLY the JSON object.`;
 

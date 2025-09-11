@@ -31,12 +31,12 @@ export class LyricOrchestrator {
     this.performanceMetrics.totalRequests++;
 
     try {
-      // Step 1: Gather comprehensive context (with caching)
+      // Step 1: Gather streamlined context (with caching) - focused on 3-4 essential elements
       secureLog.debug(`Starting lyric generation for genre: ${genre || 'contemporary'}`);
-      const context = await this.contextGatherer.getComprehensiveContext(genre);
+      const streamlinedContext = await this.contextGatherer.getStreamlinedContext(genre);
       
-      // Step 2: Attempt AI generation with context
-      const aiResult = await this.generator.generateWithAI(genre, context);
+      // Step 2: Attempt AI generation with focused context for better quality
+      const aiResult = await this.generator.generateWithStreamlinedAI(genre, streamlinedContext);
       
       if (aiResult) {
         this.performanceMetrics.aiSuccesses++;

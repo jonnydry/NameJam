@@ -1,5 +1,6 @@
 import { 
   ComprehensiveAPIContext, 
+  StreamlinedCoreContext,
   DatamuseContext, 
   SpotifyContext, 
   LastFmContext, 
@@ -45,6 +46,122 @@ export class LyricContextGatherer {
     apiContextCache.set(cacheKey, context, 3600); // Cache for 1 hour
     
     return context;
+  }
+
+  /**
+   * Get streamlined context with only 3-4 essential elements for focused AI generation
+   */
+  async getStreamlinedContext(genre?: string): Promise<StreamlinedCoreContext> {
+    const cacheKey = `streamlined:${genre || 'contemporary'}`;
+    
+    // Try to get from cache first
+    const cached = apiContextCache.get(cacheKey) as StreamlinedCoreContext | null;
+    if (cached) {
+      secureLog.debug(`🎯 Cache hit for streamlined genre context: ${genre}`);
+      return cached;
+    }
+
+    // Get comprehensive context first (this will be cached)
+    const comprehensive = await this.getComprehensiveContext(genre);
+    
+    // Extract only the most essential elements
+    const streamlined = this.extractStreamlinedContext(comprehensive);
+    
+    // Cache the streamlined result separately
+    apiContextCache.set(cacheKey, streamlined, 3600); // Cache for 1 hour
+    
+    secureLog.debug(`🎵 Built streamlined context for ${genre || 'contemporary'}: focused on ${this.countStreamlinedItems(streamlined)} essential items`);
+    
+    return streamlined;
+  }
+
+  /**
+   * Extract the most essential context elements from comprehensive data
+   */
+  private extractStreamlinedContext(comprehensive: ComprehensiveAPIContext): StreamlinedCoreContext {
+    return {
+      // 1. Core vocabulary (Datamuse) - Most important for genre authenticity
+      vocabulary: {
+        genreTerms: comprehensive.datamuse.genreWords
+          .filter(word => this.isHighValueTerm(word))
+          .slice(0, 8),
+        emotionalTerms: comprehensive.datamuse.emotionalWords
+          .filter(word => this.isHighValueTerm(word))
+          .slice(0, 6)
+      },
+      
+      // 2. Cultural context (Last.fm preferred) - For style and authenticity
+      cultural: {
+        artists: comprehensive.lastfm.topArtists
+          .filter(artist => artist && artist.length > 1)
+          .slice(0, 4),
+        relatedGenres: comprehensive.lastfm.relatedGenres
+          .filter(genre => genre && genre.length > 2)
+          .slice(0, 3)
+      },
+      
+      // 3. Poetic elements (Poetry) - For lyrical sophistication
+      poetic: {
+        vocabulary: comprehensive.poetry.vocabulary
+          .filter(word => this.isPoeticallyUseful(word))
+          .slice(0, 8),
+        themes: comprehensive.poetry.themes
+          .filter(theme => theme && theme.length > 2)
+          .slice(0, 2)
+      },
+      
+      // 4. Backup artists (Spotify) - Additional cultural context if Last.fm limited
+      backup: {
+        artists: comprehensive.spotify.genreArtists
+          .filter(artist => artist && artist.length > 1)
+          .filter(artist => !comprehensive.lastfm.topArtists.includes(artist)) // Avoid duplicates
+          .slice(0, 3)
+      }
+    };
+  }
+
+  /**
+   * Check if a term is high-value for lyric generation
+   */
+  private isHighValueTerm(word: string): boolean {
+    if (!word || word.length < 3) return false;
+    
+    // Exclude overly common words that don't add value
+    const lowValueWords = ['the', 'and', 'but', 'for', 'you', 'are', 'not', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'man', 'may'];
+    if (lowValueWords.includes(word.toLowerCase())) return false;
+    
+    // Must be reasonably lyrical and not too technical
+    return this.isGoodLyricWord(word);
+  }
+
+  /**
+   * Check if a word is poetically useful
+   */
+  private isPoeticallyUseful(word: string): boolean {
+    if (!this.isHighValueTerm(word)) return false;
+    
+    // Prefer words that are evocative, emotional, or imagistic
+    const poeticIndicators = ['heart', 'soul', 'dream', 'light', 'dark', 'fire', 'water', 'sky', 'moon', 'star', 'shadow', 'wind', 'rain', 'song', 'dance', 'whisper', 'echo', 'memory', 'hope', 'fear', 'love', 'pain', 'joy', 'sorrow'];
+    
+    return poeticIndicators.some(indicator => 
+      word.toLowerCase().includes(indicator) || 
+      indicator.includes(word.toLowerCase())
+    ) || word.length >= 5; // Longer words tend to be more sophisticated
+  }
+
+  /**
+   * Count total items in streamlined context
+   */
+  private countStreamlinedItems(context: StreamlinedCoreContext): number {
+    return [
+      ...context.vocabulary.genreTerms,
+      ...context.vocabulary.emotionalTerms,
+      ...context.cultural.artists,
+      ...context.cultural.relatedGenres,
+      ...context.poetic.vocabulary,
+      ...context.poetic.themes,
+      ...context.backup.artists
+    ].filter(Boolean).length;
   }
 
   /**

@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Heart, BookOpen } from "lucide-react";
+import { Copy, ExternalLink, Heart, BookOpen, MessageSquare } from "lucide-react";
 import { useStash } from "@/hooks/use-stash";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import { BandBioModal } from "./band-bio-modal";
 import { StatusBadge } from "./status-badge";
 import { ConfidenceIndicator } from "./confidence-indicator";
+import { FeedbackButtons } from "@/components/ui/feedback-buttons";
+import { FeedbackModal } from "@/components/ui/feedback-modal";
+import { FeedbackDisplay } from "@/components/ui/feedback-display";
+import { useAuth } from "@/hooks/useAuth";
 
 interface VerificationResult {
   status: 'available' | 'similar' | 'taken';
@@ -42,7 +46,9 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
   const { name, verification } = result;
   const { toggleStashItem, isInStash } = useStash();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const [showBioModal, setShowBioModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationType, setAnimationType] = useState<'add' | 'remove'>('add');
   const [isHighlighted, setIsHighlighted] = useState(false);
@@ -118,6 +124,27 @@ export function ResultCard({ result, nameType, onCopy, genre, mood }: ResultCard
         description: `"${name}" is already saved in your stash.`,
       });
     }
+  };
+
+  const handleQuickFeedback = (isPositive: boolean) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to provide feedback.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Open feedback modal for detailed feedback
+    setShowFeedbackModal(true);
+  };
+
+  const handleFeedbackSubmitted = () => {
+    toast({
+      title: "Thank you!",
+      description: "Your feedback helps us improve our suggestions.",
+    });
   };
 
 
