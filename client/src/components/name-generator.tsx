@@ -352,7 +352,7 @@ export function NameGenerator({ bandResults, setBandResults, songResults, setSon
               <SelectItem value="indie">🎨 Indie</SelectItem>
               <SelectItem value="pop">💫 Pop</SelectItem>
               <SelectItem value="alternative">🌀 Alternative</SelectItem>
-              <SelectItem value="jam band">🌻 Jam Band</SelectItem>
+              <SelectItem value="jam band">🪐 Jam Band</SelectItem>
             </SelectContent>
           </Select>
         </div>
