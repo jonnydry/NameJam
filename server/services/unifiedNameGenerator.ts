@@ -452,12 +452,31 @@ export class UnifiedNameGeneratorService {
       /^\s*song[_\s]*titles?\s*:?\s*$/i, // Field labels
       /^\s*\{\s*$/,                      // Opening brace only
       /^\s*\}\s*$/,                      // Closing brace only
-      /^\s*"?\s*:?\s*\[?\s*$/          // Incomplete JSON syntax
+      /^\s*"?\s*:?\s*\[?\s*$/,           // Incomplete JSON syntax
+      /^\s*"(band_names|song_titles|names|titles|results|data)"\s*:?\s*$/i, // JSON keys
+      /^\s*(band_names|song_titles|names|titles|results|data)\s*:?\s*$/i,   // Unquoted JSON keys
+      /^\s*"(band_names|song_titles)"\s*:\s*\[/i, // JSON key with array start
+      /^\s*:\s*\[/,                      // Colon array pattern
+      /^\s*\]\s*,?\s*$/,                 // Array closing bracket
+      /^\s*,\s*$/                        // Lone comma
     ];
     
     return skipPatterns.some(pattern => pattern.test(line));
   }
   
+  /**
+   * Helper: Check if a string is a reserved JSON key that should not be treated as a name
+   */
+  private isReservedWord(name: string): boolean {
+    const normalizedName = name.toLowerCase().replace(/[^a-z_]/g, '');
+    const reservedWords = [
+      'band_names', 'bandnames', 'song_titles', 'songtitles', 'names', 'titles',
+      'results', 'data', 'response', 'output', 'array', 'list', 'items'
+    ];
+    
+    return reservedWords.includes(normalizedName);
+  }
+
   /**
    * Helper: Validate extracted names
    */
@@ -473,6 +492,14 @@ export class UnifiedNameGeneratorService {
     
     for (const name of names) {
       const trimmed = name.trim();
+      
+      // Reserved word validation (critical bug fix)
+      if (this.isReservedWord(trimmed)) {
+        invalid.push(trimmed);
+        issues.push(`Reserved JSON key filtered: "${trimmed}"`);
+        secureLog.debug(`🔍 Filtered reserved word: "${trimmed}"`);
+        continue;
+      }
       
       // Length validation
       if (trimmed.length < minNameLength) {
