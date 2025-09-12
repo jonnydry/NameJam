@@ -68,8 +68,8 @@ export class UnifiedWordFilter {
       }
     }
     
-    // Reject if ANY significant words overlap (zero tolerance for current generation)
-    const maxSignificantOverlap = 1; // No significant word overlap allowed in same generation
+    // Allow some overlap but prevent excessive repetition in current generation
+    const maxSignificantOverlap = Math.min(2, Math.ceil(significantWords.length * 0.6)); // Allow up to 60% overlap or max 2 words
     if (currentGenerationOverlap >= maxSignificantOverlap) {
       secureLog.debug(`❌ Rejected "${name}" - ${currentGenerationOverlap} significant words already used (max: ${maxSignificantOverlap-1})`);
       return true;
