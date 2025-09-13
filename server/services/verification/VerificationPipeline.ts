@@ -82,16 +82,7 @@ export class VerificationPipeline implements IVerificationPipeline {
         }
       }
 
-      // 3. Check for easter eggs (short-circuit)
-      if (!context.skipEasterEggs) {
-        const easterEgg = this.easterEggService.checkEasterEgg(context.name, context.type);
-        if (easterEgg) {
-          secureLog.debug('Easter egg triggered', { name: context.name, type: context.type });
-          return easterEgg; // Don't cache easter eggs
-        }
-      }
-
-      // 4. Check for famous artists (short-circuit with caching)
+      // 3. Check for famous artists first (prevents easter egg config regression)
       if (!context.skipFamousArtists) {
         const famousArtist = this.easterEggService.checkFamousArtist(
           context.name,
@@ -105,6 +96,15 @@ export class VerificationPipeline implements IVerificationPipeline {
           // Cache famous artist results
           this.cacheResult(context, famousArtist, this.config.cache.famousArtist);
           return famousArtist;
+        }
+      }
+
+      // 4. Check for easter eggs (after famous artists to prevent precedence issues)
+      if (!context.skipEasterEggs) {
+        const easterEgg = this.easterEggService.checkEasterEgg(context.name, context.type);
+        if (easterEgg) {
+          secureLog.debug('Easter egg triggered', { name: context.name, type: context.type });
+          return easterEgg; // Don't cache easter eggs
         }
       }
 
@@ -172,12 +172,18 @@ export class VerificationPipeline implements IVerificationPipeline {
   ): Promise<Record<string, PlatformEvidence>> {
     const enabledPlatforms = context.platforms || this.config.platforms.enabled;
     const platformPromises: Array<Promise<{platform: string, evidence: PlatformEvidence}>> = [];
+    const platformEvidence: Record<string, PlatformEvidence> = {};
 
     // Launch all platform verifications in parallel
     for (const platformName of enabledPlatforms) {
       const platform = this.platforms.get(platformName);
       if (!platform) {
         secureLog.warn(`Platform not found: ${platformName}`);
+        // Add failed evidence for missing platform instead of skipping
+        platformEvidence[platformName] = this.createFailedEvidence(
+          platformName,
+          new Error(`Platform implementation not found: ${platformName}`)
+        );
         continue;
       }
 
@@ -189,6 +195,9 @@ export class VerificationPipeline implements IVerificationPipeline {
       ).then(evidence => ({
         platform: platformName,
         evidence
+      })).catch(error => ({
+        platform: platformName,
+        evidence: this.createFailedEvidence(platformName, error)
       }));
 
       platformPromises.push(platformPromise);
@@ -196,24 +205,17 @@ export class VerificationPipeline implements IVerificationPipeline {
 
     // Execute all platforms concurrently with proper error handling
     const results = await Promise.allSettled(platformPromises);
-    const platformEvidence: Record<string, PlatformEvidence> = {};
 
-    // Process results and handle individual platform failures
-    results.forEach((result, index) => {
+    // Process results (all should be fulfilled now due to internal error handling)
+    results.forEach((result) => {
       if (result.status === 'fulfilled') {
         const { platform, evidence } = result.value;
         platformEvidence[platform] = evidence;
       } else {
-        const platformName = enabledPlatforms[index];
-        secureLog.warn(`Platform ${platformName} verification failed`, {
+        // This should rarely happen now, but handle it gracefully
+        secureLog.error('Unexpected platform promise rejection', {
           error: result.reason
         });
-
-        // Add failed evidence for this platform
-        platformEvidence[platformName] = this.createFailedEvidence(
-          platformName,
-          result.reason
-        );
       }
     });
 
@@ -221,7 +223,7 @@ export class VerificationPipeline implements IVerificationPipeline {
   }
 
   /**
-   * Execute single platform verification with timeout
+   * Execute single platform verification with timeout (fixed race condition)
    */
   private async executePlatformWithTimeout(
     platform: IPlatformVerifier,
@@ -236,16 +238,36 @@ export class VerificationPipeline implements IVerificationPipeline {
       );
     }
 
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error(`${platform.platformName} timeout`)), timeoutMs);
+    // Use AbortController to properly handle timeout cancellation
+    const controller = new AbortController();
+    let timeoutHandle: NodeJS.Timeout | null = null;
+
+    const timeoutPromise = new Promise<PlatformEvidence>((_, reject) => {
+      timeoutHandle = setTimeout(() => {
+        controller.abort();
+        reject(new Error(`${platform.platformName} timeout`));
+      }, timeoutMs);
     });
 
     try {
-      return await Promise.race([
-        platform.verify(context.name, context.type),
+      const platformPromise = platform.verify(context.name, context.type);
+      
+      const result = await Promise.race([
+        platformPromise,
         timeoutPromise
       ]);
+
+      // Clear timeout if platform resolved first
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
+
+      return result;
     } catch (error) {
+      // Clear timeout on any error
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
       return this.createFailedEvidence(platform.platformName, error);
     }
   }
@@ -312,16 +334,16 @@ export class VerificationPipeline implements IVerificationPipeline {
   }
 
   /**
-   * Create fallback result for errors
+   * Create fallback result for errors (improved to avoid misleading signals)
    */
   private createFallbackResult(
     context: VerificationContext,
     error: any
   ): VerificationResult {
     const result: VerificationResult = {
-      status: 'available',
-      confidence: 0.5,
-      confidenceLevel: 'medium',
+      status: 'available', // Note: Consider 'uncertain' status in future schema updates
+      confidence: 0.3, // Lower confidence to indicate uncertainty
+      confidenceLevel: 'low',
       explanation: 'Verification incomplete due to technical issues',
       details: 'Verification temporarily unavailable - name appears to be available.',
       verificationLinks: this.generateVerificationLinks(context.name, context.type)
