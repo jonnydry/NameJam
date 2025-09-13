@@ -867,6 +867,112 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     }
   });
 
+  // Stash API routes for authenticated users
+  
+  // Get user's stash items
+  app.get('/api/stash', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      const type = req.query.type as string;
+      const stashItems = await storage.getStashItems(userId, type);
+      res.json({ stashItems });
+    } catch (error) {
+      secureLog.error("Error fetching stash:", error);
+      res.status(500).json({ message: "Failed to fetch stash" });
+    }
+  });
+
+  // Add item to stash
+  app.post('/api/stash', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      const item = req.body;
+      
+      // Check if item already exists
+      const exists = await storage.isInStash(userId, item.name, item.type);
+      if (exists) {
+        return res.status(409).json({ message: "Item already in stash" });
+      }
+      
+      const stashItem = await storage.addToStash(userId, item);
+      res.json({ stashItem, success: true });
+    } catch (error) {
+      secureLog.error("Error adding to stash:", error);
+      res.status(500).json({ message: "Failed to add to stash" });
+    }
+  });
+
+  // Remove item from stash
+  app.delete('/api/stash/:itemId', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { itemId } = req.params;
+      
+      const success = await storage.removeFromStash(userId, itemId);
+      if (!success) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      secureLog.error("Error removing from stash:", error);
+      res.status(500).json({ message: "Failed to remove from stash" });
+    }
+  });
+
+  // Update stash item rating
+  app.patch('/api/stash/:itemId/rating', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { itemId } = req.params;
+      const { rating } = req.body;
+      
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+      
+      const success = await storage.updateStashRating(userId, itemId, rating);
+      if (!success) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      secureLog.error("Error updating stash rating:", error);
+      res.status(500).json({ message: "Failed to update rating" });
+    }
+  });
+
+  // Clear user's stash
+  app.delete('/api/stash', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.clearUserStash(userId);
+      res.json({ success: true });
+    } catch (error) {
+      secureLog.error("Error clearing stash:", error);
+      res.status(500).json({ message: "Failed to clear stash" });
+    }
+  });
+
+  // Check if item is in stash
+  app.get('/api/stash/check', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, type } = req.query as { name: string, type: string };
+      
+      if (!name || !type) {
+        return res.status(400).json({ message: "Name and type are required" });
+      }
+      
+      const inStash = await storage.isInStash(userId, name, type);
+      res.json({ inStash });
+    } catch (error) {
+      secureLog.error("Error checking stash:", error);
+      res.status(500).json({ message: "Failed to check stash" });
+    }
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;
