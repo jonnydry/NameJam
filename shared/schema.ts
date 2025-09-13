@@ -130,7 +130,54 @@ export const stashItem = z.object({
 
 export type StashItem = z.infer<typeof stashItem>;
 
+// Stash items table for authenticated users to save names, band lore, and lyric jams
+export const stashItems = pgTable("stash_items", {
+  id: varchar("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // 'band', 'song', 'bandLore', 'lyricJam'
+  wordCount: integer("word_count").notNull(),
+  savedAt: timestamp("saved_at").defaultNow().notNull(),
+  rating: integer("rating"), // 1-5 star rating
+  
+  // Verification data stored as JSON
+  verification: jsonb("verification"), // Complete verification result object
+  
+  // Generation metadata
+  isAiGenerated: boolean("is_ai_generated"),
+  genre: text("genre"),
+  mood: text("mood"),
+  
+  // Additional fields for band lore items (stored as JSON for flexibility)
+  bandLoreData: jsonb("band_lore_data"),
+  
+  // Additional fields for lyric jam items (stored as JSON for flexibility)
+  metadata: jsonb("metadata"),
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  // Primary indexes
+  index("idx_stash_items_user_id").on(table.userId),
+  index("idx_stash_items_type").on(table.type),
+  index("idx_stash_items_created_at").on(table.createdAt),
+  
+  // Composite indexes for user queries
+  index("idx_stash_items_user_type").on(table.userId, table.type),
+  index("idx_stash_items_user_saved").on(table.userId, table.savedAt),
+  
+  // Foreign key constraint
+  foreignKey({
+    columns: [table.userId],
+    foreignColumns: [users.id],
+    name: "fk_stash_items_user_id"
+  }).onDelete("cascade"), // Delete stash items when user is deleted
+]);
 
+// Stash items types
+export type StashItemDB = typeof stashItems.$inferSelect;
+export type InsertStashItem = typeof stashItems.$inferInsert;
 
 // User feedback table for content rating and improvement
 export const userFeedback = pgTable("user_feedback", {

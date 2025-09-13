@@ -4,6 +4,7 @@ import {
   userFeedback,
   userPreferences,
   feedbackAnalytics,
+  stashItems,
   type GeneratedName,
   type InsertGeneratedName,
   type User,
@@ -16,6 +17,9 @@ import {
   type InsertFeedbackAnalytics,
   type UserFeedbackRequest,
   type UserPreferencesUpdate,
+  type StashItem,
+  type StashItemDB,
+  type InsertStashItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, sql, count, avg, sum } from "drizzle-orm";
@@ -57,6 +61,14 @@ export interface IStorage {
     averageRating: number;
     feedbackCount: number;
   }[]>;
+
+  // Stash operations for authenticated users
+  addToStash(userId: string, item: Omit<StashItem, 'id' | 'savedAt'>): Promise<StashItemDB>;
+  getStashItems(userId: string, type?: string): Promise<StashItemDB[]>;
+  removeFromStash(userId: string, itemId: string): Promise<boolean>;
+  updateStashRating(userId: string, itemId: string, rating: number): Promise<boolean>;
+  clearUserStash(userId: string): Promise<boolean>;
+  isInStash(userId: string, name: string, type: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -589,6 +601,96 @@ export class DatabaseStorage implements IStorage {
         averageRating: record.averageStarRating ? record.averageStarRating / 100 : 0,
         feedbackCount: record.totalFeedbacks || 0,
       }));
+    });
+  }
+
+  // Stash operations for authenticated users
+  async addToStash(userId: string, item: Omit<StashItem, 'id' | 'savedAt'>): Promise<StashItemDB> {
+    return withDatabaseRetry(async () => {
+      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const [stashItem] = await db
+        .insert(stashItems)
+        .values({
+          id,
+          userId,
+          name: item.name,
+          type: item.type,
+          wordCount: item.wordCount,
+          rating: item.rating,
+          verification: item.verification as any,
+          isAiGenerated: item.isAiGenerated,
+          genre: item.genre,
+          mood: item.mood,
+          bandLoreData: item.bandLoreData as any,
+          metadata: item.metadata as any,
+        })
+        .returning();
+      return stashItem;
+    });
+  }
+
+  async getStashItems(userId: string, type?: string): Promise<StashItemDB[]> {
+    return withDatabaseRetry(async () => {
+      if (type) {
+        return await db
+          .select()
+          .from(stashItems)
+          .where(and(eq(stashItems.userId, userId), eq(stashItems.type, type)))
+          .orderBy(desc(stashItems.savedAt));
+      } else {
+        return await db
+          .select()
+          .from(stashItems)
+          .where(eq(stashItems.userId, userId))
+          .orderBy(desc(stashItems.savedAt));
+      }
+    });
+  }
+
+  async removeFromStash(userId: string, itemId: string): Promise<boolean> {
+    return withDatabaseRetry(async () => {
+      const result = await db
+        .delete(stashItems)
+        .where(and(eq(stashItems.id, itemId), eq(stashItems.userId, userId)))
+        .returning({ id: stashItems.id });
+      return result.length > 0;
+    });
+  }
+
+  async updateStashRating(userId: string, itemId: string, rating: number): Promise<boolean> {
+    return withDatabaseRetry(async () => {
+      const result = await db
+        .update(stashItems)
+        .set({ 
+          rating, 
+          updatedAt: new Date() 
+        })
+        .where(and(eq(stashItems.id, itemId), eq(stashItems.userId, userId)))
+        .returning({ id: stashItems.id });
+      return result.length > 0;
+    });
+  }
+
+  async clearUserStash(userId: string): Promise<boolean> {
+    return withDatabaseRetry(async () => {
+      await db
+        .delete(stashItems)
+        .where(eq(stashItems.userId, userId));
+      return true;
+    });
+  }
+
+  async isInStash(userId: string, name: string, type: string): Promise<boolean> {
+    return withDatabaseRetry(async () => {
+      const [result] = await db
+        .select({ count: count() })
+        .from(stashItems)
+        .where(and(
+          eq(stashItems.userId, userId),
+          eq(stashItems.name, name),
+          eq(stashItems.type, type)
+        ));
+      return result.count > 0;
     });
   }
 }
