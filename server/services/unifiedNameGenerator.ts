@@ -588,8 +588,34 @@ export class UnifiedNameGeneratorService {
         names = await this.generateWithPatterns(context, type, genre, mood, count, wordCount);
       }
       
-      // 3. Apply repetition filtering first
-      const filteredNames = this.applyRepetitionFiltering(names, generationId, type); // Filter out repetitive names
+      // 3. Apply repetition filtering and ensure we have enough names
+      let filteredNames = this.applyRepetitionFiltering(names, generationId, type);
+      
+      // 3a. Generate additional names if filtering reduced count below target
+      let retryCount = 0;
+      const maxRetries = 3; // Prevent infinite loops
+      
+      while (filteredNames.length < count && retryCount < maxRetries) {
+        const needed = count - filteredNames.length;
+        secureLog.info(`Need ${needed} more names after filtering, generating additional names (attempt ${retryCount + 1})`);
+        
+        let additionalNames: string[];
+        if (strategy.useAI) {
+          additionalNames = await this.generateWithAI(context, type, genre, mood, needed, wordCount, strategy);
+        } else {
+          additionalNames = await this.generateWithPatterns(context, type, genre, mood, needed, wordCount);
+        }
+        
+        // Filter the additional names and add them to our collection
+        const additionalFiltered = this.applyRepetitionFiltering(additionalNames, generationId, type);
+        filteredNames = [...filteredNames, ...additionalFiltered];
+        retryCount++;
+      }
+      
+      // Log final result after additional generation attempts
+      if (retryCount > 0) {
+        secureLog.info(`Generated ${filteredNames.length}/${count} names after ${retryCount} additional attempts`);
+      }
       
       // 4. Apply quality scoring and select best names
       const scoredNames = filteredNames.map((name: string) => ({
