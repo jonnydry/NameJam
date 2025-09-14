@@ -4,8 +4,8 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { UnifiedNameGeneratorService, GENERATION_STRATEGIES } from "./services/unifiedNameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
-import { BandBioGeneratorService } from "./services/bandBioGenerator";
-import { LyricStarterService } from "./services/lyricStarterService";
+import { BandBioGenerator } from "./services/bandBio/bandBioGenerator";
+import { lyricOrchestrator } from "./services/lyric/lyricOrchestrator";
 import { qualityScoring } from "./services/qualityScoring";
 import { db } from "./db";
 import { users, errorLogs, userFeedback, userPreferences, feedbackAnalytics } from "@shared/schema";
@@ -46,8 +46,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
   
   let nameGenerator: UnifiedNameGeneratorService;
   let nameVerifier: NameVerifierService;
-  let bandBioGenerator: BandBioGeneratorService;
-  let lyricStarterService: LyricStarterService;
+  let bandBioGenerator: BandBioGenerator;
 
   try {
     nameGenerator = new UnifiedNameGeneratorService();
@@ -66,20 +65,14 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
   }
 
   try {
-    bandBioGenerator = new BandBioGeneratorService();
-    secureLog.info("✓ BandBioGeneratorService initialized");
+    bandBioGenerator = new BandBioGenerator();
+    secureLog.info("✓ BandBioGenerator initialized");
   } catch (error) {
-    secureLog.error("✗ Failed to initialize BandBioGeneratorService:", error);
+    secureLog.error("✗ Failed to initialize BandBioGenerator:", error);
     throw error;
   }
 
-  try {
-    lyricStarterService = new LyricStarterService();
-    secureLog.info("✓ LyricStarterService initialized");
-  } catch (error) {
-    secureLog.error("✗ Failed to initialize LyricStarterService:", error);
-    throw error;
-  }
+  // lyricOrchestrator is already initialized as a singleton
 
   // Auth routes (with rate limiting)
   app.get('/api/auth/user', 
@@ -378,7 +371,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     try {
       const { genre } = req.body;
       
-      const lyricResult = await lyricStarterService.generateLyricStarter(genre);
+      const lyricResult = await lyricOrchestrator.generateLyricStarter(genre);
       
       // Apply quality scoring to evaluate the generated lyric
       let finalLyricResult = lyricResult;
@@ -519,8 +512,8 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
       // Sanitize inputs
       const sanitizedFeedback = {
         ...feedbackData,
-        contentName: InputSanitizer.sanitizeTextInput(feedbackData.contentName),
-        textComment: feedbackData.textComment ? InputSanitizer.sanitizeTextInput(feedbackData.textComment) : undefined,
+        contentName: InputSanitizer.sanitizeNameInput(feedbackData.contentName),
+        textComment: feedbackData.textComment ? InputSanitizer.sanitizeNameInput(feedbackData.textComment) : undefined,
         genre: feedbackData.genre ? InputSanitizer.sanitizeGenreInput(feedbackData.genre) : undefined,
         mood: feedbackData.mood ? InputSanitizer.sanitizeMoodInput(feedbackData.mood) : undefined,
       };
