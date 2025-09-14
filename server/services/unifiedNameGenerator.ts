@@ -593,23 +593,46 @@ export class UnifiedNameGeneratorService {
       
       // 3a. Generate additional names if filtering reduced count below target
       let retryCount = 0;
-      const maxRetries = 3; // Prevent infinite loops
+      const maxRetries = 5; // Increased retries for better coverage
       
       while (filteredNames.length < count && retryCount < maxRetries) {
         const needed = count - filteredNames.length;
-        secureLog.info(`Need ${needed} more names after filtering, generating additional names (attempt ${retryCount + 1})`);
+        // Generate more names than needed to account for filtering
+        const generateCount = Math.max(needed * 2, needed + 4);
+        secureLog.info(`Need ${needed} more names after filtering, generating ${generateCount} additional names (attempt ${retryCount + 1})`);
         
         let additionalNames: string[];
         if (strategy.useAI) {
-          additionalNames = await this.generateWithAI(context, type, genre, mood, needed, wordCount, strategy);
+          additionalNames = await this.generateWithAI(context, type, genre, mood, generateCount, wordCount, strategy);
         } else {
-          additionalNames = await this.generateWithPatterns(context, type, genre, mood, needed, wordCount);
+          additionalNames = await this.generateWithPatterns(context, type, genre, mood, generateCount, wordCount);
         }
         
         // Filter the additional names and add them to our collection
         const additionalFiltered = this.applyRepetitionFiltering(additionalNames, generationId, type);
         filteredNames = [...filteredNames, ...additionalFiltered];
         retryCount++;
+        
+        // If we still don't have enough after multiple attempts, relax filtering temporarily
+        if (filteredNames.length < count && retryCount >= 3) {
+          secureLog.info(`Still need ${count - filteredNames.length} names after ${retryCount} attempts, generating with relaxed filtering`);
+          const fallbackNames = await this.generateFallbackNames(type, genre, mood, count - filteredNames.length);
+          const fallbackFiltered = fallbackNames
+            .map(item => item.name)
+            .filter(name => !filteredNames.includes(name)); // Just check for direct duplicates
+          filteredNames = [...filteredNames, ...fallbackFiltered.slice(0, count - filteredNames.length)];
+          break;
+        }
+      }
+      
+      // Final safety check - ensure we always have the requested count
+      if (filteredNames.length < count) {
+        secureLog.warn(`Still short ${count - filteredNames.length} names after all attempts, using basic fallback`);
+        const basicFallback = await this.generateFallbackNames(type, genre, mood, count - filteredNames.length);
+        const basicNames = basicFallback
+          .map(item => item.name)
+          .filter(name => !filteredNames.includes(name));
+        filteredNames = [...filteredNames, ...basicNames.slice(0, count - filteredNames.length)];
       }
       
       // Log final result after additional generation attempts
