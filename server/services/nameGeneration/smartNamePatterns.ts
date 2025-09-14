@@ -3,6 +3,7 @@ import { secureLog } from '../../utils/secureLogger';
 import { getRandomWord } from './generationHelpers';
 import { capitalize, singularize } from './generationHelpers';
 import { scoreMusicalName } from './musicalWordFilter';
+import { EnhancedWordSource } from './types';
 
 // Real band/song name patterns from famous examples
 const BAND_PATTERNS = [
@@ -10,7 +11,7 @@ const BAND_PATTERNS = [
   { 
     pattern: 'the_adj_nouns',
     weight: 0.2,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const adj = getRandomWord(words.adjectives) || 'wild';
       const noun = getRandomWord(words.nouns) || 'hearts';
       return `The ${capitalize(adj)} ${capitalize(noun)}s`;
@@ -20,7 +21,7 @@ const BAND_PATTERNS = [
   {
     pattern: 'compound_word',
     weight: 0.15,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const word1 = getRandomWord([...words.nouns, ...words.adjectives]) || 'radio';
       const word2 = getRandomWord([...words.nouns]) || 'head';
       return capitalize(word1) + capitalize(word2).toLowerCase();
@@ -30,7 +31,7 @@ const BAND_PATTERNS = [
   {
     pattern: 'adj_creature',
     weight: 0.15,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const adj = getRandomWord(words.adjectives) || 'arctic';
       const noun = getRandomWord(words.nouns.filter((n: string) => n.length > 4)) || 'tigers';
       return `${capitalize(adj)} ${capitalize(noun)}`;
@@ -40,7 +41,7 @@ const BAND_PATTERNS = [
   {
     pattern: 'single_impact',
     weight: 0.1,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const impactWords = [...words.nouns, ...words.musicalTerms].filter((w: string) => 
         w.length >= 4 && w.length <= 7
       );
@@ -51,7 +52,7 @@ const BAND_PATTERNS = [
   {
     pattern: 'place_thing',
     weight: 0.1,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const places = ['beach', 'fleet', 'crystal', 'glass', 'velvet', 'copper'];
       const things = ['house', 'foxes', 'castle', 'garden', 'factory', 'palace'];
       const place = getRandomWord([...places, ...words.contextualWords]) || 'crystal';
@@ -66,7 +67,7 @@ const SONG_PATTERNS = [
   {
     pattern: 'unique_compound',
     weight: 0.25,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const prefixes = ['hyper', 'ultra', 'neo', 'meta', 'proto', 'anti', 'omni', 'poly', 'multi'];
       const midWords = getRandomWord([...words.adjectives, ...words.nouns, ...words.genreTerms]) || 'stellar';
       const suffix = getRandomWord(words.nouns) || 'dreams';
@@ -78,7 +79,7 @@ const SONG_PATTERNS = [
   {
     pattern: 'invented_word',
     weight: 0.2,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const endings = ['opia', 'scape', 'tron', 'verse', 'sphere', 'flux', 'wave', 'core'];
       const base = getRandomWord([...words.nouns, ...words.genreTerms]) || 'dream';
       const ending = getRandomWord(endings);
@@ -90,7 +91,7 @@ const SONG_PATTERNS = [
   {
     pattern: 'number_emotion',
     weight: 0.15,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const numbers = ['zero', 'seven', 'eleven', '404', '808', 'XIII', 'infinite', 'binary'];
       const emotions = ['heartbreak', 'sorrows', 'desires', 'whispers', 'echoes', 'memories'];
       const number = getRandomWord(numbers) || 'seven';
@@ -102,7 +103,7 @@ const SONG_PATTERNS = [
   {
     pattern: 'genre_unique',
     weight: 0.15,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const techWords = ['pixel', 'glitch', 'byte', 'cyber', 'quantum', 'digital', 'analog', 'fractal'];
       const natureWords = ['sunrise', 'twilight', 'horizon', 'aurora', 'nebula', 'cosmos'];
       const tech = getRandomWord([...techWords, ...words.genreTerms]) || 'pixel';
@@ -116,7 +117,7 @@ const SONG_PATTERNS = [
   {
     pattern: 'rare_adj_noun',
     weight: 0.1,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const rareAdjs = ['lucid', 'visceral', 'ethereal', 'prismatic', 'chromatic', 'holographic', 'iridescent'];
       const uniqueNouns = ['prism', 'void', 'nexus', 'flux', 'vortex', 'paradox', 'enigma'];
       const adj = getRandomWord([...rareAdjs, ...words.adjectives.filter((a: string) => a.length > 6)]) || 'lucid';
@@ -128,7 +129,7 @@ const SONG_PATTERNS = [
   {
     pattern: 'single_unique',
     weight: 0.1,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const bases = getRandomWord([...words.nouns, ...words.genreTerms, ...words.musicalTerms]) || 'echo';
       const modifiers = ['ism', 'ology', 'esque', 'onic', 'atic', 'morphic'];
       const modifier = getRandomWord(modifiers);
@@ -139,7 +140,7 @@ const SONG_PATTERNS = [
   {
     pattern: 'verb_prep_noun',
     weight: 0.05,
-    generate: (words: any) => {
+    generate: (words: EnhancedWordSource) => {
       const uniqueVerbs = words.verbs.filter((v: string) => v.length > 5) || ['transcend', 'illuminate', 'resonate'];
       const verb = getRandomWord(uniqueVerbs) || 'transcend';
       const preps = ['beyond', 'beneath', 'within', 'between', 'alongside'];
@@ -151,7 +152,7 @@ const SONG_PATTERNS = [
   }
 ];
 
-export function generateSmartBandName(words: any, genre?: string): string {
+export function generateSmartBandName(words: EnhancedWordSource, genre?: string): string {
   // Select pattern based on weights
   const totalWeight = BAND_PATTERNS.reduce((sum, p) => sum + p.weight, 0);
   let random = Math.random() * totalWeight;
@@ -175,7 +176,7 @@ export function generateSmartBandName(words: any, genre?: string): string {
   return BAND_PATTERNS[0].generate(words);
 }
 
-export function generateSmartSongName(words: any, genre?: string): string {
+export function generateSmartSongName(words: EnhancedWordSource, genre?: string): string {
   // Select pattern based on weights
   const totalWeight = SONG_PATTERNS.reduce((sum, p) => sum + p.weight, 0);
   let random = Math.random() * totalWeight;
