@@ -1,7 +1,6 @@
 // Smart name pattern generation based on real musical naming conventions
 import { secureLog } from '../../utils/secureLogger';
-import { getRandomWord } from './generationHelpers';
-import { capitalize, singularize } from './generationHelpers';
+import { getRandomWord, capitalize, singularize } from './stringUtils';
 import { scoreMusicalName } from './musicalWordFilter';
 import { EnhancedWordSource } from './types';
 

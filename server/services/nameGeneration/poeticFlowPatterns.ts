@@ -1,5 +1,5 @@
 import { EnhancedWordSource } from './types';
-import { getRandomWord, capitalize, singularize } from './generationHelpers';
+import { getRandomWord, capitalize, singularize } from './stringUtils';
 import { secureLog } from '../../utils/secureLogger';
 
 export class PoeticFlowPatterns {
