@@ -205,12 +205,7 @@ export function isVerbLike(word: string): boolean {
 }
 
 export function generateFallbackName(sources: EnhancedWordSource, wordCount: number, poetryContext?: string[]): string {
-  // For 4+ words, use poetic flow patterns
-  if (wordCount >= 4 && poetryContext && poetryContext.length > 0) {
-    // Import poeticFlowPatterns dynamically to avoid circular dependency
-    const { poeticFlowPatterns } = require('./poeticFlowPatterns');
-    return poeticFlowPatterns.generatePoeticName(wordCount, sources, poetryContext);
-  }
+  // Note: Poetic flow patterns for 4+ words are now handled by the orchestrator to avoid circular dependencies
   
   // Base fallback words for when all else fails
   const fallbackAdjectives = [
