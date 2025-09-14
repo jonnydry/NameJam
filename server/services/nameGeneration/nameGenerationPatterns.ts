@@ -4,10 +4,11 @@ import { secureLog } from '../../utils/secureLogger';
 import { 
   singularize, 
   capitalize, 
+  getRandomWord
+} from './stringUtils';
+import { 
   isLikelyAdjective, 
   isLikelyVerb,
-  isBandName,
-  getRandomWord,
   isGenreAppropriate 
 } from './generationHelpers';
 import { generateSmartBandName, generateSmartSongName } from './smartNamePatterns';
