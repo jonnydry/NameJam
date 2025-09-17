@@ -1,5 +1,10 @@
 // Musical word filtering for better name generation
 import { secureLog } from '../../utils/secureLogger';
+import { 
+  MUSICAL_PATTERNS, 
+  UTILITY_PATTERNS, 
+  PatternTester 
+} from './regexConstants';
 
 // Words that should never appear in band/song names
 const INAPPROPRIATE_WORDS = new Set([
@@ -77,23 +82,23 @@ const GENRE_VOCABULARY: Record<string, Set<string>> = {
   'jam band': new Set(['groove', 'cosmic', 'flow', 'journey', 'festival', 'spiral', 'sunshine', 'tribe'])
 };
 
-// Common musical name patterns from real bands/songs
+// Common musical name patterns from real bands/songs (using precompiled patterns)
 const GOOD_PATTERNS = [
   // Definite article patterns
-  { pattern: /^The\s+\w+\s+\w+s?$/, examples: ['The Rolling Stones', 'The Black Keys'] },
-  { pattern: /^The\s+\w+$/, examples: ['The Doors', 'The Who'] },
+  { pattern: MUSICAL_PATTERNS.THE_PATTERN_PLURAL, examples: ['The Rolling Stones', 'The Black Keys'] },
+  { pattern: MUSICAL_PATTERNS.THE_PATTERN_SINGLE, examples: ['The Doors', 'The Who'] },
   
   // Compound words
-  { pattern: /^\w+\w+$/, examples: ['Radiohead', 'Soundgarden'] },
+  { pattern: MUSICAL_PATTERNS.COMPOUND_WORD, examples: ['Radiohead', 'Soundgarden'] },
   
   // Adjective + Noun
-  { pattern: /^(Red|Blue|Black|White|Green|Pink|Purple)\s+\w+$/, examples: ['Red Hot Chili Peppers', 'Black Sabbath'] },
+  { pattern: MUSICAL_PATTERNS.COLOR_ADJECTIVE, examples: ['Red Hot Chili Peppers', 'Black Sabbath'] },
   
   // Numbers in names
-  { pattern: /^\w+\s+\d+$/, examples: ['Blink 182', 'Sum 41'] },
+  { pattern: MUSICAL_PATTERNS.NUMBER_PATTERN, examples: ['Blink 182', 'Sum 41'] },
   
   // Single impactful words
-  { pattern: /^[A-Z][a-z]+$/, examples: ['Queen', 'Rush', 'Kiss'] }
+  { pattern: MUSICAL_PATTERNS.SINGLE_IMPACTFUL, examples: ['Queen', 'Rush', 'Kiss'] }
 ];
 
 export function isMusicallyAppropriate(word: string): boolean {
@@ -149,7 +154,7 @@ export function isGoodNamePattern(name: string): boolean {
 export function scoreMusicalName(name: string, type: 'band' | 'song', genre?: string): number {
   let score = 0.5; // Base score
   
-  const words = name.toLowerCase().split(/\s+/);
+  const words = name.toLowerCase().split(MUSICAL_PATTERNS.SPLIT_WORDS);
   
   // Penalize inappropriate words heavily
   if (words.some(word => INAPPROPRIATE_WORDS.has(word))) {

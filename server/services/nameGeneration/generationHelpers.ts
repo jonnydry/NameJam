@@ -1,6 +1,7 @@
 import { EnhancedWordSource } from './types';
 import { isPoeticWord, isProblematicWord } from './wordValidation';
 import { singularize, capitalize, getRandomWord, isBandName, selectUniqueWords } from './stringUtils';
+import { WORD_TYPE_PATTERNS, PatternTester } from './regexConstants';
 
 // Note: singularize, capitalize, getRandomWord, and isBandName are now imported from stringUtils
 // This file focuses on higher-level generation logic
@@ -62,34 +63,18 @@ export function createEnhancedWordPool(genreWords: string[], fallbackWords: stri
 }
 
 export function isAdjectiveLike(word: string): boolean {
-  // Check if the word is likely an adjective based on common patterns
-  const adjectivePatterns = [
-    /^.*(ly|y|ful|less|ous|ive|able|ible|al|ic|ish|like)$/,
-    /^(bright|dark|hot|cold|fast|slow|big|small|tall|short|new|old|good|bad|great)$/i,
-    /^(beautiful|ugly|happy|sad|angry|calm|loud|quiet|strong|weak|smart|dumb)$/i
-  ];
-  
-  return adjectivePatterns.some(pattern => pattern.test(word.toLowerCase()));
+  // Check if the word is likely an adjective (using precompiled pattern)
+  return WORD_TYPE_PATTERNS.ALL_ADJECTIVE_PATTERNS.test(word.toLowerCase());
 }
 
 export function isNounLike(word: string): boolean {
-  // Check if the word is likely a noun based on common patterns
-  const nounPatterns = [
-    /^.*(tion|sion|ment|ness|ity|ance|ence|ship|hood|dom|ism|ist|er|or|ar)$/,
-    /^(person|place|thing|animal|plant|object|idea|concept|feeling|emotion)$/i
-  ];
-  
-  return nounPatterns.some(pattern => pattern.test(word.toLowerCase()));
+  // Check if the word is likely a noun (using precompiled pattern)
+  return WORD_TYPE_PATTERNS.ALL_NOUN_PATTERNS.test(word.toLowerCase());
 }
 
 export function isVerbLike(word: string): boolean {
-  // Check if the word is likely a verb based on common patterns
-  const verbPatterns = [
-    /^.*(ing|ed|es|ize|ify|ate)$/,
-    /^(run|walk|jump|sing|dance|fly|swim|write|read|think|feel|love|hate)$/i
-  ];
-  
-  return verbPatterns.some(pattern => pattern.test(word.toLowerCase()));
+  // Check if the word is likely a verb (using precompiled pattern)
+  return WORD_TYPE_PATTERNS.ALL_VERB_PATTERNS.test(word.toLowerCase());
 }
 
 export function generateFallbackName(sources: EnhancedWordSource, wordCount: number, poetryContext?: string[]): string {

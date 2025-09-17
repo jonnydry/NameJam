@@ -5,6 +5,11 @@
 
 import { secureLog } from '../../utils/secureLogger';
 import { CacheService } from '../cacheService';
+import { 
+  PHONETIC_PATTERNS, 
+  UTILITY_PATTERNS, 
+  PatternTester 
+} from './regexConstants';
 
 interface PhoneticScore {
   overall: number; // 0-100
@@ -45,20 +50,20 @@ export class PhoneticFlowAnalyzer {
     'ght', 'gth', 'ngth', 'xts', 'pts', 'cts', 'rsts'
   ];
   
-  // Vowel patterns that flow well
+  // Vowel patterns that flow well (now using precompiled patterns)
   private readonly goodVowelPatterns = [
-    /[aeiou][^aeiou][aeiou]/, // consonant between vowels
-    /[^aeiou][aeiou]{1,2}[^aeiou]/, // 1-2 vowels between consonants
-    /^[aeiou][^aeiou]+/, // starts with vowel followed by consonants
-    /[^aeiou]+[aeiou]$/ // ends with consonants followed by vowel
+    PHONETIC_PATTERNS.CONSONANT_BETWEEN_VOWELS, // consonant between vowels
+    PHONETIC_PATTERNS.VOWEL_CLUSTERS, // 1-2 vowels between consonants
+    PHONETIC_PATTERNS.STARTS_VOWEL_CONSONANTS, // starts with vowel followed by consonants
+    PHONETIC_PATTERNS.ENDS_CONSONANTS_VOWEL // ends with consonants followed by vowel
   ];
   
-  // Syllable stress patterns (simplified)
+  // Syllable stress patterns (now using precompiled patterns)
   private readonly stressPatterns = {
-    iambic: /^[a-z]{1,2}[A-Z][a-z]+/, // weak-STRONG
-    trochaic: /^[A-Z][a-z]+[a-z]{1,2}$/, // STRONG-weak
-    dactylic: /^[A-Z][a-z]{2}[a-z]+/, // STRONG-weak-weak
-    anapestic: /^[a-z]{2}[A-Z][a-z]+/ // weak-weak-STRONG
+    iambic: PHONETIC_PATTERNS.IAMBIC, // weak-STRONG
+    trochaic: PHONETIC_PATTERNS.TROCHAIC, // STRONG-weak
+    dactylic: PHONETIC_PATTERNS.DACTYLIC, // STRONG-weak-weak
+    anapestic: PHONETIC_PATTERNS.ANAPESTIC // weak-weak-STRONG
   };
   
   constructor() {
@@ -97,7 +102,7 @@ export class PhoneticFlowAnalyzer {
    * Perform the actual phonetic analysis (uncached)
    */
   private performPhoneticAnalysis(name: string): PhoneticScore {
-    const words = name.split(/\s+/);
+    const words = name.split(UTILITY_PATTERNS.SINGLE_SPACE);
     const issues: string[] = [];
     
     // Calculate individual scores
@@ -139,15 +144,15 @@ export class PhoneticFlowAnalyzer {
       }
     }
     
-    // Check for too many consecutive consonants
-    const consonantRuns = lowerName.match(/[^aeiou]{4,}/g);
+    // Check for too many consecutive consonants (using precompiled pattern)
+    const consonantRuns = lowerName.match(PHONETIC_PATTERNS.CONSECUTIVE_CONSONANTS);
     if (consonantRuns) {
       score -= consonantRuns.length * 15;
       issues.push(`Too many consecutive consonants: ${consonantRuns.join(', ')}`);
     }
     
-    // Check for too many consecutive vowels
-    const vowelRuns = lowerName.match(/[aeiou]{4,}/g);
+    // Check for too many consecutive vowels (using precompiled pattern)
+    const vowelRuns = lowerName.match(PHONETIC_PATTERNS.CONSECUTIVE_VOWELS);
     if (vowelRuns) {
       score -= vowelRuns.length * 10;
       issues.push(`Too many consecutive vowels: ${vowelRuns.join(', ')}`);
@@ -282,14 +287,14 @@ export class PhoneticFlowAnalyzer {
       score += 10;
     }
     
-    // Unique letter combinations
-    const hasUnusualCombos = /[qx]|[zj]|[vy]/.test(name.toLowerCase());
+    // Unique letter combinations (using precompiled pattern)
+    const hasUnusualCombos = PHONETIC_PATTERNS.UNUSUAL_COMBINATIONS.test(name.toLowerCase());
     if (hasUnusualCombos) {
       score += 15;
     }
     
-    // Mixed case patterns (like "McFly" or "LaRoux")
-    const hasMixedCase = /[a-z][A-Z]/.test(name);
+    // Mixed case patterns (like "McFly" or "LaRoux") (using precompiled pattern)
+    const hasMixedCase = PHONETIC_PATTERNS.MIXED_CASE.test(name);
     if (hasMixedCase) {
       score += 10;
     }
@@ -416,18 +421,14 @@ export class PhoneticFlowAnalyzer {
   }
   
   /**
-   * Helper: Check for distinctive sound patterns
+   * Helper: Check for distinctive sound patterns (using precompiled patterns)
    */
   private hasDistinctivePattern(name: string): boolean {
-    const patterns = [
-      /(.)\1{2,}/, // Repeated letters (like "Buzzz")
-      /[A-Z][a-z]+[A-Z]/, // CamelCase variation
-      /^\W/, // Starts with non-letter
-      /\d/, // Contains numbers
-      /[!?&]/ // Contains special characters
-    ];
-    
-    return patterns.some(p => p.test(name));
+    return PHONETIC_PATTERNS.REPEATED_LETTERS.test(name) ||
+           PHONETIC_PATTERNS.CAMEL_CASE.test(name) ||
+           PHONETIC_PATTERNS.STARTS_NON_LETTER.test(name) ||
+           PHONETIC_PATTERNS.CONTAINS_NUMBERS.test(name) ||
+           PHONETIC_PATTERNS.SPECIAL_CHARACTERS.test(name);
   }
   
   /**
@@ -446,10 +447,10 @@ export class PhoneticFlowAnalyzer {
   }
   
   /**
-   * Normalize cache key for consistent caching
+   * Normalize cache key for consistent caching (using precompiled pattern)
    */
   private normalizeCacheKey(name: string): string {
-    return name.toLowerCase().trim().replace(/\s+/g, ' ');
+    return name.toLowerCase().trim().replace(UTILITY_PATTERNS.MULTIPLE_SPACES, ' ');
   }
   
   /**

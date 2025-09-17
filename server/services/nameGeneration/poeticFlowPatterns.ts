@@ -1,6 +1,11 @@
 import { EnhancedWordSource } from './types';
 import { getRandomWord, capitalize, singularize } from './stringUtils';
 import { secureLog } from '../../utils/secureLogger';
+import { 
+  POETIC_FLOW_PATTERNS, 
+  UTILITY_PATTERNS, 
+  PatternTester 
+} from './regexConstants';
 
 export class PoeticFlowPatterns {
   // Track recently used templates to avoid repetition
@@ -203,18 +208,13 @@ export class PoeticFlowPatterns {
   }
 
   private hasDoubleSuffix(word: string): boolean {
-    // Prevent malformed words like "gloaminging"
-    const suffixPatterns = [
-      /inging$/, /eded$/, /eses$/, /fulful$/, /lessless$/, /nessness$/,
-      /mentment$/, /tiontion$/, /iveive$/, /ousous$/, /alal$/, /icic$/,
-      /lyly$/, /erness$/, /ismism$/
-    ];
+    // Prevent malformed words like "gloaminging" (using precompiled pattern)
     // Also check for verbs that already end with -ing getting another -ing
-    if (word.match(/\w+ing$/i) && this.isVerbLike(word)) {
+    if (POETIC_FLOW_PATTERNS.VERB_ING_PATTERN.test(word) && this.isVerbLike(word)) {
       // If it's already a verb ending in -ing, flag it for filtering
       return true;
     }
-    return suffixPatterns.some(pattern => pattern.test(word.toLowerCase()));
+    return POETIC_FLOW_PATTERNS.ALL_DOUBLE_SUFFIXES.test(word.toLowerCase());
   }
 
   private isProblematicForMusic(word: string): boolean {
@@ -229,13 +229,8 @@ export class PoeticFlowPatterns {
   }
 
   private hasGoodPhonetics(word: string): boolean {
-    // Avoid words with difficult consonant clusters
-    const difficultPatterns = [
-      /[^aeiou]{4,}/i,  // 4+ consonants in a row
-      /^[^aeiou]{3,}/i, // 3+ consonants at start
-      /[^aeiou]{3,}$/i  // 3+ consonants at end
-    ];
-    return !difficultPatterns.some(pattern => pattern.test(word));
+    // Avoid words with difficult consonant clusters (using precompiled patterns)
+    return !PatternTester.hasGoodPhoneticFlow(word);
   }
 
   private getFallbackWord(type: string): string {
@@ -398,10 +393,10 @@ export class PoeticFlowPatterns {
   }
 
   private cleanupPhrase(phrase: string): string {
-    // Fix common grammar issues
-    phrase = phrase.replace(/\s+/g, ' ').trim();
-    phrase = phrase.replace(/\b(a) ([aeiou])/gi, 'an $2');
-    phrase = phrase.replace(/\b(an) ([^aeiou])/gi, 'a $2');
+    // Fix common grammar issues (using precompiled patterns)
+    phrase = phrase.replace(UTILITY_PATTERNS.MULTIPLE_SPACES, ' ').trim();
+    phrase = phrase.replace(POETIC_FLOW_PATTERNS.ARTICLE_A_VOWEL, 'an $2');
+    phrase = phrase.replace(POETIC_FLOW_PATTERNS.ARTICLE_AN_CONSONANT, 'a $2');
     
     // More natural capitalization for better flow
     const words = phrase.split(' ');
