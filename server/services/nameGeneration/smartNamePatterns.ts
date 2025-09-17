@@ -149,50 +149,82 @@ const SONG_PATTERNS = [
   }
 ];
 
-export function generateSmartBandName(words: EnhancedWordSource, genre?: string): string {
-  // Select pattern based on weights
-  const totalWeight = BAND_PATTERNS.reduce((sum, p) => sum + p.weight, 0);
-  let random = Math.random() * totalWeight;
-  
-  for (const pattern of BAND_PATTERNS) {
-    random -= pattern.weight;
-    if (random <= 0) {
-      const name = pattern.generate(words);
-      const score = scoreMusicalName(name, 'band', genre);
-      
-      // If score is too low, try another pattern
-      if (score < 0.5) {
-        return generateSmartBandName(words, genre); // Recursive retry
+// Synchronous retry utility for pattern generation
+function generateWithRetry<T>(
+  generator: () => T,
+  validator: (result: T) => boolean,
+  maxAttempts: number = 3,
+  fallback: () => T
+): T {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const result = generator();
+      if (validator(result)) {
+        return result;
       }
-      
-      return name;
+    } catch (error) {
+      // Continue to next attempt or fallback
     }
   }
-  
-  // Fallback
-  return BAND_PATTERNS[0].generate(words);
+  return fallback();
+}
+
+export function generateSmartBandName(words: EnhancedWordSource, genre?: string): string {
+  // OPTIMIZED: Use synchronous retry with iterative fallback instead of recursion
+  return generateWithRetry(
+    () => {
+      // Try multiple patterns iteratively instead of recursively
+      const shuffledPatterns = [...BAND_PATTERNS].sort(() => Math.random() - 0.5);
+      
+      for (const pattern of shuffledPatterns) {
+        const name = pattern.generate(words);
+        const score = scoreMusicalName(name, 'band', genre);
+        
+        // Accept if score is decent
+        if (score >= 0.4) { // Lowered threshold to reduce retries
+          return name;
+        }
+      }
+      
+      // If no pattern worked well, throw to trigger fallback
+      throw new Error('No suitable pattern found');
+    },
+    (name) => Boolean(name && name.length > 0),
+    3,
+    () => {
+      // Graceful fallback: use most reliable pattern without score checking
+      const reliablePattern = BAND_PATTERNS.find(p => p.pattern === 'the_adj_nouns') || BAND_PATTERNS[0];
+      return reliablePattern.generate(words);
+    }
+  );
 }
 
 export function generateSmartSongName(words: EnhancedWordSource, genre?: string): string {
-  // Select pattern based on weights
-  const totalWeight = SONG_PATTERNS.reduce((sum, p) => sum + p.weight, 0);
-  let random = Math.random() * totalWeight;
-  
-  for (const pattern of SONG_PATTERNS) {
-    random -= pattern.weight;
-    if (random <= 0) {
-      const name = pattern.generate(words);
-      const score = scoreMusicalName(name, 'song', genre);
+  // OPTIMIZED: Use synchronous retry with iterative fallback instead of recursion  
+  return generateWithRetry(
+    () => {
+      // Try multiple patterns iteratively instead of recursively
+      const shuffledPatterns = [...SONG_PATTERNS].sort(() => Math.random() - 0.5);
       
-      // If score is too low, try another pattern
-      if (score < 0.5) {
-        return generateSmartSongName(words, genre); // Recursive retry
+      for (const pattern of shuffledPatterns) {
+        const name = pattern.generate(words);
+        const score = scoreMusicalName(name, 'song', genre);
+        
+        // Accept if score is decent
+        if (score >= 0.4) { // Lowered threshold to reduce retries
+          return name;
+        }
       }
       
-      return name;
+      // If no pattern worked well, throw to trigger fallback
+      throw new Error('No suitable pattern found');
+    },
+    (name) => Boolean(name && name.length > 0),
+    3,
+    () => {
+      // Graceful fallback: use most reliable pattern without score checking
+      const reliablePattern = SONG_PATTERNS.find(p => p.pattern === 'unique_compound') || SONG_PATTERNS[0];
+      return reliablePattern.generate(words);
     }
-  }
-  
-  // Fallback
-  return SONG_PATTERNS[0].generate(words);
+  );
 }

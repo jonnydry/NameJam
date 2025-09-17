@@ -1,6 +1,6 @@
 import { EnhancedWordSource } from './types';
 import { isPoeticWord, isProblematicWord } from './wordValidation';
-import { singularize, capitalize, getRandomWord, isBandName } from './stringUtils';
+import { singularize, capitalize, getRandomWord, isBandName, selectUniqueWords } from './stringUtils';
 
 // Note: singularize, capitalize, getRandomWord, and isBandName are now imported from stringUtils
 // This file focuses on higher-level generation logic
@@ -111,60 +111,74 @@ export function generateFallbackName(sources: EnhancedWordSource, wordCount: num
     'Dream', 'Think', 'Feel', 'Know', 'See', 'Hear', 'Touch', 'Breathe'
   ];
   
+  // Prepare enhanced word sources
+  let enhancedAdjectives = [...sources.adjectives.slice(0, 20), ...fallbackAdjectives];
+  let enhancedNouns = [...sources.nouns.slice(0, 20), ...fallbackNouns];  
+  let enhancedVerbs = [...sources.verbs.slice(0, 10), ...fallbackVerbs];
+  
   // Include poetry context if available
   if (poetryContext && poetryContext.length > 0) {
     const poeticWords = poetryContext.filter(w => w && w.length > 2 && w.length < 12);
-    sources.adjectives.unshift(...poeticWords.filter(w => isAdjectiveLike(w)));
-    sources.nouns.unshift(...poeticWords.filter(w => isNounLike(w)));
-    sources.verbs.unshift(...poeticWords.filter(w => isVerbLike(w)));
+    enhancedAdjectives.unshift(...poeticWords.filter(w => isAdjectiveLike(w)));
+    enhancedNouns.unshift(...poeticWords.filter(w => isNounLike(w)));
+    enhancedVerbs.unshift(...poeticWords.filter(w => isVerbLike(w)));
   }
   
-  const allWords = [
-    ...sources.adjectives.slice(0, 20),
-    ...sources.nouns.slice(0, 20),
-    ...sources.verbs.slice(0, 10),
-    ...fallbackAdjectives,
-    ...fallbackNouns,
-    ...fallbackVerbs
+  // OPTIMIZED: Use pre-filtered selection instead of retry loops
+  const wordArrays = [
+    enhancedAdjectives,
+    enhancedNouns,
+    enhancedVerbs
   ];
   
-  const words: string[] = [];
-  const usedWords = new Set<string>();
+  // First try to select unique words efficiently
+  let selectedWords = selectUniqueWords(wordArrays, wordCount);
   
-  // Generate the requested number of words
-  for (let i = 0; i < wordCount; i++) {
-    let word: string | null = null;
-    let attempts = 0;
+  // Handle special patterns for better quality
+  if (selectedWords.length >= wordCount) {
+    // Sometimes start with "The" for longer names
+    if (wordCount > 2 && Math.random() > 0.7) {
+      selectedWords[0] = 'The';
+    }
     
-    // Try to get a unique word
-    while ((!word || usedWords.has(word.toLowerCase())) && attempts < 50) {
-      if (i === 0 && wordCount > 2 && Math.random() > 0.7) {
-        // Sometimes start with "The"
-        word = 'The';
-      } else if (i < wordCount - 1 && isAdjectiveLike(word || '')) {
-        // Try to get a noun after an adjective
-        word = getRandomWord([...sources.nouns, ...fallbackNouns]);
+    // Apply smart ordering: adjectives before nouns when possible
+    const reorderedWords: string[] = [];
+    const adjectives: string[] = [];
+    const nouns: string[] = [];
+    const others: string[] = [];
+    
+    selectedWords.forEach(word => {
+      if (word === 'The') {
+        reorderedWords.push(word); // Keep 'The' at the beginning
+      } else if (isAdjectiveLike(word)) {
+        adjectives.push(word);
+      } else if (isNounLike(word)) {
+        nouns.push(word);
       } else {
-        // Get any word
-        word = getRandomWord(allWords);
+        others.push(word);
       }
-      attempts++;
-    }
+    });
     
-    if (word) {
-      usedWords.add(word.toLowerCase());
-      words.push(capitalize(word));
+    // Smart reordering: The -> adjectives -> nouns -> others
+    const orderedWords = [
+      ...reorderedWords, // 'The' if present
+      ...adjectives.slice(0, Math.ceil(wordCount / 3)),
+      ...nouns.slice(0, Math.ceil(wordCount / 2)), 
+      ...others
+    ].slice(0, wordCount);
+    
+    // If we have enough well-ordered words, use them
+    if (orderedWords.length >= wordCount) {
+      return orderedWords.map(word => capitalize(word)).join(' ');
     }
   }
   
-  // Fallback if we couldn't generate enough words
-  if (words.length < wordCount) {
-    const finalFallbacks = ['Echo', 'Dream', 'Fire', 'Soul', 'Heart'];
-    while (words.length < wordCount) {
-      const fallback = finalFallbacks[words.length % finalFallbacks.length];
-      words.push(fallback);
-    }
+  // Graceful degradation: if we couldn't get enough unique words
+  const finalFallbacks = ['Echo', 'Dream', 'Fire', 'Soul', 'Heart', 'Storm', 'Light', 'Shadow'];
+  while (selectedWords.length < wordCount) {
+    const fallback = finalFallbacks[selectedWords.length % finalFallbacks.length];
+    selectedWords.push(fallback);
   }
   
-  return words.join(' ');
+  return selectedWords.slice(0, wordCount).map(word => capitalize(word)).join(' ');
 }

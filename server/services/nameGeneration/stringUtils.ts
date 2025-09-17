@@ -156,3 +156,142 @@ export function getRandomWordByLength(
   
   return lengthFiltered[Math.floor(Math.random() * lengthFiltered.length)];
 }
+
+/**
+ * Efficiently samples multiple unique words from an array without replacement
+ * This replaces inefficient while-loop retry patterns
+ */
+export function sampleWithoutReplacement<T>(
+  array: T[], 
+  count: number, 
+  filter?: (item: T) => boolean
+): T[] {
+  if (!array || array.length === 0) return [];
+  
+  // Apply filter first if provided
+  let filteredArray = filter ? array.filter(filter) : [...array];
+  
+  // If we need more items than available, return what we can
+  const actualCount = Math.min(count, filteredArray.length);
+  if (actualCount === 0) return [];
+  
+  // For small arrays or when we need most/all items, use Fisher-Yates shuffle approach
+  if (actualCount > filteredArray.length * 0.5) {
+    // Shuffle the entire array and take first N items
+    const shuffled = [...filteredArray];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, actualCount);
+  }
+  
+  // For larger arrays where we need only a few items, use reservoir sampling
+  const result: T[] = [];
+  const used = new Set<number>();
+  
+  while (result.length < actualCount && used.size < filteredArray.length) {
+    const index = Math.floor(Math.random() * filteredArray.length);
+    if (!used.has(index)) {
+      used.add(index);
+      result.push(filteredArray[index]);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Circuit breaker for retry operations to prevent infinite loops
+ */
+export interface RetryOptions {
+  maxAttempts?: number;
+  backoffMs?: number;
+  onFailure?: (attempt: number, error?: any) => void;
+}
+
+export class RetryCircuitBreaker {
+  private failures = 0;
+  private lastFailureTime = 0;
+  private readonly maxFailures: number;
+  private readonly cooldownMs: number;
+
+  constructor(maxFailures = 3, cooldownMs = 1000) {
+    this.maxFailures = maxFailures;
+    this.cooldownMs = cooldownMs;
+  }
+
+  isOpen(): boolean {
+    if (this.failures >= this.maxFailures) {
+      const timeSinceFailure = Date.now() - this.lastFailureTime;
+      if (timeSinceFailure < this.cooldownMs) {
+        return true; // Circuit is open
+      }
+      // Reset after cooldown
+      this.failures = 0;
+    }
+    return false; // Circuit is closed
+  }
+
+  recordSuccess(): void {
+    this.failures = 0;
+  }
+
+  recordFailure(): void {
+    this.failures++;
+    this.lastFailureTime = Date.now();
+  }
+
+  async attempt<T>(
+    operation: () => T | Promise<T>,
+    fallback: () => T | Promise<T>
+  ): Promise<T> {
+    if (this.isOpen()) {
+      return await fallback();
+    }
+
+    try {
+      const result = await operation();
+      this.recordSuccess();
+      return result;
+    } catch (error) {
+      this.recordFailure();
+      return await fallback();
+    }
+  }
+}
+
+/**
+ * Optimized word selection with automatic fallback and no retry loops
+ */
+export function selectUniqueWords(
+  wordArrays: string[][], 
+  count: number, 
+  usedWords?: Set<string>,
+  filter?: (word: string) => boolean
+): string[] {
+  // Combine all word arrays and remove used words
+  const allWords = wordArrays
+    .flat()
+    .filter(word => {
+      if (!word || word.length < 2) return false;
+      if (usedWords && usedWords.has(word.toLowerCase())) return false;
+      if (filter && !filter(word)) return false;
+      return true;
+    });
+
+  // Remove duplicates while preserving order preference
+  const uniqueWords: string[] = [];
+  const seen = new Set<string>();
+  
+  for (const word of allWords) {
+    const key = word.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueWords.push(word);
+    }
+  }
+
+  // Use efficient sampling
+  return sampleWithoutReplacement(uniqueWords, count);
+}
