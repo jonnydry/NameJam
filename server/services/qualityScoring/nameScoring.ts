@@ -13,6 +13,7 @@ import type {
 import { TextAnalyzer, CreativityAnalyzer, ScoringUtils, PerformanceTracker } from './utils';
 import { DEFAULT_NAME_WEIGHTS, GENRE_ADJUSTMENTS, COMMON_WORDS } from './config';
 import { secureLog } from '../../utils/secureLogger';
+import { phoneticFlowAnalyzer } from '../nameGeneration/phoneticFlowAnalyzer';
 
 export class NameScoringEngine {
   private algorithmVersion = '1.0.0';
@@ -135,9 +136,9 @@ export class NameScoringEngine {
   private scoreQuality(name: string): number {
     let score = 0.5; // Base quality
     
-    // Pronunciation ease
-    const pronunciationScore = TextAnalyzer.getPronunciationDifficulty(name);
-    score += pronunciationScore * 0.4;
+    // Enhanced pronunciation analysis using cached phonetic analyzer
+    const phoneticScore = phoneticFlowAnalyzer.analyzePhoneticFlow(name);
+    score += (phoneticScore.pronunciation / 100) * 0.4;
     
     // Character composition quality
     const metrics = TextAnalyzer.getTextMetrics(name);
@@ -174,12 +175,17 @@ export class NameScoringEngine {
   private scoreMemorability(name: string, type: 'band' | 'song'): number {
     let score = 0.4; // Base memorability
     
+    // Enhanced memorability analysis using cached phonetic analyzer
+    const phoneticScore = phoneticFlowAnalyzer.analyzePhoneticFlow(name);
+    score += (phoneticScore.memorability / 100) * 0.3;
+    score += (phoneticScore.flow / 100) * 0.2;
+    
     // Alliteration bonus
     if (TextAnalyzer.hasAlliteration(name)) {
-      score += 0.2;
+      score += 0.1; // Reduced since phonetic analyzer also considers this
     }
     
-    // Rhythm and flow
+    // Rhythm and flow (basic analysis as fallback)
     const syllableCount = TextAnalyzer.countSyllables(name);
     const wordCount = TextAnalyzer.getTextMetrics(name).wordCount;
     
@@ -187,7 +193,7 @@ export class NameScoringEngine {
     if (wordCount > 1) {
       const avgSyllablesPerWord = syllableCount / wordCount;
       if (avgSyllablesPerWord >= 1.5 && avgSyllablesPerWord <= 3) {
-        score += 0.15;
+        score += 0.1; // Reduced weight since phonetic analyzer provides better flow analysis
       }
     }
     
@@ -217,6 +223,10 @@ export class NameScoringEngine {
    */
   private scoreUniqueness(name: string, isAiGenerated: boolean): number {
     let score = 0.6; // Base uniqueness
+    
+    // Enhanced uniqueness analysis using cached phonetic analyzer
+    const phoneticScore = phoneticFlowAnalyzer.analyzePhoneticFlow(name);
+    score += (phoneticScore.uniqueness / 100) * 0.2;
     
     // Check against common overused words
     const nameLower = name.toLowerCase();

@@ -4,6 +4,7 @@
  */
 
 import { secureLog } from '../../utils/secureLogger';
+import { CacheService } from '../cacheService';
 
 interface PhoneticScore {
   overall: number; // 0-100
@@ -14,7 +15,30 @@ interface PhoneticScore {
   issues: string[]; // List of detected issues
 }
 
+interface PhoneticCacheStats {
+  hits: number;
+  misses: number;
+  hitRate: number;
+  size: number;
+  maxSize: number;
+  warmingComplete: boolean;
+}
+
 export class PhoneticFlowAnalyzer {
+  // Cache for phonetic analysis results
+  private cache: CacheService<PhoneticScore>;
+  private warmingComplete: boolean = false;
+  
+  // Common musical words for cache warming
+  private readonly commonWords = [
+    'music', 'sound', 'beat', 'rhythm', 'melody', 'harmony', 'song', 'band',
+    'rock', 'jazz', 'blues', 'soul', 'funk', 'metal', 'punk', 'folk',
+    'dream', 'shadow', 'light', 'fire', 'storm', 'echo', 'wave', 'flow',
+    'heart', 'mind', 'spirit', 'love', 'hope', 'fear', 'rage', 'joy',
+    'electric', 'cosmic', 'neon', 'dark', 'bright', 'wild', 'free', 'lost',
+    'black', 'white', 'red', 'blue', 'gold', 'silver', 'green', 'purple'
+  ];
+  
   // Consonant clusters that are hard to pronounce
   private readonly difficultClusters = [
     'xth', 'fth', 'sth', 'pth', 'kth', 'tch', 'dg',
@@ -37,10 +61,42 @@ export class PhoneticFlowAnalyzer {
     anapestic: /^[a-z]{2}[A-Z][a-z]+/ // weak-weak-STRONG
   };
   
+  constructor() {
+    // Initialize cache with 1 hour TTL and max 5000 entries for phonetic analysis
+    this.cache = new CacheService<PhoneticScore>(3600, 5000);
+    
+    // Start cache warming in background
+    this.warmCache();
+  }
+  
   /**
-   * Analyze the phonetic quality of a name
+   * Analyze the phonetic quality of a name with caching
    */
   public analyzePhoneticFlow(name: string): PhoneticScore {
+    // Normalize the name for consistent cache keys
+    const cacheKey = this.normalizeCacheKey(name);
+    
+    // Check cache first
+    const cached = this.cache.get(cacheKey);
+    if (cached !== null) {
+      secureLog.debug(`PhoneticFlowAnalyzer cache hit for: ${name}`);
+      return cached;
+    }
+    
+    // Cache miss - perform analysis
+    secureLog.debug(`PhoneticFlowAnalyzer cache miss for: ${name}`);
+    const result = this.performPhoneticAnalysis(name);
+    
+    // Cache the result
+    this.cache.set(cacheKey, result);
+    
+    return result;
+  }
+  
+  /**
+   * Perform the actual phonetic analysis (uncached)
+   */
+  private performPhoneticAnalysis(name: string): PhoneticScore {
     const words = name.split(/\s+/);
     const issues: string[] = [];
     
@@ -387,6 +443,80 @@ export class PhoneticFlowAnalyzer {
     } else {
       return 'Poor phonetic quality - difficult to pronounce or remember';
     }
+  }
+  
+  /**
+   * Normalize cache key for consistent caching
+   */
+  private normalizeCacheKey(name: string): string {
+    return name.toLowerCase().trim().replace(/\s+/g, ' ');
+  }
+  
+  /**
+   * Warm the cache with common words and combinations
+   */
+  private async warmCache(): Promise<void> {
+    try {
+      secureLog.info('Starting phonetic analysis cache warming...');
+      
+      // Single words
+      for (const word of this.commonWords) {
+        const cacheKey = this.normalizeCacheKey(word);
+        this.cache.set(cacheKey, this.performPhoneticAnalysis(word));
+      }
+      
+      // Common two-word combinations
+      const sampleCombinations = [
+        'dark shadow', 'electric storm', 'neon dream', 'cosmic wave',
+        'fire heart', 'silver moon', 'black rose', 'wild spirit',
+        'lost soul', 'bright light', 'deep blue', 'golden hour',
+        'metal storm', 'jazz fusion', 'rock solid', 'folk tale'
+      ];
+      
+      for (const combination of sampleCombinations) {
+        const cacheKey = this.normalizeCacheKey(combination);
+        this.cache.set(cacheKey, this.performPhoneticAnalysis(combination));
+      }
+      
+      this.warmingComplete = true;
+      secureLog.info(`Phonetic analysis cache warmed with ${this.commonWords.length + sampleCombinations.length} entries`);
+    } catch (error) {
+      secureLog.error('Error during cache warming:', error);
+    }
+  }
+  
+  /**
+   * Get cache statistics for monitoring
+   */
+  public getCacheStats(): PhoneticCacheStats {
+    const stats = this.cache.getStats();
+    return {
+      hits: stats.hits,
+      misses: stats.misses,
+      hitRate: stats.hitRate,
+      size: stats.size,
+      maxSize: stats.maxSize,
+      warmingComplete: this.warmingComplete
+    };
+  }
+  
+  /**
+   * Clear the cache (for testing or admin purposes)
+   */
+  public clearCache(): void {
+    this.cache.clear();
+    this.warmingComplete = false;
+    secureLog.info('Phonetic analysis cache cleared');
+  }
+  
+  /**
+   * Pre-analyze and cache a list of names
+   */
+  public preAnalyze(names: string[]): void {
+    for (const name of names) {
+      this.analyzePhoneticFlow(name);
+    }
+    secureLog.info(`Pre-analyzed and cached ${names.length} names`);
   }
 }
 

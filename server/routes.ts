@@ -966,6 +966,47 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     }
   });
 
+  // Test endpoint for phonetic analysis caching (for testing/monitoring)
+  app.get('/api/test/phonetic-cache', async (req: Request, res: Response) => {
+    try {
+      const { phoneticFlowAnalyzer } = await import('./services/nameGeneration/phoneticFlowAnalyzer');
+      
+      // Test cache functionality
+      const testName = req.query.name as string || 'electric storm';
+      
+      // First analysis (may be cache miss)
+      const start1 = Date.now();
+      const result1 = phoneticFlowAnalyzer.analyzePhoneticFlow(testName);
+      const time1 = Date.now() - start1;
+      
+      // Second analysis (should be cache hit)
+      const start2 = Date.now();
+      const result2 = phoneticFlowAnalyzer.analyzePhoneticFlow(testName);
+      const time2 = Date.now() - start2;
+      
+      // Get cache statistics
+      const stats = phoneticFlowAnalyzer.getCacheStats();
+      
+      res.json({
+        success: true,
+        testName,
+        analysisResult: result1,
+        performance: {
+          firstAnalysis: `${time1}ms`,
+          secondAnalysis: `${time2}ms`,
+          improvement: time1 > time2 ? `${((time1 - time2) / time1 * 100).toFixed(1)}%` : 'N/A'
+        },
+        cacheStats: stats
+      });
+    } catch (error) {
+      secureLog.error("Error in phonetic cache test:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to test phonetic cache",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
