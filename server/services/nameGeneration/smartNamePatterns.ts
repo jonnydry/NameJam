@@ -1,6 +1,6 @@
 // Smart name pattern generation based on real musical naming conventions
 import { secureLog } from '../../utils/secureLogger';
-import { getRandomWord, capitalize, singularize } from './stringUtils';
+import { getRandomWord, getRandomWordByLength, capitalize, singularize } from './stringUtils';
 import { scoreMusicalName } from './musicalWordFilter';
 import { EnhancedWordSource } from './types';
 
@@ -11,8 +11,8 @@ const BAND_PATTERNS = [
     pattern: 'the_adj_nouns',
     weight: 0.2,
     generate: (words: EnhancedWordSource) => {
-      const adj = getRandomWord(words.adjectives) || 'wild';
-      const noun = getRandomWord(words.nouns) || 'hearts';
+      const adj = getRandomWord(words.validAdjectives) || 'wild';
+      const noun = getRandomWord(words.validNouns) || 'hearts';
       return `The ${capitalize(adj)} ${capitalize(noun)}s`;
     }
   },
@@ -21,8 +21,8 @@ const BAND_PATTERNS = [
     pattern: 'compound_word',
     weight: 0.15,
     generate: (words: EnhancedWordSource) => {
-      const word1 = getRandomWord([...words.nouns, ...words.adjectives]) || 'radio';
-      const word2 = getRandomWord([...words.nouns]) || 'head';
+      const word1 = getRandomWord([...words.validNouns, ...words.validAdjectives]) || 'radio';
+      const word2 = getRandomWord(words.validNouns) || 'head';
       return capitalize(word1) + capitalize(word2).toLowerCase();
     }
   },
@@ -31,8 +31,8 @@ const BAND_PATTERNS = [
     pattern: 'adj_creature',
     weight: 0.15,
     generate: (words: EnhancedWordSource) => {
-      const adj = getRandomWord(words.adjectives) || 'arctic';
-      const noun = getRandomWord(words.nouns.filter((n: string) => n.length > 4)) || 'tigers';
+      const adj = getRandomWord(words.validAdjectives) || 'arctic';
+      const noun = getRandomWordByLength(words.validNouns, 5) || 'tigers';
       return `${capitalize(adj)} ${capitalize(noun)}`;
     }
   },
@@ -41,10 +41,8 @@ const BAND_PATTERNS = [
     pattern: 'single_impact',
     weight: 0.1,
     generate: (words: EnhancedWordSource) => {
-      const impactWords = [...words.nouns, ...words.musicalTerms].filter((w: string) => 
-        w.length >= 4 && w.length <= 7
-      );
-      return capitalize(getRandomWord(impactWords) || 'pulse');
+      const impactWords = [...words.validNouns, ...words.validMusicalTerms];
+      return capitalize(getRandomWordByLength(impactWords, 4, 7) || 'pulse');
     }
   },
   // Name/Place + Thing (Fleet Foxes, Beach House)
@@ -54,8 +52,8 @@ const BAND_PATTERNS = [
     generate: (words: EnhancedWordSource) => {
       const places = ['beach', 'fleet', 'crystal', 'glass', 'velvet', 'copper'];
       const things = ['house', 'foxes', 'castle', 'garden', 'factory', 'palace'];
-      const place = getRandomWord([...places, ...words.contextualWords]) || 'crystal';
-      const thing = getRandomWord([...things, ...words.nouns]) || 'palace';
+      const place = getRandomWord([...places, ...words.validContextualWords]) || 'crystal';
+      const thing = getRandomWord([...things, ...words.validNouns]) || 'palace';
       return `${capitalize(place)} ${capitalize(thing)}`;
     }
   }
@@ -68,8 +66,8 @@ const SONG_PATTERNS = [
     weight: 0.25,
     generate: (words: EnhancedWordSource) => {
       const prefixes = ['hyper', 'ultra', 'neo', 'meta', 'proto', 'anti', 'omni', 'poly', 'multi'];
-      const midWords = getRandomWord([...words.adjectives, ...words.nouns, ...words.genreTerms]) || 'stellar';
-      const suffix = getRandomWord(words.nouns) || 'dreams';
+      const midWords = getRandomWord([...words.validAdjectives, ...words.validNouns, ...words.validGenreTerms]) || 'stellar';
+      const suffix = getRandomWord(words.validNouns) || 'dreams';
       const prefix = getRandomWord(prefixes);
       return `${capitalize(prefix + midWords)} ${capitalize(suffix)}`;
     }
@@ -80,9 +78,9 @@ const SONG_PATTERNS = [
     weight: 0.2,
     generate: (words: EnhancedWordSource) => {
       const endings = ['opia', 'scape', 'tron', 'verse', 'sphere', 'flux', 'wave', 'core'];
-      const base = getRandomWord([...words.nouns, ...words.genreTerms]) || 'dream';
+      const base = getRandomWord([...words.validNouns, ...words.validGenreTerms]) || 'dream';
       const ending = getRandomWord(endings);
-      const action = getRandomWord([...words.verbs.map((v: string) => v + 'ing'), ...words.musicalTerms]) || 'rising';
+      const action = getRandomWord([...words.validVerbs.map((v: string) => v + 'ing'), ...words.validMusicalTerms]) || 'rising';
       return `${capitalize(base + ending)} ${capitalize(action)}`;
     }
   },
@@ -94,7 +92,7 @@ const SONG_PATTERNS = [
       const numbers = ['zero', 'seven', 'eleven', '404', '808', 'XIII', 'infinite', 'binary'];
       const emotions = ['heartbreak', 'sorrows', 'desires', 'whispers', 'echoes', 'memories'];
       const number = getRandomWord(numbers) || 'seven';
-      const emotion = getRandomWord([...emotions, ...words.nouns.filter((n: string) => n.length > 5)]) || 'echoes';
+      const emotion = getRandomWord([...emotions, ...words.longWords]) || 'echoes';
       return `${capitalize(number)} ${capitalize(emotion)}`;
     }
   },
@@ -105,8 +103,8 @@ const SONG_PATTERNS = [
     generate: (words: EnhancedWordSource) => {
       const techWords = ['pixel', 'glitch', 'byte', 'cyber', 'quantum', 'digital', 'analog', 'fractal'];
       const natureWords = ['sunrise', 'twilight', 'horizon', 'aurora', 'nebula', 'cosmos'];
-      const tech = getRandomWord([...techWords, ...words.genreTerms]) || 'pixel';
-      const nature = getRandomWord([...natureWords, ...words.contextualWords]) || 'sunrise';
+      const tech = getRandomWord([...techWords, ...words.validGenreTerms]) || 'pixel';
+      const nature = getRandomWord([...natureWords, ...words.validContextualWords]) || 'sunrise';
       return Math.random() > 0.5 
         ? `${capitalize(tech)}ated ${capitalize(nature)}`
         : `${capitalize(tech)}wave ${capitalize(nature)}`;
@@ -119,8 +117,8 @@ const SONG_PATTERNS = [
     generate: (words: EnhancedWordSource) => {
       const rareAdjs = ['lucid', 'visceral', 'ethereal', 'prismatic', 'chromatic', 'holographic', 'iridescent'];
       const uniqueNouns = ['prism', 'void', 'nexus', 'flux', 'vortex', 'paradox', 'enigma'];
-      const adj = getRandomWord([...rareAdjs, ...words.adjectives.filter((a: string) => a.length > 6)]) || 'lucid';
-      const noun = getRandomWord([...uniqueNouns, ...words.musicalTerms, ...words.genreTerms]) || 'prism';
+      const adj = getRandomWord([...rareAdjs, ...words.longWords.filter(w => words.validAdjectives.includes(w))]) || 'lucid';
+      const noun = getRandomWord([...uniqueNouns, ...words.validMusicalTerms, ...words.validGenreTerms]) || 'prism';
       return `${capitalize(adj)} ${capitalize(singularize(noun))}`;
     }
   },

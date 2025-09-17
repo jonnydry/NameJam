@@ -111,6 +111,14 @@ export function isBandName(word: string): boolean {
 export function getRandomWord(wordArray: string[]): string | null {
   if (!wordArray || wordArray.length === 0) return null;
   
+  // Arrays are now pre-filtered, just select randomly
+  return wordArray[Math.floor(Math.random() * wordArray.length)];
+}
+
+// Legacy function that applies filtering (kept for backward compatibility)
+export function getRandomWordWithFiltering(wordArray: string[]): string | null {
+  if (!wordArray || wordArray.length === 0) return null;
+  
   const validWords = wordArray.filter(word => 
     word && 
     word.length > 2 && 
@@ -122,4 +130,29 @@ export function getRandomWord(wordArray: string[]): string | null {
   if (validWords.length === 0) return null;
   
   return validWords[Math.floor(Math.random() * validWords.length)];
+}
+
+// Performance-optimized word selection with length constraints
+export function getRandomWordByLength(
+  wordArray: string[], 
+  minLength?: number, 
+  maxLength?: number
+): string | null {
+  if (!wordArray || wordArray.length === 0) return null;
+  
+  // If no length constraints, use pre-filtered array directly
+  if (!minLength && !maxLength) {
+    return getRandomWord(wordArray);
+  }
+  
+  // Apply length filtering on pre-filtered array (much smaller set)
+  const lengthFiltered = wordArray.filter(word => {
+    if (minLength && word.length < minLength) return false;
+    if (maxLength && word.length > maxLength) return false;
+    return true;
+  });
+  
+  if (lengthFiltered.length === 0) return null;
+  
+  return lengthFiltered[Math.floor(Math.random() * lengthFiltered.length)];
 }

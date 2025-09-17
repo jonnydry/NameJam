@@ -7,6 +7,7 @@ import { secureLog } from '../../utils/secureLogger';
 import { EnhancedWordSource } from './types';
 import { isPoeticWord, isProblematicWord } from './wordValidation';
 import { isMusicallyAppropriate, filterWordsForMusic, getRealMusicExamples, getGenreWords } from './musicalWordFilter';
+import { isBandName } from './stringUtils';
 
 export class WordSourceBuilder {
   private datamuseService: DatamuseService;
@@ -20,6 +21,7 @@ export class WordSourceBuilder {
   // Build word sources using Datamuse's contextual relationships + external APIs
   async buildContextualWordSources(mood?: string, genre?: string, type?: string): Promise<EnhancedWordSource> {
     const sources: EnhancedWordSource = {
+      // Original raw word arrays (kept for compatibility)
       adjectives: [],
       nouns: [],
       verbs: [],
@@ -29,7 +31,29 @@ export class WordSourceBuilder {
       genreTerms: [],
       lastfmWords: [],
       spotifyWords: [],
-      conceptNetWords: []
+      conceptNetWords: [],
+      
+      // Pre-filtered collections (will be populated in cleanWordSources)
+      validAdjectives: [],
+      validNouns: [],
+      validVerbs: [],
+      validMusicalTerms: [],
+      validContextualWords: [],
+      validAssociatedWords: [],
+      validGenreTerms: [],
+      validLastfmWords: [],
+      validSpotifyWords: [],
+      validConceptNetWords: [],
+      
+      // Length-specific pre-filtered arrays
+      shortWords: [],
+      mediumWords: [],
+      longWords: [],
+      
+      // Combined pre-filtered collections
+      allValidWords: [],
+      qualityNouns: [],
+      qualityAdjectives: []
     };
 
     try {
@@ -304,21 +328,82 @@ export class WordSourceBuilder {
   }
 
   private cleanWordSources(sources: EnhancedWordSource): void {
-    Object.keys(sources).forEach(key => {
-      const sourceKey = key as keyof EnhancedWordSource;
-      const uniqueWords = Array.from(new Set(sources[sourceKey]));
-      sources[sourceKey] = uniqueWords.filter((word: string) => 
+    // Apply word quality filtering function once
+    const applyQualityFilter = (words: string[]): string[] => {
+      return Array.from(new Set(words)).filter((word: string) => 
         word && 
         word.length > 2 && 
         !word.includes('_') &&
         !word.includes('-') &&
         !/^\d+$/.test(word) &&
+        !isBandName(word) &&
         isPoeticWord(word) &&
         !isProblematicWord(word) &&
         isMusicallyAppropriate(word)
-      );
+      ).slice(0, 100);
+    };
+
+    // Clean original arrays and create pre-filtered versions
+    const rawArrayKeys = ['adjectives', 'nouns', 'verbs', 'musicalTerms', 'contextualWords', 
+                         'associatedWords', 'genreTerms', 'lastfmWords', 'spotifyWords', 'conceptNetWords'];
+    
+    rawArrayKeys.forEach(key => {
+      const sourceKey = key as keyof EnhancedWordSource;
+      const cleanedWords = applyQualityFilter(sources[sourceKey] as string[]);
+      sources[sourceKey] = cleanedWords as any;
       
-      sources[sourceKey] = sources[sourceKey].slice(0, 100);
+      // Populate corresponding pre-filtered arrays
+      const validKey = ('valid' + key.charAt(0).toUpperCase() + key.slice(1)) as keyof EnhancedWordSource;
+      (sources[validKey] as string[]) = [...cleanedWords];
+    });
+
+    // Create combined collections
+    sources.allValidWords = [
+      ...sources.validAdjectives,
+      ...sources.validNouns,
+      ...sources.validVerbs,
+      ...sources.validMusicalTerms,
+      ...sources.validContextualWords,
+      ...sources.validAssociatedWords,
+      ...sources.validGenreTerms,
+      ...sources.validLastfmWords,
+      ...sources.validSpotifyWords,
+      ...sources.validConceptNetWords
+    ];
+
+    // Create length-specific arrays
+    sources.shortWords = sources.allValidWords.filter(w => w.length >= 3 && w.length <= 5);
+    sources.mediumWords = sources.allValidWords.filter(w => w.length >= 6 && w.length <= 8);
+    sources.longWords = sources.allValidWords.filter(w => w.length >= 9);
+
+    // Create high-quality collections with additional scoring
+    const scoreWord = (word: string): number => {
+      let score = 0;
+      if (word.length >= 5 && word.length <= 8) score += 2; // Optimal length
+      if (/^.*ness$|^.*less$|^.*ful$|^.*ous$|^.*ent$|^.*ant$|^.*ive$|^.*ic$/.test(word)) score += 3; // Poetic endings
+      if (['shadow', 'light', 'soul', 'heart', 'dream', 'fire', 'storm'].some(w => word.includes(w))) score += 2; // Core poetic words
+      return score;
+    };
+
+    // Quality nouns for band/song names
+    sources.qualityNouns = [...sources.validNouns, ...sources.validMusicalTerms, ...sources.validAssociatedWords]
+      .filter(w => w.length >= 4 && w.length <= 10)
+      .sort((a, b) => scoreWord(b) - scoreWord(a))
+      .slice(0, 50);
+
+    // Quality adjectives for descriptive names
+    sources.qualityAdjectives = sources.validAdjectives
+      .filter(w => w.length >= 4 && w.length <= 9)
+      .sort((a, b) => scoreWord(b) - scoreWord(a))
+      .slice(0, 40);
+
+    secureLog.debug('🔧 Word sources pre-filtering complete:', {
+      allValidWords: sources.allValidWords.length,
+      shortWords: sources.shortWords.length,
+      mediumWords: sources.mediumWords.length,
+      longWords: sources.longWords.length,
+      qualityNouns: sources.qualityNouns.length,
+      qualityAdjectives: sources.qualityAdjectives.length
     });
   }
 
