@@ -1,0 +1,114 @@
+{
+  "results": [
+    {
+      "testName": "Basic Name Generation",
+      "optimizedTime": 1226,
+      "metadata": {
+        "namesGenerated": 0,
+        "strategy": "comprehensive",
+        "quality": 0,
+        "throughput": 0,
+        "cacheHit": false
+      }
+    },
+    {
+      "testName": "Phonetic Analysis Caching",
+      "optimizedTime": 0,
+      "unoptimizedTime": 0,
+      "improvementPercent": null,
+      "metadata": {
+        "namesAnalyzed": 8,
+        "coldCacheTime": 0,
+        "warmCacheTime": 0,
+        "avgTimePerNameCold": 0,
+        "avgTimePerNameWarm": 0,
+        "cacheEffectiveness": "Low"
+      }
+    },
+    {
+      "testName": "Regex Pattern Optimization",
+      "optimizedTime": 3,
+      "unoptimizedTime": 0,
+      "improvementPercent": null,
+      "metadata": {
+        "wordsProcessed": 18,
+        "optimizedOpsPerSecond": 6000,
+        "unoptimizedOpsPerSecond": null,
+        "resultsMatch": false
+      }
+    },
+    {
+      "testName": "Word Deduplication",
+      "optimizedTime": 0,
+      "unoptimizedTime": 0,
+      "improvementPercent": null,
+      "metadata": {
+        "inputWords": 24,
+        "outputWords": 8,
+        "duplicatesRemoved": 16,
+        "optimizedThroughput": null,
+        "unoptimizedThroughput": null,
+        "resultsMatch": true
+      }
+    },
+    {
+      "testName": "Bulk Name Generation",
+      "optimizedTime": 7148,
+      "metadata": {
+        "totalRequests": 5,
+        "successfulRequests": 5,
+        "totalNamesGenerated": 0,
+        "throughput": 0.6994963626189143,
+        "memoryUsed": -77,
+        "avgNamesPerRequest": 0,
+        "avgTimePerRequest": 1429.6
+      }
+    }
+  ],
+  "summary": {
+    "executionTime": "2025-09-17T23:42:17.653Z",
+    "testsRun": 5,
+    "averageImprovement": null,
+    "totalOptimizedTime": 8377,
+    "totalUnoptimizedTime": 0,
+    "overallSpeedup": "N/A",
+    "testSummaries": [
+      {
+        "test": "Basic Name Generation",
+        "optimizedTime": 1226,
+        "improvement": "N/A",
+        "status": "📊 Baseline"
+      },
+      {
+        "test": "Phonetic Analysis Caching",
+        "optimizedTime": 0,
+        "improvement": "N/A",
+        "status": "❌ Degraded"
+      },
+      {
+        "test": "Regex Pattern Optimization",
+        "optimizedTime": 3,
+        "improvement": "-Infinity%",
+        "status": "❌ Degraded"
+      },
+      {
+        "test": "Word Deduplication",
+        "optimizedTime": 0,
+        "improvement": "N/A",
+        "status": "❌ Degraded"
+      },
+      {
+        "test": "Bulk Name Generation",
+        "optimizedTime": 7148,
+        "improvement": "N/A",
+        "status": "📊 Baseline"
+      }
+    ],
+    "insights": [
+      "📈 Precompiled regex patterns provide modest improvement"
+    ],
+    "recommendations": [
+      "⚡ Consider implementing request batching for better throughput"
+    ]
+  }
+}
