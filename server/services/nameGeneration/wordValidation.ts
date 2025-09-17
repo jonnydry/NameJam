@@ -1,9 +1,15 @@
+import { 
+  WORD_VALIDATION_PATTERNS, 
+  UTILITY_PATTERNS, 
+  PatternTester 
+} from './regexConstants';
+
 export function isPoeticWord(word: string): boolean {
   if (!word || word.length < 3) return false;
   
-  // Basic quality filters
+  // Basic quality filters (using precompiled patterns)
   if (word.includes('_') || word.includes('-')) return false;
-  if (/^\d+$/.test(word)) return false;
+  if (WORD_VALIDATION_PATTERNS.ONLY_DIGITS.test(word)) return false;
   if (word.length > 15) return false;
   
   // Skip common unpoetic words
@@ -17,22 +23,9 @@ export function isPoeticWord(word: string): boolean {
   
   if (unpoetic.includes(word.toLowerCase())) return false;
   
-  // Word patterns that are typically poetic
-  const poeticPatterns = [
-    /^.*ness$/, // darkness, brightness
-    /^.*less$/, // endless, fearless
-    /^.*ful$/, // beautiful, powerful
-    /^.*ing$/, // floating, burning
-    /^.*ly$/, // softly, quickly
-    /^.*ous$/, // mysterious, glorious
-    /^.*ent$/, // ancient, silent
-    /^.*ant$/, // distant, brilliant
-    /^.*ive$/, // massive, creative
-    /^.*ic$/, // magic, cosmic
-  ];
-  
-  for (const pattern of poeticPatterns) {
-    if (pattern.test(word.toLowerCase())) return true;
+  // Word patterns that are typically poetic (using precompiled pattern)
+  if (WORD_VALIDATION_PATTERNS.POETIC_SUFFIXES.test(word.toLowerCase())) {
+    return true;
   }
   
   // Common poetic words
@@ -74,7 +67,7 @@ export function isProblematicWord(word: string): boolean {
 }
 
 export function cleanWord(word: string): string {
-  return word.trim().toLowerCase().replace(/[^a-z]/g, '');
+  return word.trim().toLowerCase().replace(WORD_VALIDATION_PATTERNS.NON_ALPHABETIC, '');
 }
 
 export function isValidWordLength(word: string, minLength: number = 3, maxLength: number = 15): boolean {
@@ -82,7 +75,7 @@ export function isValidWordLength(word: string, minLength: number = 3, maxLength
 }
 
 export function hasValidCharacters(word: string): boolean {
-  return /^[a-zA-Z]+$/.test(word);
+  return WORD_VALIDATION_PATTERNS.VALID_CHARACTERS.test(word);
 }
 
 export function isNotCommonWord(word: string): boolean {
