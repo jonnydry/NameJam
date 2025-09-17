@@ -295,3 +295,179 @@ export function selectUniqueWords(
   // Use efficient sampling
   return sampleWithoutReplacement(uniqueWords, count);
 }
+
+/**
+ * Performance metrics for tracking deduplication efficiency
+ */
+interface DeduplicationMetrics {
+  originalCount: number;
+  deduplicatedCount: number;
+  duplicatesRemoved: number;
+  processingTimeMs: number;
+  method: string;
+}
+
+/**
+ * High-performance centralized word array deduplication utility
+ * Replaces inefficient O(n²) indexOf operations with O(n) Set-based deduplication
+ */
+export function deduplicateWordArrays(options: {
+  // Main processing options
+  arrays: string[][]; // Individual arrays to deduplicate separately
+  combinedArray?: string[]; // Single array to deduplicate
+  preserveOrder?: boolean; // Whether to maintain original order (default: true)
+  caseInsensitive?: boolean; // Whether to treat words case-insensitively (default: true)
+  
+  // Filtering options
+  minLength?: number;
+  maxLength?: number;
+  customFilter?: (word: string) => boolean;
+  
+  // Performance options
+  enableMetrics?: boolean; // Whether to collect performance metrics
+  batchSize?: number; // For very large arrays, process in batches
+}): {
+  deduplicatedArrays?: string[][]; // Results for arrays parameter
+  deduplicatedArray?: string[]; // Result for combinedArray parameter
+  metrics?: DeduplicationMetrics;
+} {
+  const startTime = performance.now();
+  const { 
+    arrays, 
+    combinedArray, 
+    preserveOrder = true, 
+    caseInsensitive = true,
+    minLength,
+    maxLength,
+    customFilter,
+    enableMetrics = false,
+    batchSize = 10000
+  } = options;
+
+  let totalOriginalCount = 0;
+  let totalDeduplicatedCount = 0;
+
+  // Helper function for efficient deduplication of a single array
+  const deduplicateSingleArray = (array: string[]): string[] => {
+    if (!array || array.length === 0) return [];
+    
+    totalOriginalCount += array.length;
+    
+    // Pre-filter invalid entries
+    const validWords = array.filter(word => {
+      if (!word || typeof word !== 'string') return false;
+      const trimmed = word.trim();
+      if (trimmed.length === 0) return false;
+      if (minLength && trimmed.length < minLength) return false;
+      if (maxLength && trimmed.length > maxLength) return false;
+      if (customFilter && !customFilter(trimmed)) return false;
+      return true;
+    });
+
+    // For very large arrays, use batch processing
+    if (validWords.length > batchSize && !preserveOrder) {
+      // Use Set approach for maximum performance when order doesn't matter
+      const uniqueSet = new Set(
+        caseInsensitive 
+          ? validWords.map(w => w.toLowerCase()) 
+          : validWords
+      );
+      const result = Array.from(uniqueSet);
+      totalDeduplicatedCount += result.length;
+      return result;
+    }
+
+    // Standard order-preserving deduplication
+    const seen = new Set<string>();
+    const deduplicated: string[] = [];
+
+    for (const word of validWords) {
+      const key = caseInsensitive ? word.toLowerCase() : word;
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduplicated.push(word);
+      }
+    }
+
+    totalDeduplicatedCount += deduplicated.length;
+    return deduplicated;
+  };
+
+  let deduplicatedArrays: string[][] | undefined;
+  let deduplicatedArray: string[] | undefined;
+
+  // Process individual arrays
+  if (arrays && arrays.length > 0) {
+    deduplicatedArrays = arrays.map(array => deduplicateSingleArray(array));
+  }
+
+  // Process combined array
+  if (combinedArray) {
+    deduplicatedArray = deduplicateSingleArray(combinedArray);
+  }
+
+  const endTime = performance.now();
+  const processingTimeMs = endTime - startTime;
+  
+  // Generate metrics if requested
+  let metrics: DeduplicationMetrics | undefined;
+  if (enableMetrics) {
+    metrics = {
+      originalCount: totalOriginalCount,
+      deduplicatedCount: totalDeduplicatedCount,
+      duplicatesRemoved: totalOriginalCount - totalDeduplicatedCount,
+      processingTimeMs,
+      method: 'set_based_optimized'
+    };
+  }
+
+  return {
+    deduplicatedArrays,
+    deduplicatedArray,
+    metrics
+  };
+}
+
+/**
+ * Convenient wrapper for deduplicating a single array
+ * Optimized replacement for the inefficient indexOf approach
+ */
+export function deduplicateArray(
+  array: string[], 
+  caseInsensitive = true, 
+  preserveOrder = true
+): string[] {
+  const result = deduplicateWordArrays({
+    combinedArray: array,
+    caseInsensitive,
+    preserveOrder,
+    enableMetrics: false
+  });
+  
+  return result.deduplicatedArray || [];
+}
+
+/**
+ * Efficient bulk deduplication for multiple arrays at once
+ * Replaces multiple separate deduplication calls
+ */
+export function deduplicateMultipleArrays(
+  arrays: string[][], 
+  options?: {
+    caseInsensitive?: boolean;
+    preserveOrder?: boolean;
+    enableMetrics?: boolean;
+  }
+): { arrays: string[][]; metrics?: DeduplicationMetrics } {
+  const result = deduplicateWordArrays({
+    arrays,
+    caseInsensitive: options?.caseInsensitive ?? true,
+    preserveOrder: options?.preserveOrder ?? true,
+    enableMetrics: options?.enableMetrics ?? false
+  });
+  
+  return {
+    arrays: result.deduplicatedArrays || [],
+    metrics: result.metrics
+  };
+}

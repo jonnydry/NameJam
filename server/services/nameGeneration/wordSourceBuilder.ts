@@ -7,7 +7,7 @@ import { secureLog } from '../../utils/secureLogger';
 import { EnhancedWordSource } from './types';
 import { isPoeticWord, isProblematicWord } from './wordValidation';
 import { isMusicallyAppropriate, filterWordsForMusic, getRealMusicExamples, getGenreWords } from './musicalWordFilter';
-import { isBandName } from './stringUtils';
+import { isBandName, deduplicateMultipleArrays, deduplicateArray } from './stringUtils';
 
 export class WordSourceBuilder {
   private datamuseService: DatamuseService;
@@ -328,10 +328,9 @@ export class WordSourceBuilder {
   }
 
   private cleanWordSources(sources: EnhancedWordSource): void {
-    // Apply word quality filtering function once
-    const applyQualityFilter = (words: string[]): string[] => {
-      return Array.from(new Set(words)).filter((word: string) => 
-        word && 
+    // Define word quality filter function (reusable)
+    const qualityFilter = (word: string): boolean => {
+      return word && 
         word.length > 2 && 
         !word.includes('_') &&
         !word.includes('-') &&
@@ -339,17 +338,38 @@ export class WordSourceBuilder {
         !isBandName(word) &&
         isPoeticWord(word) &&
         !isProblematicWord(word) &&
-        isMusicallyAppropriate(word)
-      ).slice(0, 100);
+        isMusicallyAppropriate(word);
     };
 
-    // Clean original arrays and create pre-filtered versions
+    // Prepare arrays for bulk deduplication and filtering
     const rawArrayKeys = ['adjectives', 'nouns', 'verbs', 'musicalTerms', 'contextualWords', 
                          'associatedWords', 'genreTerms', 'lastfmWords', 'spotifyWords', 'conceptNetWords'];
     
-    rawArrayKeys.forEach(key => {
+    const arraysToProcess = rawArrayKeys.map(key => {
       const sourceKey = key as keyof EnhancedWordSource;
-      const cleanedWords = applyQualityFilter(sources[sourceKey] as string[]);
+      return sources[sourceKey] as string[];
+    });
+
+    // OPTIMIZED: Use centralized bulk deduplication with performance monitoring
+    const startTime = performance.now();
+    const { arrays: deduplicatedArrays, metrics } = deduplicateMultipleArrays(
+      arraysToProcess,
+      { 
+        caseInsensitive: true,
+        preserveOrder: true,
+        enableMetrics: true
+      }
+    );
+    
+    // Apply quality filtering AFTER deduplication (more efficient)
+    const qualityFilteredArrays = deduplicatedArrays.map(array => 
+      array.filter(qualityFilter).slice(0, 100) // Limit to 100 words per category
+    );
+
+    // Update sources with deduplicated and filtered arrays
+    rawArrayKeys.forEach((key, index) => {
+      const sourceKey = key as keyof EnhancedWordSource;
+      const cleanedWords = qualityFilteredArrays[index];
       sources[sourceKey] = cleanedWords as any;
       
       // Populate corresponding pre-filtered arrays
@@ -357,8 +377,8 @@ export class WordSourceBuilder {
       (sources[validKey] as string[]) = [...cleanedWords];
     });
 
-    // Create combined collections
-    sources.allValidWords = [
+    // Create combined collections with single deduplication pass
+    const allValidWordsArray = [
       ...sources.validAdjectives,
       ...sources.validNouns,
       ...sources.validVerbs,
@@ -370,6 +390,22 @@ export class WordSourceBuilder {
       ...sources.validSpotifyWords,
       ...sources.validConceptNetWords
     ];
+    
+    // Single final deduplication for combined array
+    sources.allValidWords = deduplicateArray(allValidWordsArray, true, true);
+    
+    // Log performance improvements from centralized deduplication
+    const totalTime = performance.now() - startTime;
+    if (metrics) {
+      secureLog.debug('🚀 Optimized word deduplication completed:', {
+        totalProcessingTime: `${totalTime.toFixed(2)}ms`,
+        originalWords: metrics.originalCount,
+        deduplicatedWords: metrics.deduplicatedCount,
+        duplicatesRemoved: metrics.duplicatesRemoved,
+        deduplicationEfficiency: `${((metrics.duplicatesRemoved / metrics.originalCount) * 100).toFixed(1)}%`,
+        finalCombinedWords: sources.allValidWords.length
+      });
+    }
 
     // Create length-specific arrays
     sources.shortWords = sources.allValidWords.filter(w => w.length >= 3 && w.length <= 5);

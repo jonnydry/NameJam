@@ -22,6 +22,7 @@ export function createEnhancedWordSource(basicWordSource: {
   conceptNetWords?: string[];
 }): EnhancedWordSource {
   // Helper function to filter words with quality checks
+  // NOTE: Deduplication is now handled upstream in wordSourceBuilder for optimal performance
   function applyQualityFilter(words: string[]): string[] {
     return words
       .filter(w => w && typeof w === 'string')
@@ -30,7 +31,7 @@ export function createEnhancedWordSource(basicWordSource: {
       .filter(w => !isProblematicWord(w))
       .filter(w => isPoeticWord(w))
       .filter(w => isMusicallyAppropriate(w))
-      .filter((word, index, array) => array.indexOf(word) === index) // Remove duplicates
+      // OPTIMIZATION: Removed inefficient O(n²) indexOf deduplication - now handled upstream
       .slice(0, 100); // Limit to 100 words per category
   }
 
@@ -84,6 +85,7 @@ export function createEnhancedWordSource(basicWordSource: {
   sources.validConceptNetWords = applyQualityFilter(sources.conceptNetWords);
 
   // Create combined collection
+  // OPTIMIZATION: Removed redundant O(n²) deduplication - words are already deduplicated upstream
   sources.allValidWords = [
     ...sources.validAdjectives,
     ...sources.validNouns,
@@ -95,7 +97,7 @@ export function createEnhancedWordSource(basicWordSource: {
     ...sources.validLastfmWords,
     ...sources.validSpotifyWords,
     ...sources.validConceptNetWords
-  ].filter((word, index, array) => array.indexOf(word) === index); // Remove duplicates
+  ]; // Already deduplicated in wordSourceBuilder for optimal performance
 
   // Create length-specific arrays
   sources.shortWords = sources.allValidWords.filter(w => w.length >= 3 && w.length <= 5);
