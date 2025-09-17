@@ -4,7 +4,8 @@ import { secureLog } from '../../utils/secureLogger';
 import { 
   singularize, 
   capitalize, 
-  getRandomWord
+  getRandomWord,
+  getRandomWordByLength
 } from './stringUtils';
 import { 
   isLikelyAdjective, 
@@ -164,7 +165,7 @@ export class NameGenerationPatterns {
       const patterns = [
         // Add suffix to create unique word
         () => {
-          const base = getRandomWord([...sources.nouns, ...sources.genreTerms]) || 'echo';
+          const base = getRandomWord([...sources.validNouns, ...sources.validGenreTerms]) || 'echo';
           const suffixes = ['ism', 'ology', 'esque', 'onic', 'atic', 'morphic', 'core', 'wave', 'flux'];
           const suffix = getRandomWord(suffixes);
           return capitalize(base + suffix);
@@ -172,7 +173,7 @@ export class NameGenerationPatterns {
         // Compound single word
         () => {
           const prefixes = ['neo', 'hyper', 'ultra', 'meta', 'proto', 'omni'];
-          const base = getRandomWord([...sources.musicalTerms, ...sources.genreTerms]) || 'wave';
+          const base = getRandomWord([...sources.validMusicalTerms, ...sources.validGenreTerms]) || 'wave';
           const prefix = getRandomWord(prefixes);
           return capitalize(prefix + base);
         },
@@ -194,9 +195,10 @@ export class NameGenerationPatterns {
     
     // 40% chance to use traditional single word selection
     const singleWordSources = [
-      ...sources.nouns.filter(n => n.length >= 5), // Prefer longer words
-      ...sources.musicalTerms,
-      ...sources.genreTerms
+      ...sources.mediumWords.filter(w => sources.validNouns.includes(w)),
+      ...sources.longWords.filter(w => sources.validNouns.includes(w)),
+      ...sources.validMusicalTerms,
+      ...sources.validGenreTerms
     ];
     
     if (singleWordSources.length > 0) {
@@ -218,18 +220,18 @@ export class NameGenerationPatterns {
       // Invented/Compound word patterns
       () => {
         const prefixes = ['neo', 'hyper', 'ultra', 'meta', 'proto', 'omni', 'anti'];
-        const base = getRandomWord([...sources.nouns, ...sources.genreTerms, ...sources.musicalTerms]) || 'wave';
+        const base = getRandomWord([...sources.validNouns, ...sources.validGenreTerms, ...sources.validMusicalTerms]) || 'wave';
         const prefix = getRandomWord(prefixes);
         const suffix = getRandomWord(['core', 'wave', 'flux', 'sphere', 'verse', 'scape']) || 'core';
         return Math.random() > 0.5 
           ? `${capitalize(prefix + base)} ${capitalize(suffix)}`
-          : `${capitalize(base + suffix)} ${capitalize(getRandomWord(sources.nouns) || 'echo')}`;
+          : `${capitalize(base + suffix)} ${capitalize(getRandomWord(sources.validNouns) || 'echo')}`;
       },
       
       // Number/Code + Concept
       () => {
         const numbers = ['Zero', 'Seven', 'Eleven', '404', '808', 'XIII', 'Binary', 'Infinite'];
-        const concepts = [...sources.musicalTerms, ...sources.genreTerms, 'Void', 'Nexus', 'Prism', 'Paradox'];
+        const concepts = [...sources.validMusicalTerms, ...sources.validGenreTerms, 'Void', 'Nexus', 'Prism', 'Paradox'];
         const number = getRandomWord(numbers);
         const concept = getRandomWord(concepts) || 'Echo';
         return `${number} ${capitalize(concept)}`;
@@ -241,7 +243,7 @@ export class NameGenerationPatterns {
         const uniqueNouns = ['Prism', 'Void', 'Nexus', 'Flux', 'Vortex', 'Paradox', 'Enigma', 'Cipher'];
         
         // Try to get rare adjectives from Datamuse
-        const noun = getRandomWord([...uniqueNouns, ...sources.musicalTerms]) || 'prism';
+        const noun = getRandomWord([...uniqueNouns, ...sources.validMusicalTerms]) || 'prism';
         try {
           const adjectives = await this.datamuseService.findAdjectivesForNoun(noun.toLowerCase(), 20);
           if (adjectives && adjectives.length > 0) {
