@@ -11,6 +11,8 @@ import { spotifyService } from "./spotifyService";
 import { lastfmService } from "./lastfmService";
 import { optimizedContextService, OptimizedContext } from "./optimizedContextService";
 import { performanceMonitor } from "./performanceMonitor";
+import { sampleWithoutReplacement, RetryCircuitBreaker } from "./nameGeneration/stringUtils";
+import { createEnhancedWordSource } from "./nameGeneration/enhancedWordSourceUtils";
 import OpenAI from "openai";
 
 // Strategy configuration
@@ -74,6 +76,10 @@ export class UnifiedNameGeneratorService {
   private openai: OpenAI;
   private contextCache = new Map<string, CachedContext>();
   private parsingStats = new Map<string, { uses: number, totalExtracted: number, totalExpected: number }>();
+  
+  // Circuit breakers for retry pattern optimization
+  private generationCircuitBreaker = new RetryCircuitBreaker(5, 1000);
+  private filteringCircuitBreaker = new RetryCircuitBreaker(3, 500);
 
   constructor() {
     this.openai = new OpenAI({ 
@@ -588,57 +594,52 @@ export class UnifiedNameGeneratorService {
         names = await this.generateWithPatterns(context, type, genre, mood, count, wordCount);
       }
       
-      // 3. Apply repetition filtering and ensure we have enough names
+      // 3. Apply repetition filtering and ensure we have enough names - OPTIMIZED
       let filteredNames = this.applyRepetitionFiltering(names, generationId, type);
       
-      // 3a. Generate additional names if filtering reduced count below target
-      let retryCount = 0;
-      const maxRetries = 5; // Increased retries for better coverage
-      
-      while (filteredNames.length < count && retryCount < maxRetries) {
-        const needed = count - filteredNames.length;
-        // Generate more names than needed to account for filtering
-        const generateCount = Math.max(needed * 2, needed + 4);
-        secureLog.info(`Need ${needed} more names after filtering, generating ${generateCount} additional names (attempt ${retryCount + 1})`);
-        
-        let additionalNames: string[];
-        if (strategy.useAI) {
-          additionalNames = await this.generateWithAI(context, type, genre, mood, generateCount, wordCount, strategy);
-        } else {
-          additionalNames = await this.generateWithPatterns(context, type, genre, mood, generateCount, wordCount);
-        }
-        
-        // Filter the additional names and add them to our collection
-        const additionalFiltered = this.applyRepetitionFiltering(additionalNames, generationId, type);
-        filteredNames = [...filteredNames, ...additionalFiltered];
-        retryCount++;
-        
-        // If we still don't have enough after multiple attempts, relax filtering temporarily
-        if (filteredNames.length < count && retryCount >= 3) {
-          secureLog.info(`Still need ${count - filteredNames.length} names after ${retryCount} attempts, generating with relaxed filtering`);
-          const fallbackNames = await this.generateFallbackNames(type, genre, mood, count - filteredNames.length);
-          const fallbackFiltered = fallbackNames
-            .map(item => item.name)
-            .filter(name => !filteredNames.includes(name)); // Just check for direct duplicates
-          filteredNames = [...filteredNames, ...fallbackFiltered.slice(0, count - filteredNames.length)];
-          break;
-        }
-      }
-      
-      // Final safety check - ensure we always have the requested count
+      // OPTIMIZED: Use circuit breaker with intelligent bulk generation instead of retry loops
       if (filteredNames.length < count) {
-        secureLog.warn(`Still short ${count - filteredNames.length} names after all attempts, using basic fallback`);
-        const basicFallback = await this.generateFallbackNames(type, genre, mood, count - filteredNames.length);
-        const basicNames = basicFallback
-          .map(item => item.name)
-          .filter(name => !filteredNames.includes(name));
-        filteredNames = [...filteredNames, ...basicNames.slice(0, count - filteredNames.length)];
+        const needed = count - filteredNames.length;
+        secureLog.info(`Need ${needed} more names after filtering, using optimized bulk generation`);
+        
+        await this.filteringCircuitBreaker.attempt(
+          async () => {
+            // Generate significantly more names upfront to account for filtering
+            const generateCount = Math.max(needed * 3, count * 2);
+            
+            let additionalNames: string[];
+            if (strategy.useAI) {
+              additionalNames = await this.generateWithAI(context, type, genre, mood, generateCount, wordCount, strategy);
+            } else {
+              additionalNames = await this.generateWithPatterns(context, type, genre, mood, generateCount, wordCount);
+            }
+            
+            // Filter and efficiently select the best candidates
+            const additionalFiltered = this.applyRepetitionFiltering(additionalNames, generationId, type);
+            const uniqueNew = additionalFiltered.filter(name => !filteredNames.includes(name));
+            
+            // Use efficient sampling to select the best names
+            const selectedNew = sampleWithoutReplacement(uniqueNew, needed);
+            filteredNames = [...filteredNames, ...selectedNew];
+            
+            if (filteredNames.length < count) {
+              throw new Error(`Still need ${count - filteredNames.length} names after bulk generation`);
+            }
+          },
+          async () => {
+            // Graceful fallback: generate simple fallback names
+            secureLog.info(`Using graceful fallback for remaining ${count - filteredNames.length} names`);
+            const fallbackNames = await this.generateFallbackNames(type, genre, mood, count - filteredNames.length);
+            const fallbackFiltered = fallbackNames
+              .map(item => item.name)
+              .filter(name => !filteredNames.includes(name));
+            filteredNames = [...filteredNames, ...fallbackFiltered.slice(0, count - filteredNames.length)];
+          }
+        );
       }
       
-      // Log final result after additional generation attempts
-      if (retryCount > 0) {
-        secureLog.info(`Generated ${filteredNames.length}/${count} names after ${retryCount} additional attempts`);
-      }
+      // Log final result  
+      secureLog.info(`Generated ${filteredNames.length}/${count} names using optimized approach`);
       
       // 4. Apply quality scoring and select best names
       const scoredNames = filteredNames.map((name: string) => ({
@@ -914,8 +915,8 @@ export class UnifiedNameGeneratorService {
     const wordSourceBuilder = new WordSourceBuilder(datamuseService, spotifyService);
     const namePatterns = new NameGenerationPatterns(datamuseService);
     
-    // Build word sources from context to match EnhancedWordSource interface
-    const wordSources = {
+    // Build word sources from context and convert to proper EnhancedWordSource
+    const basicWordSource = {
       adjectives: [...context.genreKeywords, ...context.moodWords].slice(0, 10),
       nouns: [...context.genreTags, ...context.audioCharacteristics].slice(0, 10),
       verbs: ['play', 'sing', 'dance', 'rock', 'groove'].slice(0, 5),
@@ -928,43 +929,75 @@ export class UnifiedNameGeneratorService {
       conceptNetWords: context.wordAssociations.slice(0, 3)
     };
     
-    const names: string[] = [];
-    const normalizedWordCount = typeof wordCount === 'string' && wordCount === "4+" ? 4 : (typeof wordCount === 'number' ? wordCount : 2);
-    let attempts = 0;
-    const maxAttempts = count * 10;
+    // Convert to proper EnhancedWordSource with all required filtered properties
+    const wordSources = createEnhancedWordSource(basicWordSource);
     
-    while (names.length < count && attempts < maxAttempts) {
-      attempts++;
-      
-      try {
-        const result = await namePatterns.generateContextualNameWithCount(
-          type,
-          normalizedWordCount,
-          wordSources,
-          mood || undefined,
-          genre || undefined
-        );
+    const normalizedWordCount = typeof wordCount === 'string' && wordCount === "4+" ? 4 : (typeof wordCount === 'number' ? wordCount : 2);
+    
+    // OPTIMIZED: Use circuit breaker with bulk generation instead of retry loops
+    let names: string[] = [];
+    
+    await this.generationCircuitBreaker.attempt(
+      async () => {
+        // Generate more names than needed upfront to ensure we get enough unique ones
+        const generateCount = Math.max(count * 3, count + 10);
+        const candidates: string[] = [];
         
-        if (result && result.name) {
-          if (!names.includes(result.name)) {
-            names.push(result.name);
+        // Batch generate names to avoid retry loops
+        for (let i = 0; i < generateCount; i++) {
+          try {
+            const result = await namePatterns.generateContextualNameWithCount(
+              type,
+              normalizedWordCount,
+              wordSources,
+              mood || undefined,
+              genre || undefined
+            );
+            
+            if (result && result.name && !candidates.includes(result.name)) {
+              candidates.push(result.name);
+            }
+          } catch (error) {
+            secureLog.debug('Pattern generation error:', error);
+            // Continue with other generations instead of failing entirely
           }
         }
-      } catch (error) {
-        secureLog.debug('Pattern generation error:', error);
+        
+        // Use efficient sampling to select the needed count
+        names = sampleWithoutReplacement(candidates, count);
+        
+        if (names.length < count) {
+          throw new Error(`Generated ${names.length}/${count} names, need fallback`);
+        }
+      },
+      async () => {
+        // Graceful fallback: ensure we have the requested count
+        secureLog.info(`Using fallback names for remaining ${count - names.length} names`);
+        
+        const fallbackNames = [
+          'Electric Dreams', 'Midnight Echo', 'Golden Hour', 'Neon Lights',
+          'Silver Storm', 'Crystal Vision', 'Velvet Thunder', 'Rainbow Fire',
+          'Azure Wave', 'Diamond Dust', 'Cosmic Dance', 'Starlight Symphony'
+        ];
+        
+        const needed = count - names.length;
+        const fallbackSelected = sampleWithoutReplacement(
+          fallbackNames.filter(name => !names.includes(name)), 
+          needed
+        );
+        
+        // Fill any remaining slots with unique variations
+        while (names.length + fallbackSelected.length < count) {
+          const base = fallbackNames[Math.floor(Math.random() * fallbackNames.length)];
+          const variation = `${base} ${Math.random().toString(36).substr(2, 3)}`;
+          if (!names.includes(variation) && !fallbackSelected.includes(variation)) {
+            fallbackSelected.push(variation);
+          }
+        }
+        
+        names = [...names, ...fallbackSelected.slice(0, needed)];
       }
-    }
-    
-    // Fill remaining slots with fallback names if needed
-    while (names.length < count) {
-      const fallbackNames = ['Electric Dreams', 'Midnight Echo', 'Golden Hour', 'Neon Lights'];
-      const fallback = fallbackNames[names.length % fallbackNames.length];
-      if (!names.includes(fallback)) {
-        names.push(fallback);
-      } else {
-        names.push(`${fallback} ${names.length + 1}`);
-      }
-    }
+    );
     
     return names;
   }
