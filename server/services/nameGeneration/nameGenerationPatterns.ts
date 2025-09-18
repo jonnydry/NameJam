@@ -14,6 +14,17 @@ import {
 } from './generationHelpers';
 import { generateSmartBandName, generateSmartSongName } from './smartNamePatterns';
 import { poeticFlowPatterns } from './poeticFlowPatterns';
+import { 
+  advancedPatternLibrary, 
+  PatternContext, 
+  PatternDefinition 
+} from './advancedPatternLibrary';
+import { 
+  patternSelectionEngine, 
+  PatternSelectionCriteria 
+} from './patternSelectionEngine';
+import { contextualPatternBuilder } from './contextualPatternBuilder';
+import { creativePatternCategories } from './creativePatternCategories';
 
 export class NameGenerationPatterns {
   constructor(private datamuseService: DatamuseService) {}
@@ -84,7 +95,69 @@ export class NameGenerationPatterns {
   ): Promise<{ name: string; actualWordCount: number }> {
     let name = '';
     
-    // Use smart patterns 50% of the time for better quality
+    // Create pattern selection criteria
+    const criteria: PatternSelectionCriteria = {
+      wordCount,
+      genre,
+      mood,
+      type: type as 'band' | 'song',
+      creativityLevel: 'balanced',
+      targetAudience: 'mainstream'
+    };
+
+    const context: PatternContext = {
+      genre,
+      mood,
+      type: type as 'band' | 'song',
+      wordCount
+    };
+
+    // Try advanced pattern system first (70% of the time for better variety)
+    if (Math.random() < 0.7) {
+      const selectedPattern = patternSelectionEngine.selectPattern(criteria, sources);
+      if (selectedPattern) {
+        name = advancedPatternLibrary.generateFromPattern(selectedPattern, sources, context);
+        const actualWordCount = name.split(' ').filter(w => w.length > 0).length;
+        
+        // If word count matches request, return it
+        if (wordCount >= 4 ? (actualWordCount >= 4 && actualWordCount <= 10) : actualWordCount === wordCount) {
+          secureLog.debug(`Generated using advanced pattern: ${selectedPattern.id} -> "${name}"`);
+          return { name, actualWordCount };
+        }
+      }
+    }
+    
+    // Try creative pattern categories (20% of the time)
+    if (Math.random() < 0.2) {
+      const creativeCategories = ['metaphorical', 'narrative', 'sensory', 'temporal', 'spatial'] as const;
+      const category = getRandomWord(creativeCategories);
+      if (category) {
+        const creativeName = creativePatternCategories.generateCreativePattern(category, sources, context);
+        if (creativeName) {
+          const actualWordCount = creativeName.split(' ').filter(w => w.length > 0).length;
+          if (wordCount >= 4 ? (actualWordCount >= 4 && actualWordCount <= 10) : actualWordCount === wordCount) {
+            secureLog.debug(`Generated using creative pattern (${category}): "${creativeName}"`);
+            return { name: creativeName, actualWordCount };
+          }
+        }
+      }
+    }
+
+    // Try contextual pattern builder for dynamic patterns (15% of the time)
+    if (Math.random() < 0.15) {
+      const dynamicPattern = contextualPatternBuilder.buildContextualPattern(criteria, sources, context);
+      if (dynamicPattern) {
+        name = advancedPatternLibrary.generateFromPattern(dynamicPattern, sources, context);
+        const actualWordCount = name.split(' ').filter(w => w.length > 0).length;
+        
+        if (wordCount >= 4 ? (actualWordCount >= 4 && actualWordCount <= 10) : actualWordCount === wordCount) {
+          secureLog.debug(`Generated using dynamic pattern: ${dynamicPattern.id} -> "${name}"`);
+          return { name, actualWordCount };
+        }
+      }
+    }
+    
+    // Fallback to smart patterns (enhanced original logic)
     if (Math.random() < 0.5) {
       if (type === 'band') {
         name = generateSmartBandName(sources, genre);
@@ -99,7 +172,7 @@ export class NameGenerationPatterns {
       }
     }
     
-    // Otherwise use original pattern-based generation
+    // Final fallback to original pattern-based generation
     switch (wordCount) {
       case 1:
         name = this.generateSingleContextualWord(sources);
