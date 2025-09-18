@@ -19,6 +19,7 @@ import type {
 import { phoneticSemanticAnalyzer } from './phoneticSemanticAnalyzer';
 import { semanticAnalyzer } from './semanticAnalyzer';
 import { phoneticFlowAnalyzer } from '../nameGeneration/phoneticFlowAnalyzer';
+import { musicalityScoring, type MusicalityRequest } from './musicalityScoring';
 import { TextAnalyzer, CreativityAnalyzer, ScoringUtils, PerformanceTracker } from './utils';
 import { DEFAULT_NAME_WEIGHTS, GENRE_ADJUSTMENTS } from './config';
 import { secureLog } from '../../utils/secureLogger';
@@ -28,26 +29,33 @@ export class EnhancedNameScoringEngine {
   private cache: CacheService<EnhancedNameQualityResult>;
   private algorithmVersion = '2.0.0';
   
-  // Enhanced weighting configurations
+  // Enhanced weighting configurations (normalized to sum to 1.0)
   private readonly enhancedWeights: EnhancedScoringWeights = {
-    // Traditional dimensions (reduced weights to make room for new dimensions)
-    creativity: 0.15,
-    appropriateness: 0.12,
-    quality: 0.12,
-    memorability: 0.11,
-    uniqueness: 0.10,
-    structure: 0.05,
+    // Traditional dimensions (normalized proportionally)
+    creativity: 0.091,         // 0.12 / 1.32
+    appropriateness: 0.076,    // 0.10 / 1.32
+    quality: 0.076,           // 0.10 / 1.32
+    memorability: 0.068,      // 0.09 / 1.32
+    uniqueness: 0.061,        // 0.08 / 1.32
+    structure: 0.030,         // 0.04 / 1.32
     
     // New phonetic dimensions
-    phoneticFlow: 0.12,
+    phoneticFlow: 0.076,      // 0.10 / 1.32
     
     // New semantic dimensions
-    semanticCoherence: 0.10,
-    emotionalResonance: 0.08,
-    culturalAppeal: 0.08,
+    semanticCoherence: 0.061, // 0.08 / 1.32
+    emotionalResonance: 0.045, // 0.06 / 1.32
+    culturalAppeal: 0.045,    // 0.06 / 1.32
+    
+    // New musicality dimensions
+    rhymeQuality: 0.091,      // 0.12 / 1.32
+    rhythmQuality: 0.083,     // 0.11 / 1.32
+    musicalCoherence: 0.061,  // 0.08 / 1.32
+    vocalDeliverability: 0.053, // 0.07 / 1.32
+    musicalSynergy: 0.038,    // 0.05 / 1.32
     
     // Cross-dimensional synergy
-    crossDimensionalSynergy: 0.07
+    crossDimensionalSynergy: 0.045  // 0.06 / 1.32
   };
   
   // Advanced configuration
@@ -119,10 +127,22 @@ export class EnhancedNameScoringEngine {
         culturalContext: request.culturalContext
       });
       
+      // Perform musicality analysis
+      const musicalityAnalysis = await musicalityScoring.analyzeMusicalName({
+        name: request.name,
+        type: request.type,
+        genre: request.genre,
+        mood: request.mood,
+        targetAudience: request.targetAudience,
+        culturalContext: request.culturalContext,
+        analysisDepth: request.analysisDepth || 'standard'
+      });
+      
       // Calculate enhanced score breakdown
       const breakdown = await this.calculateEnhancedScoreBreakdown(
         request, 
-        phoneticSemanticAnalysis
+        phoneticSemanticAnalysis,
+        musicalityAnalysis
       );
       
       // Get contextual weights
@@ -202,7 +222,8 @@ export class EnhancedNameScoringEngine {
    */
   private async calculateEnhancedScoreBreakdown(
     request: EnhancedNameScoringRequest,
-    phoneticSemanticAnalysis: any
+    phoneticSemanticAnalysis: any,
+    musicalityAnalysis: any
   ): Promise<EnhancedScoreBreakdown> {
     // Extract scores from phonetic-semantic analysis
     const phoneticScore = phoneticSemanticAnalysis.phoneticAnalysis;
@@ -226,10 +247,19 @@ export class EnhancedNameScoringEngine {
     const culturalAppeal = semanticScore.culturalAppeal / 100;
     const imageAssociation = semanticScore.imagery / 100;
     
+    // Musicality dimensions
+    const musicalScore = musicalityAnalysis.score;
+    const rhymeQuality = musicalScore.breakdown.rhymeQuality / 100;
+    const rhythmQuality = musicalScore.breakdown.rhythmQuality / 100;
+    const musicalCoherence = musicalScore.breakdown.musicalCoherence / 100;
+    const vocalDeliverability = musicalScore.breakdown.vocalDeliverability / 100;
+    const musicCatchiness = musicalScore.breakdown.catchiness / 100;
+    
     // Cross-dimensional synergy
     const phoneticSemanticAlignment = synergyScore.phoneticSemanticAlignment / 100;
     const genreOptimization = synergyScore.genreOptimization / 100;
     const marketAppeal = phoneticSemanticAnalysis.combinedMetrics.marketAppealIndex / 100;
+    const musicalSynergy = musicalScore.synergy.reinforcement / 100;
     
     return {
       // Traditional dimensions
@@ -251,10 +281,18 @@ export class EnhancedNameScoringEngine {
       culturalAppeal,
       imageAssociation,
       
+      // New musicality dimensions
+      rhymeQuality,
+      rhythmQuality,
+      musicalCoherence,
+      vocalDeliverability,
+      catchiness: musicCatchiness,
+      
       // Cross-dimensional synergy
       phoneticSemanticAlignment,
       genreOptimization,
-      marketAppeal
+      marketAppeal,
+      musicalSynergy
     };
   }
   
@@ -479,18 +517,32 @@ export class EnhancedNameScoringEngine {
     weights: EnhancedScoringWeights,
     qualityVector: QualityVector
   ): number {
-    // Calculate weighted score
+    // Calculate weighted score with ALL enhanced dimensions
     let score = 
+      // Traditional dimensions
       breakdown.creativity * weights.creativity +
       breakdown.appropriateness * weights.appropriateness +
       breakdown.quality * weights.quality +
       breakdown.memorability * weights.memorability +
       breakdown.uniqueness * weights.uniqueness +
       breakdown.structure * weights.structure +
+      
+      // Phonetic dimensions  
       breakdown.phoneticFlow * weights.phoneticFlow +
+      
+      // Semantic dimensions
       breakdown.semanticCoherence * weights.semanticCoherence +
       breakdown.emotionalResonance * weights.emotionalResonance +
       breakdown.culturalAppeal * weights.culturalAppeal +
+      
+      // Musicality dimensions (PREVIOUSLY MISSING!)
+      breakdown.rhymeQuality * weights.rhymeQuality +
+      breakdown.rhythmQuality * weights.rhythmQuality +
+      breakdown.musicalCoherence * weights.musicalCoherence +
+      breakdown.vocalDeliverability * weights.vocalDeliverability +
+      breakdown.musicalSynergy * weights.musicalSynergy +
+      
+      // Cross-dimensional synergy
       breakdown.phoneticSemanticAlignment * weights.crossDimensionalSynergy;
     
     // Apply quality vector bonuses

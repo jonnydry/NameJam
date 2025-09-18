@@ -41,10 +41,18 @@ export interface EnhancedScoreBreakdown extends BaseScoreBreakdown {
   culturalAppeal: number;      // Cultural relevance and appeal
   imageAssociation: number;    // Vivid imagery and visual associations
   
+  // New musicality dimensions (0-1)
+  rhymeQuality: number;        // Quality of rhyming patterns
+  rhythmQuality: number;       // Quality of rhythmic patterns
+  musicalCoherence: number;    // How well rhyme and rhythm work together
+  vocalDeliverability: number; // How well it can be sung/performed
+  catchiness: number;          // Musical catchiness and appeal
+  
   // Cross-dimensional synergy (0-1)
   phoneticSemanticAlignment: number; // How well sound matches meaning
   genreOptimization: number;         // Optimization for specific genre
   marketAppeal: number;              // Commercial/audience appeal
+  musicalSynergy: number;           // Overall musical synergy score
 }
 
 export interface EnhancedScoreMetadata extends BaseScoreMetadata {
@@ -169,6 +177,13 @@ export interface EnhancedScoringWeights extends BaseScoringWeights {
   emotionalResonance: number;
   culturalAppeal: number;
   crossDimensionalSynergy: number;
+  
+  // Musicality weights
+  rhymeQuality: number;
+  rhythmQuality: number;
+  musicalCoherence: number;
+  vocalDeliverability: number;
+  musicalSynergy: number;
 }
 
 // Advanced configuration
