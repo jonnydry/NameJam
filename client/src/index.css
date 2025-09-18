@@ -465,28 +465,30 @@
   
   /* Main SVG with advanced lighting */
   .fermata-svg {
+    transform-origin: center center;
     transform: translateZ(0) scale(var(--proximity-scale));
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     filter: 
       drop-shadow(0 0 20px rgba(255, 179, 71, calc(0.3 * var(--warmth-factor))))
       drop-shadow(0 4px 16px rgba(0, 0, 0, 0.2))
       drop-shadow(0 0 40px rgba(0, 184, 255, calc(0.15 * var(--brightness-factor))));
-    animation: fermata-breathe 6s ease-in-out infinite;
+    animation: fermata-breathe 4s ease-in-out infinite;
   }
   
-  /* Breathing animation - subtle floating effect */
+  /* Breathing animation - enhanced floating effect */
   @keyframes fermata-breathe {
     0%, 100% {
-      transform: translateY(0) translateZ(0) scale(var(--proximity-scale));
+      transform: translateY(0) scale(1);
     }
     50% {
-      transform: translateY(-2px) translateZ(10px) scale(calc(var(--proximity-scale) * 1.02));
+      transform: translateY(-4px) scale(1.03);
     }
   }
   
   /* Warm light fluctuation - like real incandescent bulb */
   .fermata-outer-glow {
-    animation: light-fluctuation 8s ease-in-out infinite;
+    transform-origin: center center;
+    animation: light-fluctuation 5s ease-in-out infinite;
   }
   
   @keyframes light-fluctuation {
@@ -495,26 +497,27 @@
       transform: scale(1);
     }
     20% {
-      opacity: 0.65;
-      transform: scale(1.02);
+      opacity: 0.75;
+      transform: scale(1.05);
     }
     40% {
-      opacity: 0.55;
-      transform: scale(0.98);
+      opacity: 0.5;
+      transform: scale(0.95);
     }
     60% {
-      opacity: 0.62;
-      transform: scale(1.01);
+      opacity: 0.7;
+      transform: scale(1.03);
     }
     80% {
-      opacity: 0.58;
-      transform: scale(0.99);
+      opacity: 0.55;
+      transform: scale(0.97);
     }
   }
   
   /* Caustic light animation */
   .fermata-caustic {
-    animation: caustic-shift 12s linear infinite;
+    transform-origin: center center;
+    animation: caustic-shift 8s linear infinite;
   }
   
   @keyframes caustic-shift {
@@ -523,12 +526,12 @@
       opacity: 0.4;
     }
     33% {
-      transform: rotate(120deg) scale(1.1);
-      opacity: 0.35;
+      transform: rotate(120deg) scale(1.15);
+      opacity: 0.3;
     }
     66% {
-      transform: rotate(240deg) scale(0.95);
-      opacity: 0.45;
+      transform: rotate(240deg) scale(0.9);
+      opacity: 0.5;
     }
     100% {
       transform: rotate(360deg) scale(1);
@@ -554,39 +557,130 @@
   
   /* Glass shimmer effect */
   .fermata-highlight-primary {
-    animation: glass-shimmer 10s ease-in-out infinite;
+    transform-origin: center center;
+    animation: glass-shimmer 6s ease-in-out infinite;
   }
   
   .fermata-highlight-secondary {
-    animation: glass-shimmer 10s ease-in-out infinite 0.5s;
+    transform-origin: center center;
+    animation: glass-shimmer 6s ease-in-out infinite 0.5s;
   }
   
   .fermata-shimmer {
-    animation: glass-shimmer 10s ease-in-out infinite 1s;
+    transform-origin: center center;
+    animation: glass-shimmer 6s ease-in-out infinite 1s;
+  }
+  
+  /* Apply shimmer to glass base as well */
+  .fermata-glass-base {
+    transform-origin: center center;
+    animation: glass-subtle-breathe 8s ease-in-out infinite;
+  }
+  
+  /* Animate the inner glow layer */
+  .fermata-inner-glow {
+    transform-origin: center center;
+    animation: inner-glow-pulse 4s ease-in-out infinite;
+  }
+  
+  /* Animate the bulb group */
+  .fermata-bulb-group {
+    transform-origin: center center;
+    animation: bulb-subtle-sway 10s ease-in-out infinite;
+  }
+  
+  /* Animate texture layer */
+  .fermata-texture {
+    animation: texture-shimmer 15s linear infinite;
   }
   
   @keyframes glass-shimmer {
     0%, 100% {
       opacity: 0.25;
-      transform: translateX(0) translateY(0);
+      transform: translateX(0) translateY(0) scale(1);
     }
     25% {
-      opacity: 0.3;
-      transform: translateX(2px) translateY(-1px);
+      opacity: 0.35;
+      transform: translateX(3px) translateY(-2px) scale(1.05);
     }
     50% {
       opacity: 0.2;
-      transform: translateX(-1px) translateY(2px);
+      transform: translateX(-2px) translateY(3px) scale(0.95);
     }
     75% {
+      opacity: 0.4;
+      transform: translateX(2px) translateY(-3px) scale(1.02);
+    }
+  }
+  
+  /* Subtle breathing for glass */
+  @keyframes glass-subtle-breathe {
+    0%, 100% {
+      opacity: 0.9;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.95;
+      transform: scale(1.02);
+    }
+  }
+  
+  /* Inner glow pulse */
+  @keyframes inner-glow-pulse {
+    0%, 100% {
+      opacity: 0.15;
+      transform: scale(1);
+    }
+    25% {
+      opacity: 0.2;
+      transform: scale(1.03);
+    }
+    50% {
+      opacity: 0.25;
+      transform: scale(1.05);
+    }
+    75% {
+      opacity: 0.18;
+      transform: scale(1.02);
+    }
+  }
+  
+  /* Bulb sway animation */
+  @keyframes bulb-subtle-sway {
+    0%, 100% {
+      transform: rotate(0deg) scale(1);
+    }
+    25% {
+      transform: rotate(0.5deg) scale(1.01);
+    }
+    50% {
+      transform: rotate(-0.5deg) scale(1.02);
+    }
+    75% {
+      transform: rotate(0.3deg) scale(1.01);
+    }
+  }
+  
+  /* Texture shimmer */
+  @keyframes texture-shimmer {
+    0% {
+      opacity: 0.3;
+      transform: translateX(0) translateY(0);
+    }
+    50% {
       opacity: 0.35;
-      transform: translateX(1px) translateY(-2px);
+      transform: translateX(1px) translateY(-1px);
+    }
+    100% {
+      opacity: 0.3;
+      transform: translateX(0) translateY(0);
     }
   }
   
   /* Edge reflection animation */
   .fermata-edge-reflection {
-    animation: edge-glint 8s linear infinite;
+    transform-origin: center center;
+    animation: edge-glint 6s linear infinite;
   }
   
   @keyframes edge-glint {
@@ -606,11 +700,30 @@
   
   /* Filament glow animation */
   .fermata-filament-wire {
+    transform-origin: center center;
     animation: filament-glow 3s ease-in-out infinite;
   }
   
   .fermata-filament-support {
+    transform-origin: center center;
     animation: filament-heat 5s ease-in-out infinite;
+  }
+  
+  /* Apply animation to entire filament group */
+  .fermata-filament {
+    transform-origin: center center;
+    animation: filament-subtle-pulse 6s ease-in-out infinite;
+  }
+  
+  @keyframes filament-subtle-pulse {
+    0%, 100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.02);
+    }
   }
   
   @keyframes filament-glow {
@@ -637,7 +750,26 @@
   
   /* Metal base shimmer */
   .fermata-metal-reflection {
-    animation: metal-shimmer 15s linear infinite;
+    transform-origin: center center;
+    animation: metal-shimmer 12s linear infinite;
+  }
+  
+  /* Animate base group */
+  .fermata-base-group {
+    transform-origin: center bottom;
+    animation: base-subtle-rock 8s ease-in-out infinite;
+  }
+  
+  /* Animate reflections group */
+  .fermata-reflections {
+    transform-origin: center center;
+    animation: reflections-dance 7s ease-in-out infinite;
+  }
+  
+  /* Animate symbol group */
+  .fermata-symbol-group {
+    transform-origin: center center;
+    animation: symbol-subtle-breathe 6s ease-in-out infinite;
   }
   
   @keyframes metal-shimmer {
@@ -645,7 +777,46 @@
       fill-opacity: 0.1;
     }
     50% {
-      fill-opacity: 0.2;
+      fill-opacity: 0.25;
+    }
+  }
+  
+  /* Base rock animation */
+  @keyframes base-subtle-rock {
+    0%, 100% {
+      transform: rotate(0deg) scale(1);
+    }
+    25% {
+      transform: rotate(-0.2deg) scale(1.01);
+    }
+    75% {
+      transform: rotate(0.2deg) scale(0.99);
+    }
+  }
+  
+  /* Reflections dance */
+  @keyframes reflections-dance {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+    33% {
+      opacity: 0.9;
+      transform: scale(1.02) rotate(1deg);
+    }
+    66% {
+      opacity: 0.95;
+      transform: scale(0.98) rotate(-1deg);
+    }
+  }
+  
+  /* Symbol breathe */
+  @keyframes symbol-subtle-breathe {
+    0%, 100% {
+      transform: scale(1) translateY(0);
+    }
+    50% {
+      transform: scale(1.03) translateY(-2px);
     }
   }
   
@@ -667,52 +838,72 @@
     }
   }
   
-  /* Fermata symbol animations */
+  /* Fermata symbol animations - enhanced visibility */
   .fermata-question-main {
-    animation: symbol-float 8s ease-in-out infinite;
+    transform-origin: center center;
+    animation: symbol-float 5s ease-in-out infinite;
   }
   
   .fermata-arc-main {
-    animation: symbol-float 8s ease-in-out infinite 0.2s;
+    transform-origin: center center;
+    animation: symbol-float 5s ease-in-out infinite 0.3s;
   }
   
   @keyframes symbol-float {
     0%, 100% {
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
     50% {
-      transform: translateY(-1px);
+      transform: translateY(-3px) scale(1.05);
     }
   }
   
-  /* Enhanced dot pulsing */
+  /* Enhanced dot pulsing - using transform instead of r attribute */
   .fermata-dot-core {
+    transform-origin: center center;
     animation: dot-pulse 2s ease-in-out infinite;
   }
   
   .fermata-dot-glow {
+    transform-origin: center center;
     animation: dot-glow-pulse 2s ease-in-out infinite;
+  }
+  
+  .fermata-dot-highlight {
+    transform-origin: center center;
+    animation: dot-highlight-pulse 2s ease-in-out infinite 0.3s;
   }
   
   @keyframes dot-pulse {
     0%, 100% {
-      r: 1.8;
+      transform: scale(1);
       fill-opacity: 1;
     }
     50% {
-      r: 2;
-      fill-opacity: 0.9;
+      transform: scale(1.3);
+      fill-opacity: 0.8;
     }
   }
   
   @keyframes dot-glow-pulse {
     0%, 100% {
-      r: 3;
+      transform: scale(1);
       opacity: 0.2;
     }
     50% {
-      r: 4;
-      opacity: 0.4;
+      transform: scale(1.5);
+      opacity: 0.5;
+    }
+  }
+  
+  @keyframes dot-highlight-pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.4);
+      opacity: 0.3;
     }
   }
   
@@ -723,7 +914,8 @@
   }
   
   .fermata-advanced:hover .fermata-svg {
-    animation-play-state: paused;
+    /* Keep animations running on hover */
+    animation-duration: 3s; /* Speed up slightly on hover */
     transform: translateY(-3px) translateZ(20px) scale(1.05);
     filter: 
       drop-shadow(0 0 30px rgba(255, 179, 71, 0.5))
@@ -732,12 +924,14 @@
   }
   
   .fermata-advanced:hover .fermata-outer-glow {
-    animation-play-state: paused;
+    /* Keep animations running on hover */
+    animation-duration: 4s; /* Speed up slightly on hover */
     opacity: 0.8;
   }
   
   .fermata-advanced:hover .fermata-caustic {
-    animation-play-state: paused;
+    /* Keep animations running on hover */
+    animation-duration: 6s; /* Speed up slightly on hover */
     opacity: 0.6;
   }
   
@@ -1039,7 +1233,8 @@
   
   .lightbulb-container:hover::before {
     opacity: 0.25;
-    animation-play-state: paused;
+    /* Keep animations running on hover */
+    animation-duration: 6s; /* Speed up slightly on hover */
     transform: translateZ(-5px) scale(1.15);
   }
   
