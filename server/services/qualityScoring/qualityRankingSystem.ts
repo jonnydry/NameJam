@@ -11,7 +11,11 @@ import type {
   EnhancedNameScoringRequest
 } from './enhancedInterfaces';
 
+import type { UserFeedback } from '@shared/schema';
 import { enhancedNameScoringEngine } from './enhancedNameScoringEngine';
+import { comparativeRankingEngine } from './comparativeRankingEngine';
+import { qualityThresholdManager } from './qualityThresholdManager';
+import { rankingIntelligence } from './rankingIntelligence';
 import { secureLog } from '../../utils/secureLogger';
 import { CacheService } from '../cacheService';
 
@@ -206,7 +210,7 @@ export class QualityRankingSystem {
   }
   
   /**
-   * Rank names with comprehensive quality analysis
+   * Rank names with comprehensive quality analysis using intelligent ranking system
    */
   async rankNames(request: QualityRankingRequest): Promise<QualityRankingResult> {
     const cacheKey = this.generateCacheKey(request);
@@ -221,56 +225,41 @@ export class QualityRankingSystem {
     secureLog.info(`Ranking ${request.names.length} names with mode: ${request.rankingMode}`);
     
     try {
-      // Score all names
+      // Score all names using enhanced scoring engine
       const scoredNames = await this.scoreAllNames(request.names, request.context);
       
-      // Apply quality threshold filtering
-      const threshold = this.getEffectiveThreshold(request, scoredNames);
-      const passingNames = this.applyQualityThreshold(scoredNames, threshold);
+      // Apply intelligent quality threshold filtering
+      const thresholdConfig = this.buildThresholdConfig(request);
+      const qualityGateResult = await qualityThresholdManager.applyQualityGate(scoredNames, thresholdConfig);
       
-      // Rank names based on mode
-      const rankedNames = this.rankByMode(passingNames, request.rankingMode, request.context);
+      // Use comparative ranking engine for intelligent ranking
+      // Extract just the name strings from qualified results
+      const qualifiedNameStrings = qualityGateResult.qualifiedNames.map(result => result.name);
+      const comparativeRequest = this.buildComparativeRankingRequest(qualifiedNameStrings, request);
+      const comparativeResult = await comparativeRankingEngine.rankNamesComparatively(comparativeRequest);
       
-      // Apply diversity optimization if requested
-      const diversifiedNames = request.diversityTarget 
-        ? this.optimizeForDiversity(rankedNames, request.diversityTarget)
-        : rankedNames;
-      
-      // Limit results if specified
-      const finalResults = request.maxResults 
-        ? diversifiedNames.slice(0, request.maxResults)
-        : diversifiedNames;
-      
-      // Generate analytics
-      const analytics = this.generateRankingAnalytics(scoredNames, finalResults);
-      
-      // Generate quality distribution
-      const qualityDistribution = this.generateQualityDistribution(scoredNames, threshold);
-      
-      // Generate recommendations
-      const recommendations = this.generateRankingRecommendations(
-        finalResults, 
-        analytics, 
-        request
-      );
-      
-      // Generate adaptive feedback if enabled
-      const adaptiveFeedback = request.adaptiveLearning 
-        ? this.generateAdaptiveFeedback(finalResults, analytics, request)
-        : undefined;
-      
-      const result: QualityRankingResult = {
-        rankedNames: finalResults,
-        analytics,
-        qualityDistribution,
-        recommendations,
-        adaptiveFeedback
-      };
-      
-      // Cache the result
-      this.cache.set(cacheKey, result);
-      
-      return result;
+      // Apply ranking intelligence for adaptive learning and personalization
+      if (request.adaptiveLearning) {
+        const intelligenceRequest = this.buildRankingIntelligenceRequest(qualityGateResult.qualifiedNames, request);
+        const intelligenceResult = await rankingIntelligence.applyIntelligentRanking(intelligenceRequest);
+        
+        // Merge intelligence insights with comparative results
+        const enhancedResult = this.mergeIntelligenceResults(comparativeResult, intelligenceResult);
+        
+        // Convert to legacy format for compatibility
+        const legacyResult = this.convertToLegacyFormat(enhancedResult, qualityGateResult, scoredNames, request);
+        
+        // Cache and return
+        this.cache.set(cacheKey, legacyResult);
+        return legacyResult;
+      } else {
+        // Use standard comparative ranking without adaptive learning
+        const legacyResult = this.convertComparativeToLegacyFormat(comparativeResult, qualityGateResult, scoredNames, request);
+        
+        // Cache and return
+        this.cache.set(cacheKey, legacyResult);
+        return legacyResult;
+      }
       
     } catch (error) {
       secureLog.error('Quality ranking failed:', error);
@@ -298,6 +287,406 @@ export class QualityRankingSystem {
     );
     
     return Promise.all(scoringPromises);
+  }
+  
+  /**
+   * Build threshold configuration for quality gate filtering
+   */
+  private buildThresholdConfig(request: QualityRankingRequest): any {
+    return {
+      mode: request.qualityThreshold ? 'custom' : 'adaptive',
+      context: {
+        genre: request.context?.genre,
+        mood: request.context?.mood,
+        type: request.context?.type || 'band',
+        targetAudience: request.context?.targetAudience,
+        qualityPriority: this.mapRankingModeToQualityPriority(request.rankingMode)
+      },
+      requirements: {
+        minimumOverallScore: request.qualityThreshold || this.getBaseThresholdForMode(request.rankingMode),
+        dimensionalMinimums: this.getDimensionalMinimumsForMode(request.rankingMode),
+        balanceRequirement: 0.4,
+        consistencyRequirement: 0.3
+      },
+      adaptiveSettings: {
+        enabled: request.adaptiveLearning || false,
+        learningRate: this.adaptiveConfig.learningRate,
+        feedbackWeight: this.adaptiveConfig.feedbackWeight,
+        adaptationThreshold: 0.1,
+        maxAdjustment: this.adaptiveConfig.maxAdjustment
+      },
+      emergencyFallback: {
+        enabled: true,
+        fallbackThreshold: 0.3,
+        minimumResults: Math.max(1, Math.floor(request.maxResults || 10) / 2),
+        escalationSteps: [
+          {
+            condition: 'insufficient_results',
+            action: 'lower_threshold',
+            parameters: {},
+            thresholdAdjustment: -0.1
+          }
+        ],
+        qualityWarnings: true
+      }
+    };
+  }
+  
+  /**
+   * Build comparative ranking request
+   */
+  private buildComparativeRankingRequest(names: any[], request: QualityRankingRequest): any {
+    return {
+      names,
+      context: {
+        genre: request.context?.genre,
+        mood: request.context?.mood,
+        type: request.context?.type || 'band',
+        targetAudience: request.context?.targetAudience,
+        useCase: this.mapRankingModeToUseCase(request.rankingMode)
+      },
+      rankingOptions: {
+        mode: this.mapRankingModeToComparativeMode(request.rankingMode),
+        priorityDimensions: this.getPriorityDimensionsForMode(request.rankingMode),
+        diversityWeight: request.diversityTarget || 0.2,
+        explanationLevel: 'standard',
+        includeCompetitiveAnalysis: true,
+        maxResults: request.maxResults
+      }
+    };
+  }
+  
+  /**
+   * Build ranking intelligence request
+   */
+  private buildRankingIntelligenceRequest(names: any[], request: QualityRankingRequest): any {
+    return {
+      names,
+      context: {
+        genre: request.context?.genre,
+        mood: request.context?.mood,
+        type: request.context?.type || 'band',
+        targetAudience: request.context?.targetAudience,
+        useCase: this.mapRankingModeToUseCase(request.rankingMode)
+      },
+      preferences: {
+        // Would come from user preferences in a real implementation
+        creativityWeight: 5,
+        availabilityWeight: 5,
+        uniquenessWeight: 5,
+        qualityThreshold: 'moderate'
+      },
+      learningConfig: {
+        enabled: request.adaptiveLearning || false,
+        personalizedLearning: true,
+        aggregateLearning: true,
+        learningSpeed: 'moderate',
+        adaptationScope: 'user',
+        feedbackWeight: this.adaptiveConfig.feedbackWeight,
+        temporalDecay: this.adaptiveConfig.decayFactor,
+        confidenceThreshold: 0.5
+      },
+      optimizationTargets: {
+        primaryObjective: this.mapRankingModeToObjective(request.rankingMode),
+        secondaryObjectives: ['quality', 'diversity'],
+        qualityFloor: request.qualityThreshold || this.getBaseThresholdForMode(request.rankingMode),
+        diversityTarget: request.diversityTarget || 0.3,
+        noveltyWeight: 0.2,
+        riskTolerance: 'moderate',
+        explanationDetail: 'standard'
+      }
+    };
+  }
+  
+  /**
+   * Merge intelligence results with comparative results
+   */
+  private mergeIntelligenceResults(comparativeResult: any, intelligenceResult: any): any {
+    // Combine the insights from both engines
+    return {
+      ...comparativeResult,
+      intelligenceInsights: intelligenceResult.learningInsights,
+      personalizationMetrics: intelligenceResult.personalizationMetrics,
+      adaptiveAdjustments: intelligenceResult.adaptiveAdjustments,
+      enhancedRecommendations: intelligenceResult.recommendations
+    };
+  }
+  
+  /**
+   * Convert enhanced results to legacy format for compatibility
+   */
+  private convertToLegacyFormat(
+    enhancedResult: any, 
+    qualityGateResult: any, 
+    allNames: EnhancedNameQualityResult[], 
+    request: QualityRankingRequest
+  ): QualityRankingResult {
+    // Convert comparative ranked names to legacy RankedName format
+    const rankedNames: RankedName[] = enhancedResult.rankedNames.map((name: any) => ({
+      name: name.name,
+      rank: name.rank,
+      qualityScore: name.overallScore,
+      qualityVector: name.qualityProfile.vector,
+      strengthProfile: this.convertToLegacyStrengthProfile(name.strengths || []),
+      differentiationFactors: name.competitivePosition.differentiationFactors.map((f: any) => f.description),
+      marketPosition: name.marketPosition.segment,
+      confidenceScore: name.confidenceScore
+    }));
+    
+    // Generate legacy analytics
+    const analytics = this.generateEnhancedRankingAnalytics(enhancedResult, allNames);
+    
+    // Generate legacy quality distribution
+    const qualityDistribution = this.generateQualityDistribution(allNames, qualityGateResult.thresholdUsed);
+    
+    // Generate legacy recommendations
+    const recommendations = this.convertToLegacyRecommendations(enhancedResult.recommendations);
+    
+    // Generate legacy adaptive feedback
+    const adaptiveFeedback = request.adaptiveLearning ? {
+      weightAdjustments: this.extractWeightAdjustments(enhancedResult.adaptiveAdjustments),
+      thresholdAdjustments: qualityGateResult.thresholdUsed - this.getBaseThresholdForMode(request.rankingMode),
+      learningInsights: enhancedResult.intelligenceInsights.keyFindings,
+      confidenceUpdates: this.extractConfidenceUpdates(enhancedResult.personalizationMetrics)
+    } : undefined;
+    
+    return {
+      rankedNames,
+      analytics,
+      qualityDistribution,
+      recommendations,
+      adaptiveFeedback
+    };
+  }
+  
+  /**
+   * Convert comparative results to legacy format (without intelligence)
+   */
+  private convertComparativeToLegacyFormat(
+    comparativeResult: any, 
+    qualityGateResult: any, 
+    allNames: EnhancedNameQualityResult[], 
+    request: QualityRankingRequest
+  ): QualityRankingResult {
+    // Convert comparative ranked names to legacy RankedName format
+    const rankedNames: RankedName[] = comparativeResult.rankedNames.map((name: any) => ({
+      name: name.name,
+      rank: name.rank,
+      qualityScore: name.overallScore,
+      qualityVector: name.qualityProfile.vector,
+      strengthProfile: this.convertToLegacyStrengthProfile(name.strengths || []),
+      differentiationFactors: name.competitivePosition.differentiationFactors.map((f: any) => f.description),
+      marketPosition: name.marketPosition.segment,
+      confidenceScore: name.confidenceScore
+    }));
+    
+    // Generate analytics from comparative result
+    const analytics = this.generateComparativeRankingAnalytics(comparativeResult, allNames);
+    
+    // Generate quality distribution
+    const qualityDistribution = this.generateQualityDistribution(allNames, qualityGateResult.thresholdUsed);
+    
+    // Generate recommendations
+    const recommendations = this.convertToLegacyRecommendations(comparativeResult.recommendations);
+    
+    return {
+      rankedNames,
+      analytics,
+      qualityDistribution,
+      recommendations
+    };
+  }
+  
+  /**
+   * Helper methods for mapping between systems
+   */
+  private mapRankingModeToQualityPriority(mode: QualityRankingRequest['rankingMode']): string {
+    const mapping = {
+      'overall': 'balanced',
+      'balanced': 'balanced',
+      'genre-optimized': 'balanced',
+      'market-focused': 'strict',
+      'creative-first': 'quantity-focused'
+    };
+    return mapping[mode] || 'balanced';
+  }
+  
+  private mapRankingModeToUseCase(mode: QualityRankingRequest['rankingMode']): string {
+    const mapping = {
+      'overall': 'professional',
+      'balanced': 'personal',
+      'genre-optimized': 'creative',
+      'market-focused': 'commercial',
+      'creative-first': 'creative'
+    };
+    return mapping[mode] || 'personal';
+  }
+  
+  private mapRankingModeToComparativeMode(mode: QualityRankingRequest['rankingMode']): string {
+    const mapping = {
+      'overall': 'comprehensive',
+      'balanced': 'balanced',
+      'genre-optimized': 'contextual',
+      'market-focused': 'market-focused',
+      'creative-first': 'creative-first'
+    };
+    return mapping[mode] || 'comprehensive';
+  }
+  
+  private mapRankingModeToObjective(mode: QualityRankingRequest['rankingMode']): string {
+    const mapping = {
+      'overall': 'quality',
+      'balanced': 'balance',
+      'genre-optimized': 'personalization',
+      'market-focused': 'quality',
+      'creative-first': 'surprise'
+    };
+    return mapping[mode] || 'quality';
+  }
+  
+  private getBaseThresholdForMode(mode: QualityRankingRequest['rankingMode']): number {
+    const thresholds = {
+      'overall': this.qualityThresholds.moderate,
+      'balanced': this.qualityThresholds.moderate,
+      'genre-optimized': this.qualityThresholds.lenient,
+      'market-focused': this.qualityThresholds.strict,
+      'creative-first': this.qualityThresholds.lenient
+    };
+    return thresholds[mode] || this.qualityThresholds.moderate;
+  }
+  
+  private getDimensionalMinimumsForMode(mode: QualityRankingRequest['rankingMode']): any {
+    // Return default dimensional minimums - would be customized per mode
+    return {
+      phoneticFlow: 0.5,
+      semanticCoherence: 0.5,
+      creativity: 0.4,
+      memorability: 0.5,
+      marketAppeal: 0.4,
+      appropriateness: 0.6,
+      uniqueness: 0.3,
+      pronunciation: 0.5
+    };
+  }
+  
+  private getPriorityDimensionsForMode(mode: QualityRankingRequest['rankingMode']): string[] {
+    const priorities = {
+      'overall': ['quality', 'balance'],
+      'balanced': ['balance', 'quality'],
+      'genre-optimized': ['appropriateness', 'contextualFit'],
+      'market-focused': ['marketability', 'memorability'],
+      'creative-first': ['creativity', 'uniqueness']
+    };
+    return priorities[mode] || ['quality'];
+  }
+  
+  private convertToLegacyStrengthProfile(strengths: any[]): StrengthProfile {
+    // Ensure strengths is defined and is an array
+    const safeStrengths = Array.isArray(strengths) ? strengths : [];
+    
+    const primary = safeStrengths.filter(s => s && s.impact === 'high').map(s => s.strength || s);
+    const secondary = safeStrengths.filter(s => s && s.impact === 'medium').map(s => s.strength || s);
+    
+    return {
+      primaryStrengths: primary.slice(0, 3),
+      secondaryStrengths: secondary.slice(0, 3),
+      uniqueAdvantages: safeStrengths.filter(s => s && s.category === 'competitive').map(s => s.strength || s),
+      improvementAreas: [] // Would be extracted from opportunities
+    };
+  }
+  
+  private generateEnhancedRankingAnalytics(enhancedResult: any, allNames: EnhancedNameQualityResult[]): RankingAnalytics {
+    const analytics = enhancedResult.analytics;
+    
+    return {
+      totalAnalyzed: allNames.length,
+      passingThreshold: enhancedResult.rankedNames.length,
+      averageQuality: analytics.qualityDistribution.mean,
+      qualityRange: { 
+        min: analytics.qualityDistribution.range.min, 
+        max: analytics.qualityDistribution.range.max 
+      },
+      dimensionalAverages: this.calculateDimensionalAverages(allNames),
+      correlationMatrix: this.calculateCorrelationMatrix(allNames),
+      clusterAnalysis: this.performClusterAnalysis(allNames),
+      diversityIndex: analytics.diversityMetrics.diversityIndex
+    };
+  }
+  
+  private generateComparativeRankingAnalytics(comparativeResult: any, allNames: EnhancedNameQualityResult[]): RankingAnalytics {
+    return {
+      totalAnalyzed: allNames.length,
+      passingThreshold: comparativeResult.rankedNames.length,
+      averageQuality: comparativeResult.analytics.qualityDistribution.mean,
+      qualityRange: { 
+        min: comparativeResult.analytics.qualityDistribution.range.min, 
+        max: comparativeResult.analytics.qualityDistribution.range.max 
+      },
+      dimensionalAverages: this.calculateDimensionalAverages(allNames),
+      correlationMatrix: this.calculateCorrelationMatrix(allNames),
+      clusterAnalysis: this.performClusterAnalysis(allNames),
+      diversityIndex: comparativeResult.analytics.diversityMetrics.diversityIndex
+    };
+  }
+  
+  private convertToLegacyRecommendations(recommendations: any): RankingRecommendations {
+    // Provide safe fallbacks for undefined/null properties
+    const topRecommendations = recommendations?.topRecommendations || [];
+    const contextualRecommendations = recommendations?.contextualRecommendations || [];
+    const systemRecommendations = recommendations?.systemRecommendations || [];
+    const userGuidance = recommendations?.userGuidance || {};
+    const tips = userGuidance.tips || [];
+    
+    // Debug logging to track recommendation structure
+    secureLog.debug(`Converting recommendations to legacy format`, {
+      hasTopRecommendations: !!recommendations?.topRecommendations,
+      topRecommendationsLength: topRecommendations.length,
+      hasContextualRecommendations: !!recommendations?.contextualRecommendations,
+      hasSystemRecommendations: !!recommendations?.systemRecommendations,
+      hasUserGuidance: !!recommendations?.userGuidance,
+      recommendationsKeys: recommendations ? Object.keys(recommendations) : []
+    });
+    
+    return {
+      topChoices: topRecommendations.map((r: any) => r?.name || r).slice(0, 3),
+      diversifiedSelection: topRecommendations.slice(0, 5).map((r: any) => r?.name || r),
+      genreOptimized: contextualRecommendations
+        .filter((r: any) => r && r.context && typeof r.context.includes === 'function' && r.context.includes('genre'))
+        .map((r: any) => r.recommendation || r)
+        .slice(0, 3),
+      improvementPriorities: systemRecommendations
+        .map((r: any) => r?.recommendation || r)
+        .slice(0, 5),
+      strategicAdvice: Array.isArray(tips) ? tips : []
+    };
+  }
+  
+  private extractWeightAdjustments(adaptiveAdjustments: any[]): Record<string, number> {
+    const adjustments: Record<string, number> = {};
+    
+    // Ensure adaptiveAdjustments is an array
+    const safeAdjustments = Array.isArray(adaptiveAdjustments) ? adaptiveAdjustments : [];
+    
+    safeAdjustments
+      .filter(adj => adj && (adj.type === 'personalization' || adj.type === 'optimization'))
+      .forEach(adj => {
+        if (adj.adjustment && typeof adj.magnitude === 'number') {
+          adjustments[adj.adjustment] = adj.magnitude;
+        }
+      });
+    
+    return adjustments;
+  }
+  
+  private extractConfidenceUpdates(personalizationMetrics: any): Record<string, number> {
+    // Provide safe fallbacks for undefined/null metrics
+    const metrics = personalizationMetrics || {};
+    
+    return {
+      personalization: typeof metrics.personalizationScore === 'number' ? metrics.personalizationScore : 0.5,
+      adaptation: typeof metrics.adaptationAccuracy === 'number' ? metrics.adaptationAccuracy : 0.5,
+      learning: typeof metrics.learningProgress === 'number' ? metrics.learningProgress : 0.5
+    };
   }
   
   /**
@@ -1067,14 +1456,7 @@ export class QualityRankingSystem {
   }
 }
 
-// Supporting interfaces
-interface UserFeedback {
-  name?: string;
-  rating: number; // 1-5
-  selectedForFinalUse: boolean;
-  improvementSuggestions?: string[];
-  timestamp?: number;
-}
+// UserFeedback interface is imported from @shared/schema
 
 // Export singleton instance
 export const qualityRankingSystem = new QualityRankingSystem();

@@ -7,6 +7,7 @@ import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGenerator } from "./services/bandBio/bandBioGenerator";
 import { lyricOrchestrator } from "./services/lyric/lyricOrchestrator";
 import { qualityScoring } from "./services/qualityScoring";
+import { QualityRankingSystem } from "./services/qualityScoring/qualityRankingSystem";
 import { db } from "./db";
 import { users, errorLogs, userFeedback, userPreferences, feedbackAnalytics } from "@shared/schema";
 
@@ -32,6 +33,44 @@ import {
   responseTimeMiddleware 
 } from "./middleware/performanceOptimization";
 
+// Helper functions for intelligent ranking
+function determineRankingMode(request: any, userPreferences: any): string {
+  // Determine ranking mode based on request parameters and user preferences
+  if (userPreferences?.preferredRankingMode) {
+    return userPreferences.preferredRankingMode;
+  }
+  
+  // Infer from genre and context
+  if (request.genre === 'experimental' || request.genre === 'avant-garde') {
+    return 'creative-first';
+  }
+  
+  if (request.genre === 'pop' || request.genre === 'commercial') {
+    return 'market-focused';
+  }
+  
+  if (request.genre) {
+    return 'genre-optimized';
+  }
+  
+  return 'balanced'; // Default to balanced mode
+}
+
+function getQualityThreshold(request: any, userPreferences: any): number {
+  // Get quality threshold based on user preferences and request context
+  if (userPreferences?.qualityThreshold) {
+    const thresholdMapping = {
+      'strict': 0.75,
+      'moderate': 0.60,
+      'lenient': 0.45
+    };
+    return thresholdMapping[userPreferences.qualityThreshold] || 0.60;
+  }
+  
+  // Default moderate threshold
+  return 0.60;
+}
+
 export async function registerRoutes(app: Express, middleware?: any): Promise<Server> {
   // Add performance optimization middleware
   app.use(compressionMiddleware);
@@ -47,6 +86,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
   let nameGenerator: UnifiedNameGeneratorService;
   let nameVerifier: NameVerifierService;
   let bandBioGenerator: BandBioGenerator;
+  let qualityRankingSystem: QualityRankingSystem;
 
   try {
     nameGenerator = new UnifiedNameGeneratorService();
@@ -69,6 +109,14 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     secureLog.info("✓ BandBioGenerator initialized");
   } catch (error) {
     secureLog.error("✗ Failed to initialize BandBioGenerator:", error);
+    throw error;
+  }
+
+  try {
+    qualityRankingSystem = new QualityRankingSystem();
+    secureLog.info("✓ QualityRankingSystem initialized");
+  } catch (error) {
+    secureLog.error("✗ Failed to initialize QualityRankingSystem:", error);
     throw error;
   }
 
@@ -127,62 +175,93 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
         return;
       }
       
-      // Apply quality scoring to filter low-quality names
-      let qualityFilteredNames = names;
+      // Apply intelligent quality ranking system
+      let intelligentlyRankedNames = names;
+      let rankingMetadata = null;
+      
       try {
-        const nameRequests = names.map(nameResult => ({
-          name: nameResult.name,
-          type: request.type as 'band' | 'song',
-          genre: request.genre,
-          mood: request.mood,
-          isAiGenerated: nameResult.isAiGenerated,
-          wordCount: typeof request.wordCount === 'number' ? request.wordCount : undefined
-        }));
+        secureLog.info('Applying full comparative quality ranking system');
         
-        const qualityResult = await qualityScoring.scoreNames({
-          names: nameRequests,
-          thresholdMode: 'moderate', // Use moderate threshold for good balance
-          maxResults: request.count * 2 // Allow some extra results for filtering
+        // Determine ranking mode based on request context and user preferences
+        const userPreferences = req.user ? await storage.getUserPreferences(req.user.claims.sub).catch(() => null) : null;
+        const rankingMode = determineRankingMode(request, userPreferences);
+        const qualityThreshold = getQualityThreshold(request, userPreferences);
+        
+        // Prepare quality ranking request
+        const qualityRankingRequest = {
+          names: names.map(n => n.name),
+          context: {
+            genre: request.genre,
+            mood: request.mood,
+            type: request.type,
+            targetAudience: 'mainstream' as const // Default to mainstream for now
+          },
+          rankingMode: rankingMode as any,
+          qualityThreshold,
+          maxResults: request.count,
+          diversityTarget: 0.7, // Encourage diversity
+          adaptiveLearning: true
+        };
+        
+        // Apply quality ranking system
+        const rankingResult = await qualityRankingSystem.rankNames(qualityRankingRequest);
+        
+        // Extract top ranked names up to requested count
+        const topRankedNames = rankingResult.rankedNames.slice(0, request.count);
+        
+        // Map ranked names back to original format with quality information
+        intelligentlyRankedNames = topRankedNames.map(rankedName => {
+          const originalName = names.find(n => n.name === rankedName.name);
+          return {
+            ...originalName,
+            qualityScore: rankedName.qualityScore,
+            rank: rankedName.rank,
+            strengthProfile: rankedName.strengthProfile,
+            marketPosition: rankedName.marketPosition
+          };
         });
         
-        if (qualityResult.success && qualityResult.data) {
-          const { filtered, analytics } = qualityResult.data;
-          
-          if (filtered.length > 0) {
-            // Map quality results back to original format, prioritizing high-quality names
-            qualityFilteredNames = filtered
-              .sort((a, b) => b.score.overall - a.score.overall) // Sort by quality score
-              .slice(0, request.count) // Take requested number of top results
-              .map(qualityResult => {
-                const originalName = names.find(n => n.name === qualityResult.name);
-                return originalName || { name: qualityResult.name, isAiGenerated: true, source: 'quality-filtered' };
-              });
-            
-            secureLog.info(`Quality filtering: ${analytics.totalProcessed} names → ${filtered.length} passed → ${qualityFilteredNames.length} served`, {
-              avgScore: Math.round(analytics.averageScore * 100) / 100,
-              threshold: 'moderate',
-              passRate: Math.round((analytics.passedThreshold / analytics.totalProcessed) * 100)
-            });
-          } else {
-            // If no names pass quality threshold, use top original names but log warning
-            secureLog.warn('No names passed quality threshold, serving original results', {
-              totalScored: qualityResult.data.analytics.totalProcessed,
-              avgScore: Math.round(qualityResult.data.analytics.averageScore * 100) / 100
-            });
-          }
-        } else {
-          secureLog.warn('Quality scoring failed, serving original results:', qualityResult.error);
-        }
-      } catch (qualityError) {
-        secureLog.error('Quality scoring error, serving original results:', qualityError);
+        // Extract ranking metadata
+        rankingMetadata = {
+          totalAnalyzed: rankingResult.analytics.totalAnalyzed,
+          qualifiedNames: rankingResult.analytics.passingThreshold,
+          averageQuality: rankingResult.analytics.averageQuality,
+          rankingMode: rankingMode,
+          diversityIndex: rankingResult.analytics.diversityIndex,
+          adaptiveLearning: true,
+          recommendations: rankingResult.recommendations.strategicAdvice,
+          qualityDistribution: {
+            excellent: rankingResult.qualityDistribution.excellent.length,
+            good: rankingResult.qualityDistribution.good.length,
+            fair: rankingResult.qualityDistribution.fair.length,
+            poor: rankingResult.qualityDistribution.poor.length
+          },
+          dimensionalAverages: rankingResult.analytics.dimensionalAverages
+        };
+        
+        secureLog.info(`Quality ranking applied: ${names.length} names → ${intelligentlyRankedNames.length} served (mode: ${rankingMode}, avg quality: ${rankingResult.analytics.averageQuality.toFixed(3)})`);
+        
+      } catch (filterError) {
+        secureLog.error('Quality ranking failed, falling back to basic filtering:', filterError);
+        // Fallback to basic approach if quality ranking fails
+        intelligentlyRankedNames = names.slice(0, request.count);
+        rankingMetadata = {
+          totalAnalyzed: names.length,
+          qualifiedNames: intelligentlyRankedNames.length,
+          averageQuality: 0.6, // Conservative fallback
+          rankingMode: 'fallback-basic',
+          diversityIndex: 0.5,
+          adaptiveLearning: false,
+          recommendations: [],
+          error: 'Quality ranking system unavailable, using basic fallback'
+        };
       }
       
       // Optimized parallel verification and storage
-      const isUserAuthenticated = req.isAuthenticated && req.isAuthenticated();
       
       // Batch verification for better performance - use faster approach
       const { parallelVerificationService } = await import('./services/parallelVerification');
-      const namesToVerify = qualityFilteredNames.map(nameResult => ({
+      const namesToVerify = intelligentlyRankedNames.map(nameResult => ({
         name: nameResult.name,
         type: request.type as 'band' | 'song'
       }));
@@ -197,12 +276,12 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
       
       // Process results and handle database storage
       const results = await Promise.all(
-        qualityFilteredNames.map(async (nameResult, index) => {
+        intelligentlyRankedNames.map(async (nameResult, index) => {
           const verification = verificationResults[index];
           let storedName = null;
           
           // Only store in database if user is authenticated (non-blocking)
-          if (isUserAuthenticated && !hasResponded && !res.headersSent) {
+          if (req.user && req.user.claims && req.user.claims.sub && !hasResponded && !res.headersSent) {
             const userId = req.user.claims.sub;
             
             try {
@@ -238,7 +317,19 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
         })
       );
 
-      sendResponse(200, { results });
+      // Include ranking metadata in response for enhanced user experience
+      const responseData = {
+        results,
+        ...(rankingMetadata && {
+          ranking: {
+            metadata: rankingMetadata,
+            intelligentRankingApplied: true,
+            enhancedQualityData: true
+          }
+        })
+      };
+      
+      sendResponse(200, responseData);
     } catch (error) {
       secureLog.error("Error generating names:", error);
       if (error instanceof z.ZodError) {

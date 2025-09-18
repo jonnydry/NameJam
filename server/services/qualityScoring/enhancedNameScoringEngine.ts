@@ -845,6 +845,16 @@ export class EnhancedNameScoringEngine {
   }
   
   private generateCacheKey(request: EnhancedNameScoringRequest): string {
+    // Debug logging to understand the structure
+    if (!request || typeof request.name !== 'string') {
+      secureLog.error('Invalid request structure in generateCacheKey:', { 
+        request: JSON.stringify(request, null, 2),
+        nameType: typeof request?.name,
+        name: request?.name
+      });
+      throw new Error(`Invalid request: name must be a string, got ${typeof request?.name}`);
+    }
+    
     return `enhanced_${request.name.toLowerCase()}_${JSON.stringify({
       type: request.type,
       genre: request.genre,
