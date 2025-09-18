@@ -79,6 +79,16 @@ export const generateNameRequestSchema = z.object({
     'rock', 'metal', 'jazz', 'electronic', 'folk', 'classical', 'hip-hop', 
     'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative', 'jam band'
   ]).optional(),
+  // Cross-genre fusion parameters
+  enableFusion: z.boolean().optional().default(false),
+  secondaryGenre: z.enum([
+    'rock', 'metal', 'jazz', 'electronic', 'folk', 'classical', 'hip-hop', 
+    'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative', 'jam band'
+  ]).optional(),
+  fusionIntensity: z.enum(['subtle', 'moderate', 'bold', 'experimental']).optional().default('moderate'),
+  creativityLevel: z.enum(['conservative', 'balanced', 'innovative', 'revolutionary']).optional().default('balanced'),
+  preserveAuthenticity: z.boolean().optional().default(true),
+  culturalSensitivity: z.boolean().optional().default(true),
 });
 
 export type GenerateNameRequest = z.infer<typeof generateNameRequestSchema>;
