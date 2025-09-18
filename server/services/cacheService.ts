@@ -138,13 +138,13 @@ export class CacheService<T = any> {
     let oldestKey: string | null = null;
     let oldestTime = Infinity;
 
-    for (const [key, entry] of this.cache.entries()) {
+    this.cache.forEach((entry, key) => {
       const lastAccess = entry.timestamp + (entry.hits * 1000); // Rough LRU approximation
       if (lastAccess < oldestTime) {
         oldestTime = lastAccess;
         oldestKey = key;
       }
-    }
+    });
 
     if (oldestKey) {
       this.cache.delete(oldestKey);
@@ -166,12 +166,17 @@ export class CacheService<T = any> {
    */
   private cleanupExpired(): void {
     let cleaned = 0;
-    for (const [key, entry] of this.cache.entries()) {
+    const keysToDelete: string[] = [];
+    this.cache.forEach((entry, key) => {
       if (this.isExpired(entry)) {
-        this.cache.delete(key);
-        cleaned++;
+        keysToDelete.push(key);
       }
-    }
+    });
+    
+    keysToDelete.forEach(key => {
+      this.cache.delete(key);
+      cleaned++;
+    });
     
     if (cleaned > 0) {
       secureLog.debug(`Cache cleanup: removed ${cleaned} expired entries`);
