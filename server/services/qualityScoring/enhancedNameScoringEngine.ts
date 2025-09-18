@@ -238,8 +238,8 @@ export class EnhancedNameScoringEngine {
     const uniqueness = this.calculateEnhancedUniqueness(request, phoneticScore, semanticScore);
     const structure = this.calculateEnhancedStructure(request);
     
-    // New phonetic dimensions
-    const phoneticFlow = phoneticScore.flow / 100;
+    // New phonetic dimensions - handle potential missing properties
+    const phoneticFlow = (phoneticScore?.flow || phoneticScore?.overall || 60) / 100;
     
     // New semantic dimensions
     const semanticCoherence = semanticScore.coherence / 100;
@@ -272,8 +272,8 @@ export class EnhancedNameScoringEngine {
       
       // New phonetic dimensions
       phoneticFlow,
-      pronunciation: phoneticScore.pronunciation / 100,
-      phoneticMemorability: phoneticScore.memorability / 100,
+      pronunciation: (phoneticScore?.pronunciation || phoneticScore?.overall || 60) / 100,
+      phoneticMemorability: (phoneticScore?.memorability || phoneticScore?.overall || 60) / 100,
       
       // New semantic dimensions
       semanticCoherence,
