@@ -23,6 +23,12 @@ import {
 } from "./nameGeneration/patternSelectionEngine";
 import { contextualPatternBuilder } from "./nameGeneration/contextualPatternBuilder";
 import { creativePatternCategories } from "./nameGeneration/creativePatternCategories";
+import { 
+  crossGenreFusionEngine, 
+  CrossGenreFusionRequest, 
+  CrossGenreFusionResult 
+} from "./nameGeneration/crossGenreFusionEngine";
+import { GenreType } from "./nameGeneration/genreCompatibilityMatrix";
 import OpenAI from "openai";
 
 // Strategy configuration
@@ -579,18 +585,28 @@ export class UnifiedNameGeneratorService {
     request: GenerateNameRequest, 
     strategy: GenerationStrategy = GENERATION_STRATEGIES.QUALITY
   ): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
-    const { type, genre, mood, count = 4, wordCount } = request;
+    const { type, genre, mood, count = 4, wordCount, enableFusion, secondaryGenre, fusionIntensity, creativityLevel, preserveAuthenticity, culturalSensitivity } = request;
     const generationId = unifiedWordFilter.startNewGeneration();
     const operationId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     // Start performance monitoring
     performanceMonitor.startOperation(operationId, 'unified_name_generation', {
-      type, genre, mood, count, wordCount, strategy: strategy.contextDepth
+      type, genre, mood, count, wordCount, strategy: strategy.contextDepth, enableFusion, secondaryGenre
     });
     
-    secureLog.info(`🎯 Unified generation: ${count} ${type} names for ${genre || 'general'} genre using ${strategy.contextDepth} strategy`);
+    secureLog.info(`🎯 Unified generation: ${count} ${type} names for ${genre || 'general'} genre using ${strategy.contextDepth} strategy ${enableFusion ? `with ${secondaryGenre} fusion` : ''}`);
     
     const startTime = Date.now();
+    
+    // Handle cross-genre fusion if enabled
+    if (enableFusion && genre && secondaryGenre && genre !== secondaryGenre) {
+      try {
+        return await this.generateWithCrossGenreFusion(request, strategy, generationId, operationId);
+      } catch (error) {
+        secureLog.error('Cross-genre fusion failed, falling back to standard generation:', error);
+        // Fall through to standard generation as fallback
+      }
+    }
     
     try {
       // 1. Gather context based on strategy
@@ -1443,6 +1459,151 @@ Generate ${count} creative ${isband ? 'band names' : 'song titles'} in JSON form
     
     secureLog.info(`Repetition filtering: ${names.length} → ${filteredNames.length} names (${names.length - filteredNames.length} filtered)`);
     return filteredNames;
+  }
+
+  /**
+   * Generate names using cross-genre fusion system
+   */
+  private async generateWithCrossGenreFusion(
+    request: GenerateNameRequest, 
+    strategy: GenerationStrategy,
+    generationId: string,
+    operationId: string
+  ): Promise<Array<{name: string, isAiGenerated: boolean, source: string}>> {
+    const { 
+      type, genre, secondaryGenre, mood, count = 4, wordCount,
+      fusionIntensity = 'moderate', 
+      creativityLevel = 'balanced',
+      preserveAuthenticity = true,
+      culturalSensitivity = true
+    } = request;
+
+    secureLog.info(`🎨 Cross-genre fusion: ${genre} + ${secondaryGenre} (${fusionIntensity} intensity, ${creativityLevel} creativity)`);
+
+    try {
+      // 1. Gather enhanced context for both genres
+      const context = await this.gatherContextWithStrategy(genre, mood, type, strategy);
+      const sources = createEnhancedWordSource(context);
+
+      // 2. Build cross-genre fusion request
+      const fusionRequest: CrossGenreFusionRequest = {
+        primaryGenre: genre as GenreType,
+        secondaryGenre: secondaryGenre as GenreType,
+        mood,
+        wordCount: wordCount === '4+' ? 5 : (wordCount || 2),
+        count: Math.max(count * 2, 8), // Generate more for filtering
+        fusionIntensity,
+        creativityLevel,
+        preserveAuthenticity,
+        targetAudience: strategy.contextDepth === 'comprehensive' ? 'experimental' : 'mainstream'
+      };
+
+      // 3. Generate fused names using cross-genre fusion engine
+      const fusionResults = await crossGenreFusionEngine.generateFusedNames(fusionRequest, sources);
+      secureLog.info(`🎨 Fusion engine generated ${fusionResults.length} names`);
+
+      if (fusionResults.length === 0) {
+        throw new Error('Cross-genre fusion engine returned no results');
+      }
+
+      // 4. Convert fusion results to unified format
+      let generatedNames = fusionResults.map((result: CrossGenreFusionResult, index: number) => ({
+        name: result.name,
+        isAiGenerated: false, // Fusion is pattern-based, not AI
+        source: `fusion_${result.fusionMetadata.fusionStyle}`,
+        qualityScore: result.qualityScore,
+        fusionMetadata: result.fusionMetadata,
+        sortOrder: index
+      }));
+
+      // 5. Apply intelligent sorting - prioritize quality and authenticity
+      generatedNames.sort((a, b) => {
+        // Primary sort: Quality score (higher is better)
+        if (Math.abs(a.qualityScore - b.qualityScore) > 0.1) {
+          return b.qualityScore - a.qualityScore;
+        }
+        // Secondary sort: Authenticity if preserveAuthenticity is true
+        if (preserveAuthenticity) {
+          const authDiff = b.fusionMetadata.authenticity - a.fusionMetadata.authenticity;
+          if (Math.abs(authDiff) > 0.1) {
+            return authDiff;
+          }
+        }
+        // Tertiary sort: Innovation factor for creative requests
+        if (creativityLevel === 'innovative' || creativityLevel === 'revolutionary') {
+          return b.fusionMetadata.innovationFactor - a.fusionMetadata.innovationFactor;
+        }
+        // Default: Original order
+        return a.sortOrder - b.sortOrder;
+      });
+
+      // 6. Apply repetition filtering
+      let filteredNames = this.applyRepetitionFiltering(
+        generatedNames.map(n => n.name), 
+        generationId, 
+        type
+      );
+
+      // 7. Ensure we have enough names
+      if (filteredNames.length < count) {
+        const needed = count - filteredNames.length;
+        secureLog.info(`🎨 Need ${needed} more fusion names, generating additional batch`);
+
+        // Generate more with slightly different parameters
+        const additionalRequest = {
+          ...fusionRequest,
+          count: needed * 2,
+          fusionIntensity: fusionIntensity === 'subtle' ? 'moderate' : fusionIntensity,
+          creativityLevel: creativityLevel === 'conservative' ? 'balanced' : creativityLevel
+        };
+
+        const additionalResults = await crossGenreFusionEngine.generateFusedNames(additionalRequest, sources);
+        const additionalFiltered = this.applyRepetitionFiltering(
+          additionalResults.map(r => r.name),
+          generationId,
+          type
+        );
+
+        filteredNames.push(...additionalFiltered.slice(0, needed));
+      }
+
+      // 8. Final selection and tracking
+      const finalNames = filteredNames.slice(0, count);
+      
+      // Track generated names in the filter
+      finalNames.forEach(name => unifiedWordFilter.acceptName(name, generationId));
+
+      // Record performance metrics
+      performanceMonitor.endOperation(operationId, {
+        success: true,
+        fusionGenerated: finalNames.length,
+        fusionEngine: 'cross_genre_fusion',
+        primaryGenre: genre,
+        secondaryGenre: secondaryGenre,
+        fusionIntensity,
+        creativityLevel
+      });
+
+      secureLog.info(`🎨 Cross-genre fusion successful: Generated ${finalNames.length} ${genre}-${secondaryGenre} fusion names`);
+
+      return finalNames.map(name => ({
+        name,
+        isAiGenerated: false,
+        source: `fusion_${genre}_${secondaryGenre}`
+      }));
+
+    } catch (error) {
+      secureLog.error('Cross-genre fusion generation failed:', error);
+      
+      // Record failure metrics
+      performanceMonitor.endOperation(operationId, {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown fusion error',
+        fusionEngine: 'cross_genre_fusion_failed'
+      });
+
+      throw error; // Let the main method handle fallback
+    }
   }
 
 }
