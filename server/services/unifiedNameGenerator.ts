@@ -13,6 +13,16 @@ import { optimizedContextService, OptimizedContext } from "./optimizedContextSer
 import { performanceMonitor } from "./performanceMonitor";
 import { sampleWithoutReplacement, RetryCircuitBreaker } from "./nameGeneration/stringUtils";
 import { createEnhancedWordSource } from "./nameGeneration/enhancedWordSourceUtils";
+import { 
+  advancedPatternLibrary, 
+  PatternContext 
+} from "./nameGeneration/advancedPatternLibrary";
+import { 
+  patternSelectionEngine, 
+  PatternSelectionCriteria 
+} from "./nameGeneration/patternSelectionEngine";
+import { contextualPatternBuilder } from "./nameGeneration/contextualPatternBuilder";
+import { creativePatternCategories } from "./nameGeneration/creativePatternCategories";
 import OpenAI from "openai";
 
 // Strategy configuration
