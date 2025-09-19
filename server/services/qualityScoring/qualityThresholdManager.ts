@@ -724,6 +724,12 @@ export class QualityThresholdManager {
     const breakdown = name.score.breakdown;
     const vector = name.score.qualityVector;
     
+    // Defensive check: if breakdown is undefined, skip dimensional checks
+    if (!breakdown) {
+      console.warn(`Missing breakdown for name "${name.name}" - skipping dimensional quality checks`);
+      return reasons; // Return early with only overall score check
+    }
+    
     // Check overall score
     if (name.score.overall < requirements.minimumOverallScore) {
       reasons.push({

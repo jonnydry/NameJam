@@ -145,7 +145,11 @@ function getFallbackOperation(serviceName: string, url: string): (() => Promise<
           type: 'band',
           wordCount: 2,
           isAiGenerated: false,
-          verification: { isAvailable: true, popularity: 0 }
+          verification: { 
+            status: 'available',
+            details: 'No existing band found with this name',
+            verificationLinks: []
+          }
         }],
         degraded: true,
         message: 'Using simplified name generation'
