@@ -1009,12 +1009,15 @@ export class RankingIntelligence {
     let diversityScore = 0;
     let comparisons = 0;
     
-    const nameVector = name.score.qualityVector;
+    const nameVector = name.score?.qualityVector;
+    if (!nameVector) return 1.0; // If no vector, assume high diversity
     
     for (let i = 0; i < allNames.length; i++) {
       if (i === index) continue;
       
-      const otherVector = allNames[i].score.qualityVector;
+      const otherVector = allNames[i].score?.qualityVector;
+      if (!otherVector) continue; // Skip if other vector is missing
+      
       const similarity = this.calculateVectorSimilarity(nameVector, otherVector);
       diversityScore += (1 - similarity);
       comparisons++;
@@ -1027,8 +1030,18 @@ export class RankingIntelligence {
    * Calculate vector similarity between two quality vectors
    */
   private calculateVectorSimilarity(vector1: QualityVector, vector2: QualityVector): number {
+    // Safety checks for undefined vectors or dimensions
+    if (!vector1 || !vector2 || !vector1.dimensions || !vector2.dimensions) {
+      return 0;
+    }
+    
     const dims1 = Object.values(vector1.dimensions);
     const dims2 = Object.values(vector2.dimensions);
+    
+    // Ensure both dimension arrays have the same length
+    if (dims1.length !== dims2.length || dims1.length === 0) {
+      return 0;
+    }
     
     let dotProduct = 0;
     let magnitude1 = 0;
