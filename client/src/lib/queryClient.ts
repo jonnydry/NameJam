@@ -78,6 +78,11 @@ export async function apiRequest(
   const fallbackOperation = serviceName ? getFallbackOperation(serviceName, url) : undefined;
   
   try {
+    // BYPASS degradation service for name generation - it's working perfectly
+    if (serviceName === 'name-generation') {
+      return await executeRequest();
+    }
+    
     if (serviceName) {
       const result = await gracefulDegradationService.executeWithDegradation(
         serviceName,
@@ -134,32 +139,11 @@ function getServiceNameFromUrl(url: string): string | null {
 }
 
 function getFallbackOperation(serviceName: string, url: string): (() => Promise<Response>) | undefined {
+  // TEMPORARILY DISABLED: Backend is working perfectly, no fallback needed
   // Define fallback operations for critical services
   if (serviceName === 'name-generation') {
-    return async () => {
-      // Return a minimal response for name generation
-      const fallbackResponse = {
-        results: [{
-          id: Date.now(),
-          name: 'Fallback Name',
-          type: 'band',
-          wordCount: 2,
-          isAiGenerated: false,
-          verification: { 
-            status: 'available',
-            details: 'No existing band found with this name',
-            verificationLinks: []
-          }
-        }],
-        degraded: true,
-        message: 'Using simplified name generation'
-      };
-      
-      return new Response(JSON.stringify(fallbackResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    };
+    // Return undefined to disable fallback and force real API calls
+    return undefined;
   }
   
   return undefined;

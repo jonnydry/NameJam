@@ -64,7 +64,7 @@ function getQualityThreshold(request: any, userPreferences: any): number {
       'moderate': 0.60,
       'lenient': 0.45
     };
-    return thresholdMapping[userPreferences.qualityThreshold] || 0.60;
+    return thresholdMapping[userPreferences.qualityThreshold as keyof typeof thresholdMapping] || 0.60;
   }
   
   // Default moderate threshold
@@ -212,8 +212,13 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
         // Map ranked names back to original format with quality information
         intelligentlyRankedNames = topRankedNames.map(rankedName => {
           const originalName = names.find(n => n.name === rankedName.name);
+          if (!originalName) {
+            throw new Error(`Original name not found for ranked name: ${rankedName.name}`);
+          }
           return {
-            ...originalName,
+            name: originalName.name,
+            isAiGenerated: originalName.isAiGenerated,
+            source: originalName.source,
             qualityScore: rankedName.qualityScore,
             rank: rankedName.rank,
             strengthProfile: rankedName.strengthProfile,
