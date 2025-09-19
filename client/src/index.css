@@ -438,44 +438,179 @@
 
   /* Removed old character-by-character animation - simplified approach */
   
-  /* Clean Fermata Logo Animation */
+  /* Advanced Fermata Logo Animations and Effects */
   
-  /* Simple pulse animation */
-  @keyframes fermata-pulse {
+  /* Base container styling */
+  .fermata-advanced {
+    --warmth-factor: 1;
+    --brightness-factor: 1;
+    --proximity-scale: 1;
+    position: relative;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+  
+  /* Size-specific adjustments */
+  .fermata-sm {
+    --base-scale: 1;
+  }
+  
+  .fermata-lg {
+    --base-scale: 1.5;
+  }
+  
+  .fermata-xl {
+    --base-scale: 2;
+  }
+  
+  /* Main SVG with advanced lighting */
+  .fermata-svg {
+    transform: translateZ(0) scale(var(--proximity-scale));
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: 
+      drop-shadow(0 0 20px rgba(255, 179, 71, calc(0.3 * var(--warmth-factor))))
+      drop-shadow(0 4px 16px rgba(0, 0, 0, 0.2))
+      drop-shadow(0 0 40px rgba(0, 184, 255, calc(0.15 * var(--brightness-factor))));
+    animation: fermata-breathe 6s ease-in-out infinite;
+  }
+  
+  /* Breathing animation - subtle floating effect */
+  @keyframes fermata-breathe {
     0%, 100% {
-      transform: scale(1);
+      transform: translateY(0) translateZ(0) scale(var(--proximity-scale));
     }
     50% {
-      transform: scale(1.02);
+      transform: translateY(-2px) translateZ(10px) scale(calc(var(--proximity-scale) * 1.02));
     }
   }
   
-  /* Custom Tailwind animation class */
-  .animate-fermata-pulse {
-    animation: fermata-pulse 7s ease-in-out infinite;
+  /* Warm light fluctuation - like real incandescent bulb */
+  .fermata-outer-glow {
+    animation: light-fluctuation 8s ease-in-out infinite;
   }
   
-  .fermata-clean {
-    transform-origin: center center;
-  }
-  
-  /* All complex animations removed for clean, professional design */
-  
-  /* Apply animation to entire filament group */
-  .fermata-filament {
-    transform-origin: center center;
-    animation: filament-subtle-pulse 6s ease-in-out infinite;
-  }
-  
-  @keyframes filament-subtle-pulse {
+  @keyframes light-fluctuation {
     0%, 100% {
-      opacity: 0.4;
-      transform: scale(1);
-    }
-    50% {
       opacity: 0.6;
+      transform: scale(1);
+    }
+    20% {
+      opacity: 0.65;
       transform: scale(1.02);
     }
+    40% {
+      opacity: 0.55;
+      transform: scale(0.98);
+    }
+    60% {
+      opacity: 0.62;
+      transform: scale(1.01);
+    }
+    80% {
+      opacity: 0.58;
+      transform: scale(0.99);
+    }
+  }
+  
+  /* Caustic light animation */
+  .fermata-caustic {
+    animation: caustic-shift 12s linear infinite;
+  }
+  
+  @keyframes caustic-shift {
+    0% {
+      transform: rotate(0deg) scale(1);
+      opacity: 0.4;
+    }
+    33% {
+      transform: rotate(120deg) scale(1.1);
+      opacity: 0.35;
+    }
+    66% {
+      transform: rotate(240deg) scale(0.95);
+      opacity: 0.45;
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+      opacity: 0.4;
+    }
+  }
+  
+  /* Rim light pulsing */
+  .fermata-rim {
+    animation: rim-pulse 4s ease-in-out infinite;
+  }
+  
+  @keyframes rim-pulse {
+    0%, 100% {
+      opacity: 0.5;
+      stroke-width: 2;
+    }
+    50% {
+      opacity: 0.7;
+      stroke-width: 2.5;
+    }
+  }
+  
+  /* Glass shimmer effect */
+  .fermata-highlight-primary {
+    animation: glass-shimmer 10s ease-in-out infinite;
+  }
+  
+  .fermata-highlight-secondary {
+    animation: glass-shimmer 10s ease-in-out infinite 0.5s;
+  }
+  
+  .fermata-shimmer {
+    animation: glass-shimmer 10s ease-in-out infinite 1s;
+  }
+  
+  @keyframes glass-shimmer {
+    0%, 100% {
+      opacity: 0.25;
+      transform: translateX(0) translateY(0);
+    }
+    25% {
+      opacity: 0.3;
+      transform: translateX(2px) translateY(-1px);
+    }
+    50% {
+      opacity: 0.2;
+      transform: translateX(-1px) translateY(2px);
+    }
+    75% {
+      opacity: 0.35;
+      transform: translateX(1px) translateY(-2px);
+    }
+  }
+  
+  /* Edge reflection animation */
+  .fermata-edge-reflection {
+    animation: edge-glint 8s linear infinite;
+  }
+  
+  @keyframes edge-glint {
+    0%, 90% {
+      stroke-opacity: 0.2;
+      stroke-width: 1;
+    }
+    95% {
+      stroke-opacity: 0.6;
+      stroke-width: 1.5;
+    }
+    100% {
+      stroke-opacity: 0.2;
+      stroke-width: 1;
+    }
+  }
+  
+  /* Filament glow animation */
+  .fermata-filament-wire {
+    animation: filament-glow 3s ease-in-out infinite;
+  }
+  
+  .fermata-filament-support {
+    animation: filament-heat 5s ease-in-out infinite;
   }
   
   @keyframes filament-glow {
@@ -502,26 +637,7 @@
   
   /* Metal base shimmer */
   .fermata-metal-reflection {
-    transform-origin: center center;
-    animation: metal-shimmer 12s linear infinite;
-  }
-  
-  /* Animate base group */
-  .fermata-base-group {
-    transform-origin: center bottom;
-    animation: base-subtle-rock 8s ease-in-out infinite;
-  }
-  
-  /* Animate reflections group */
-  .fermata-reflections {
-    transform-origin: center center;
-    animation: reflections-dance 7s ease-in-out infinite;
-  }
-  
-  /* Animate symbol group */
-  .fermata-symbol-group {
-    transform-origin: center center;
-    animation: symbol-subtle-breathe 6s ease-in-out infinite;
+    animation: metal-shimmer 15s linear infinite;
   }
   
   @keyframes metal-shimmer {
@@ -529,46 +645,7 @@
       fill-opacity: 0.1;
     }
     50% {
-      fill-opacity: 0.25;
-    }
-  }
-  
-  /* Base rock animation */
-  @keyframes base-subtle-rock {
-    0%, 100% {
-      transform: rotate(0deg) scale(1);
-    }
-    25% {
-      transform: rotate(-0.2deg) scale(1.01);
-    }
-    75% {
-      transform: rotate(0.2deg) scale(0.99);
-    }
-  }
-  
-  /* Reflections dance */
-  @keyframes reflections-dance {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1) rotate(0deg);
-    }
-    33% {
-      opacity: 0.9;
-      transform: scale(1.02) rotate(1deg);
-    }
-    66% {
-      opacity: 0.95;
-      transform: scale(0.98) rotate(-1deg);
-    }
-  }
-  
-  /* Symbol breathe */
-  @keyframes symbol-subtle-breathe {
-    0%, 100% {
-      transform: scale(1) translateY(0);
-    }
-    50% {
-      transform: scale(1.03) translateY(-2px);
+      fill-opacity: 0.2;
     }
   }
   
@@ -590,72 +667,52 @@
     }
   }
   
-  /* Fermata symbol animations - enhanced visibility */
+  /* Fermata symbol animations */
   .fermata-question-main {
-    transform-origin: center center;
-    animation: symbol-float 5s ease-in-out infinite;
+    animation: symbol-float 8s ease-in-out infinite;
   }
   
   .fermata-arc-main {
-    transform-origin: center center;
-    animation: symbol-float 5s ease-in-out infinite 0.3s;
+    animation: symbol-float 8s ease-in-out infinite 0.2s;
   }
   
   @keyframes symbol-float {
     0%, 100% {
-      transform: translateY(0) scale(1);
+      transform: translateY(0);
     }
     50% {
-      transform: translateY(-3px) scale(1.05);
+      transform: translateY(-1px);
     }
   }
   
-  /* Enhanced dot pulsing - using transform instead of r attribute */
+  /* Enhanced dot pulsing */
   .fermata-dot-core {
-    transform-origin: center center;
     animation: dot-pulse 2s ease-in-out infinite;
   }
   
   .fermata-dot-glow {
-    transform-origin: center center;
     animation: dot-glow-pulse 2s ease-in-out infinite;
-  }
-  
-  .fermata-dot-highlight {
-    transform-origin: center center;
-    animation: dot-highlight-pulse 2s ease-in-out infinite 0.3s;
   }
   
   @keyframes dot-pulse {
     0%, 100% {
-      transform: scale(1);
+      r: 1.8;
       fill-opacity: 1;
     }
     50% {
-      transform: scale(1.3);
-      fill-opacity: 0.8;
+      r: 2;
+      fill-opacity: 0.9;
     }
   }
   
   @keyframes dot-glow-pulse {
     0%, 100% {
-      transform: scale(1);
+      r: 3;
       opacity: 0.2;
     }
     50% {
-      transform: scale(1.5);
-      opacity: 0.5;
-    }
-  }
-  
-  @keyframes dot-highlight-pulse {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.6;
-    }
-    50% {
-      transform: scale(1.4);
-      opacity: 0.3;
+      r: 4;
+      opacity: 0.4;
     }
   }
   
@@ -666,8 +723,7 @@
   }
   
   .fermata-advanced:hover .fermata-svg {
-    /* Keep animations running on hover */
-    animation-duration: 3s; /* Speed up slightly on hover */
+    animation-play-state: paused;
     transform: translateY(-3px) translateZ(20px) scale(1.05);
     filter: 
       drop-shadow(0 0 30px rgba(255, 179, 71, 0.5))
@@ -676,14 +732,12 @@
   }
   
   .fermata-advanced:hover .fermata-outer-glow {
-    /* Keep animations running on hover */
-    animation-duration: 4s; /* Speed up slightly on hover */
+    animation-play-state: paused;
     opacity: 0.8;
   }
   
   .fermata-advanced:hover .fermata-caustic {
-    /* Keep animations running on hover */
-    animation-duration: 6s; /* Speed up slightly on hover */
+    animation-play-state: paused;
     opacity: 0.6;
   }
   
@@ -753,307 +807,6 @@
     will-change: transform, opacity;
     transform: translateZ(0);
     backface-visibility: hidden;
-  }
-  
-  /* ========================================
-     ENHANCED LIGHTBULB CONTAINER STYLES
-     ======================================== */
-  
-  /* CSS Custom Properties for Dynamic Theming */
-  .lightbulb-container {
-    --logo-warm-light: #ffdc99;
-    --logo-cool-light: #e8f4ff;
-    --logo-metal-gradient: linear-gradient(135deg, #8e9eab 0%, #eef2f3 50%, #8e9eab 100%);
-    --logo-glass-opacity: 0.95;
-    --logo-glow-intensity: 1;
-    --logo-shadow-color: rgba(255, 179, 71, 0.2);
-    --logo-ambient-light: rgba(0, 184, 255, 0.1);
-  }
-  
-  /* Enhanced Container with Depth and Presence */
-  .lightbulb-container {
-    position: relative;
-    transform-style: preserve-3d;
-    perspective: 1200px;
-    contain: layout style paint;
-    isolation: isolate;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    
-    /* Multi-layer shadow system for depth */
-    box-shadow: 
-      0 2px 8px rgba(0, 0, 0, 0.1),
-      0 4px 16px var(--logo-shadow-color),
-      0 8px 32px var(--logo-ambient-light),
-      inset 0 1px 2px rgba(255, 255, 255, 0.05);
-    
-    /* Subtle radial gradient backdrop */
-    background: radial-gradient(
-      ellipse at center,
-      rgba(255, 220, 153, 0.03) 0%,
-      transparent 40%,
-      rgba(232, 244, 255, 0.02) 70%,
-      transparent 100%
-    );
-    
-    border-radius: 50%;
-    backdrop-filter: blur(0.5px);
-    animation: shadow-pulse 6s ease-in-out infinite;
-  }
-  
-  /* Pseudo-elements for additional depth layers */
-  .lightbulb-container::before {
-    content: '';
-    position: absolute;
-    inset: -10%;
-    border-radius: inherit;
-    background: radial-gradient(
-      circle at 30% 30%,
-      var(--logo-warm-light) 0%,
-      transparent 25%
-    );
-    opacity: 0;
-    filter: blur(20px);
-    animation: warm-glow 8s ease-in-out infinite;
-    pointer-events: none;
-    transform: translateZ(-10px);
-  }
-  
-  .lightbulb-container::after {
-    content: '';
-    position: absolute;
-    inset: -5%;
-    border-radius: inherit;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      var(--logo-cool-light) 45deg,
-      transparent 90deg,
-      var(--logo-warm-light) 135deg,
-      transparent 180deg,
-      var(--logo-cool-light) 225deg,
-      transparent 270deg,
-      var(--logo-warm-light) 315deg,
-      transparent 360deg
-    );
-    opacity: 0;
-    animation: glass-reflection 10s linear infinite;
-    pointer-events: none;
-    transform: translateZ(5px) rotateZ(0deg);
-    mix-blend-mode: screen;
-  }
-  
-  /* ========================================
-     ADDITIONAL KEYFRAME ANIMATIONS
-     ======================================== */
-  
-  /* Realistic light fluctuation */
-  @keyframes lightbulb-flicker {
-    0%, 100% {
-      filter: brightness(1) contrast(1);
-      transform: scale(1);
-    }
-    5% {
-      filter: brightness(0.95) contrast(1.05);
-      transform: scale(0.99);
-    }
-    10% {
-      filter: brightness(1.05) contrast(0.98);
-      transform: scale(1.01);
-    }
-    15% {
-      filter: brightness(0.98) contrast(1.02);
-      transform: scale(0.995);
-    }
-    50% {
-      filter: brightness(1.02) contrast(1);
-      transform: scale(1.005);
-    }
-    85% {
-      filter: brightness(0.97) contrast(1.01);
-      transform: scale(0.998);
-    }
-    95% {
-      filter: brightness(1.03) contrast(0.99);
-      transform: scale(1.002);
-    }
-  }
-  
-  /* Moving glass reflection */
-  @keyframes glass-reflection {
-    0% {
-      opacity: 0.15;
-      transform: translateZ(5px) rotateZ(0deg);
-    }
-    25% {
-      opacity: 0.25;
-      transform: translateZ(8px) rotateZ(90deg);
-    }
-    50% {
-      opacity: 0.15;
-      transform: translateZ(5px) rotateZ(180deg);
-    }
-    75% {
-      opacity: 0.20;
-      transform: translateZ(7px) rotateZ(270deg);
-    }
-    100% {
-      opacity: 0.15;
-      transform: translateZ(5px) rotateZ(360deg);
-    }
-  }
-  
-  /* Color temperature variation */
-  @keyframes warm-glow {
-    0%, 100% {
-      opacity: 0.1;
-      filter: hue-rotate(0deg) brightness(1);
-      transform: translateZ(-10px) scale(1);
-    }
-    25% {
-      opacity: 0.15;
-      filter: hue-rotate(-5deg) brightness(1.1);
-      transform: translateZ(-8px) scale(1.05);
-    }
-    50% {
-      opacity: 0.2;
-      filter: hue-rotate(5deg) brightness(1.2);
-      transform: translateZ(-5px) scale(1.1);
-    }
-    75% {
-      opacity: 0.15;
-      filter: hue-rotate(-3deg) brightness(1.05);
-      transform: translateZ(-8px) scale(1.05);
-    }
-  }
-  
-  /* Dynamic shadow beneath logo */
-  @keyframes shadow-pulse {
-    0%, 100% {
-      box-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.1),
-        0 4px 16px var(--logo-shadow-color),
-        0 8px 32px var(--logo-ambient-light),
-        0 16px 48px rgba(255, 220, 153, 0.05),
-        inset 0 1px 2px rgba(255, 255, 255, 0.05);
-    }
-    50% {
-      box-shadow: 
-        0 3px 12px rgba(0, 0, 0, 0.15),
-        0 6px 24px var(--logo-shadow-color),
-        0 12px 48px var(--logo-ambient-light),
-        0 24px 64px rgba(255, 220, 153, 0.08),
-        inset 0 2px 4px rgba(255, 255, 255, 0.08);
-    }
-  }
-  
-  /* ========================================
-     PROFESSIONAL FINISHING TOUCHES
-     ======================================== */
-  
-  /* Complex fermata animations removed */
-  
-  /* Chromatic aberration on hover */
-  .lightbulb-container:hover {
-    --logo-glow-intensity: 1.5;
-    transform: translateZ(10px) scale(1.02);
-    filter: 
-      contrast(1.05)
-      saturate(1.1);
-  }
-  
-  .lightbulb-container:hover::before {
-    opacity: 0.25;
-    /* Keep animations running on hover */
-    animation-duration: 6s; /* Speed up slightly on hover */
-    transform: translateZ(-5px) scale(1.15);
-  }
-  
-  .lightbulb-container:hover::after {
-    opacity: 0.3;
-    animation-duration: 5s;
-  }
-  
-  /* Complex fermata filters removed */
-  
-  /* 3D perspective effect on interaction */
-  .lightbulb-container:active {
-    transform: translateZ(-5px) scale(0.98);
-  }
-  
-  .lightbulb-container:active::before {
-    opacity: 0.3;
-    transform: translateZ(-15px) scale(1.2);
-  }
-  
-  .lightbulb-container:active::after {
-    opacity: 0.4;
-    animation-duration: 2s;
-  }
-  
-  /* ========================================
-     PERFORMANCE OPTIMIZATIONS
-     ======================================== */
-  
-  /* GPU-accelerated transforms for all animated elements */
-  .lightbulb-container,
-  .lightbulb-container::before,
-  .lightbulb-container::after {
-    will-change: transform, opacity, filter;
-    transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    -webkit-font-smoothing: subpixel-antialiased;
-  }
-  
-  /* Optimize for 60fps animations */
-  .lightbulb-container * {
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    animation-fill-mode: both;
-  }
-  
-  /* Reduced motion preferences */
-  @media (prefers-reduced-motion: reduce) {
-    .lightbulb-container,
-    .lightbulb-container::before,
-    .lightbulb-container::after {
-      animation: none !important;
-      transition: opacity 0.3s ease !important;
-    }
-    
-    .lightbulb-container:hover {
-      transform: none;
-      filter: none;
-    }
-  }
-  
-  /* Dark theme adjustments */
-  .dark .lightbulb-container {
-    --logo-shadow-color: rgba(255, 179, 71, 0.3);
-    --logo-ambient-light: rgba(0, 184, 255, 0.2);
-    box-shadow: 
-      0 2px 12px rgba(0, 0, 0, 0.3),
-      0 4px 24px var(--logo-shadow-color),
-      0 8px 48px var(--logo-ambient-light),
-      inset 0 1px 2px rgba(255, 255, 255, 0.1);
-  }
-  
-  /* Viewport size optimizations */
-  @media (max-width: 640px) {
-    .lightbulb-container {
-      perspective: 800px;
-      --logo-glow-intensity: 0.8;
-    }
-    
-    .lightbulb-container::before,
-    .lightbulb-container::after {
-      display: none; /* Reduce complexity on mobile */
-    }
-  }
-  
-  @media (min-width: 1280px) {
-    .lightbulb-container {
-      perspective: 1500px;
-      --logo-glow-intensity: 1.2;
-    }
   }
 
 
