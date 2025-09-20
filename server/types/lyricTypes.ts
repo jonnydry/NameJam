@@ -165,8 +165,7 @@ export interface LyricServiceConfig {
     model: string;
     temperature: number;
     maxTokens: number;
-    frequencyPenalty: number;
-    presencePenalty: number;
+    // Removed frequencyPenalty and presencePenalty - not supported by grok-4-fast
     retryAttempts: number;
     retryDelay: number;
   };

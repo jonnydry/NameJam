@@ -1438,7 +1438,22 @@ Generate ${count} creative ${isband ? 'band names' : 'song titles'} in JSON form
     try {
       // 1. Gather enhanced context for both genres
       const context = await this.gatherContextWithStrategy(genre, mood, type, strategy);
-      const sources = createEnhancedWordSource(context);
+      
+      // Convert GenerationContext to the expected enhanced word source format
+      const basicWordSource = {
+        adjectives: [...context.genreKeywords, ...context.moodWords].slice(0, 10),
+        nouns: [...context.genreTags, ...context.audioCharacteristics].slice(0, 10),
+        verbs: ['play', 'sing', 'dance', 'rock', 'groove'].slice(0, 5),
+        musicalTerms: context.audioCharacteristics.slice(0, 5),
+        contextualWords: context.culturalReferences.slice(0, 5),
+        associatedWords: context.wordAssociations.slice(0, 8),
+        genreTerms: context.genreTags.slice(0, 5),
+        lastfmWords: context.genreTags.slice(0, 3),
+        spotifyWords: context.relatedArtists.slice(0, 3),
+        conceptNetWords: context.wordAssociations.slice(0, 3)
+      };
+      
+      const sources = createEnhancedWordSource(basicWordSource);
 
       // 2. Build cross-genre fusion request
       const fusionRequest: CrossGenreFusionRequest = {
