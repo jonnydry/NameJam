@@ -149,10 +149,8 @@ export function buildRequestParams(systemPrompt: string, prompt: string): any {
       }
     ],
     max_tokens: BAND_BIO_CONFIG.MAX_TOKENS,
-    temperature: BAND_BIO_CONFIG.TEMPERATURE,
-    top_p: BAND_BIO_CONFIG.TOP_P,
-    frequency_penalty: BAND_BIO_CONFIG.FREQUENCY_PENALTY,
-    presence_penalty: BAND_BIO_CONFIG.PRESENCE_PENALTY
+    temperature: BAND_BIO_CONFIG.TEMPERATURE
+    // Removed top_p, frequency_penalty, presence_penalty as grok-4-fast doesn't support them
   };
 }
 
