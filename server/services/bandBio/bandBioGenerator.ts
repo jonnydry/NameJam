@@ -118,7 +118,26 @@ export class BandBioGenerator {
   private async executeAIRequest(requestParams: any): Promise<any> {
     return await xaiRateLimiter.execute(async () => {
       return withRetry(async () => {
+        secureLog.info(`🤖 Calling grok-4-fast with params:`, {
+          model: requestParams.model,
+          temperature: requestParams.temperature,
+          max_tokens: requestParams.max_tokens,
+          messages_count: requestParams.messages?.length,
+          system_prompt_length: requestParams.messages?.[0]?.content?.length,
+          user_prompt_length: requestParams.messages?.[1]?.content?.length
+        });
+        
         const resp = await this.openai!.chat.completions.create(requestParams);
+        
+        secureLog.info(`🤖 grok-4-fast response:`, {
+          id: resp.id,
+          model: resp.model,
+          choices_count: resp.choices?.length,
+          content_length: resp.choices?.[0]?.message?.content?.length,
+          finish_reason: resp.choices?.[0]?.finish_reason,
+          usage: resp.usage
+        });
+        
         return resp;
       }, BAND_BIO_CONFIG.RETRY_ATTEMPTS, BAND_BIO_CONFIG.RETRY_DELAY);
     });

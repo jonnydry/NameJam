@@ -28,11 +28,10 @@ export class LyricConfig {
   private loadConfiguration(): LyricServiceConfig {
     return {
       openAI: {
-        model: process.env.LYRIC_AI_MODEL || 'grok-4',
+        model: process.env.LYRIC_AI_MODEL || 'grok-4-fast',
         temperature: parseFloat(process.env.LYRIC_AI_TEMPERATURE || '0.85'),
         maxTokens: parseInt(process.env.LYRIC_AI_MAX_TOKENS || '200'),
-        frequencyPenalty: parseFloat(process.env.LYRIC_AI_FREQUENCY_PENALTY || '0.6'),
-        presencePenalty: parseFloat(process.env.LYRIC_AI_PRESENCE_PENALTY || '0.5'),
+        // Removed frequencyPenalty and presencePenalty as grok-4-fast doesn't support them
         retryAttempts: parseInt(process.env.LYRIC_AI_RETRY_ATTEMPTS || '3'),
         retryDelay: parseInt(process.env.LYRIC_AI_RETRY_DELAY || '2000')
       },

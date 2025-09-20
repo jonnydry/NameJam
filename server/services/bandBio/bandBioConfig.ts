@@ -64,12 +64,10 @@ export type BandBioRequest = z.infer<typeof BandBioRequestSchema>;
 
 // Configuration constants
 export const BAND_BIO_CONFIG = {
-  MODEL: "grok-4",
-  MAX_TOKENS: 300,
+  MODEL: "grok-4-fast",
+  MAX_TOKENS: 600, // Increased from 300 to fix 'length' finish_reason issue
   TEMPERATURE: 1.2,
-  TOP_P: 0.95,
-  FREQUENCY_PENALTY: 0.6,
-  PRESENCE_PENALTY: 0.4,
+  // Removed TOP_P, FREQUENCY_PENALTY, PRESENCE_PENALTY as grok-4-fast doesn't support them
   MAX_WORDS: 150,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 2000,

@@ -1108,7 +1108,7 @@ Generate ${count} creative ${isband ? 'band names' : 'song titles'} in JSON form
       const finalTemperature = Math.max(0.7, Math.min(1.5, baseTemperature + temperatureAdjust));
       
       const response = await this.openai.chat.completions.create({
-        model: "grok-4",
+        model: "grok-4-fast",
         messages: [{ role: "user", content: prompt }],
         temperature: finalTemperature,
         max_tokens: 300
