@@ -28,7 +28,7 @@ export class LyricConfig {
   private loadConfiguration(): LyricServiceConfig {
     return {
       openAI: {
-        model: process.env.LYRIC_AI_MODEL || 'grok-3',
+        model: process.env.LYRIC_AI_MODEL || 'grok-4',
         temperature: parseFloat(process.env.LYRIC_AI_TEMPERATURE || '0.85'),
         maxTokens: parseInt(process.env.LYRIC_AI_MAX_TOKENS || '200'),
         frequencyPenalty: parseFloat(process.env.LYRIC_AI_FREQUENCY_PENALTY || '0.6'),
