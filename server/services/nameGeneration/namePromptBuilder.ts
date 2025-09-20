@@ -31,7 +31,7 @@ export class NamePromptBuilder {
    * Build optimized prompt configuration for grok-4-fast
    */
   static buildPrompt(request: NameGenerationRequest, strategy: GenerationStrategy): {
-    messages: Array<{ role: string; content: string }>;
+    messages: Array<{ role: "system" | "user"; content: string }>;
     config: NamePromptConfig;
   } {
     const config = this.getStrategyConfig(strategy);
