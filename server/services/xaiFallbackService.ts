@@ -9,7 +9,7 @@ interface FallbackOptions {
 
 export class XAIFallbackService {
   private openai: OpenAI;
-  private models = ['grok-3'];
+  private models = ['grok-4-fast', 'grok-3']; // Prioritize grok-4-fast
   private cache = new Map<string, { data: any, timestamp: number }>();
   private cacheExpiry = 1000 * 60 * 30; // 30 minute cache
   
@@ -104,7 +104,7 @@ Understand subtle semantic relationships and cultural connotations.`
               { role: 'user', content: prompt }
             ],
             temperature,
-            max_tokens: 500,
+            max_tokens: 250, // Reduced from 500 for word lists - architect recommendation
             response_format: { type: 'json_object' }
           });
 
@@ -199,7 +199,7 @@ ${options.type === 'artists'
               { role: 'user', content: prompt }
             ],
             temperature: options.type === 'artists' ? 0.85 : 0.9, // Slightly lower for artist names
-            max_tokens: 600,
+            max_tokens: 400, // Reduced from 600 for better efficiency 
             response_format: { type: 'json_object' }
           });
 
@@ -317,7 +317,7 @@ Return as JSON: {"genreTerms": ["term1"], "descriptiveWords": ["word1"]}`;
               { role: 'user', content: prompt }
             ],
             temperature: 0.8,
-            max_tokens: 200,
+            max_tokens: 150, // Reduced from 200 for simple word lists
             response_format: { type: 'json_object' }
           });
 
