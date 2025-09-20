@@ -64,7 +64,7 @@ export type BandBioRequest = z.infer<typeof BandBioRequestSchema>;
 
 // Configuration constants
 export const BAND_BIO_CONFIG = {
-  MODEL: "grok-3",
+  MODEL: "grok-4",
   MAX_TOKENS: 300,
   TEMPERATURE: 1.2,
   TOP_P: 0.95,
