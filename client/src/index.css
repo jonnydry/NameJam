@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Bebas+Neue&display=swap');
-@import './styles/mobile-enhancements.css';
+@import url('./styles/mobile-enhancements.css');
 
 @tailwind base;
 @tailwind components;
