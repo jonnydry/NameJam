@@ -7,7 +7,6 @@ export interface EnhancedWordSource {
   contextualWords: string[];
   associatedWords: string[];
   genreTerms: string[];
-  lastfmWords: string[];
   spotifyWords: string[];
   conceptNetWords: string[];
   
@@ -19,7 +18,6 @@ export interface EnhancedWordSource {
   validContextualWords: string[];
   validAssociatedWords: string[];
   validGenreTerms: string[];
-  validLastfmWords: string[];
   validSpotifyWords: string[];
   validConceptNetWords: string[];
   

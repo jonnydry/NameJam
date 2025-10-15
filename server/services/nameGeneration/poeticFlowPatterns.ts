@@ -139,7 +139,6 @@ export class PoeticFlowPatterns {
       case 'adjective':
         wordPool = [
           ...sources.adjectives,
-          ...(sources.lastfmWords || []),
           ...(poetryContext?.filter(w => this.isAdjectiveLike(w)) || [])
         ];
         break;
@@ -165,8 +164,7 @@ export class PoeticFlowPatterns {
     
     // Prefer words from music context when available
     const musicWords = filtered.filter(w => 
-      sources.spotifyWords?.includes(w) || 
-      sources.lastfmWords?.includes(w) ||
+      sources.spotifyWords?.includes(w) ||
       sources.musicalTerms?.includes(w)
     );
     

@@ -17,7 +17,6 @@ export function createEnhancedWordSource(basicWordSource: {
   contextualWords?: string[];
   associatedWords?: string[];
   genreTerms?: string[];
-  lastfmWords?: string[];
   spotifyWords?: string[];
   conceptNetWords?: string[];
 }): EnhancedWordSource {
@@ -45,7 +44,6 @@ export function createEnhancedWordSource(basicWordSource: {
     contextualWords: basicWordSource.contextualWords || [],
     associatedWords: basicWordSource.associatedWords || [],
     genreTerms: basicWordSource.genreTerms || [],
-    lastfmWords: basicWordSource.lastfmWords || [],
     spotifyWords: basicWordSource.spotifyWords || [],
     conceptNetWords: basicWordSource.conceptNetWords || [],
     
@@ -57,7 +55,6 @@ export function createEnhancedWordSource(basicWordSource: {
     validContextualWords: [],
     validAssociatedWords: [],
     validGenreTerms: [],
-    validLastfmWords: [],
     validSpotifyWords: [],
     validConceptNetWords: [],
     
@@ -80,7 +77,6 @@ export function createEnhancedWordSource(basicWordSource: {
   sources.validContextualWords = applyQualityFilter(sources.contextualWords);
   sources.validAssociatedWords = applyQualityFilter(sources.associatedWords);
   sources.validGenreTerms = applyQualityFilter(sources.genreTerms);
-  sources.validLastfmWords = applyQualityFilter(sources.lastfmWords);
   sources.validSpotifyWords = applyQualityFilter(sources.spotifyWords);
   sources.validConceptNetWords = applyQualityFilter(sources.conceptNetWords);
 
@@ -94,7 +90,6 @@ export function createEnhancedWordSource(basicWordSource: {
     ...sources.validContextualWords,
     ...sources.validAssociatedWords,
     ...sources.validGenreTerms,
-    ...sources.validLastfmWords,
     ...sources.validSpotifyWords,
     ...sources.validConceptNetWords
   ]; // Already deduplicated in wordSourceBuilder for optimal performance
@@ -140,7 +135,6 @@ export function createFallbackEnhancedWordSource(): EnhancedWordSource {
     contextualWords: ['night', 'day', 'sky', 'earth', 'water', 'wind', 'sun', 'moon', 'star', 'rain'],
     associatedWords: ['power', 'energy', 'force', 'spirit', 'magic', 'wonder', 'beauty', 'grace', 'strength', 'freedom'],
     genreTerms: ['rock', 'blues', 'jazz', 'folk', 'soul', 'funk', 'indie', 'alternative', 'ambient', 'acoustic'],
-    lastfmWords: ['artist', 'album', 'track', 'band', 'music', 'sound', 'genre', 'style', 'vibe', 'mood'],
     spotifyWords: ['playlist', 'stream', 'discover', 'explore', 'listen', 'play', 'shuffle', 'repeat', 'favorite', 'top'],
     conceptNetWords: ['concept', 'idea', 'thought', 'feeling', 'emotion', 'sense', 'vision', 'dream', 'hope', 'love']
   };

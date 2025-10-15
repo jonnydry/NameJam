@@ -75,7 +75,7 @@ export class APIFallbackManager {
       artist: {
         name: 'Artist Data Fallback',
         priority: 1,
-        sources: ['spotify', 'lastfm', 'musicbrainz', 'bandcamp', 'xai-fallback'],
+        sources: ['spotify', 'musicbrainz', 'bandcamp', 'xai-fallback'],
         minQualityThreshold: 70,
         maxRetries: 3,
         timeout: 15000,
@@ -86,7 +86,7 @@ export class APIFallbackManager {
       track: {
         name: 'Track Data Fallback',
         priority: 1,
-        sources: ['spotify', 'lastfm', 'musicbrainz', 'xai-fallback'],
+        sources: ['spotify', 'musicbrainz', 'xai-fallback'],
         minQualityThreshold: 65,
         maxRetries: 3,
         timeout: 12000,
@@ -108,7 +108,7 @@ export class APIFallbackManager {
       genre: {
         name: 'Genre Data Fallback',
         priority: 1,
-        sources: ['spotify', 'lastfm', 'musicbrainz', 'xai-fallback'],
+        sources: ['spotify', 'musicbrainz', 'xai-fallback'],
         minQualityThreshold: 60,
         maxRetries: 3,
         timeout: 8000,
@@ -423,9 +423,6 @@ export class APIFallbackManager {
         case 'spotify':
           result = await this.fetchSpotifyData(type, query, options);
           break;
-        case 'lastfm':
-          result = await this.fetchLastFmData(type, query, options);
-          break;
         case 'datamuse':
           result = await this.fetchDatamuseData(query, options);
           break;
@@ -466,20 +463,6 @@ export class APIFallbackManager {
         return service.searchArtists(query, 10);
       case 'track':
         return service.searchTracks(query, 10);
-      default:
-        return null;
-    }
-  }
-
-  private async fetchLastFmData(type: string, query: string, options: any): Promise<any> {
-    const { LastFmService } = await import('./lastfmService');
-    const service = new LastFmService();
-    
-    switch (type) {
-      case 'artist':
-        return service.getArtistGenres(query);
-      case 'vocabulary':
-        return service.getGenreVocabulary(query);
       default:
         return null;
     }

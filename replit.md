@@ -13,11 +13,12 @@ NameJam is a web application designed to generate unique band names and song tit
 - **Lyric Generator Fix**: Fixed capitalization issue where lyrics were showing syllable stress patterns - now outputs lyrics with normal capitalization.
 - **Enhanced Stash Sidebar**: Complete redesign with search functionality, bulk selection/operations, visual categorization with icons/colors, collapsible categories, improved animations, enhanced item cards with preview information, and glass-like transparent effect matching the main interface.
 - **Alliteration Fix**: Updated AI prompts to explicitly avoid excessive alliteration in band and song name generation, especially for 4+ word names, creating more natural and varied results.
-- **Added Jam Band Genre**: Added "Jam Band" as a selectable genre option with appropriate vocabulary (groove, cosmic, festival, journey) and context for bands like Phish, Grateful Dead, etc. Works with Spotify and Last.fm APIs for contextual generation.
+- **Added Jam Band Genre**: Added "Jam Band" as a selectable genre option with appropriate vocabulary (groove, cosmic, festival, journey) and context for bands like Phish, Grateful Dead, etc. Works with Spotify API for contextual generation.
 - **Band Bio Generation Refactoring**: Complete architectural overhaul of band bio generation system with modular design pattern. Extracted configuration constants, created dedicated utility functions, implemented proper TypeScript interfaces, and separated fallback generation logic. This mirrors the successful lyric generation architecture for improved maintainability, testability, and code quality while maintaining all existing creative features.
 - **Lyric Typing Animation**: Implemented smooth AI chat-style typing animation for lyric results using custom React hooks with requestAnimationFrame. Features character-by-character reveal, blinking cursor, click-to-complete functionality, multi-line support, intersection observer optimization, and accessibility compliance with reduced motion preferences. Enhances user experience with engaging visual feedback while maintaining performance.
 - **Name Verification System Refactoring**: Complete architectural transformation from monolithic 700-line file to modular pipeline architecture. Implemented 11 specialized TypeScript interfaces, 12 dedicated components with Strategy Pattern for platform verifiers, Pipeline Pattern for sequential processing, and comprehensive error handling. Reduced main verification method from 355 lines to 57 lines while preserving all functionality including easter eggs, famous artists, and platform verification. Fixed critical production issues including timeout race conditions, platform attribution mismatches, and precedence bugs. Achieved production-ready status with architect approval.
 - **Repetition Filtering Fix**: Fixed critical bug where repetition filtering could result in fewer than requested results (e.g., generating only 3 instead of 4 band names). Implemented intelligent retry logic that generates fresh alternatives when names are filtered out, ensuring users always receive the full requested count. System now attempts up to 3 additional generations when filtering reduces results below target, maintaining quality while guaranteeing complete result sets.
+- **Last.fm API Removal (October 2025)**: Completely removed Last.fm API integration due to rate limiting issues. System now relies on Spotify + Datamuse + XAI for context generation, maintaining quality while eliminating the strictest rate-limited service. Removed Last.fm from all services, rate limiters, circuit breakers, and fallback configurations. Fixed TypeScript errors and cleaned up all references across the codebase.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -46,13 +47,13 @@ Name generation approach: Dynamic API-driven context (no static lists) feeding s
 - `migrations/`: Database migration files
 
 ### Key Features & Design Patterns
-- **Intelligent Name Generation Service**: API-driven name generation using dynamic context from Datamuse (word associations), Spotify (genre artists), and Last.fm (genre vocabulary) feeding into structured XAI prompts. Eliminates static word lists in favor of live API data for fresh, contextual results.
+- **Intelligent Name Generation Service**: API-driven name generation using dynamic context from Datamuse (word associations) and Spotify (genre artists) feeding into structured XAI prompts. Eliminates static word lists in favor of live API data for fresh, contextual results.
 - **Legacy AI Name Generation Service**: Provides fallback AI-powered name generation using XAI's Grok 2 model with minimal context.
 - **Enhanced AI Lyric Generation Service**: Generates diverse lyrical starters with variable length, poetic meter, and authentic genre vocabulary, utilizing a hybrid approach with Datamuse API and AI for enriched context.
 - **Flexible Word Count System**: "4+" option now generates names ranging from 4-10 words with proper distribution across the full range, using structured prompts to ensure both shorter (4-6 words) and longer (7-10 words) name variations.
 - **Creative AI Band Name Generation Service**: Uses humorous, entertaining prompts focused on puns, wordplay, and whimsy. Generates 8 creative names, evaluates them on originality and entertainment value, then selects top 4. Returns JSON format {"band_names": []} for easy parsing.
 - **Creative AI Song Title Generation Service**: Uses humorous, entertaining prompts focused on clever, punny, and unexpected song titles. Generates 8 creative titles, evaluates them on originality and entertainment value, then selects top 4. Returns JSON format {"song_titles": []} for easy parsing.
-- **Name Verification Service**: Verifies name availability prioritizing Spotify, then Spotify Similar Matches, Famous Names Database, and other APIs like Last.fm and MusicBrainz, returning detailed availability with popularity scores and genre info.
+- **Name Verification Service**: Verifies name availability prioritizing Spotify, then Spotify Similar Matches, Famous Names Database, and other APIs like MusicBrainz, returning detailed availability with popularity scores and genre info.
 - **ConceptNet Integration Service**: Enhances name generation with semantic knowledge, emotional, genre, and cultural associations.
 - **UI Components**: Includes Generator Interface, Result Display, Loading Animations, and Stash Management with rating and sorting.
 - **State Management**: Uses React Context for stash management and local storage for persistence.
@@ -66,7 +67,6 @@ Name generation approach: Dynamic API-driven context (no static lists) feeding s
 - **APIs**:
     - Spotify Web API
     - Datamuse API
-    - Last.fm API
     - MusicBrainz API
     - ConceptNet API
     - PoetryDB API

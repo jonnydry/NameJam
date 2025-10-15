@@ -1,6 +1,5 @@
 import { DatamuseService } from '../datamuseService';
 import { datamuseEnhancementService } from '../datamuseEnhancements';
-import { lastfmService } from '../lastfmService';
 import { SpotifyService } from '../spotifyService';
 import { conceptNetService } from '../conceptNetService';
 import { secureLog } from '../../utils/secureLogger';
@@ -29,7 +28,6 @@ export class WordSourceBuilder {
       contextualWords: [],
       associatedWords: [],
       genreTerms: [],
-      lastfmWords: [],
       spotifyWords: [],
       conceptNetWords: [],
       
@@ -41,7 +39,6 @@ export class WordSourceBuilder {
       validContextualWords: [],
       validAssociatedWords: [],
       validGenreTerms: [],
-      validLastfmWords: [],
       validSpotifyWords: [],
       validConceptNetWords: [],
       
@@ -67,14 +64,6 @@ export class WordSourceBuilder {
       secureLog.debug(`🔍 Checking external API conditions: genre="${genre}", mood="${mood}"`);
       if (genre || mood) {
         secureLog.debug(`🌐 Entering external API calls section`);
-        
-        // Last.fm API promise
-        if (genre) {
-          secureLog.debug(`🎵 Starting Last.fm API call for genre: ${genre}`);
-          apiPromises.push(
-            this.fetchLastFmData(genre, sources)
-          );
-        }
         
         // Spotify API promises
         if (genre) {
@@ -146,29 +135,6 @@ export class WordSourceBuilder {
     return sources;
   }
 
-  private async fetchLastFmData(genre: string, sources: EnhancedWordSource): Promise<void> {
-    try {
-      const genreVocab = await lastfmService.getGenreVocabulary(genre);
-      secureLog.debug(`📥 Last.fm response received:`, {
-        genreTerms: genreVocab.genreTerms,
-        descriptiveWords: genreVocab.descriptiveWords,
-        relatedGenres: genreVocab.relatedGenres,
-        confidence: genreVocab.confidence
-      });
-      
-      sources.genreTerms.push(...genreVocab.genreTerms);
-      sources.lastfmWords.push(...genreVocab.descriptiveWords);
-      sources.contextualWords.push(...genreVocab.relatedGenres);
-      
-      secureLog.debug(`✅ Last.fm integration successful:`, {
-        genreTerms: genreVocab.genreTerms.length,
-        descriptiveWords: genreVocab.descriptiveWords.length,
-        confidence: genreVocab.confidence
-      });
-    } catch (error) {
-      secureLog.error('❌ Last.fm integration failed:', error);
-    }
-  }
 
   private async fetchSpotifyGenreData(genre: string, sources: EnhancedWordSource): Promise<void> {
     try {
@@ -330,7 +296,7 @@ export class WordSourceBuilder {
   private cleanWordSources(sources: EnhancedWordSource): void {
     // Define word quality filter function (reusable)
     const qualityFilter = (word: string): boolean => {
-      return word && 
+      return !!word && 
         word.length > 2 && 
         !word.includes('_') &&
         !word.includes('-') &&
@@ -343,7 +309,7 @@ export class WordSourceBuilder {
 
     // Prepare arrays for bulk deduplication and filtering
     const rawArrayKeys = ['adjectives', 'nouns', 'verbs', 'musicalTerms', 'contextualWords', 
-                         'associatedWords', 'genreTerms', 'lastfmWords', 'spotifyWords', 'conceptNetWords'];
+                         'associatedWords', 'genreTerms', 'spotifyWords', 'conceptNetWords'];
     
     const arraysToProcess = rawArrayKeys.map(key => {
       const sourceKey = key as keyof EnhancedWordSource;
@@ -386,7 +352,6 @@ export class WordSourceBuilder {
       ...sources.validContextualWords,
       ...sources.validAssociatedWords,
       ...sources.validGenreTerms,
-      ...sources.validLastfmWords,
       ...sources.validSpotifyWords,
       ...sources.validConceptNetWords
     ];

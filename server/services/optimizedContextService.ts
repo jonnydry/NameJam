@@ -5,7 +5,6 @@
 
 import { datamuseService } from './datamuseService';
 import { spotifyService } from './spotifyService';
-import { lastfmService } from './lastfmService';
 import { secureLog } from '../utils/secureLogger';
 
 interface ContextPriority {
@@ -185,15 +184,8 @@ export class OptimizedContextService {
     }
     
     if (actualGenre && strategy.important.includes('genreTags')) {
-      importantPromises.push(
-        lastfmService.getGenreVocabulary(actualGenre)
-          .then((vocabulary: any) => {
-            context.genreTags = vocabulary.descriptiveWords.slice(0, 6);
-          })
-          .catch(() => {
-            context.genreTags = [];
-          })
-      );
+      // Genre tags now provided by static fallback (Last.fm removed)
+      context.genreTags = [];
     }
 
     // Execute important context with shorter timeout
@@ -227,15 +219,8 @@ export class OptimizedContextService {
       }
       
       if (genre && optionalFields.includes('culturalReferences')) {
-        optionalPromises.push(
-          lastfmService.getGenreVocabulary(genre)
-            .then((vocabulary: any) => {
-              context.culturalReferences = this.extractCulturalReferences(vocabulary.descriptiveWords);
-            })
-            .catch(() => {
-              context.culturalReferences = [];
-            })
-        );
+        // Cultural references now handled by XAI fallback (Last.fm removed)
+        context.culturalReferences = [];
       }
       
       if (optionalPromises.length > 0) {

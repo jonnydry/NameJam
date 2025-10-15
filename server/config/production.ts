@@ -31,7 +31,6 @@ export const productionConfig = {
   // API timeouts
   apiTimeouts: {
     spotify: 15000, // 15 seconds
-    lastfm: 15000,
     datamuse: 15000,
     conceptnet: 15000,
     xai: 20000, // 20 seconds for AI

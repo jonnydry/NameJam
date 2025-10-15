@@ -8,7 +8,6 @@ import { secureLog } from "../utils/secureLogger";
 import { unifiedWordFilter } from "./nameGeneration/unifiedWordFilter";
 import { datamuseService } from "./datamuseService";
 import { spotifyService } from "./spotifyService";
-import { lastfmService } from "./lastfmService";
 import { optimizedContextService, OptimizedContext } from "./optimizedContextService";
 import { performanceMonitor } from "./performanceMonitor";
 import { sampleWithoutReplacement, RetryCircuitBreaker } from "./nameGeneration/stringUtils";
@@ -782,17 +781,11 @@ export class UnifiedNameGeneratorService {
               .then((artists: any[]) => {
                 context.relatedArtists = artists.map((a: any) => a.name);
                 context.audioCharacteristics = this.getAudioCharacteristics(genre);
+                // Genre tags and cultural references will be populated by XAI fallback if needed
+                context.genreTags = this.getStaticGenreTags(genre);
+                context.culturalReferences = [];
               })
               .catch((err: any) => secureLog.debug('Spotify genre error:', err))
-          );
-          
-          promises.push(
-            lastfmService.getGenreVocabulary(genre)
-              .then((vocabulary: any) => {
-                context.genreTags = vocabulary.descriptiveWords.slice(0, 8);
-                context.culturalReferences = this.extractCulturalReferences(vocabulary.descriptiveWords);
-              })
-              .catch((err: any) => secureLog.debug('Last.fm genre error:', err))
           );
         }
         

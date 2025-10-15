@@ -245,12 +245,6 @@ export const lyricCircuitBreakers = {
     successThreshold: 2
   }),
   
-  lastfm: CircuitBreakerRegistry.getBreaker('lastfm', {
-    failureThreshold: 3,
-    recoveryTimeout: 30000, // 30 seconds
-    successThreshold: 2
-  }),
-  
   conceptnet: CircuitBreakerRegistry.getBreaker('conceptnet', {
     failureThreshold: 3,
     recoveryTimeout: 30000, // 30 seconds

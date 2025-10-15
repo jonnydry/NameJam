@@ -73,11 +73,6 @@ export const apiRetryConfigs = {
     initialDelay: 1000,
     retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND'],
   },
-  lastfm: {
-    maxRetries: 2,
-    initialDelay: 500,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT'],
-  },
   musicbrainz: {
     maxRetries: 2,
     initialDelay: 2000, // MusicBrainz requires slower rate
