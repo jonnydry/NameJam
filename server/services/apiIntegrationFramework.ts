@@ -479,13 +479,15 @@ export class APIIntegrationFramework {
   }
 
   private getCacheTTL(serviceName: string): number {
-    // Service-specific cache TTL
+    // OPTIMIZATION: Updated TTL based on data volatility analysis
     const ttlMap: Record<string, number> = {
-      'spotify': 15 * 60 * 1000,    // 15 minutes
-      'lastfm': 30 * 60 * 1000,     // 30 minutes
-      'datamuse': 60 * 60 * 1000,   // 1 hour
-      'conceptnet': 120 * 60 * 1000, // 2 hours
-      'poetry': 240 * 60 * 1000     // 4 hours
+      'spotify': 10 * 60 * 1000,    // 10 minutes - frequently changing artist data
+      'datamuse': 2 * 60 * 60 * 1000,   // 2 hours - stable vocabulary data
+      'conceptnet': 4 * 60 * 60 * 1000, // 4 hours - very stable associations
+      'poetrydb': 1 * 60 * 60 * 1000,   // 1 hour - moderately stable poetry data
+      'itunes': 15 * 60 * 1000,     // 15 minutes - frequently changing
+      'soundcloud': 20 * 60 * 1000, // 20 minutes - moderately changing
+      'bandcamp': 30 * 60 * 1000    // 30 minutes - less frequently changing
     };
     
     return ttlMap[serviceName] || 30 * 60 * 1000; // Default 30 minutes
