@@ -107,23 +107,15 @@ export class OptimizedContextService {
     mood: string | undefined,
     strategy: ContextPriority
   ): Promise<OptimizedContext> {
-    // Randomize genre/mood when none specified for context diversity
+    // Use consistent defaults when none specified to enable caching
+    // FIXED: Random selection was breaking cache (different key each time)
     let actualGenre = genre;
     let actualMood = mood;
     
     if (!genre && !mood) {
-      const availableGenres = ['indie', 'alternative', 'pop', 'electronic', 'folk', 'ambient'];
-      const availableMoods = ['energetic', 'dreamy', 'uplifting', 'mysterious', 'nostalgic'];
-      
-      // Randomly pick genre or mood to ensure variety while maintaining API context richness
-      const shouldUseGenre = Math.random() > 0.5;
-      if (shouldUseGenre) {
-        actualGenre = availableGenres[Math.floor(Math.random() * availableGenres.length)];
-        secureLog.debug(`[OptimizedContext] Randomized to genre: ${actualGenre} for diversity`);
-      } else {
-        actualMood = availableMoods[Math.floor(Math.random() * availableMoods.length)];
-        secureLog.debug(`[OptimizedContext] Randomized to mood: ${actualMood} for diversity`);
-      }
+      // Use a consistent default genre to maintain cache effectiveness
+      actualGenre = 'indie';
+      secureLog.debug(`[OptimizedContext] Using default genre: ${actualGenre} for cache efficiency`);
     }
 
     const context: OptimizedContext = {
