@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import { DistributedRateLimiter } from './utils/sessionSecretRotation';
 import { InputSanitizer } from './utils/inputSanitizer';
 import { csrfService, createCSRFMiddleware } from './services/csrfService';
+import crypto from 'crypto';
 // Server-side HTML sanitization (simplified approach for security)
 const sanitizeHtml = (input: string): string => {
   if (!input || typeof input !== 'string') return '';
@@ -18,8 +19,31 @@ const sanitizeHtml = (input: string): string => {
     .trim();
 };
 
-// Encryption key from environment or generate one
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'name-jam-default-key-2025';
+let cachedEncryptionKey: string | null = null;
+
+const resolveEncryptionKey = (): string => {
+  if (cachedEncryptionKey) {
+    return cachedEncryptionKey;
+  }
+
+  let key = process.env.ENCRYPTION_KEY;
+  if (!key) {
+    if (process.env.NODE_ENV === 'development') {
+      key = crypto.randomBytes(48).toString('hex');
+      process.env.ENCRYPTION_KEY = key;
+      console.warn('⚠️  ENCRYPTION_KEY was missing. Generated a temporary development key. Add ENCRYPTION_KEY to Replit Secrets for consistent encryption.');
+    } else {
+      throw new Error('ENCRYPTION_KEY must be provided. Set it in Replit Secrets before starting the server.');
+    }
+  }
+
+  if (key.length < 32) {
+    throw new Error('ENCRYPTION_KEY must be at least 32 characters long.');
+  }
+
+  cachedEncryptionKey = key;
+  return cachedEncryptionKey;
+};
 
 /**
  * API Rate Limiting Configuration
@@ -335,14 +359,16 @@ export const encryption = {
   // Encrypt sensitive data
   encrypt: (text: string): string => {
     if (!text) return '';
-    return CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
+    const key = resolveEncryptionKey();
+    return CryptoJS.AES.encrypt(text, key).toString();
   },
 
   // Decrypt sensitive data
   decrypt: (encryptedText: string): string => {
     if (!encryptedText) return '';
     try {
-      const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
+      const key = resolveEncryptionKey();
+      const bytes = CryptoJS.AES.decrypt(encryptedText, key);
       return bytes.toString(CryptoJS.enc.Utf8);
     } catch (error) {
       console.error('Decryption failed:', error);

@@ -579,6 +579,59 @@ export class UnifiedNameGeneratorService {
       secureLog.info(`Parsing method ${method} stats: ${stats.uses} uses, ${avgSuccessRate}% avg success rate`);
     }
   }
+
+  /**
+   * Calculate filtering efficiency based on input/output ratio
+   */
+  private calculateFilteringEfficiency(filteredCount: number, originalCount: number): number {
+    if (originalCount === 0) return 0;
+    return filteredCount / originalCount;
+  }
+
+  /**
+   * Calculate smart multiplier for generation count based on various factors
+   */
+  private calculateSmartMultiplier(needed: number, efficiency: number, type: string, genre?: string): number {
+    let baseMultiplier = 2.0; // Start with conservative 2x
+    
+    // Adjust based on filtering efficiency
+    if (efficiency < 0.3) {
+      baseMultiplier = 4.0; // High filtering, need more generation
+    } else if (efficiency < 0.5) {
+      baseMultiplier = 3.0; // Medium filtering
+    } else if (efficiency > 0.8) {
+      baseMultiplier = 1.5; // Low filtering, less generation needed
+    }
+    
+    // Adjust based on name type complexity
+    if (type === 'band') {
+      baseMultiplier *= 1.2; // Band names are more complex
+    } else if (type === 'song') {
+      baseMultiplier *= 0.9; // Song names are simpler
+    }
+    
+    // Adjust based on genre difficulty
+    if (genre) {
+      const difficultGenres = ['metal', 'electronic', 'experimental'];
+      const easyGenres = ['pop', 'country', 'folk'];
+      
+      if (difficultGenres.includes(genre.toLowerCase())) {
+        baseMultiplier *= 1.3; // More generation needed for difficult genres
+      } else if (easyGenres.includes(genre.toLowerCase())) {
+        baseMultiplier *= 0.8; // Less generation needed for easy genres
+      }
+    }
+    
+    // Adjust based on how many names we need
+    if (needed <= 2) {
+      baseMultiplier *= 1.5; // Small requests need higher multiplier
+    } else if (needed >= 10) {
+      baseMultiplier *= 0.8; // Large requests can use lower multiplier
+    }
+    
+    // Cap the multiplier between 1.2 and 5.0
+    return Math.max(1.2, Math.min(5.0, baseMultiplier));
+  }
   
 
   async generateNames(
@@ -630,8 +683,12 @@ export class UnifiedNameGeneratorService {
         
         await this.filteringCircuitBreaker.attempt(
           async () => {
-            // Generate significantly more names upfront to account for filtering
-            const generateCount = Math.max(needed * 3, count * 2);
+            // OPTIMIZATION: Smart generation count based on filtering efficiency
+            const filteringEfficiency = this.calculateFilteringEfficiency(filteredNames.length, names.length);
+            const smartMultiplier = this.calculateSmartMultiplier(needed, filteringEfficiency, type, genre);
+            const generateCount = Math.max(needed * smartMultiplier, count * 1.5);
+            
+            secureLog.debug(`Smart generation: needed=${needed}, efficiency=${filteringEfficiency.toFixed(2)}, multiplier=${smartMultiplier.toFixed(1)}, generating=${generateCount}`);
             
             let additionalNames: string[];
             if (strategy.useAI) {

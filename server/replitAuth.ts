@@ -41,6 +41,8 @@ export function getSession() {
   const sessionSecrets = secrets.previous 
     ? [secrets.current, secrets.previous] 
     : [secrets.current];
+
+  const isProduction = process.env.NODE_ENV === 'production';
   
   return session({
     secret: sessionSecrets, // Support both new and old secrets during rotation
@@ -49,10 +51,9 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // Always false for Replit development
+      secure: isProduction,
       maxAge: sessionTtl,
-      sameSite: 'lax', // More permissive for dev
-      // Remove domain restriction for development
+      sameSite: isProduction ? 'strict' : 'lax',
     },
     rolling: true, // Reset expiration on activity
     name: 'namejam.session', // Custom session name

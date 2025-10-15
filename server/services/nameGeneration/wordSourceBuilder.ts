@@ -98,20 +98,24 @@ export class WordSourceBuilder {
         }
       }
       
-      // Wait for all parallel API calls to complete with timeout
+      // Wait for all parallel API calls to complete with optimized timeout
       if (apiPromises.length > 0) {
         try {
+          // OPTIMIZATION: Adaptive timeout based on number of API calls
+          const adaptiveTimeout = Math.min(12000, 3000 + (apiPromises.length * 2000)); // 3-12 seconds based on load
           const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('External API timeout')), 15000); // 15 second timeout for external APIs
+            setTimeout(() => reject(new Error('External API timeout')), adaptiveTimeout);
           });
           
+          const startTime = performance.now();
           await Promise.race([
             Promise.allSettled(apiPromises),
             timeoutPromise
           ]);
-          secureLog.debug(`🔄 External API calls completed`);
+          const duration = performance.now() - startTime;
+          secureLog.debug(`🔄 External API calls completed in ${duration.toFixed(0)}ms (${apiPromises.length} calls)`);
         } catch (error) {
-          secureLog.warn(`⏰ External API calls timed out after 15 seconds, continuing with Datamuse-only generation`);
+          secureLog.warn(`⏰ External API calls timed out, continuing with Datamuse-only generation`);
         }
       }
       
@@ -239,58 +243,66 @@ export class WordSourceBuilder {
   }
 
   private async fetchDatamuseData(poeticSeeds: any, mood: string | undefined, genre: string | undefined, sources: EnhancedWordSource): Promise<void> {
+    const startTime = performance.now();
+    
+    // OPTIMIZATION: Batch similar requests together for better performance
     const datamusePromises = [];
     
-    // Get emotionally evocative words using enhanced multi-query
+    // Batch 1: Emotional and sensory words (similar processing)
     const emotionalSeeds = poeticSeeds.emotional.slice(0, 2);
-    datamusePromises.push(...emotionalSeeds.map((seed: string) =>
-      this.fetchEnhancedDatamuseWords(seed, 'adjective').then(enhancedWords => {
-        sources.contextualWords.push(...enhancedWords.slice(0, 8));
-      }).catch(error => secureLog.error('Enhanced emotional words failed:', error))
-    ));
-    
-    // Get sensory/imagery words using enhanced multi-query
     const sensorySeeds = poeticSeeds.sensory.slice(0, 2);
-    datamusePromises.push(...sensorySeeds.map((seed: string) =>
-      this.fetchEnhancedDatamuseWords(seed, 'noun').then(enhancedWords => {
-        sources.associatedWords.push(...enhancedWords.slice(0, 10));
-      }).catch(error => secureLog.error('Enhanced sensory words failed:', error))
-    ));
+    const emotionalSensorySeeds = [...emotionalSeeds, ...sensorySeeds];
     
-    // Get musical/rhythmic words using enhanced multi-query
+    datamusePromises.push(
+      Promise.allSettled(emotionalSensorySeeds.map((seed: string, index: number) =>
+        this.fetchEnhancedDatamuseWords(seed, index < emotionalSeeds.length ? 'adjective' : 'noun')
+          .then(enhancedWords => {
+            if (index < emotionalSeeds.length) {
+              sources.contextualWords.push(...enhancedWords.slice(0, 8));
+            } else {
+              sources.associatedWords.push(...enhancedWords.slice(0, 10));
+            }
+          })
+          .catch(error => secureLog.error(`Enhanced ${index < emotionalSeeds.length ? 'emotional' : 'sensory'} words failed:`, error))
+      ))
+    );
+    
+    // Batch 2: Musical and genre-specific words
     const musicalSeeds = ['melody', 'rhythm'];
-    datamusePromises.push(...musicalSeeds.map(seed =>
-      this.fetchEnhancedDatamuseWords(seed, 'noun').then(enhancedWords => {
-        sources.musicalTerms.push(...enhancedWords.slice(0, 5));
-      }).catch(error => secureLog.error('Enhanced musical words failed:', error))
-    ));
-    
-    // Get high-quality adjectives using enhanced multi-query
     const adjectiveSeeds = this.getAdjectiveSeeds(mood, genre).slice(0, 3);
-    datamusePromises.push(...adjectiveSeeds.map(seed =>
-      this.fetchEnhancedDatamuseWords(seed, 'adjective').then(enhancedWords => {
-        sources.adjectives.push(...enhancedWords.slice(0, 10));
-      }).catch(error => secureLog.error('Enhanced adjectives failed:', error))
-    ));
-    
-    // Get poetic nouns using enhanced multi-query
     const nounSeeds = this.getNounSeeds(mood, genre).slice(0, 3);
-    datamusePromises.push(...nounSeeds.map(seed =>
-      this.fetchEnhancedDatamuseWords(seed, 'noun').then(enhancedWords => {
-        sources.nouns.push(...enhancedWords.slice(0, 10));
-      }).catch(error => secureLog.error('Enhanced nouns failed:', error))
-    ));
-    
-    // Get verbs using enhanced multi-query
     const verbSeeds = this.getVerbSeeds(mood, genre).slice(0, 2);
-    datamusePromises.push(...verbSeeds.map(seed =>
-      this.fetchEnhancedDatamuseWords(seed, 'verb').then(enhancedWords => {
-        const actionVerbs = enhancedWords.filter(w => this.isActionWord(w));
-        sources.verbs.push(...actionVerbs.slice(0, 8));
-      }).catch(error => secureLog.error('Enhanced verbs failed:', error))
-    ));
     
+    const allSeeds = [
+      ...musicalSeeds.map(seed => ({ seed, type: 'noun' as const, target: 'musicalTerms' })),
+      ...adjectiveSeeds.map(seed => ({ seed, type: 'adjective' as const, target: 'adjectives' })),
+      ...nounSeeds.map(seed => ({ seed, type: 'noun' as const, target: 'nouns' })),
+      ...verbSeeds.map(seed => ({ seed, type: 'verb' as const, target: 'verbs' }))
+    ];
+    
+    datamusePromises.push(
+      Promise.allSettled(allSeeds.map(({ seed, type, target }) =>
+        this.fetchEnhancedDatamuseWords(seed, type)
+          .then(enhancedWords => {
+            let processedWords = enhancedWords;
+            if (type === 'verb') {
+              processedWords = enhancedWords.filter(w => this.isActionWord(w));
+            }
+            
+            const limit = target === 'musicalTerms' ? 5 : 
+                         target === 'verbs' ? 8 : 10;
+            
+            (sources[target] as string[]).push(...processedWords.slice(0, limit));
+          })
+          .catch(error => secureLog.error(`Enhanced ${type} words failed for ${seed}:`, error))
+      ))
+    );
+    
+    // Execute all batches in parallel
     await Promise.allSettled(datamusePromises);
+    
+    const duration = performance.now() - startTime;
+    secureLog.debug(`🚀 Datamuse data fetching completed in ${duration.toFixed(0)}ms`);
   }
 
   private cleanWordSources(sources: EnhancedWordSource): void {
