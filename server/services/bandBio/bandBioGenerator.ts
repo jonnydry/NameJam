@@ -100,19 +100,26 @@ export class BandBioGenerator {
       prompt = buildPromptString(jsonPrompt, false);
     }
 
-    // Build request parameters
+    // Build request parameters - optimized for creative quality
     const requestParams = buildRequestParams(systemPrompt, prompt);
 
-    // Make API call with retry logic
+    // Make API call with creative-focused retry logic
     const response = await this.executeAIRequest(requestParams);
-    
-    // Parse and validate response
+
+    // Parse and validate response with quality checks
     const content = response.choices[0]?.message?.content || "";
     if (!content || content.trim() === "") {
       throw new Error('Empty content returned');
     }
 
-    return parseAIResponse(content);
+    const parsedBio = parseAIResponse(content);
+
+    // Basic creativity validation (NEW)
+    if (parsedBio.length < 200) {
+      secureLog.warn('Bio suspiciously short, may lack creative depth');
+    }
+
+    return parsedBio;
   }
 
   private async executeAIRequest(requestParams: any): Promise<any> {

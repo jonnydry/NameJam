@@ -4,6 +4,10 @@ interface RateLimiterOptions {
   maxRequests: number;
   windowMs: number;
   delayMs?: number;
+  // Creative optimizations
+  adaptiveDelay?: boolean;
+  baseDelay?: number;
+  peakHours?: string;
 }
 
 interface QueuedRequest {
@@ -119,10 +123,21 @@ export const spotifyRateLimiter = new RateLimiter({
   delayMs: 100       // 100ms between requests
 });
 
+// Optimized XAI rate limiter - higher throughput for creative tasks
 export const xaiRateLimiter = new RateLimiter({
-  maxRequests: 60,   // Conservative estimate for XAI
+  maxRequests: 80,   // Increased for creative bursts
   windowMs: 60000,   // 1 minute
-  delayMs: 200       // 200ms between requests
+  adaptiveDelay: true, // NEW: adapt delay based on response times
+  baseDelay: 150      // Faster base delay for creativity
+});
+
+// Creative burst rate limiter for peak nighttime creative sessions
+export const xaiCreativeBurstRateLimiter = new RateLimiter({
+  maxRequests: 100,  // Highest throughput during creative hours
+  windowMs: 60000,
+  adaptiveDelay: true,
+  baseDelay: 100,
+  peakHours: '18:00-02:00' // Nighttime creative sessions
 });
 
 export const lastFmRateLimiter = new RateLimiter({

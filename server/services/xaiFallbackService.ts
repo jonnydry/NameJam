@@ -24,9 +24,32 @@ export class XAIFallbackService {
     return `${type}_${JSON.stringify(options)}`;
   }
 
-  private getFromCache(key: string): any | null {
+  // Enhanced context-aware caching with variable TTL
+  private getCacheTTL(type: string): number {
+    const cacheConfigs = {
+      'datamuse': 8 * 60 * 60 * 1000,    // 8 hours - stable vocab
+      'spotify': 4 * 60 * 60 * 1000,     // 4 hours - artist data
+      'conceptnet': 6 * 60 * 60 * 1000,  // 6 hours - associations
+      'lyrics': 15 * 60 * 1000,          // 15 min - highly creative
+      'bios': 30 * 60 * 1000,            // 30 min - creative but reusable
+    };
+    return cacheConfigs[type as keyof typeof cacheConfigs] || this.cacheExpiry;
+  }
+
+  // Time-bucketed cache keys for better freshness management
+  private getEnhancedCacheKey(type: string, options: any): string {
+    const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000)); // Per hour buckets
+    return `${type}_${hourBucket}_${JSON.stringify(options)}`;
+  }
+
+  private getFromCache(key: string): any | null;
+  private getFromCache(key: string, type?: string): any | null {
     const cached = this.cache.get(key);
-    if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
+    if (!cached) return null;
+
+    // Use type-specific TTL if provided, otherwise use default expiration
+    const ttl = type ? this.getCacheTTL(type) : this.cacheExpiry;
+    if (Date.now() - cached.timestamp < ttl) {
       return cached.data;
     }
     return null;
@@ -50,9 +73,9 @@ export class XAIFallbackService {
     type: 'adjectives' | 'nouns' | 'related';
     count: number;
   }): Promise<any[]> {
-    // Check cache first
+    // Check cache first with type-specific TTL
     const cacheKey = this.getCacheKey('datamuse', options);
-    const cached = this.getFromCache(cacheKey);
+    const cached = this.getFromCache(cacheKey, 'datamuse');
     if (cached) {
       secureLog.debug('Using cached Datamuse fallback data');
       return cached;
@@ -157,9 +180,9 @@ Understand subtle semantic relationships and cultural connotations.`
     type: 'artists' | 'tracks';
     count: number;
   }): Promise<any[]> {
-    // Check cache first
+    // Check cache first with type-specific TTL
     const cacheKey = this.getCacheKey('spotify', options);
-    const cached = this.getFromCache(cacheKey);
+    const cached = this.getFromCache(cacheKey, 'spotify');
     if (cached) {
       secureLog.debug('Using cached Spotify fallback data');
       return cached;
@@ -228,7 +251,7 @@ ${options.type === 'artists'
                 }
               });
               
-              // Cache successful results
+              // Cache successful results with type-specific TTL
               this.setCache(cacheKey, results);
               return results;
             }
