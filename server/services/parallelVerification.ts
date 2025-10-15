@@ -5,6 +5,7 @@ import { performanceCache } from "./performanceCache";
 import { secureLog } from "../utils/secureLogger";
 
 export class ParallelVerificationService {
+  private static readonly MAX_CONCURRENT_BATCH = 5;
   private famousNames = new Set([
     'the beatles', 'rolling stones', 'queen', 'led zeppelin', 'pink floyd',
     'nirvana', 'metallica', 'radiohead', 'u2', 'coldplay', 'oasis',
@@ -40,33 +41,36 @@ export class ParallelVerificationService {
 
     // Verify uncached names in parallel with limited concurrency
     if (uncachedNames.length > 0) {
-      const verificationPromises = uncachedNames.map(async ({ name, type, index }) => {
-        try {
-          const result = await this.verifyNameFast(name, type);
-          // Cache the result
-          performanceCache.setCachedVerification(name, type, result);
-          return { result, index };
-        } catch (error) {
-          // Fallback result for errors
-          return {
-            result: {
-              status: 'available' as const,
-              details: 'Verification temporarily unavailable',
-              verificationLinks: this.generateVerificationLinks(name, type)
-            },
-            index
-          };
-        }
-      });
+      const batchSize = ParallelVerificationService.MAX_CONCURRENT_BATCH;
 
-      // Execute all verification promises in parallel for maximum speed
-      const verificationResults = await Promise.allSettled(verificationPromises);
-      
-      verificationResults.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          results[result.value.index] = result.value.result;
-        }
-      });
+      for (let i = 0; i < uncachedNames.length; i += batchSize) {
+        const batch = uncachedNames.slice(i, i + batchSize);
+        const verificationResults = await Promise.allSettled(
+          batch.map(async ({ name, type, index }) => {
+            try {
+              const result = await this.verifyNameFast(name, type);
+              performanceCache.setCachedVerification(name, type, result);
+              return { result, index };
+            } catch (error) {
+              secureLog.debug(`Verification fallback triggered for "${name}"`, error);
+              return {
+                result: {
+                  status: 'available' as const,
+                  details: 'Verification temporarily unavailable',
+                  verificationLinks: this.generateVerificationLinks(name, type)
+                },
+                index
+              };
+            }
+          })
+        );
+
+        verificationResults.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            results[result.value.index] = result.value.result;
+          }
+        });
+      }
     }
 
     return results;
