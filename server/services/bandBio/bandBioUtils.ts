@@ -28,6 +28,55 @@ export function getRandomElements<T>(array: readonly T[], count: number): T[] {
   return shuffled.slice(0, count);
 }
 
+// Dynamic humor system for varied results
+const humorProfiles = {
+  comedicVoice: [
+    { name: 'snarky-observer', weight: 1.0, description: 'Witty commentary on music industry absurdities' },
+    { name: 'self-deprecating', weight: 0.9, description: 'Bands poking fun at their own ridiculousness' },
+    { name: 'deadpan-absurdist', weight: 1.1, description: 'Straight-faced delivery of insane situations' },
+    { name: 'hyperbolic-enthusiast', weight: 0.8, description: 'Comically exaggerated band mythology' }
+  ],
+  targetFocus: [
+    { name: 'institutional-roast', weight: 1.0, description: 'Mocking music industry norms and clichés' },
+    { name: 'personal-flaws', weight: 1.2, description: 'Highlighting embarrassing member quirks' },
+    { name: 'industry-satire', weight: 0.9, description: 'Poking fun at record labels and venues' },
+    { name: 'origin-myth-busting', weight: 1.0, description: 'Undercutting rock-star origin stories' }
+  ],
+  timingStyle: [
+    { name: 'tight-punchy', weight: 1.0, description: 'Quick wit, rapid fire punchlines' },
+    { name: 'meandering-ramble', weight: 0.8, description: 'Building to absurd conclusions' },
+    { name: 'non-sequitur', weight: 1.1, description: 'Unexpected turns and juxtapositions' },
+    { name: 'circular-logic', weight: 0.9, description: 'Ridiculous situations spiraling outward' }
+  ]
+};
+
+export function generateDynamicHumorStyle(): { voice: string; focus: string; timing: string; description: string } {
+  const voice = getWeightedRandomElement(humorProfiles.comedicVoice);
+  const focus = getWeightedRandomElement(humorProfiles.targetFocus);
+  const timing = getWeightedRandomElement(humorProfiles.timingStyle);
+
+  return {
+    voice: voice.name,
+    focus: focus.name,
+    timing: timing.name,
+    description: `${voice.description}, ${focus.description}, with ${timing.description}`
+  };
+}
+
+function getWeightedRandomElement<T extends { weight: number }>(array: readonly T[]): T {
+  const totalWeight = array.reduce((sum, item) => sum + item.weight, 0);
+  let random = Math.random() * totalWeight;
+
+  for (const item of array) {
+    random -= item.weight;
+    if (random <= 0) {
+      return item;
+    }
+  }
+
+  return array[array.length - 1]; // Fallback
+}
+
 // Style selection utilities
 export function selectJournalisticStyle(): JournalisticStyle {
   return getRandomElement(JOURNALISTIC_STYLES);
@@ -46,9 +95,10 @@ export function createJournalisticPrompt(
   timestamp: number
 ): BandBioPrompt {
   const randomElement = getRandomElement(UNIQUE_ELEMENTS);
-  
+  const dynamicStyle = generateDynamicHumorStyle(); // NEW: Dynamic humor system
+
   return {
-    task: "Generate a hilarious fictional band biography",
+    task: "Generate a consistently varied and high-quality fictional band biography",
     band_info: {
       name: bandName,
       genre: genre,
@@ -61,6 +111,12 @@ export function createJournalisticPrompt(
       must_avoid: ["Generic band bio clichés", "Boring factual information", "Serious or respectful tone"],
       must_include: ["Outrageous origin story", "Embarrassing moments", "Ridiculous band member quirks", "Absurd traditions or rituals"]
     },
+    humor_profile: {  // NEW: Dynamic humor profile for variety
+      voice: dynamicStyle.voice,
+      focus: dynamicStyle.focus,
+      timing: dynamicStyle.timing,
+      adaptive_description: dynamicStyle.description
+    },
     story_elements: {
       catalyst_event: randomElement,
       required_themes: ["Dysfunction", "Poor life choices", "Embarrassing failures", "Absurd situations"],
@@ -71,11 +127,11 @@ export function createJournalisticPrompt(
       structure: "Narrative biography with punchy sentences",
       emphasis: "Entertainment value over accuracy"
     },
-    examples_of_good_humor: [
-      "Band member names that are ridiculous but believable",
-      "Origin stories that escalate from normal to absurd",
-      "Mundane events described with dramatic importance",
-      "Contradictions and ironic situations"
+    quality_guarantees: [
+      "Each biography must contain at least 3 distinct humorous elements",
+      "Humor should escalate from plausible to absurd rather than staying flat",
+      "Include specific, memorable details that make the story unique",
+      "End with a twist or punchline that surprises the reader"
     ],
     unique_id: timestamp
   };

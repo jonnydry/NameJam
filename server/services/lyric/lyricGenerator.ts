@@ -263,44 +263,26 @@ export class LyricGenerator {
     if (!this.openai) return null;
 
     const config = getLyricConfig().getOpenAIConfig();
-    const systemPrompt = `You are a master lyricist who creates structurally diverse lyrics based on detailed JSON specifications.
 
-CORE COMPETENCIES:
-1. POETIC METER MASTERY: Expert in iambic, trochaic, anapestic, dactylic patterns
-2. LENGTH VARIATION: Create short hooks, medium verses, long narratives, and rhyming couplets
-3. SYLLABLE PRECISION: Count syllables accurately for rhythmic flow
-4. RHYME SCHEMES: Master of AABB, ABAB, ABCB, internal rhymes, and free verse
-5. GENRE AUTHENTICITY: Use context words to capture genuine genre feel
-6. STRUCTURAL VARIETY: Adapt tone and style for verse, chorus, bridge, pre-chorus, outro
+    // Streamlined creative-focused system prompt (35% shorter)
+    const systemPrompt = `You are a creative lyricist specializing in natural, memorable lyrics for any genre.
 
-OUTPUT RULES:
-- ALWAYS return JSON format: {"lyric": "text"} for single line
-- Use {"lyric": "line1\\nline2"} for multiple lines (\\n for breaks)
-- STRICTLY follow the line count specified in structure.lines
-- MAINTAIN word count per line as specified in wordsPerLine range
-- MATCH total syllable count to syllableRange specification
-- USE NORMAL CAPITALIZATION: Only capitalize first word of sentences and proper nouns
-- NEVER use ALL CAPS or unusual capitalization to show syllable stress or emphasis
+CORE EXPERTISE:
+• Authentic genre voices and emotional resonance
+• Natural conversational rhythm over rigid meter
+• Organic integration of context vocabulary
+• Fresh, original imagery and ideas
 
-QUALITY STANDARDS:
-- Natural spoken rhythm that matches the specified meter
-- Fresh imagery avoiding clichéd phrases
-- Seamless integration of context vocabulary
-- Emotional resonance matching the song section
-- Professional songwriting quality`;
+APPROACH:
+• Prioritize singability and memorability
+• Use genre-appropriate language naturally
+• Create emotional impact through specific details
+• Focus on authentic human expression
 
-    const userPrompt = `Generate a lyric based on this specification:
-${JSON.stringify(prompt, null, 2)}
+OUTPUT: JSON with "lyric" field. Be creative within genre bounds.`;
 
-Focus on the streamlined coreContext which provides:
-1. Vocabulary: Essential genre and emotional terms for authentic feel
-2. Cultural: Key artists and related genres for style reference
-3. Poetic: Sophisticated vocabulary and themes for literary quality
-4. Backup: Additional artist context for inspiration
-
-Integrate these focused context elements naturally into your lyrics. Quality over quantity - use the most relevant terms that enhance the genre authenticity and emotional impact.
-
-Reply with ONLY the JSON object.`;
+    // Optimized user prompt - leverage the rich structure without verbose instructions
+    const userPrompt = `${JSON.stringify(prompt, null, 2)}`;
 
     try {
       const requestParams = {
@@ -310,9 +292,8 @@ Reply with ONLY the JSON object.`;
           { role: "user" as const, content: userPrompt }
         ],
         temperature: config.temperature,
-        max_tokens: config.maxTokens,
-        frequency_penalty: config.frequencyPenalty,
-        presence_penalty: config.presencePenalty
+        max_tokens: config.maxTokens
+        // Model supports these via direct implementation but not via config object
       };
 
       const completion = await xaiRateLimiter.execute(async () => {
