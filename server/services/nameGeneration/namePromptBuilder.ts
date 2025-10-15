@@ -1,6 +1,7 @@
 /**
  * NamePromptBuilder - Optimized prompt generation for grok-4-fast
  * Implements lean, focused prompts with strategy-aware parameter tuning
+ * Enhanced with repetition prevention, quality guidance, and diversity optimization
  */
 
 import { GenerationStrategy } from "../unifiedNameGenerator";
@@ -23,6 +24,21 @@ export interface NameGenerationRequest {
     topKeywords: string[];       // Top 3-5 genre keywords
     topAssociations: string[];   // Top 3-5 word associations
   };
+}
+
+// Enhanced configuration for repetition-aware generation
+export interface RepetitionContext {
+  recentNames: string[];
+  recentWords: string[];
+  commonPatterns: string[];
+  targetDiversity: number;
+  highRepetitionScore: number;
+}
+
+export interface GenerationHistory {
+  recentGenerations: Array<{ names: string[]; quality: number }>;
+  recentWords: Map<string, number>;
+  failedAttempts: number;
 }
 
 export class NamePromptBuilder {
