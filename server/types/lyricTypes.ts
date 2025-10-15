@@ -27,16 +27,6 @@ export interface SpotifyAudioFeatures {
   time_signature?: number;
 }
 
-// Last.fm genre info interface
-export interface LastFmGenreInfo {
-  name?: string;
-  reach?: number;
-  wiki?: string;
-  summary?: string;
-  content?: string;
-  tags?: string[];
-}
-
 // API Context interfaces
 export interface DatamuseContext {
   genreWords: string[];
@@ -49,12 +39,6 @@ export interface SpotifyContext {
   genreArtists: string[];
   moodTracks: string[];
   audioFeatures: SpotifyAudioFeatures | null;
-}
-
-export interface LastFmContext {
-  genreInfo: LastFmGenreInfo | null;
-  topArtists: string[];
-  relatedGenres: string[];
 }
 
 export interface ConceptNetContext {
@@ -70,11 +54,10 @@ export interface PoetryContext {
   themes: string[];
 }
 
-// Complete API context interface (legacy - kept for backward compatibility)
+// Complete API context interface
 export interface ComprehensiveAPIContext {
   datamuse: DatamuseContext;
   spotify: SpotifyContext;
-  lastfm: LastFmContext;
   conceptnet: ConceptNetContext;
   poetry: PoetryContext;
 }
@@ -129,7 +112,6 @@ export interface LegacyLyricPromptParameters {
   apiContext: {
     datamuse: Partial<DatamuseContext>;
     spotify: Partial<SpotifyContext>;
-    lastfm: Partial<LastFmContext>;
     conceptnet: Partial<ConceptNetContext>;
     poetry: Partial<PoetryContext>;
   };

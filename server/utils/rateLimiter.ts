@@ -140,12 +140,6 @@ export const xaiCreativeBurstRateLimiter = new RateLimiter({
   peakHours: '18:00-02:00' // Nighttime creative sessions
 });
 
-export const lastFmRateLimiter = new RateLimiter({
-  maxRequests: 5,    // Last.fm has strict limits: 5 requests per second
-  windowMs: 1000,    // 1 second
-  delayMs: 50        // 50ms between requests
-});
-
 export const musicBrainzRateLimiter = new RateLimiter({
   maxRequests: 1,    // MusicBrainz requires 1 request per second
   windowMs: 1000,    // 1 second

@@ -3,13 +3,11 @@ import {
   StreamlinedCoreContext,
   DatamuseContext, 
   SpotifyContext, 
-  LastFmContext, 
   ConceptNetContext, 
   PoetryContext 
 } from '../../types/lyricTypes';
 import { DatamuseService } from '../datamuseService';
 import { SpotifyService } from '../spotifyService';
-import { lastfmService } from '../lastfmService';
 import { conceptNetService } from '../conceptNetService';
 import { poetryDbService } from '../poetryDbService';
 import { apiContextCache } from '../cacheService';
@@ -90,14 +88,12 @@ export class LyricContextGatherer {
           .slice(0, 6)
       },
       
-      // 2. Cultural context (Last.fm preferred) - For style and authenticity
+      // 2. Cultural context (Spotify) - For style and authenticity
       cultural: {
-        artists: comprehensive.lastfm.topArtists
+        artists: comprehensive.spotify.genreArtists
           .filter(artist => artist && artist.length > 1)
           .slice(0, 4),
-        relatedGenres: comprehensive.lastfm.relatedGenres
-          .filter(genre => genre && genre.length > 2)
-          .slice(0, 3)
+        relatedGenres: [] // No longer using Last.fm - could use ConceptNet if needed
       },
       
       // 3. Poetic elements (Poetry) - For lyrical sophistication
@@ -110,11 +106,10 @@ export class LyricContextGatherer {
           .slice(0, 2)
       },
       
-      // 4. Backup artists (Spotify) - Additional cultural context if Last.fm limited
+      // 4. Backup artists (ConceptNet) - Additional cultural context
       backup: {
-        artists: comprehensive.spotify.genreArtists
-          .filter(artist => artist && artist.length > 1)
-          .filter(artist => !comprehensive.lastfm.topArtists.includes(artist)) // Avoid duplicates
+        artists: comprehensive.conceptnet.genreConcepts
+          .filter(concept => concept && concept.length > 1)
           .slice(0, 3)
       }
     };
@@ -180,11 +175,6 @@ export class LyricContextGatherer {
         moodTracks: [],
         audioFeatures: null
       },
-      lastfm: {
-        genreInfo: null,
-        topArtists: [],
-        relatedGenres: []
-      },
       conceptnet: {
         genreConcepts: [],
         emotionalConcepts: [],
@@ -207,7 +197,6 @@ export class LyricContextGatherer {
       
       if (genre) {
         apiPromises.push(this.fetchSpotifyContext(genre, context));
-        apiPromises.push(this.fetchLastFmContext(genre, context));
         apiPromises.push(this.fetchConceptNetContext(genre, context));
       }
       
@@ -305,34 +294,6 @@ export class LyricContextGatherer {
     }
   }
 
-  /**
-   * Fetch Last.fm context with circuit breaker
-   */
-  private async fetchLastFmContext(genre: string, context: ComprehensiveAPIContext): Promise<void> {
-    try {
-      await lyricCircuitBreakers.lastfm.execute(async () => {
-      // Get genre vocabulary which includes all the information we need
-      const genreVocabulary = await lastfmService.getGenreVocabulary(genre);
-      
-      if (genreVocabulary) {
-        // Set genre info (simplified as we don't have direct access to detailed info)
-        context.lastfm.genreInfo = {
-          name: genre,
-          reach: genreVocabulary.confidence || 0,
-          tags: genreVocabulary.genreTerms || []
-        };
-        
-        // Set related genres
-        context.lastfm.relatedGenres = genreVocabulary.relatedGenres || [];
-        
-        // We don't have direct access to artists, but we can use descriptive words
-        context.lastfm.topArtists = genreVocabulary.descriptiveWords?.slice(0, 10) || [];
-      }
-      });
-    } catch (error) {
-      secureLog.error('Error fetching Last.fm context:', error);
-    }
-  }
 
   /**
    * Fetch ConceptNet context with circuit breaker
@@ -444,8 +405,6 @@ export class LyricContextGatherer {
       ...context.datamuse.sensoryWords,
       ...context.spotify.genreArtists,
       ...context.spotify.moodTracks,
-      ...context.lastfm.topArtists,
-      ...context.lastfm.relatedGenres,
       ...context.conceptnet.genreConcepts,
       ...context.conceptnet.emotionalConcepts,
       ...context.conceptnet.culturalAssociations,

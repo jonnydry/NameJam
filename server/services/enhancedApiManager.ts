@@ -16,7 +16,6 @@ import { performanceMonitor } from './performanceMonitor';
 
 // Import existing services
 import { SpotifyService } from './spotifyService';
-import { LastFmService } from './lastfmService';
 import { DatamuseService } from './datamuseService';
 import { ConceptNetService } from './conceptNetService';
 import { PoetryDbService } from './poetryDbService';
@@ -70,7 +69,6 @@ export class EnhancedAPIManager {
     try {
       // Initialize service instances
       this.serviceInstances.set('spotify', new SpotifyService());
-      this.serviceInstances.set('lastfm', new LastFmService());
       this.serviceInstances.set('datamuse', new DatamuseService());
       this.serviceInstances.set('conceptnet', new ConceptNetService());
       this.serviceInstances.set('poetrydb', new PoetryDbService());
@@ -104,16 +102,6 @@ export class EnhancedAPIManager {
         priority: 1,
         healthCheck: async () => this.checkSpotifyHealth(),
         qualityThreshold: 70
-      },
-      {
-        name: 'lastfm',
-        baseUrl: 'https://ws.audioscrobbler.com/2.0',
-        timeout: 12000,
-        rateLimit: { requests: 80, windowMs: 60000 },
-        circuitBreaker: { failureThreshold: 4, recoveryTimeout: 45000, successThreshold: 2 },
-        priority: 2,
-        healthCheck: async () => this.checkLastFmHealth(),
-        qualityThreshold: 65
       },
       {
         name: 'datamuse',
@@ -331,7 +319,7 @@ export class EnhancedAPIManager {
     };
 
     const startTime = Date.now();
-    const sources = [settings.primarySource!, 'lastfm', 'itunes', 'soundcloud'];
+    const sources = [settings.primarySource!, 'itunes', 'soundcloud'];
     const results: Array<{ data: any[]; source: string; quality: number }> = [];
     const diagnostics = {
       attempts: 0,
@@ -406,7 +394,7 @@ export class EnhancedAPIManager {
     options: Partial<EnhancedAPIRequest> = {}
   ): Promise<EnhancedAPIResponse<any>> {
     const settings: EnhancedAPIRequest = {
-      primarySource: 'lastfm',
+      primarySource: 'spotify',
       allowFallback: true,
       allowFusion: true,
       qualityThreshold: 60,
@@ -416,7 +404,7 @@ export class EnhancedAPIManager {
     };
 
     const startTime = Date.now();
-    const sources = ['lastfm', 'spotify', 'conceptnet'];
+    const sources = ['spotify', 'conceptnet'];
     const results: Array<{ data: any; source: string; quality: number }> = [];
 
     for (const source of sources) {
@@ -473,16 +461,6 @@ export class EnhancedAPIManager {
       const service = this.serviceInstances.get('spotify');
       const testResult = await service.searchArtists('test', 1);
       return Array.isArray(testResult);
-    } catch {
-      return false;
-    }
-  }
-
-  private async checkLastFmHealth(): Promise<boolean> {
-    try {
-      const service = this.serviceInstances.get('lastfm');
-      const testResult = await service.getGenreVocabulary('rock');
-      return testResult && typeof testResult === 'object';
     } catch {
       return false;
     }
@@ -552,9 +530,6 @@ export class EnhancedAPIManager {
     switch (source) {
       case 'spotify':
         return service.searchTracks(query, limit);
-      case 'lastfm':
-        // Last.fm doesn't have direct track search in our service
-        return [];
       case 'itunes':
         return service.searchTracks(query, limit);
       case 'soundcloud':
@@ -569,8 +544,6 @@ export class EnhancedAPIManager {
     if (!service) return null;
 
     switch (source) {
-      case 'lastfm':
-        return service.getGenreVocabulary(genre);
       case 'spotify':
         return service.searchArtists(genre, 5);
       case 'conceptnet':
@@ -648,7 +621,6 @@ export class EnhancedAPIManager {
     // Source reliability bonus
     const sourceBonus: Record<string, number> = {
       'spotify': 20,
-      'lastfm': 15,
       'itunes': 15,
       'soundcloud': 10,
       'datamuse': 10,

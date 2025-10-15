@@ -151,7 +151,6 @@ export const createHelmetOptions = () => {
           "https://api.x.ai", // XAI API
           "https://api.spotify.com", // Spotify API
           "https://api.datamuse.com", // Datamuse API
-          "https://ws.audioscrobbler.com", // Last.fm API
           "https://musicbrainz.org", // MusicBrainz API
         ],
         objectSrc: ["'none'"],
