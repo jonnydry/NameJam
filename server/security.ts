@@ -59,9 +59,10 @@ export const createRateLimiters = () => {
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Skip rate limiting for health checks and static assets
+    // Only apply rate limiting to API routes
     skip: (req) => {
-      return req.path.startsWith('/api/health') || 
+      return !req.path.startsWith('/api/') || 
+             req.path.startsWith('/api/health') || 
              req.path.startsWith('/assets/') ||
              req.path.startsWith('/favicon');
     }
