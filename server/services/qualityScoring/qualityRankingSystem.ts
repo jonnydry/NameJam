@@ -614,18 +614,27 @@ export class QualityRankingSystem {
   }
   
   private generateComparativeRankingAnalytics(comparativeResult: any, allNames: EnhancedNameQualityResult[]): RankingAnalytics {
+    // Calculate average quality from ranked names if analytics not available
+    const averageQuality = comparativeResult.analytics?.qualityDistribution?.mean ?? 
+      (comparativeResult.rankedNames.reduce((sum: number, n: any) => sum + (n.overallScore || 0.75), 0) / comparativeResult.rankedNames.length);
+    
+    // Calculate quality range from ranked names if analytics not available
+    const scores = comparativeResult.rankedNames.map((n: any) => n.overallScore || 0.75);
+    const minScore = comparativeResult.analytics?.qualityDistribution?.range?.min ?? Math.min(...scores);
+    const maxScore = comparativeResult.analytics?.qualityDistribution?.range?.max ?? Math.max(...scores);
+    
     return {
       totalAnalyzed: allNames.length,
       passingThreshold: comparativeResult.rankedNames.length,
-      averageQuality: comparativeResult.analytics.qualityDistribution.mean,
+      averageQuality,
       qualityRange: { 
-        min: comparativeResult.analytics.qualityDistribution.range.min, 
-        max: comparativeResult.analytics.qualityDistribution.range.max 
+        min: minScore, 
+        max: maxScore 
       },
       dimensionalAverages: this.calculateDimensionalAverages(allNames),
       correlationMatrix: this.calculateCorrelationMatrix(allNames),
       clusterAnalysis: this.performClusterAnalysis(allNames),
-      diversityIndex: comparativeResult.analytics.diversityMetrics.diversityIndex
+      diversityIndex: comparativeResult.analytics?.diversityMetrics?.diversityIndex ?? 0.7
     };
   }
   
