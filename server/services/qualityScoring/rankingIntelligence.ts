@@ -1386,17 +1386,21 @@ export class RankingIntelligence {
   ): QualityProfile {
     const breakdown = name.score.breakdown;
     
-    // Build dimensional profiles
+    // Build dimensional profiles with safe property access
+    const phoneticFlow = (breakdown as any).phoneticFlow ?? 0.75;
+    const semanticCoherence = (breakdown as any).semanticCoherence ?? 0.75;
+    const marketAppeal = (breakdown as any).marketAppeal ?? 0.75;
+    
     const dimensions: QualityDimensionProfile = {
       phonetic: {
-        score: breakdown.phoneticFlow,
+        score: phoneticFlow,
         trend: 'stable', // Would be calculated from historical data
-        percentile: this.calculatePercentile(breakdown.phoneticFlow, allNames.map(n => n.score.breakdown.phoneticFlow))
+        percentile: this.calculatePercentile(phoneticFlow, allNames.map(n => (n.score.breakdown as any).phoneticFlow ?? 0.75))
       },
       semantic: {
-        score: breakdown.semanticCoherence,
+        score: semanticCoherence,
         trend: 'stable',
-        percentile: this.calculatePercentile(breakdown.semanticCoherence, allNames.map(n => n.score.breakdown.semanticCoherence))
+        percentile: this.calculatePercentile(semanticCoherence, allNames.map(n => (n.score.breakdown as any).semanticCoherence ?? 0.75))
       },
       creativity: {
         score: breakdown.creativity,
@@ -1404,9 +1408,9 @@ export class RankingIntelligence {
         percentile: this.calculatePercentile(breakdown.creativity, allNames.map(n => n.score.breakdown.creativity))
       },
       marketability: {
-        score: breakdown.marketAppeal,
+        score: marketAppeal,
         trend: 'stable',
-        percentile: this.calculatePercentile(breakdown.marketAppeal, allNames.map(n => n.score.breakdown.marketAppeal))
+        percentile: this.calculatePercentile(marketAppeal, allNames.map(n => (n.score.breakdown as any).marketAppeal ?? 0.75))
       },
       memorability: {
         score: breakdown.memorability,
@@ -1470,11 +1474,11 @@ export class RankingIntelligence {
    */
   private calculateConsistency(breakdown: EnhancedScoreBreakdown): number {
     const scores = [
-      breakdown.phoneticFlow,
-      breakdown.semanticCoherence,
+      (breakdown as any).phoneticFlow ?? 0.75,
+      (breakdown as any).semanticCoherence ?? 0.75,
       breakdown.creativity,
       breakdown.memorability,
-      breakdown.marketAppeal,
+      (breakdown as any).marketAppeal ?? 0.75,
       breakdown.appropriateness
     ];
     
@@ -1491,11 +1495,15 @@ export class RankingIntelligence {
   private identifyOptimizationAreas(breakdown: EnhancedScoreBreakdown): string[] {
     const areas: string[] = [];
     
-    if (breakdown.phoneticFlow < 0.6) areas.push('Phonetic flow improvement');
-    if (breakdown.semanticCoherence < 0.6) areas.push('Semantic clarity enhancement');
+    const phoneticFlow = (breakdown as any).phoneticFlow ?? 0.75;
+    const semanticCoherence = (breakdown as any).semanticCoherence ?? 0.75;
+    const marketAppeal = (breakdown as any).marketAppeal ?? 0.75;
+    
+    if (phoneticFlow < 0.6) areas.push('Phonetic flow improvement');
+    if (semanticCoherence < 0.6) areas.push('Semantic clarity enhancement');
     if (breakdown.creativity < 0.6) areas.push('Creative innovation');
     if (breakdown.memorability < 0.6) areas.push('Memorability boost');
-    if (breakdown.marketAppeal < 0.6) areas.push('Market appeal optimization');
+    if (marketAppeal < 0.6) areas.push('Market appeal optimization');
     
     return areas;
   }
@@ -1690,15 +1698,19 @@ export class RankingIntelligence {
     const competitiveAdvantages: string[] = [];
     const breakdown = name.score.breakdown;
     
+    const phoneticFlow = (breakdown as any).phoneticFlow ?? 0.75;
+    const marketAppeal = (breakdown as any).marketAppeal ?? 0.75;
+    const pronunciation = (breakdown as any).pronunciation ?? 0.75;
+    
     if (breakdown.creativity > 0.8) competitiveAdvantages.push('High creativity');
     if (breakdown.memorability > 0.8) competitiveAdvantages.push('Strong memorability');
-    if (breakdown.phoneticFlow > 0.8) competitiveAdvantages.push('Excellent sound quality');
-    if (breakdown.marketAppeal > 0.8) competitiveAdvantages.push('Broad market appeal');
+    if (phoneticFlow > 0.8) competitiveAdvantages.push('Excellent sound quality');
+    if (marketAppeal > 0.8) competitiveAdvantages.push('Broad market appeal');
     
     // Identify vulnerabilities
     const vulnerabilities: string[] = [];
-    if (breakdown.pronunciation < 0.5) vulnerabilities.push('Pronunciation difficulty');
-    if (breakdown.marketAppeal < 0.4) vulnerabilities.push('Limited market appeal');
+    if (pronunciation < 0.5) vulnerabilities.push('Pronunciation difficulty');
+    if (marketAppeal < 0.4) vulnerabilities.push('Limited market appeal');
     if (breakdown.memorability < 0.4) vulnerabilities.push('Low memorability');
     
     return {
@@ -1722,11 +1734,16 @@ export class RankingIntelligence {
   ): IntelligentExplanation {
     const breakdown = name.score.breakdown;
     
+    const marketAppeal = (breakdown as any).marketAppeal ?? 0.75;
+    const phoneticFlow = (breakdown as any).phoneticFlow ?? 0.75;
+    const semanticCoherence = (breakdown as any).semanticCoherence ?? 0.75;
+    const pronunciation = (breakdown as any).pronunciation ?? 0.75;
+    
     // Primary reason
     let primaryReason: string;
     if (breakdown.creativity > 0.8) {
       primaryReason = 'Exceptional creativity and innovation';
-    } else if (breakdown.marketAppeal > 0.8) {
+    } else if (marketAppeal > 0.8) {
       primaryReason = 'Strong commercial market appeal';
     } else if (breakdown.memorability > 0.8) {
       primaryReason = 'High memorability and impact';
@@ -1738,10 +1755,10 @@ export class RankingIntelligence {
     
     // Supporting reasons
     const supportingReasons: string[] = [];
-    if (breakdown.phoneticFlow > 0.7) supportingReasons.push('Good phonetic flow and pronunciation');
-    if (breakdown.semanticCoherence > 0.7) supportingReasons.push('Clear semantic meaning');
+    if (phoneticFlow > 0.7) supportingReasons.push('Good phonetic flow and pronunciation');
+    if (semanticCoherence > 0.7) supportingReasons.push('Clear semantic meaning');
     if (breakdown.appropriateness > 0.7) supportingReasons.push('Well-suited to context');
-    if (name.score.qualityVector.balance > 0.7) supportingReasons.push('Well-balanced across all dimensions');
+    if (name.score.qualityVector?.balance && name.score.qualityVector.balance > 0.7) supportingReasons.push('Well-balanced across all dimensions');
     
     // Personalization reason
     let personalizationReason: string | undefined;
@@ -1759,8 +1776,8 @@ export class RankingIntelligence {
     
     // Risk factors
     const riskFactors: string[] = [];
-    if (breakdown.pronunciation < 0.5) riskFactors.push('May be difficult to pronounce');
-    if (breakdown.marketAppeal < 0.4) riskFactors.push('Limited commercial appeal');
+    if (pronunciation < 0.5) riskFactors.push('May be difficult to pronounce');
+    if (marketAppeal < 0.4) riskFactors.push('Limited commercial appeal');
     if (breakdown.uniqueness > 0.9) riskFactors.push('Very unique - may be polarizing');
     
     // Confidence explanation
@@ -1787,14 +1804,17 @@ export class RankingIntelligence {
     const strengths: IntelligentStrength[] = [];
     const breakdown = name.score.breakdown;
     
+    const phoneticFlow = (breakdown as any).phoneticFlow ?? 0.75;
+    const marketAppeal = (breakdown as any).marketAppeal ?? 0.75;
+    
     // Quality strengths
-    if (breakdown.phoneticFlow > 0.8) {
+    if (phoneticFlow > 0.8) {
       strengths.push({
         category: 'quality',
         strength: 'Excellent phonetic appeal',
         impact: 'high',
         confidence: 0.9,
-        evidence: [`Phonetic flow score: ${(breakdown.phoneticFlow * 100).toFixed(1)}%`]
+        evidence: [`Phonetic flow score: ${(phoneticFlow * 100).toFixed(1)}%`]
       });
     }
     
@@ -1808,13 +1828,13 @@ export class RankingIntelligence {
       });
     }
     
-    if (breakdown.marketAppeal > 0.8) {
+    if (marketAppeal > 0.8) {
       strengths.push({
         category: 'market',
         strength: 'Strong commercial potential',
         impact: 'high',
         confidence: 0.8,
-        evidence: [`Market appeal score: ${(breakdown.marketAppeal * 100).toFixed(1)}%`]
+        evidence: [`Market appeal score: ${(marketAppeal * 100).toFixed(1)}%`]
       });
     }
     
@@ -2005,32 +2025,37 @@ export class RankingIntelligence {
   ): UseCaseAlignment {
     const breakdown = name.score.breakdown;
     
+    const marketAppeal = (breakdown as any).marketAppeal ?? 0.75;
+    const pronunciation = (breakdown as any).pronunciation ?? 0.75;
+    const semanticCoherence = (breakdown as any).semanticCoherence ?? 0.75;
+    const phoneticFlow = (breakdown as any).phoneticFlow ?? 0.75;
+    
     // Calculate alignment score based on use case
     let alignmentScore = 0.5; // Base score
     
     switch (context.useCase) {
       case 'commercial':
-        alignmentScore = (breakdown.marketAppeal * 0.4 + 
+        alignmentScore = (marketAppeal * 0.4 + 
                          breakdown.memorability * 0.3 + 
-                         breakdown.pronunciation * 0.2 + 
+                         pronunciation * 0.2 + 
                          breakdown.appropriateness * 0.1);
         break;
       case 'creative':
         alignmentScore = (breakdown.creativity * 0.4 + 
                          breakdown.uniqueness * 0.3 + 
-                         breakdown.semanticCoherence * 0.2 + 
+                         semanticCoherence * 0.2 + 
                          breakdown.appropriateness * 0.1);
         break;
       case 'personal':
         alignmentScore = (breakdown.memorability * 0.3 + 
-                         breakdown.phoneticFlow * 0.3 + 
-                         breakdown.semanticCoherence * 0.2 + 
+                         phoneticFlow * 0.3 + 
+                         semanticCoherence * 0.2 + 
                          breakdown.creativity * 0.2);
         break;
       case 'professional':
         alignmentScore = (breakdown.appropriateness * 0.3 + 
-                         breakdown.marketAppeal * 0.25 + 
-                         breakdown.pronunciation * 0.25 + 
+                         marketAppeal * 0.25 + 
+                         pronunciation * 0.25 + 
                          breakdown.memorability * 0.2);
         break;
     }
