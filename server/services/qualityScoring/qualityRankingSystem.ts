@@ -598,18 +598,27 @@ export class QualityRankingSystem {
   private generateEnhancedRankingAnalytics(enhancedResult: any, allNames: EnhancedNameQualityResult[]): RankingAnalytics {
     const analytics = enhancedResult.analytics;
     
+    // Calculate average quality from ranked names if analytics not available
+    const averageQuality = analytics?.qualityDistribution?.mean ?? 
+      (enhancedResult.rankedNames.reduce((sum: number, n: any) => sum + (n.overallScore || 0.75), 0) / enhancedResult.rankedNames.length);
+    
+    // Calculate quality range from ranked names if analytics not available
+    const scores = enhancedResult.rankedNames.map((n: any) => n.overallScore || 0.75);
+    const minScore = analytics?.qualityDistribution?.range?.min ?? Math.min(...scores);
+    const maxScore = analytics?.qualityDistribution?.range?.max ?? Math.max(...scores);
+    
     return {
       totalAnalyzed: allNames.length,
       passingThreshold: enhancedResult.rankedNames.length,
-      averageQuality: analytics.qualityDistribution.mean,
+      averageQuality,
       qualityRange: { 
-        min: analytics.qualityDistribution.range.min, 
-        max: analytics.qualityDistribution.range.max 
+        min: minScore, 
+        max: maxScore 
       },
       dimensionalAverages: this.calculateDimensionalAverages(allNames),
       correlationMatrix: this.calculateCorrelationMatrix(allNames),
       clusterAnalysis: this.performClusterAnalysis(allNames),
-      diversityIndex: analytics.diversityMetrics.diversityIndex
+      diversityIndex: analytics?.diversityMetrics?.diversityIndex ?? 0.7
     };
   }
   
