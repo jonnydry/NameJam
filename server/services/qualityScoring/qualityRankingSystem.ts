@@ -786,44 +786,51 @@ export class QualityRankingSystem {
     
     let score = 0;
     
+    // Get extended properties with fallbacks
+    const marketAppeal = (breakdown as any).marketAppeal ?? 0.75;
+    const genreOptimization = (breakdown as any).genreOptimization ?? 0.75;
+    const culturalAppeal = (breakdown as any).culturalAppeal ?? 0.75;
+    const balance = vector?.balance ?? 0.75;
+    const distinctiveness = vector?.distinctiveness ?? 0.75;
+    
     switch (mode) {
       case 'overall':
         score = 
           result.score.overall * weights.qualityScore +
-          vector.balance * weights.balance +
-          vector.distinctiveness * weights.distinctiveness +
-          breakdown.marketAppeal * weights.marketAppeal;
+          balance * weights.balance +
+          distinctiveness * weights.distinctiveness +
+          marketAppeal * weights.marketAppeal;
         break;
         
       case 'balanced':
         score = 
           result.score.overall * weights.qualityScore +
-          vector.balance * weights.balance +
-          vector.distinctiveness * weights.distinctiveness +
-          breakdown.marketAppeal * weights.marketAppeal;
+          balance * weights.balance +
+          distinctiveness * weights.distinctiveness +
+          marketAppeal * weights.marketAppeal;
         break;
         
       case 'genre-optimized':
         score = 
           result.score.overall * weights.qualityScore +
-          breakdown.genreOptimization * weights.genreSpecific +
+          genreOptimization * weights.genreSpecific +
           breakdown.appropriateness * weights.contextFit +
-          breakdown.marketAppeal * weights.marketAppeal;
+          marketAppeal * weights.marketAppeal;
         break;
         
       case 'market-focused':
         score = 
           result.score.overall * weights.qualityScore +
-          breakdown.marketAppeal * weights.marketAppeal +
+          marketAppeal * weights.marketAppeal +
           breakdown.memorability * weights.memorability +
-          breakdown.culturalAppeal * weights.culturalAppeal;
+          culturalAppeal * weights.culturalAppeal;
         break;
         
       case 'creative-first':
         score = 
           breakdown.creativity * weights.creativity +
           breakdown.uniqueness * weights.uniqueness +
-          vector.distinctiveness * weights.distinctiveness +
+          distinctiveness * weights.distinctiveness +
           result.score.overall * weights.qualityScore;
         break;
         
@@ -935,17 +942,17 @@ export class QualityRankingSystem {
     const vector = result.score.qualityVector;
     
     const scores = {
-      'Pronunciation': breakdown.pronunciation,
-      'Phonetic Flow': breakdown.phoneticFlow,
-      'Semantic Coherence': breakdown.semanticCoherence,
-      'Emotional Resonance': breakdown.emotionalResonance,
-      'Cultural Appeal': breakdown.culturalAppeal,
+      'Pronunciation': (breakdown as any).pronunciation ?? 0.75,
+      'Phonetic Flow': (breakdown as any).phoneticFlow ?? 0.75,
+      'Semantic Coherence': (breakdown as any).semanticCoherence ?? 0.75,
+      'Emotional Resonance': (breakdown as any).emotionalResonance ?? 0.75,
+      'Cultural Appeal': (breakdown as any).culturalAppeal ?? 0.75,
       'Creativity': breakdown.creativity,
       'Uniqueness': breakdown.uniqueness,
-      'Market Appeal': breakdown.marketAppeal,
-      'Genre Optimization': breakdown.genreOptimization,
-      'Balance': vector.balance,
-      'Distinctiveness': vector.distinctiveness
+      'Market Appeal': (breakdown as any).marketAppeal ?? 0.75,
+      'Genre Optimization': (breakdown as any).genreOptimization ?? 0.75,
+      'Balance': vector?.balance ?? 0.75,
+      'Distinctiveness': vector?.distinctiveness ?? 0.75
     };
     
     const sortedScores = Object.entries(scores).sort(([,a], [,b]) => b - a);
@@ -961,9 +968,9 @@ export class QualityRankingSystem {
       .map(([name]) => name);
     
     const uniqueAdvantages = [];
-    if (vector.distinctiveness > 0.8) uniqueAdvantages.push('Highly distinctive profile');
-    if (breakdown.phoneticSemanticAlignment > 0.8) uniqueAdvantages.push('Perfect sound-meaning alignment');
-    if (vector.balance > 0.8) uniqueAdvantages.push('Exceptionally well-balanced');
+    if (vector?.distinctiveness && vector.distinctiveness > 0.8) uniqueAdvantages.push('Highly distinctive profile');
+    if ((breakdown as any).phoneticSemanticAlignment && (breakdown as any).phoneticSemanticAlignment > 0.8) uniqueAdvantages.push('Perfect sound-meaning alignment');
+    if (vector?.balance && vector.balance > 0.8) uniqueAdvantages.push('Exceptionally well-balanced');
     
     const improvementAreas = sortedScores
       .filter(([, score]) => score < 0.6)
@@ -1014,15 +1021,15 @@ export class QualityRankingSystem {
     }
     
     // Special differentiation factors
-    if (breakdown.phoneticSemanticAlignment > 0.8) {
+    if ((breakdown as any).phoneticSemanticAlignment && (breakdown as any).phoneticSemanticAlignment > 0.8) {
       factors.push('Exceptional sound-meaning synergy');
     }
     
-    if (vector.balance > 0.8 && vector.magnitude > 0.7) {
+    if (vector?.balance && vector.balance > 0.8 && vector?.magnitude && vector.magnitude > 0.7) {
       factors.push('High quality with excellent balance');
     }
     
-    if (vector.distinctiveness > 0.8) {
+    if (vector?.distinctiveness && vector.distinctiveness > 0.8) {
       factors.push('Unique quality profile');
     }
     
