@@ -1395,32 +1395,32 @@ export class RankingIntelligence {
       phonetic: {
         score: phoneticFlow,
         trend: 'stable', // Would be calculated from historical data
-        percentile: this.calculatePercentile(phoneticFlow, allNames.map(n => (n.score.breakdown as any).phoneticFlow ?? 0.75))
+        percentile: this.calculatePercentile(phoneticFlow, allNames.map(n => (n.score?.breakdown as any)?.phoneticFlow ?? 0.75))
       },
       semantic: {
         score: semanticCoherence,
         trend: 'stable',
-        percentile: this.calculatePercentile(semanticCoherence, allNames.map(n => (n.score.breakdown as any).semanticCoherence ?? 0.75))
+        percentile: this.calculatePercentile(semanticCoherence, allNames.map(n => (n.score?.breakdown as any)?.semanticCoherence ?? 0.75))
       },
       creativity: {
         score: breakdown.creativity,
         trend: 'stable',
-        percentile: this.calculatePercentile(breakdown.creativity, allNames.map(n => n.score.breakdown.creativity))
+        percentile: this.calculatePercentile(breakdown.creativity, allNames.map(n => n.score?.breakdown?.creativity ?? 0.75))
       },
       marketability: {
         score: marketAppeal,
         trend: 'stable',
-        percentile: this.calculatePercentile(marketAppeal, allNames.map(n => (n.score.breakdown as any).marketAppeal ?? 0.75))
+        percentile: this.calculatePercentile(marketAppeal, allNames.map(n => (n.score?.breakdown as any)?.marketAppeal ?? 0.75))
       },
       memorability: {
         score: breakdown.memorability,
         trend: 'stable',
-        percentile: this.calculatePercentile(breakdown.memorability, allNames.map(n => n.score.breakdown.memorability))
+        percentile: this.calculatePercentile(breakdown.memorability, allNames.map(n => n.score?.breakdown?.memorability ?? 0.75))
       },
       appropriateness: {
         score: breakdown.appropriateness,
         trend: 'stable',
-        percentile: this.calculatePercentile(breakdown.appropriateness, allNames.map(n => n.score.breakdown.appropriateness))
+        percentile: this.calculatePercentile(breakdown.appropriateness, allNames.map(n => n.score?.breakdown?.appropriateness ?? 0.75))
       }
     };
     
