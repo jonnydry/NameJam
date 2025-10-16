@@ -1431,7 +1431,21 @@ export class QualityRankingSystem {
   ): void {
     const contextKey = this.getContextKey(context);
     const history = this.learningHistory.get(contextKey) || [];
-    history.push({ ...feedback, name, timestamp: Date.now() });
+    
+    // Create a learning history entry with the necessary fields
+    const historyEntry = {
+      contentName: name,
+      userId: feedback.userId,
+      contentType: feedback.contentType,
+      thumbsRating: feedback.thumbsRating,
+      starRating: feedback.starRating,
+      creativityRating: feedback.creativityRating,
+      memorabilityRating: feedback.memorabilityRating,
+      relevanceRating: feedback.relevanceRating,
+      timestamp: Date.now()
+    };
+    
+    history.push(historyEntry as any);
     
     // Keep only recent feedback (last 100 entries)
     if (history.length > 100) {
