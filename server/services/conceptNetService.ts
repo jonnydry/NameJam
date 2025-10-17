@@ -1,5 +1,4 @@
 import { secureLog } from '../utils/secureLogger';
-import { withApiRetry, apiRetryConfigs } from '../utils/apiRetry';
 
 interface ConceptNetEdge {
   start: { label: string; language: string };
@@ -46,19 +45,15 @@ export class ConceptNetService {
 
       const allConcepts: ConceptNetWord[] = [];
 
-      // Execute queries in parallel for better performance with retry logic
+      // Execute queries in parallel for better performance
       const responses = await Promise.allSettled(
         queries.map(url => 
-          withApiRetry(async () => {
-            const res = await fetch(url, {
-              headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'NameJam/1.0'
-              }
-            });
-            if (!res.ok) throw new Error(`ConceptNet API error: ${res.status}`);
-            return res.json();
-          }, apiRetryConfigs.conceptnet).catch(() => null)
+          fetch(url, {
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'NameJam/1.0'
+            }
+          }).then(res => res.ok ? res.json() : null)
         )
       );
 
@@ -262,17 +257,6 @@ export class ConceptNetService {
       )
       .map(c => c.word)
       .slice(0, 15);
-  }
-
-  // Add the missing method for nameQualityControl.ts
-  async getConceptualAssociations(word: string): Promise<string[]> {
-    try {
-      const concepts = await this.getRelatedConcepts(word, 20);
-      return concepts.map(c => c.word);
-    } catch (error) {
-      secureLog.error('Error getting conceptual associations:', error);
-      return [];
-    }
   }
 }
 

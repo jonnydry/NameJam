@@ -2,7 +2,6 @@ import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
-import { secureLog } from "./utils/secureLogger";
 
 // Configure WebSocket only in development
 if (process.env.NODE_ENV === "development") {
@@ -17,16 +16,6 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
-  // Add connection resilience
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined
 });
-
-// Add connection error handling
-pool.on('error', (err) => {
-  secureLog.error('Unexpected database pool error', err);
-});
-
 export const db = drizzle({ client: pool, schema });

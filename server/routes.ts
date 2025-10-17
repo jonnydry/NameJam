@@ -2,40 +2,22 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { UnifiedNameGeneratorService, GENERATION_STRATEGIES } from "./services/unifiedNameGenerator";
+import { enhancedNameGenerator } from "./services/enhancedNameGenerator";
+import { NameGeneratorService } from "./services/nameGenerator";
 import { NameVerifierService } from "./services/nameVerifier";
-import { BandBioGenerator } from "./services/bandBio/bandBioGenerator";
-import { lyricOrchestrator } from "./services/lyric/lyricOrchestrator";
-import { qualityScoring } from "./services/qualityScoring";
-import { QualityRankingSystem } from "./services/qualityScoring/qualityRankingSystem";
+import { BandBioGeneratorService } from "./services/bandBioGenerator";
+import { AINameGeneratorService } from "./services/aiNameGenerator";
+import { LyricStarterService } from "./services/lyricStarterService";
 import { db } from "./db";
-import { users, errorLogs, userFeedback, userPreferences, feedbackAnalytics } from "@shared/schema";
+import { users, errorLogs } from "@shared/schema";
 
-import { 
-  generateNameRequestSchema, 
-  userFeedbackRequestSchema, 
-  userPreferencesUpdateSchema 
-} from "@shared/schema";
+import { generateNameRequestSchema, setListRequest } from "@shared/schema";
 import { z } from "zod";
-import { ErrorHandler, ERROR_CODES, apiErrorSchema } from "@shared/errorSchemas";
 
 import { validationRules, handleValidationErrors } from "./security";
 import { performanceCache } from "./services/performanceCache";
-import { performanceMonitor } from "./services/performanceMonitor";
-import { optimizedContextService } from "./services/optimizedContextService";
 import { secureLog, sanitizeApiResponse } from "./utils/secureLogger";
-import { NameGenerationHandler } from "./api/handlers/NameGenerationHandler";
-import { VerificationHandler } from "./api/handlers/VerificationHandler";
-import { UserHandler } from "./api/handlers/UserHandler";
-import { FeedbackHandler } from "./api/handlers/FeedbackHandler";
-import { BandBioHandler } from "./api/handlers/BandBioHandler";
-import { LyricHandler } from "./api/handlers/LyricHandler";
-import { StashHandler } from "./api/handlers/StashHandler";
-import { ErrorLoggingHandler } from "./api/handlers/ErrorLoggingHandler";
-import { requestDeduplicationMiddleware } from "./api/middleware/requestDeduplication";
-import { initializeContainer, getService } from "./di/container";
 import type { Request, Response, NextFunction } from "express";
-import { InputSanitizer } from "./utils/inputSanitizer";
 
 import { cacheHeaders } from "./middleware/cacheHeaders";
 import { 
@@ -44,92 +26,11 @@ import {
   responseTimeMiddleware 
 } from "./middleware/performanceOptimization";
 
-// Helper functions for intelligent ranking and adaptive strategy selection
-function determineAdaptiveStrategy(request: any, userPreferences: any, contextCacheHit: boolean): string {
-  // Adaptive strategy selection based on performance factors
-  const sessionId = request.sessionId || 'anonymous';
-  const recentRequests = getRecentRequestCount(sessionId);
-  
-  // Speed mode after 5+ generations in same session
-  if (recentRequests >= 5) {
-    return 'SPEED';
-  }
-  
-  // Quality mode if context is cached (fast context gathering)
-  if (contextCacheHit) {
-    return 'QUALITY';
-  }
-  
-  // Balanced mode for first-time requests or cache misses
-  return 'BALANCED';
-}
-
-function determineRankingMode(request: any, userPreferences: any): string {
-  // Determine ranking mode based on request parameters and user preferences
-  if (userPreferences?.preferredRankingMode) {
-    return userPreferences.preferredRankingMode;
-  }
-  
-  // Infer from genre and context
-  if (request.genre === 'experimental' || request.genre === 'avant-garde') {
-    return 'creative-first';
-  }
-  
-  if (request.genre === 'pop' || request.genre === 'commercial') {
-    return 'market-focused';
-  }
-  
-  if (request.genre) {
-    return 'genre-optimized';
-  }
-  
-  return 'balanced'; // Default to balanced mode
-}
-
-// Track recent requests per session for adaptive strategy
-const sessionRequestCounts = new Map<string, { count: number; lastRequest: number }>();
-
-function getRecentRequestCount(sessionId: string): number {
-  const now = Date.now();
-  const sessionData = sessionRequestCounts.get(sessionId);
-  
-  // Reset count if more than 10 minutes since last request
-  if (!sessionData || (now - sessionData.lastRequest) > 10 * 60 * 1000) {
-    sessionRequestCounts.set(sessionId, { count: 0, lastRequest: now });
-    return 0;
-  }
-  
-  return sessionData.count;
-}
-
-function incrementRequestCount(sessionId: string): void {
-  const now = Date.now();
-  const sessionData = sessionRequestCounts.get(sessionId) || { count: 0, lastRequest: now };
-  sessionData.count++;
-  sessionData.lastRequest = now;
-  sessionRequestCounts.set(sessionId, sessionData);
-}
-
-function getQualityThreshold(request: any, userPreferences: any): number {
-  // Get quality threshold based on user preferences and request context
-  if (userPreferences?.qualityThreshold) {
-    const thresholdMapping = {
-      'strict': 0.75,
-      'moderate': 0.60,
-      'lenient': 0.45
-    };
-    return thresholdMapping[userPreferences.qualityThreshold as keyof typeof thresholdMapping] || 0.60;
-  }
-  
-  // Default moderate threshold
-  return 0.60;
-}
-
-export async function registerRoutes(app: Express, middleware?: any): Promise<Server> {
+export async function registerRoutes(app: Express, rateLimiters?: any): Promise<Server> {
   // Add performance optimization middleware
   app.use(compressionMiddleware);
   app.use(responseTimeMiddleware);
-  app.use(timeoutMiddleware(50000)); // 50 second timeout for complex generations
+  app.use(timeoutMiddleware(25000)); // 25 second timeout
   app.use(cacheHeaders);
   
   // Auth middleware
@@ -137,13 +38,23 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
 
   secureLog.info("Initializing services...");
   
-  let nameGenerator: UnifiedNameGeneratorService;
+  let nameGenerator: NameGeneratorService;
   let nameVerifier: NameVerifierService;
-  let bandBioGenerator: BandBioGenerator;
-  let qualityRankingSystem: QualityRankingSystem;
+  let bandBioGenerator: BandBioGeneratorService;
+  let aiNameGenerator: AINameGeneratorService;
+  let lyricStarterService: LyricStarterService;
 
   try {
-    nameGenerator = new UnifiedNameGeneratorService();
+    aiNameGenerator = new AINameGeneratorService();
+    secureLog.info("✓ AINameGeneratorService initialized");
+  } catch (error) {
+    secureLog.error("✗ Failed to initialize AINameGeneratorService:", error);
+    throw error;
+  }
+
+  try {
+    nameGenerator = new NameGeneratorService();
+    nameGenerator.setAINameGenerator(aiNameGenerator);
     secureLog.info("✓ NameGeneratorService initialized");
   } catch (error) {
     secureLog.error("✗ Failed to initialize NameGeneratorService:", error);
@@ -159,59 +70,135 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
   }
 
   try {
-    bandBioGenerator = new BandBioGenerator();
-    secureLog.info("✓ BandBioGenerator initialized");
+    bandBioGenerator = new BandBioGeneratorService();
+    secureLog.info("✓ BandBioGeneratorService initialized");
   } catch (error) {
-    secureLog.error("✗ Failed to initialize BandBioGenerator:", error);
+    secureLog.error("✗ Failed to initialize BandBioGeneratorService:", error);
     throw error;
   }
 
   try {
-    qualityRankingSystem = new QualityRankingSystem();
-    secureLog.info("✓ QualityRankingSystem initialized");
+    lyricStarterService = new LyricStarterService();
+    secureLog.info("✓ LyricStarterService initialized");
   } catch (error) {
-    secureLog.error("✗ Failed to initialize QualityRankingSystem:", error);
+    secureLog.error("✗ Failed to initialize LyricStarterService:", error);
     throw error;
   }
 
-  // lyricOrchestrator is already initialized as a singleton
-
   // Auth routes (with rate limiting)
   app.get('/api/auth/user', 
-    middleware?.auth || ((req: Request, res: Response, next: NextFunction) => next()), 
+    rateLimiters?.auth || ((req: Request, res: Response, next: NextFunction) => next()), 
     isAuthenticated, 
     async (req: Request & { user?: any }, res: Response) => {
-    await userHandler.handleGetUser(req, res);
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      secureLog.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
   });
-
-  // Initialize dependency injection container
-  initializeContainer();
-  
-  // Get handlers from DI container
-  const nameGenerationHandler = await getService<NameGenerationHandler>('nameGenerationHandler');
-  const verificationHandler = new VerificationHandler();
-  const userHandler = new UserHandler();
-  const feedbackHandler = new FeedbackHandler();
-  const bandBioHandler = new BandBioHandler();
-  const lyricHandler = new LyricHandler();
-  const stashHandler = new StashHandler();
-  const errorLoggingHandler = new ErrorLoggingHandler();
 
   // Generate names endpoint (public with optional auth for saving)
   app.post("/api/generate-names", 
-    requestDeduplicationMiddleware,
-    middleware?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
-    middleware?.csrf?.validateToken || ((req: Request, res: Response, next: NextFunction) => next()),
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
     validationRules.generateNames, 
     handleValidationErrors, 
     async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
-      await nameGenerationHandler.handleGenerateNames(req, res);
-    });
+    try {
+      const request = generateNameRequestSchema.parse(req.body);
+      
+      // Generate names using new routing system (AI + Datamuse)
+      const names = await nameGenerator.generateNames(request);
+      
+      // Optimized parallel verification and storage
+      const isUserAuthenticated = req.isAuthenticated && req.isAuthenticated();
+      
+      // Batch verification for better performance
+      const { parallelVerificationService } = await import('./services/parallelVerification');
+      const namesToVerify = names.map(nameResult => ({
+        name: nameResult.name,
+        type: request.type as 'band' | 'song'
+      }));
+      
+      // Verify all names in parallel with caching
+      const verificationResults = await parallelVerificationService.verifyNamesInParallel(namesToVerify);
+      
+      // Process results and handle database storage
+      const results = await Promise.all(
+        names.map(async (nameResult, index) => {
+          const verification = verificationResults[index];
+          let storedName = null;
+          
+          // Only store in database if user is authenticated (non-blocking)
+          if (isUserAuthenticated) {
+            const userId = req.user.claims.sub;
+            
+            // Make database storage non-blocking for better response time
+            storage.createGeneratedName({
+              name: nameResult.name,
+              type: request.type,
+              wordCount: request.wordCount,
+              verificationStatus: verification.status,
+              verificationDetails: verification.details || null,
+              isAiGenerated: nameResult.isAiGenerated,
+              userId: userId,
+            }).then(result => {
+              storedName = result;
+            }).catch(error => {
+              secureLog.error("Non-blocking database error:", error);
+            });
+          }
 
+          return {
+            id: storedName?.id || null,
+            name: nameResult.name,
+            type: request.type,
+            wordCount: nameResult.name.split(/\s+/).length, // Use actual word count instead of requested
+            isAiGenerated: nameResult.isAiGenerated,
+            verification
+          };
+        })
+      );
+
+      res.json({ results });
+    } catch (error) {
+      secureLog.error("Error generating names:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid request parameters", details: error.errors });
+      } else {
+        const errorMessage = error instanceof Error ? error.message : "Failed to generate names";
+        res.status(500).json({ 
+          error: errorMessage,
+          suggestion: "Please try again with different settings or a smaller word count." 
+        });
+      }
+    }
+  });
 
   // Get recent generated names (protected)
   app.get("/api/recent-names", isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    await userHandler.handleGetRecentNames(req, res);
+    try {
+      const userId = req.user.claims.sub;
+      const type = req.query.type as string;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      let names;
+      if (type && (type === 'band' || type === 'song')) {
+        names = await storage.getGeneratedNamesByType(type, userId, limit);
+      } else {
+        names = await storage.getGeneratedNames(userId, limit);
+      }
+
+      res.json({ names });
+    } catch (error) {
+      secureLog.error("Error fetching recent names:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch recent names",
+        suggestion: "The database service may be temporarily unavailable. Please refresh the page." 
+      });
+    }
   });
 
   // Verify specific name (with validation)
@@ -219,42 +206,370 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     validationRules.verifyName, 
     handleValidationErrors, 
     async (req: Request, res: Response) => {
-    await verificationHandler.handleVerifyName(req, res);
+    try {
+      const { name, type } = req.body;
+      
+      if (!name || !type || !['band', 'song'].includes(type)) {
+        return res.status(400).json({ error: "Name and valid type (band/song) are required" });
+      }
+
+      // Check cache first
+      const cached = performanceCache.getCachedVerification(name, type);
+      if (cached) {
+        secureLog.debug(`Cache hit for ${type}: ${name}`);
+        return res.json({ verification: cached });
+      }
+
+      // If not cached, verify normally
+      const verification = await nameVerifier.verifyName(name, type);
+      
+      // Store in cache
+      performanceCache.setCachedVerification(name, type, verification);
+      
+      res.json({ verification });
+    } catch (error) {
+      secureLog.error("Error verifying name:", error);
+      res.status(500).json({ 
+        error: "Failed to verify name",
+        suggestion: "The verification service may be temporarily unavailable. Please try again later." 
+      });
+    }
   });
 
-  // Generate band bio endpoint (public with rate limiting and validation)
-  app.post("/api/generate-band-bio", 
-    middleware?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
-    middleware?.csrf?.validateToken || ((req: Request, res: Response, next: NextFunction) => next()),
-    validationRules.generateBandBio, 
+  // Generate set list with timeout (public with optional auth for saving)
+  app.post("/api/generate-setlist", 
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    validationRules.generateSetlist, 
     handleValidationErrors, 
     async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
-    await bandBioHandler.handleGenerateBandBio(req, res);
+    const timeoutMs = 20000; // 20 second timeout
+    
+    const generateSetListWithTimeout = async () => {
+      const validation = setListRequest.safeParse(req.body);
+      if (!validation.success) {
+        throw new Error("Invalid request body");
+      }
+
+      const { songCount, mood, genre } = validation.data;
+      const totalSongs = parseInt(songCount);
+      
+      // Calculate set distribution
+      const setOneSize = totalSongs === 8 ? 3 : 7;
+      const setTwoSize = totalSongs === 8 ? 4 : 8;
+      const allSongsNeeded = totalSongs + 1; // +1 for finale
+      
+      // Generate all songs at once to properly distribute AI vs traditional
+      const songRequest = {
+        type: 'song' as const,
+        count: allSongsNeeded,
+        // Don't specify wordCount - let the generator vary it
+        mood: mood && mood !== 'none' ? mood : undefined,
+        genre: genre && genre !== 'none' ? genre : undefined
+      };
+      
+      const generatedNames = await nameGenerator.generateSetlistNames(songRequest);
+      
+      // Process generated names and verify them
+      const songs = await Promise.all(
+        generatedNames.map(async (songNameObj, i) => {
+          try {
+            // Use full verification including Spotify
+            const verification = await nameVerifier.verifyName(songNameObj.name, 'song');
+            
+            return {
+              id: i + 1,
+              name: songNameObj.name,
+              verification,
+              isAiGenerated: songNameObj.isAiGenerated || false
+            };
+          } catch (err) {
+            // Generate a simple fallback name using basic word combination
+            const fallbackWords = ['Electric', 'Midnight', 'Echo', 'Dream', 'Fire', 'Storm', 'Crystal', 'Shadow'];
+            const fallbackNouns = ['Heart', 'Soul', 'Light', 'Sky', 'Rain', 'Moon', 'Star', 'Wave'];
+            const randomWord = fallbackWords[Math.floor(Math.random() * fallbackWords.length)];
+            const randomNoun = fallbackNouns[Math.floor(Math.random() * fallbackNouns.length)];
+            
+            const fallbackName = `${randomWord} ${randomNoun}`;
+            // Use full verification for fallback names too
+            const verification = await nameVerifier.verifyName(fallbackName, 'song');
+            
+            return {
+              id: i + 1,
+              name: fallbackName,
+              verification,
+              isAiGenerated: false
+            };
+          }
+        })
+      );
+      
+      // Split into sets
+      const setOne = songs.slice(0, setOneSize);
+      const setTwo = songs.slice(setOneSize, setOneSize + setTwoSize);
+      const finale = songs[songs.length - 1];
+      
+      return {
+        setOne,
+        setTwo,
+        finale,
+        totalSongs: songs.length - 1
+      };
+    };
+    
+    try {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), timeoutMs)
+      );
+      
+      const response = await Promise.race([
+        generateSetListWithTimeout(),
+        timeoutPromise
+      ]);
+      
+      res.json(response);
+    } catch (error) {
+      secureLog.error("Error generating set list:", error);
+      
+      if (error.message === 'Timeout') {
+        return res.status(408).json({ 
+          error: "Set list generation timed out. Please try again with a smaller set." 
+        });
+      }
+      
+      res.status(500).json({ error: "Failed to generate set list" });
+    }
+  });
+
+  // Generate band name from setlist endpoint (public)
+  app.post("/api/generate-band-from-setlist", 
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    async (req: Request, res: Response) => {
+    try {
+      const { songNames, mood, genre } = req.body;
+      
+      if (!songNames || !Array.isArray(songNames) || songNames.length === 0) {
+        return res.status(400).json({ error: "Song names are required" });
+      }
+
+      // Create a description of the setlist for the AI
+      const setlistDescription = songNames.join(", ");
+      const context = `Based on this setlist: ${setlistDescription}${mood ? `, with a ${mood} mood` : ''}${genre ? ` in the ${genre} genre` : ''}`;
+      
+      const bandNameResponse = await bandBioGenerator.generateBandBioWithDetails(
+        '', // Empty band name since we're generating it
+        genre,
+        mood,
+        {
+          promptType: 'bandNameFromSetlist',
+          setlistContext: context,
+          songNames
+        }
+      );
+      
+      // Parse the response
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(bandNameResponse);
+      } catch (error) {
+        // If parsing fails, create a fallback band name
+        const moods = {
+          'dark': ['Shadow', 'Midnight', 'Raven', 'Void'],
+          'bright': ['Sunshine', 'Crystal', 'Aurora', 'Prism'],
+          'mysterious': ['Enigma', 'Mystic', 'Oracle', 'Phantom'],
+          'energetic': ['Thunder', 'Volt', 'Surge', 'Blaze'],
+          'melancholy': ['Echo', 'Rain', 'Mist', 'Sorrow'],
+          'ethereal': ['Dream', 'Celestial', 'Aether', 'Cosmos'],
+          'aggressive': ['Fury', 'Rage', 'Storm', 'Chaos'],
+          'peaceful': ['Harmony', 'Zen', 'Serenity', 'Calm'],
+          'nostalgic': ['Memory', 'Vintage', 'Echo', 'Yesterday'],
+          'futuristic': ['Neon', 'Cyber', 'Quantum', 'Digital'],
+          'romantic': ['Heart', 'Rose', 'Velvet', 'Whisper'],
+          'epic': ['Titan', 'Legend', 'Saga', 'Myth']
+        };
+        
+        const genres = {
+          'rock': ['Rebels', 'Riders', 'Brigade', 'Collective'],
+          'metal': ['Legion', 'Dominion', 'Forge', 'Battalion'],
+          'jazz': ['Ensemble', 'Quintet', 'Syndicate', 'Society'],
+          'electronic': ['Circuit', 'Matrix', 'Network', 'System'],
+          'folk': ['Wanderers', 'Troubadours', 'Circle', 'Company'],
+          'classical': ['Orchestra', 'Symphony', 'Chamber', 'Philharmonic'],
+          'hip-hop': ['Crew', 'Squad', 'Collective', 'Movement'],
+          'country': ['Band', 'Rangers', 'Riders', 'Outlaws'],
+          'blues': ['Brothers', 'Revival', 'Junction', 'Crossroads'],
+          'reggae': ['Sound', 'Roots', 'Movement', 'Collective'],
+          'punk': ['Riot', 'Rebellion', 'Anarchy', 'Disorder'],
+          'indie': ['Project', 'Experiment', 'Society', 'Collective'],
+          'pop': ['Stars', 'Dreams', 'Magic', 'Sensation'],
+          'alternative': ['Theory', 'Paradox', 'Syndrome', 'Effect']
+        };
+        
+        const moodWords = mood && moods[mood] ? moods[mood] : ['Echo', 'Dream', 'Shadow', 'Fire'];
+        const genreWords = genre && genres[genre] ? genres[genre] : ['Collective', 'Project', 'Band', 'Society'];
+        
+        const prefix = moodWords[Math.floor(Math.random() * moodWords.length)];
+        const suffix = genreWords[Math.floor(Math.random() * genreWords.length)];
+        
+        parsedResponse = {
+          bandName: `The ${prefix} ${suffix}`,
+          model: 'fallback',
+          source: 'fallback'
+        };
+      }
+      
+      res.json({ 
+        bandName: parsedResponse.bandName || parsedResponse.bio || 'The Setlist Creators',
+        model: parsedResponse.model,
+        source: parsedResponse.source
+      });
+    } catch (error) {
+      secureLog.error("Error generating band name from setlist:", error);
+      res.status(500).json({ 
+        error: "Failed to generate band name",
+        suggestion: "The AI service may be temporarily unavailable. Please try again later."
+      });
+    }
+  });
+
+  // Generate AI name endpoint (protected with rate limiting and validation)
+  app.post("/api/generate-ai-name", 
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    isAuthenticated, 
+    validationRules.generateNames, 
+    handleValidationErrors, 
+    async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const { type, genre, mood } = req.body;
+      
+      if (!type || !['band', 'song'].includes(type)) {
+        return res.status(400).json({ error: "Valid type (band/song) is required" });
+      }
+
+      const aiNameResponse = await aiNameGenerator.generateAIName(type, genre, mood);
+      
+      // Parse the response
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(aiNameResponse);
+      } catch (error) {
+        // If parsing fails, create a simple fallback
+        const fallbackNames = type === 'band' 
+          ? ['The Electric Dreams', 'Midnight Echo', 'Digital Fire', 'Crystal Storm', 'Neon Shadows']
+          : ['Electric Heart', 'Midnight Rain', 'Digital Dreams', 'Crystal Light', 'Neon Nights'];
+        
+        parsedResponse = {
+          name: fallbackNames[Math.floor(Math.random() * fallbackNames.length)],
+          model: 'fallback',
+          source: 'fallback',
+          type: type
+        };
+      }
+      
+      // Verify the generated name
+      const verification = await nameVerifier.verifyName(parsedResponse.name, type);
+      
+      // Store in database with user ID
+      const userId = req.user.claims.sub;
+      const storedName = await storage.createGeneratedName({
+        name: parsedResponse.name,
+        type: type,
+        wordCount: parsedResponse.name.split(' ').length,
+        verificationStatus: verification.status,
+        verificationDetails: verification.details || null,
+        isAiGenerated: true,
+        userId: userId,
+      });
+
+      res.json({ 
+        id: storedName.id,
+        name: parsedResponse.name,
+        type: type,
+        wordCount: parsedResponse.name.split(' ').length,
+        verification,
+        model: parsedResponse.model,
+        source: parsedResponse.source
+      });
+    } catch (error) {
+      secureLog.error("Error generating AI name:", error);
+      res.status(500).json({ 
+        error: "Failed to generate AI name",
+        suggestion: "The AI service may be temporarily unavailable. Please try again later."
+      });
+    }
+  });
+
+  // Generate band bio endpoint (protected with rate limiting and validation)
+  app.post("/api/generate-band-bio", 
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
+    isAuthenticated, 
+    validationRules.generateBandBio, 
+    handleValidationErrors, 
+    async (req: Request & { user?: any }, res: Response) => {
+    try {
+      const { bandName, genre, mood } = req.body;
+      
+      if (!bandName || typeof bandName !== 'string') {
+        return res.status(400).json({ error: "Band name is required" });
+      }
+
+      const bioResponse = await bandBioGenerator.generateBandBio(bandName, genre, mood);
+      
+      // Parse the JSON response from the bio generator
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(bioResponse);
+      } catch (error) {
+        // Fallback for legacy string responses
+        parsedResponse = {
+          bio: bioResponse,
+          model: 'unknown',
+          source: 'legacy'
+        };
+      }
+      
+      secureLog.debug("Bio generated for", bandName, ":", parsedResponse.bio);
+      
+      res.json({ 
+        bandName,
+        bio: parsedResponse.bio,
+        model: parsedResponse.model,
+        source: parsedResponse.source,
+        generatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      secureLog.error("Error generating band bio:", error);
+      res.status(500).json({ 
+        error: "Failed to generate band biography",
+        suggestion: "The AI service may be temporarily unavailable. Please try again later."
+      });
+    }
   });
 
   // Generate lyric starter endpoint (public with optional auth for saving)  
   app.post("/api/generate-lyric-starter", 
-    middleware?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
-    middleware?.csrf?.validateToken || ((req: Request, res: Response, next: NextFunction) => next()),
+    rateLimiters?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
     validationRules.generateLyricStarter, 
     handleValidationErrors, 
     async (req: Request, res: Response) => {
-    await lyricHandler.handleGenerateLyricStarter(req, res);
-  });
-
-  // CSRF token endpoint for client requests
-  app.get("/api/csrf-token", async (req: Request & { session?: any }, res: Response) => {
     try {
-      const sessionId = req.session?.id || req.sessionID || 'anonymous';
-      const { csrfService } = await import('./services/csrfService');
-      const token = csrfService.generateToken(sessionId);
+      const { genre } = req.body;
+      
+      const lyricResult = await lyricStarterService.generateLyricStarter(genre);
       
       res.json({ 
-        csrfToken: token,
-        sessionId: sessionId.substring(0, 8) + '...' // Partial session ID for debugging
+        id: Date.now(), // Simple ID generation
+        lyric: lyricResult.lyric,
+        genre: genre || null,
+        songSection: lyricResult.songSection,
+        model: lyricResult.model,
+        generatedAt: new Date().toISOString()
       });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to generate CSRF token' });
+      secureLog.error("Error generating lyric spark:", error);
+      res.status(500).json({ 
+        error: "Failed to generate lyric spark",
+        suggestion: "The AI service may be temporarily unavailable. Please try again later."
+      });
     }
   });
 
@@ -280,399 +595,58 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     }
   });
 
-  // Performance monitoring endpoint (admin only in production)
-  app.get("/api/performance", async (req: Request, res: Response) => {
-    try {
-      const report = performanceMonitor.generateReport();
-      res.json({
-        ...report,
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV
-      });
-    } catch (error) {
-      secureLog.error("Performance report generation failed:", error);
-      res.status(500).json({ message: "Failed to generate performance report" });
-    }
-  });
-
-  // ===== FEEDBACK & PREFERENCES ENDPOINTS =====
-
-  // Submit user feedback (authenticated)
-  app.post("/api/feedback", 
-    middleware?.feedback || ((req: Request, res: Response, next: NextFunction) => next()),
-    isAuthenticated,
-    async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      
-      // Validate request body
-      const feedbackData = userFeedbackRequestSchema.parse(req.body);
-      
-      // Sanitize inputs
-      const sanitizedFeedback = {
-        ...feedbackData,
-        contentName: InputSanitizer.sanitizeNameInput(feedbackData.contentName),
-        textComment: feedbackData.textComment ? InputSanitizer.sanitizeNameInput(feedbackData.textComment) : undefined,
-        genre: feedbackData.genre ? InputSanitizer.sanitizeGenreInput(feedbackData.genre) : undefined,
-        mood: feedbackData.mood ? InputSanitizer.sanitizeMoodInput(feedbackData.mood) : undefined,
-      };
-
-      // Create feedback record
-      const feedback = await storage.createUserFeedback({
-        userId,
-        ...sanitizedFeedback,
-        feedbackSource: "manual",
-        sessionId: req.headers['x-session-id'] as string || undefined,
-      });
-
-      secureLog.info("User feedback submitted", {
-        userId,
-        contentType: feedback.contentType,
-        starRating: feedback.starRating,
-        thumbsRating: feedback.thumbsRating,
-        hasComment: !!feedback.textComment
-      });
-
-      res.json({
-        success: true,
-        feedbackId: feedback.id,
-        message: "Feedback submitted successfully"
-      });
-
-    } catch (error) {
-      secureLog.error("Error submitting feedback:", error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          error: "Invalid feedback data", 
-          details: error.errors,
-          suggestion: "Please check your feedback data and try again."
-        });
-      } else {
-        res.status(500).json({ 
-          error: "Failed to submit feedback",
-          suggestion: "Please try again later."
-        });
-      }
-    }
-  });
-
-  // Get user's feedback history (authenticated)
-  app.get("/api/feedback/user", 
-    isAuthenticated,
-    async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      const limit = parseInt(req.query.limit as string) || 50;
-      const contentType = req.query.contentType as string;
-
-      let feedback;
-      if (contentType) {
-        // Filter by content type if specified
-        feedback = await storage.getUserFeedback(userId, limit);
-        feedback = feedback.filter(f => f.contentType === contentType);
-      } else {
-        feedback = await storage.getUserFeedback(userId, limit);
-      }
-
-      res.json({
-        success: true,
-        feedback: feedback.map(f => ({
-          id: f.id,
-          contentType: f.contentType,
-          contentName: f.contentName,
-          starRating: f.starRating,
-          thumbsRating: f.thumbsRating,
-          textComment: f.textComment,
-          genre: f.genre,
-          mood: f.mood,
-          creativityRating: f.creativityRating,
-          memorabilityRating: f.memorabilityRating,
-          relevanceRating: f.relevanceRating,
-          createdAt: f.createdAt
-        })),
-        totalCount: feedback.length
-      });
-
-    } catch (error) {
-      secureLog.error("Error fetching user feedback:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch feedback history",
-        suggestion: "Please try again later."
-      });
-    }
-  });
-
-  // Get feedback statistics (authenticated, optional content filtering)
-  app.get("/api/feedback/stats", 
-    isAuthenticated,
-    async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const contentType = req.query.contentType as string;
-      const genre = req.query.genre as string;
-      const timeframe = req.query.timeframe ? parseInt(req.query.timeframe as string) : undefined;
-
-      if (!contentType) {
-        return res.status(400).json({
-          error: "Content type is required",
-          suggestion: "Please specify contentType as 'name', 'lyric', or 'bandBio'"
-        });
-      }
-
-      const stats = await storage.getFeedbackStats(contentType, genre, timeframe);
-      
-      res.json({
-        success: true,
-        contentType,
-        genre: genre || "all",
-        timeframeDays: timeframe || "all",
-        stats: {
-          totalFeedbacks: stats.totalFeedbacks,
-          averageStarRating: Math.round(stats.averageStarRating * 100) / 100,
-          positiveThumbsPercentage: Math.round(stats.positiveThumbsPercentage * 100) / 100,
-          qualityBreakdown: {
-            creativity: Math.round(stats.averageCreativity * 100) / 100,
-            memorability: Math.round(stats.averageMemorability * 100) / 100,
-            relevance: Math.round(stats.averageRelevance * 100) / 100
-          }
-        }
-      });
-
-    } catch (error) {
-      secureLog.error("Error fetching feedback stats:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch feedback statistics",
-        suggestion: "Please try again later."
-      });
-    }
-  });
-
-  // Get user preferences (authenticated)
-  app.get("/api/preferences", 
-    isAuthenticated,
-    async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      const preferences = await storage.getUserPreferences(userId);
-
-      if (!preferences) {
-        // Return default preferences if none exist
-        res.json({
-          success: true,
-          preferences: {
-            preferredGenres: [],
-            preferredMoods: [],
-            preferredWordCounts: [],
-            creativityWeight: 5,
-            memorabilityWeight: 5,
-            relevanceWeight: 5,
-            availabilityWeight: 7,
-            feedbackFrequency: "normal",
-            qualityThreshold: "moderate"
-          },
-          isDefault: true
-        });
-      } else {
-        res.json({
-          success: true,
-          preferences: {
-            preferredGenres: preferences.preferredGenres || [],
-            preferredMoods: preferences.preferredMoods || [],
-            preferredWordCounts: preferences.preferredWordCounts || [],
-            creativityWeight: preferences.creativityWeight,
-            memorabilityWeight: preferences.memorabilityWeight,
-            relevanceWeight: preferences.relevanceWeight,
-            availabilityWeight: preferences.availabilityWeight,
-            feedbackFrequency: preferences.feedbackFrequency,
-            qualityThreshold: preferences.qualityThreshold
-          },
-          lastUpdated: preferences.lastUpdated,
-          isDefault: false
-        });
-      }
-
-    } catch (error) {
-      secureLog.error("Error fetching user preferences:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch preferences",
-        suggestion: "Please try again later."
-      });
-    }
-  });
-
-  // Update user preferences (authenticated)
-  app.put("/api/preferences", 
-    isAuthenticated,
-    async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      
-      // Validate request body
-      const preferencesUpdate = userPreferencesUpdateSchema.parse(req.body);
-
-      // Update preferences
-      const updatedPreferences = await storage.upsertUserPreferences(userId, preferencesUpdate);
-
-      secureLog.info("User preferences updated", {
-        userId,
-        hasGenrePrefs: !!preferencesUpdate.preferredGenres,
-        hasMoodPrefs: !!preferencesUpdate.preferredMoods,
-        qualityThreshold: preferencesUpdate.qualityThreshold
-      });
-
-      res.json({
-        success: true,
-        preferences: {
-          preferredGenres: updatedPreferences.preferredGenres || [],
-          preferredMoods: updatedPreferences.preferredMoods || [],
-          preferredWordCounts: updatedPreferences.preferredWordCounts || [],
-          creativityWeight: updatedPreferences.creativityWeight,
-          memorabilityWeight: updatedPreferences.memorabilityWeight,
-          relevanceWeight: updatedPreferences.relevanceWeight,
-          availabilityWeight: updatedPreferences.availabilityWeight,
-          feedbackFrequency: updatedPreferences.feedbackFrequency,
-          qualityThreshold: updatedPreferences.qualityThreshold
-        },
-        lastUpdated: updatedPreferences.lastUpdated
-      });
-
-    } catch (error) {
-      secureLog.error("Error updating user preferences:", error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          error: "Invalid preferences data", 
-          details: error.errors,
-          suggestion: "Please check your preferences data and try again."
-        });
-      } else {
-        res.status(500).json({ 
-          error: "Failed to update preferences",
-          suggestion: "Please try again later."
-        });
-      }
-    }
-  });
-
-  // Get feedback analytics (authenticated - for insights)
-  app.get("/api/feedback/analytics", 
-    isAuthenticated,
-    async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const contentType = req.query.contentType as string;
-      const genre = req.query.genre as string;
-      const hours = req.query.hours ? parseInt(req.query.hours as string) : 24;
-
-      // Get recent feedback trends
-      const trends = await storage.getLatestFeedbackTrends(hours);
-      
-      // Get detailed analytics if contentType is specified
-      let detailedAnalytics = null;
-      if (contentType) {
-        detailedAnalytics = await storage.getFeedbackAnalytics(contentType, genre, undefined, 10);
-      }
-
-      res.json({
-        success: true,
-        timeframe: `${hours} hours`,
-        trends: trends.map(trend => ({
-          contentType: trend.contentType,
-          qualityTrend: trend.qualityTrend,
-          averageRating: Math.round(trend.averageRating * 100) / 100,
-          feedbackCount: trend.feedbackCount
-        })),
-        detailedAnalytics: detailedAnalytics || []
-      });
-
-    } catch (error) {
-      secureLog.error("Error fetching feedback analytics:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch feedback analytics",
-        suggestion: "Please try again later."
-      });
-    }
-  });
-
-  // ===== END FEEDBACK & PREFERENCES ENDPOINTS =====
-
   // Error logging endpoint
   app.post("/api/log-error", async (req: Request & { user?: any }, res: Response) => {
-    await errorLoggingHandler.handleLogError(req, res);
-  });
-
-  // Enhanced client error tracking endpoint
-  app.post("/api/client-errors", async (req: Request & { user?: any }, res: Response) => {
-    await errorLoggingHandler.handleClientErrors(req, res);
-  });
-
-  // Stash API routes for authenticated users
-  
-  // Get user's stash items
-  app.get('/api/stash', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    await stashHandler.handleGetStash(req, res);
-  });
-
-  // Add item to stash
-  app.post('/api/stash', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    await stashHandler.handleAddToStash(req, res);
-  });
-
-  // Remove item from stash
-  app.delete('/api/stash/:itemId', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    await stashHandler.handleRemoveFromStash(req, res);
-  });
-
-  // Update stash item rating
-  app.patch('/api/stash/:itemId/rating', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    await stashHandler.handleUpdateStashRating(req, res);
-  });
-
-  // Clear user's stash
-  app.delete('/api/stash', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    await stashHandler.handleClearStash(req, res);
-  });
-
-  // Check if item is in stash
-  app.get('/api/stash/check', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    await stashHandler.handleCheckStash(req, res);
-  });
-
-  // Test endpoint for phonetic analysis caching (for testing/monitoring)
-  app.get('/api/test/phonetic-cache', async (req: Request, res: Response) => {
     try {
-      const { phoneticFlowAnalyzer } = await import('./services/nameGeneration/phoneticFlowAnalyzer');
+      const { message, stack, componentStack, userAgent, url } = req.body;
+      const userId = req.user?.claims?.sub || null;
       
-      // Test cache functionality
-      const testName = req.query.name as string || 'electric storm';
+      await db.insert(errorLogs).values({
+        message: message || "Unknown error",
+        stack,
+        componentStack,
+        userAgent,
+        url,
+        userId,
+      });
       
-      // First analysis (may be cache miss)
-      const start1 = Date.now();
-      const result1 = phoneticFlowAnalyzer.analyzePhoneticFlow(testName);
-      const time1 = Date.now() - start1;
+      res.json({ success: true });
+    } catch (error) {
+      // Silently fail - don't break the app if error logging fails
+      res.status(200).json({ success: false });
+    }
+  });
+
+  // Enhanced Datamuse-powered name generation test endpoint
+  app.post("/api/test-enhanced-generation", async (req: Request, res: Response) => {
+    try {
+      const { type = 'band', wordCount = 2, mood, genre, count = 3 } = req.body;
       
-      // Second analysis (should be cache hit)
-      const start2 = Date.now();
-      const result2 = phoneticFlowAnalyzer.analyzePhoneticFlow(testName);
-      const time2 = Date.now() - start2;
+      secureLog.debug(`🧪 Testing enhanced generation: ${count} ${type} names with ${wordCount} words`);
       
-      // Get cache statistics
-      const stats = phoneticFlowAnalyzer.getCacheStats();
-      
+      const request = {
+        type,
+        wordCount: parseInt(wordCount),
+        count: parseInt(count),
+        mood,
+        genre
+      };
+
+      // Generate using enhanced Datamuse-powered method
+      const enhancedResults = await enhancedNameGenerator.generateEnhancedNames(request);
+
       res.json({
-        success: true,
-        testName,
-        analysisResult: result1,
-        performance: {
-          firstAnalysis: `${time1}ms`,
-          secondAnalysis: `${time2}ms`,
-          improvement: time1 > time2 ? `${((time1 - time2) / time1 * 100).toFixed(1)}%` : 'N/A'
-        },
-        cacheStats: stats
+        request: request,
+        results: enhancedResults,
+        method: "Datamuse API with contextual word relationships",
+        info: "All non-AI results now use real linguistic data from Datamuse API"
       });
     } catch (error) {
-      secureLog.error("Error in phonetic cache test:", error);
+      secureLog.error("Error in enhanced generation test:", error);
       res.status(500).json({ 
-        success: false,
-        message: "Failed to test phonetic cache",
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: "Enhanced generation test failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+        fallback: "Traditional generation is still available"
       });
     }
   });

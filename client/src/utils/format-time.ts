@@ -2,17 +2,9 @@
  * Lightweight replacement for date-fns formatDistanceToNow
  * Saves 36MB from bundle size!
  */
-export function formatDistanceToNow(date: Date | string, options?: { addSuffix?: boolean }): string {
+export function formatDistanceToNow(date: Date, options?: { addSuffix?: boolean }): string {
   const now = new Date();
-  // Convert string dates to Date objects (handles localStorage serialization)
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  // Validate the date
-  if (!dateObj || isNaN(dateObj.getTime())) {
-    return options?.addSuffix ? 'just now' : 'now';
-  }
-  
-  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
   
   if (diffInSeconds < 60) {
     const text = diffInSeconds === 1 ? '1 second' : `${diffInSeconds} seconds`;

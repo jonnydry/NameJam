@@ -25,13 +25,6 @@ export function StatusBadge({ status }: StatusBadgeProps) {
           text: 'Already taken',
           className: 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950 dark:border-red-800',
         };
-      default:
-        // Fallback for unexpected status values
-        return {
-          icon: <AlertTriangle className="w-4 h-4" />,
-          text: 'Status unknown',
-          className: 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-950 dark:border-gray-800',
-        };
     }
   };
 

@@ -9,7 +9,7 @@ interface FallbackOptions {
 
 export class XAIFallbackService {
   private openai: OpenAI;
-  private models = ['grok-4-fast', 'grok-3']; // Prioritize grok-4-fast
+  private models = ['grok-3', 'grok-4', 'grok-3-mini'];
   private cache = new Map<string, { data: any, timestamp: number }>();
   private cacheExpiry = 1000 * 60 * 30; // 30 minute cache
   
@@ -24,32 +24,9 @@ export class XAIFallbackService {
     return `${type}_${JSON.stringify(options)}`;
   }
 
-  // Enhanced context-aware caching with variable TTL
-  private getCacheTTL(type: string): number {
-    const cacheConfigs = {
-      'datamuse': 8 * 60 * 60 * 1000,    // 8 hours - stable vocab
-      'spotify': 4 * 60 * 60 * 1000,     // 4 hours - artist data
-      'conceptnet': 6 * 60 * 60 * 1000,  // 6 hours - associations
-      'lyrics': 15 * 60 * 1000,          // 15 min - highly creative
-      'bios': 30 * 60 * 1000,            // 30 min - creative but reusable
-    };
-    return cacheConfigs[type as keyof typeof cacheConfigs] || this.cacheExpiry;
-  }
-
-  // Time-bucketed cache keys for better freshness management
-  private getEnhancedCacheKey(type: string, options: any): string {
-    const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000)); // Per hour buckets
-    return `${type}_${hourBucket}_${JSON.stringify(options)}`;
-  }
-
-  private getFromCache(key: string): any | null;
-  private getFromCache(key: string, type?: string): any | null {
+  private getFromCache(key: string): any | null {
     const cached = this.cache.get(key);
-    if (!cached) return null;
-
-    // Use type-specific TTL if provided, otherwise use default expiration
-    const ttl = type ? this.getCacheTTL(type) : this.cacheExpiry;
-    if (Date.now() - cached.timestamp < ttl) {
+    if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
       return cached.data;
     }
     return null;
@@ -73,9 +50,9 @@ export class XAIFallbackService {
     type: 'adjectives' | 'nouns' | 'related';
     count: number;
   }): Promise<any[]> {
-    // Check cache first with type-specific TTL
+    // Check cache first
     const cacheKey = this.getCacheKey('datamuse', options);
-    const cached = this.getFromCache(cacheKey, 'datamuse');
+    const cached = this.getFromCache(cacheKey);
     if (cached) {
       secureLog.debug('Using cached Datamuse fallback data');
       return cached;
@@ -127,37 +104,29 @@ Understand subtle semantic relationships and cultural connotations.`
               { role: 'user', content: prompt }
             ],
             temperature,
-            max_tokens: 250, // Reduced from 500 for word lists - architect recommendation
+            max_tokens: 500,
             response_format: { type: 'json_object' }
           });
 
           const content = response.choices[0]?.message?.content;
           if (content) {
-            try {
-              const parsed = JSON.parse(content);
-              const words = parsed?.words || parsed?.results || parsed?.data || parsed;
+            const parsed = JSON.parse(content);
+            const words = parsed.words || parsed.results || parsed.data || parsed;
+            
+            if (Array.isArray(words)) {
+              const results = words.map((item: any, index: number) => ({
+                word: typeof item === 'string' ? item : item.word,
+                score: item.score || (100 - index * 5) // Use provided score or simulate
+              })).filter((item: any) => 
+                item.word && 
+                item.word.length > 2 && 
+                item.word.length < 20 &&
+                /^[a-zA-Z]+$/.test(item.word)
+              );
               
-              if (Array.isArray(words) && words.length > 0) {
-                const results = words.map((item: any, index: number) => {
-                  const word = typeof item === 'string' ? item : (item?.word || '');
-                  const score = item?.score || (100 - index * 5);
-                  return { word, score };
-                }).filter((item: any) => 
-                  item.word && 
-                  typeof item.word === 'string' &&
-                  item.word.length > 2 && 
-                  item.word.length < 20 &&
-                  /^[a-zA-Z]+$/.test(item.word)
-                );
-                
-                if (results.length > 0) {
-                  // Cache successful results
-                  this.setCache(cacheKey, results);
-                  return results;
-                }
-              }
-            } catch (jsonError) {
-              secureLog.debug(`Failed to parse XAI JSON response: ${jsonError}`);
+              // Cache successful results
+              this.setCache(cacheKey, results);
+              return results;
             }
           }
         } catch (error) {
@@ -180,9 +149,9 @@ Understand subtle semantic relationships and cultural connotations.`
     type: 'artists' | 'tracks';
     count: number;
   }): Promise<any[]> {
-    // Check cache first with type-specific TTL
+    // Check cache first
     const cacheKey = this.getCacheKey('spotify', options);
-    const cached = this.getFromCache(cacheKey, 'spotify');
+    const cached = this.getFromCache(cacheKey);
     if (cached) {
       secureLog.debug('Using cached Spotify fallback data');
       return cached;
@@ -222,7 +191,7 @@ ${options.type === 'artists'
               { role: 'user', content: prompt }
             ],
             temperature: options.type === 'artists' ? 0.85 : 0.9, // Slightly lower for artist names
-            max_tokens: 400, // Reduced from 600 for better efficiency 
+            max_tokens: 600,
             response_format: { type: 'json_object' }
           });
 
@@ -251,7 +220,7 @@ ${options.type === 'artists'
                 }
               });
               
-              // Cache successful results with type-specific TTL
+              // Cache successful results
               this.setCache(cacheKey, results);
               return results;
             }
@@ -340,7 +309,7 @@ Return as JSON: {"genreTerms": ["term1"], "descriptiveWords": ["word1"]}`;
               { role: 'user', content: prompt }
             ],
             temperature: 0.8,
-            max_tokens: 150, // Reduced from 200 for simple word lists
+            max_tokens: 200,
             response_format: { type: 'json_object' }
           });
 

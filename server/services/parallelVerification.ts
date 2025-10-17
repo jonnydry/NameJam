@@ -1,11 +1,8 @@
 import type { VerificationResult } from "@shared/schema";
 import { spotifyService } from "./spotifyService";
 import { performanceCache } from "./performanceCache";
-// Removed dependency on parallelVerificationRateLimiter as it was unused
-import { secureLog } from "../utils/secureLogger";
 
 export class ParallelVerificationService {
-  private static readonly MAX_CONCURRENT_BATCH = 5;
   private famousNames = new Set([
     'the beatles', 'rolling stones', 'queen', 'led zeppelin', 'pink floyd',
     'nirvana', 'metallica', 'radiohead', 'u2', 'coldplay', 'oasis',
@@ -41,31 +38,32 @@ export class ParallelVerificationService {
 
     // Verify uncached names in parallel with limited concurrency
     if (uncachedNames.length > 0) {
-      const batchSize = ParallelVerificationService.MAX_CONCURRENT_BATCH;
+      const verificationPromises = uncachedNames.map(async ({ name, type, index }) => {
+        try {
+          const result = await this.verifyNameFast(name, type);
+          // Cache the result
+          performanceCache.setCachedVerification(name, type, result);
+          return { result, index };
+        } catch (error) {
+          // Fallback result for errors
+          return {
+            result: {
+              status: 'available' as const,
+              details: 'Verification temporarily unavailable',
+              verificationLinks: this.generateVerificationLinks(name, type)
+            },
+            index
+          };
+        }
+      });
 
-      for (let i = 0; i < uncachedNames.length; i += batchSize) {
-        const batch = uncachedNames.slice(i, i + batchSize);
-        const verificationResults = await Promise.allSettled(
-          batch.map(async ({ name, type, index }) => {
-            try {
-              const result = await this.verifyNameFast(name, type);
-              performanceCache.setCachedVerification(name, type, result);
-              return { result, index };
-            } catch (error) {
-              secureLog.debug(`Verification fallback triggered for "${name}"`, error);
-              return {
-                result: {
-                  status: 'available' as const,
-                  details: 'Verification temporarily unavailable',
-                  verificationLinks: this.generateVerificationLinks(name, type)
-                },
-                index
-              };
-            }
-          })
-        );
-
-        verificationResults.forEach((result) => {
+      // Execute with limited concurrency (max 3 parallel requests)
+      const batchSize = 3;
+      for (let i = 0; i < verificationPromises.length; i += batchSize) {
+        const batch = verificationPromises.slice(i, i + batchSize);
+        const batchResults = await Promise.allSettled(batch);
+        
+        batchResults.forEach((result) => {
           if (result.status === 'fulfilled') {
             results[result.value.index] = result.value.result;
           }
@@ -82,7 +80,6 @@ export class ParallelVerificationService {
     // Quick Spotify check only (skip other APIs for speed)
     try {
       if (await spotifyService.isAvailable()) {
-        // Direct Spotify call without rate limiting for better performance
         const spotifyResults = type === 'band' 
           ? await spotifyService.verifyBandName(name)
           : await spotifyService.verifySongName(name);
@@ -101,7 +98,6 @@ export class ParallelVerificationService {
         }
       }
     } catch (error) {
-      secureLog.debug(`Spotify verification failed for "${name}":`, error);
       // Continue to basic check if Spotify fails
     }
 
@@ -114,8 +110,6 @@ export class ParallelVerificationService {
   }
 
   private isEasterEgg(name: string): boolean {
-    if (!name || typeof name !== 'string') return false;
-    
     const normalizedName = name.toLowerCase().replace(/[^a-z]/g, '');
     if (normalizedName === 'namejam') return true;
     

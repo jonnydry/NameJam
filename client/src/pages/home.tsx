@@ -1,7 +1,8 @@
 import { NameGenerator } from "@/components/name-generator";
+import { SetListGenerator } from "@/components/setlist-generator";
 import { LyricJam } from "@/components/lyric-jam";
 import { FermataLogo } from "@/components/fermata-logo";
-import { StashSidebarEnhanced as StashSidebar } from "@/components/stash-sidebar-enhanced";
+import { StashSidebar } from "@/components/stash-sidebar";
 import { UserMenu } from "@/components/user-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,45 +14,11 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Import the result interfaces
-interface GenerationResult {
-  id: number;
-  name: string;
-  type: string;
-  wordCount: number;
-  verification: {
-    status: 'available' | 'similar' | 'taken';
-    details?: string;
-    similarNames?: string[];
-    verificationLinks?: Array<{
-      name: string;
-      url: string;
-      source: string;
-    }>;
-  };
-}
-
-interface LyricResult {
-  id: number;
-  lyric: string;
-  genre?: string;
-  songSection?: string;
-  model?: string;
-  generatedAt: string;
-}
-
 export default function Home() {
   const [copiedName, setCopiedName] = useState<string | null>(null);
   const [isStashOpen, setIsStashOpen] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
-  
-  // Shared state for name generation results to persist across tab switches
-  const [bandResults, setBandResults] = useState<GenerationResult[]>([]);
-  const [songResults, setSongResults] = useState<GenerationResult[]>([]);
-  
-  // Shared state for lyric generation results to persist across tab switches
-  const [lyricResult, setLyricResult] = useState<LyricResult | null>(null);
 
   // No longer redirect automatically - mixed approach allows guest usage
 
@@ -86,25 +53,16 @@ export default function Home() {
       <div className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border/50">
         <div className="px-2 sm:px-4 py-2">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            {/* Enhanced Stash Button */}
+            {/* Stash Button */}
             <Button
               id="stash-toggle-btn"
-              variant={isStashOpen ? "default" : "outline"}
+              variant="outline"
               size="sm"
               onClick={() => setIsStashOpen(!isStashOpen)}
-              className={cn(
-                "flex items-center gap-2 h-10 px-3 sm:px-4 md:h-9 transition-all duration-200",
-                "hover:scale-105 hover:shadow-lg",
-                isStashOpen && "bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
-              )}
+              className="flex items-center gap-2 h-10 px-2 sm:px-3 md:h-9"
             >
-              <Archive className={cn(
-                "h-5 w-5 md:h-4 md:w-4 transition-transform duration-200",
-                isStashOpen && "rotate-12"
-              )} />
-              <span className="hidden sm:inline font-medium">
-                {isStashOpen ? "Close Stash" : "My Stash"}
-              </span>
+              <Archive className="h-5 w-5 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Stash</span>
             </Button>
             
             {/* User Menu */}
@@ -133,35 +91,34 @@ export default function Home() {
                 </h1>
               </div>
             </div>
-            <p className="text-responsive-xs text-muted-foreground subtitle-fade px-2 font-normal">Generate unique band names, song titles, and lyrical inspiration</p>
+            <p className="text-responsive-xs text-muted-foreground subtitle-fade px-2 font-normal">Generate unique band names, song titles, set lists, and lyrical inspiration</p>
           </div>
 
           {/* Tabs Section */}
           <div className="w-full">
             <Tabs defaultValue="names" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 tabs-list-enhanced mb-4 md:mb-6">
+                <TabsList className="grid w-full grid-cols-3 tabs-list-enhanced mb-4 md:mb-6">
                   <TabsTrigger value="names" className="tabs-trigger-enhanced">
                     <span className="hidden sm:inline">NAME_JAM</span>
-                    <span className="sm:hidden">Name_Jam</span>
+                    <span className="sm:hidden">NAMES</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="setlist" className="tabs-trigger-enhanced">
+                    <span className="hidden sm:inline">SET_JAM</span>
+                    <span className="sm:hidden">SET LISTS</span>
                   </TabsTrigger>
                   <TabsTrigger value="lyric" className="tabs-trigger-enhanced">
                     <span className="hidden sm:inline">LYRIC_JAM</span>
-                    <span className="sm:hidden">Lyric_Jam</span>
+                    <span className="sm:hidden">LYRICS</span>
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="names">
-                  <NameGenerator 
-                    bandResults={bandResults}
-                    setBandResults={setBandResults}
-                    songResults={songResults}
-                    setSongResults={setSongResults}
-                  />
+                  <NameGenerator />
+                </TabsContent>
+                <TabsContent value="setlist">
+                  <SetListGenerator onCopy={handleCopy} />
                 </TabsContent>
                 <TabsContent value="lyric">
-                  <LyricJam 
-                    lyricResult={lyricResult}
-                    setLyricResult={setLyricResult}
-                  />
+                  <LyricJam />
                 </TabsContent>
               </Tabs>
           </div>
@@ -172,7 +129,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <p className="text-responsive-sm text-muted-foreground">© 2025 NameJam. Powered by web-sourced creativity.</p>
-            <div className="flex justify-center space-x-6">
+            <div className="flex justify-center space-x-6 mt-4">
               <Link href="/about" className="text-responsive-xs text-muted-foreground hover:text-primary transition-colors">About</Link>
               <a href="#" className="text-responsive-xs text-muted-foreground hover:text-primary transition-colors">Contact</a>
               <a href="#" className="text-responsive-xs text-muted-foreground hover:text-primary transition-colors">API Documentation</a>

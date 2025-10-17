@@ -10,14 +10,7 @@ import Home from "@/pages/home";
 import About from "@/pages/about";
 import NotFound from "@/pages/not-found";
 import { Landing } from "@/components/landing";
-import { ErrorBoundary } from "@/components/error-boundary-new";
-import { PageErrorBoundary } from "@/components/enhanced-error-boundary";
-import { DegradationIndicator, ServiceStatusIndicator } from "@/components/degradation-indicator";
-import { OfflineIndicator } from "@/components/offline-indicator";
-
-// Initialize error tracking services
-import '@/services/errorTrackingService';
-import '@/services/gracefulDegradationService';
+import { ErrorBoundary } from "@/components/error-boundary";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -45,21 +38,16 @@ function App() {
   }, []);
 
   return (
-    <PageErrorBoundary>
+    <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <StashProvider>
           <TooltipProvider>
             <Toaster />
-            <OfflineIndicator />
-            <DegradationIndicator />
-            <ServiceStatusIndicator />
-            <ErrorBoundary>
-              <Router />
-            </ErrorBoundary>
+            <Router />
           </TooltipProvider>
         </StashProvider>
       </QueryClientProvider>
-    </PageErrorBoundary>
+    </ErrorBoundary>
   );
 }
 

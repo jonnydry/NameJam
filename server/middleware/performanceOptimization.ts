@@ -9,31 +9,17 @@ export const compressionMiddleware = (req: Request, res: Response, next: NextFun
 // Request timeout middleware
 export const timeoutMiddleware = (timeoutMs: number = 30000) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    let timedOut = false;
-    
     const timeout = setTimeout(() => {
-      if (!res.headersSent && !timedOut) {
-        timedOut = true;
+      if (!res.headersSent) {
         res.status(408).json({ 
           error: 'Request timeout',
-          suggestion: 'The request took too long to process. Please try again with simpler settings.'
+          suggestion: 'The request took too long to process. Please try again.'
         });
       }
     }, timeoutMs);
 
-    // Clear timeout when response finishes
-    res.on('finish', () => {
-      clearTimeout(timeout);
-      timedOut = true;
-    });
-    
-    res.on('close', () => {
-      clearTimeout(timeout);
-      timedOut = true;
-    });
-    
-    // Store timeout state for route handlers to check
-    (req as any).timedOut = () => timedOut;
+    res.on('finish', () => clearTimeout(timeout));
+    res.on('close', () => clearTimeout(timeout));
     
     next();
   };
