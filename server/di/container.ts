@@ -6,8 +6,8 @@
 import { secureLog } from "../utils/secureLogger";
 import { config } from "../config";
 
-// Service factory type
-type ServiceFactory<T> = () => T;
+// Service factory type (can be sync or async)
+type ServiceFactory<T> = () => T | Promise<T>;
 
 // Service registration type
 type ServiceRegistration<T> = {
@@ -32,9 +32,9 @@ export class DIContainer {
   }
 
   /**
-   * Get a service from the container
+   * Get a service from the container (async)
    */
-  get<T>(name: string): T {
+  async get<T>(name: string): Promise<T> {
     const registration = this.services.get(name);
     
     if (!registration) {
@@ -46,8 +46,8 @@ export class DIContainer {
       return registration.instance;
     }
 
-    // Create new instance
-    const instance = registration.factory();
+    // Create new instance (await in case it's async)
+    const instance = await registration.factory();
     
     // Store instance if singleton
     if (registration.singleton) {
@@ -108,109 +108,109 @@ export function initializeContainer(): void {
   container.register('config', () => config, true);
 
   // Register core services
-  container.register('unifiedNameGenerator', () => {
-    const { UnifiedNameGeneratorService } = require('../services/unifiedNameGenerator');
+  container.register('unifiedNameGenerator', async () => {
+    const { UnifiedNameGeneratorService } = await import('../services/unifiedNameGenerator');
     return new UnifiedNameGeneratorService();
   }, true);
 
-  container.register('qualityRankingSystem', () => {
-    const { qualityRankingSystem } = require('../services/qualityScoring/qualityRankingSystem');
+  container.register('qualityRankingSystem', async () => {
+    const { qualityRankingSystem } = await import('../services/qualityScoring/qualityRankingSystem');
     return qualityRankingSystem;
   }, true);
 
-  container.register('parallelVerificationService', () => {
-    const { parallelVerificationService } = require('../services/parallelVerification');
+  container.register('parallelVerificationService', async () => {
+    const { parallelVerificationService } = await import('../services/parallelVerification');
     return parallelVerificationService;
   }, true);
 
-  container.register('unifiedWordFilter', () => {
-    const { unifiedWordFilter } = require('../services/nameGeneration/unifiedWordFilter');
+  container.register('unifiedWordFilter', async () => {
+    const { unifiedWordFilter } = await import('../services/nameGeneration/unifiedWordFilter');
     return unifiedWordFilter;
   }, true);
 
-  container.register('optimizedContextService', () => {
-    const { optimizedContextService } = require('../services/optimizedContextService');
+  container.register('optimizedContextService', async () => {
+    const { optimizedContextService } = await import('../services/optimizedContextService');
     return optimizedContextService;
   }, true);
 
-  container.register('backgroundQueue', () => {
-    const { backgroundQueue } = require('../api/services/BackgroundQueue');
+  container.register('backgroundQueue', async () => {
+    const { backgroundQueue } = await import('../api/services/BackgroundQueue');
     return backgroundQueue;
   }, true);
 
-  container.register('requestDeduplicationService', () => {
-    const { requestDeduplicationService } = require('../api/middleware/requestDeduplication');
+  container.register('requestDeduplicationService', async () => {
+    const { requestDeduplicationService } = await import('../api/middleware/requestDeduplication');
     return requestDeduplicationService;
   }, true);
 
   // Register handlers
-  container.register('nameGenerationHandler', () => {
-    const { NameGenerationHandler } = require('../api/handlers/NameGenerationHandler');
-    const nameGenerator = container.get('unifiedNameGenerator');
+  container.register('nameGenerationHandler', async () => {
+    const { NameGenerationHandler } = await import('../api/handlers/NameGenerationHandler');
+    const nameGenerator = await container.get('unifiedNameGenerator');
     return new NameGenerationHandler(nameGenerator);
   }, true);
 
-  container.register('generationOrchestrator', () => {
-    const { GenerationOrchestrator } = require('../api/services/GenerationOrchestrator');
-    const nameGenerator = container.get('unifiedNameGenerator');
+  container.register('generationOrchestrator', async () => {
+    const { GenerationOrchestrator } = await import('../api/services/GenerationOrchestrator');
+    const nameGenerator = await container.get('unifiedNameGenerator');
     return new GenerationOrchestrator(nameGenerator);
   }, true);
 
   // Register AI services
-  container.register('aiNameGenerator', () => {
-    const { AINameGenerator } = require('../services/nameGeneration/core/AINameGenerator');
+  container.register('aiNameGenerator', async () => {
+    const { AINameGenerator } = await import('../services/nameGeneration/core/AINameGenerator');
     return new AINameGenerator();
   }, true);
 
   // Register new focused services
-  container.register('patternNameGenerator', () => {
-    const { PatternNameGenerator } = require('../services/nameGeneration/core/PatternNameGenerator');
+  container.register('patternNameGenerator', async () => {
+    const { PatternNameGenerator } = await import('../services/nameGeneration/core/PatternNameGenerator');
     return new PatternNameGenerator();
   }, true);
 
-  container.register('contextEnricher', () => {
-    const { ContextEnricher } = require('../services/nameGeneration/core/ContextEnricher');
+  container.register('contextEnricher', async () => {
+    const { ContextEnricher } = await import('../services/nameGeneration/core/ContextEnricher');
     return new ContextEnricher();
   }, true);
 
-  container.register('varietyOptimizer', () => {
-    const { VarietyOptimizer } = require('../services/nameGeneration/core/VarietyOptimizer');
+  container.register('varietyOptimizer', async () => {
+    const { VarietyOptimizer } = await import('../services/nameGeneration/core/VarietyOptimizer');
     return new VarietyOptimizer();
   }, true);
 
-  container.register('nameGenerationCoordinator', () => {
-    const { NameGenerationCoordinator } = require('../services/nameGeneration/core/NameGenerationCoordinator');
-    const aiGenerator = container.get('aiNameGenerator');
-    const patternGenerator = container.get('patternNameGenerator');
-    const contextEnricher = container.get('contextEnricher');
-    const varietyOptimizer = container.get('varietyOptimizer');
+  container.register('nameGenerationCoordinator', async () => {
+    const { NameGenerationCoordinator } = await import('../services/nameGeneration/core/NameGenerationCoordinator');
+    const aiGenerator = await container.get('aiNameGenerator');
+    const patternGenerator = await container.get('patternNameGenerator');
+    const contextEnricher = await container.get('contextEnricher');
+    const varietyOptimizer = await container.get('varietyOptimizer');
     return new NameGenerationCoordinator(aiGenerator, patternGenerator, contextEnricher, varietyOptimizer);
   }, true);
 
   // Register new unified name generator
-  container.register('newUnifiedNameGenerator', () => {
-    const { NewUnifiedNameGeneratorService } = require('../services/nameGeneration/NewUnifiedNameGenerator');
+  container.register('newUnifiedNameGenerator', async () => {
+    const { NewUnifiedNameGeneratorService } = await import('../services/nameGeneration/NewUnifiedNameGenerator');
     return new NewUnifiedNameGeneratorService();
   }, true);
 
   // Register additional handlers
-  container.register('bandBioHandler', () => {
-    const { BandBioHandler } = require('../api/handlers/BandBioHandler');
+  container.register('bandBioHandler', async () => {
+    const { BandBioHandler } = await import('../api/handlers/BandBioHandler');
     return new BandBioHandler();
   }, true);
 
-  container.register('lyricHandler', () => {
-    const { LyricHandler } = require('../api/handlers/LyricHandler');
+  container.register('lyricHandler', async () => {
+    const { LyricHandler } = await import('../api/handlers/LyricHandler');
     return new LyricHandler();
   }, true);
 
-  container.register('stashHandler', () => {
-    const { StashHandler } = require('../api/handlers/StashHandler');
+  container.register('stashHandler', async () => {
+    const { StashHandler } = await import('../api/handlers/StashHandler');
     return new StashHandler();
   }, true);
 
-  container.register('errorLoggingHandler', () => {
-    const { ErrorLoggingHandler } = require('../api/handlers/ErrorLoggingHandler');
+  container.register('errorLoggingHandler', async () => {
+    const { ErrorLoggingHandler } = await import('../api/handlers/ErrorLoggingHandler');
     return new ErrorLoggingHandler();
   }, true);
 
@@ -218,10 +218,10 @@ export function initializeContainer(): void {
 }
 
 /**
- * Helper function to get a service with type safety
+ * Helper function to get a service with type safety (async)
  */
-export function getService<T>(name: string): T {
-  return container.get<T>(name);
+export async function getService<T>(name: string): Promise<T> {
+  return await container.get<T>(name);
 }
 
 /**

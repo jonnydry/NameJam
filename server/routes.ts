@@ -188,7 +188,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
   initializeContainer();
   
   // Get handlers from DI container
-  const nameGenerationHandler = getService<NameGenerationHandler>('nameGenerationHandler');
+  const nameGenerationHandler = await getService<NameGenerationHandler>('nameGenerationHandler');
   const verificationHandler = new VerificationHandler();
   const userHandler = new UserHandler();
   const feedbackHandler = new FeedbackHandler();
