@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { xaiFallbackService } from './xaiFallbackService';
 import { secureLog } from '../utils/secureLogger';
 
