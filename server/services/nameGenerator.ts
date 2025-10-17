@@ -28,13 +28,13 @@ export class NameGeneratorService {
     // Generate AI names if available and requested
     if (aiCount > 0 && this.aiNameGenerator) {
       try {
-        // Get context examples from Spotify/Last.fm if genre is specified
+        // Get context examples from Spotify if genre is specified
         let contextExamples: string[] = [];
         if (request.genre) {
           // Get real examples from enhanced name generator's API sources
           const wordSources = await enhancedNameGenerator.buildContextualWordSources(request.mood, request.genre);
-          // Combine artist names from Spotify, Last.fm, and ConceptNet for context
-          contextExamples = [...wordSources.spotifyWords, ...wordSources.lastfmWords, ...wordSources.conceptNetWords]
+          // Combine artist names from Spotify and ConceptNet for context
+          contextExamples = [...wordSources.spotifyWords, ...wordSources.conceptNetWords]
             .filter(w => w.length > 2 && !w.includes(' ')) // Filter for quality
             .slice(0, 15); // Increased to 15 examples for richer context
         }
@@ -122,11 +122,11 @@ export class NameGeneratorService {
       // Generate AI songs if available and requested
       if (aiCount > 0 && this.aiNameGenerator) {
         try {
-          // Get enhanced context from all sources (Spotify, Last.fm, ConceptNet)
+          // Get enhanced context from all sources (Spotify, ConceptNet)
           let contextExamples: string[] = [];
           if (enhancedRequest.genre) {
             const wordSources = await enhancedNameGenerator.buildContextualWordSources(enhancedRequest.mood, enhancedRequest.genre);
-            contextExamples = [...wordSources.spotifyWords, ...wordSources.lastfmWords, ...wordSources.conceptNetWords]
+            contextExamples = [...wordSources.spotifyWords, ...wordSources.conceptNetWords]
               .filter(w => w.length > 2 && !w.includes(' '))
               .slice(0, 15);
           }
