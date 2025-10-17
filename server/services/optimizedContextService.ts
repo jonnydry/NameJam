@@ -112,9 +112,11 @@ export class OptimizedContextService {
     let actualMood = mood;
     
     if (!genre && !mood) {
-      // Use a consistent default genre to maintain cache effectiveness
-      actualGenre = 'indie';
-      secureLog.debug(`[OptimizedContext] Using default genre: ${actualGenre} for cache efficiency`);
+      // Use a deterministic default based on time to provide variety while maintaining cache effectiveness
+      const timeBasedIndex = Math.floor(Date.now() / (5 * 60 * 1000)) % 6; // Rotate every 5 minutes
+      const defaultGenres = ['indie', 'rock', 'electronic', 'pop', 'folk', 'jazz'];
+      actualGenre = defaultGenres[timeBasedIndex];
+      secureLog.debug(`[OptimizedContext] Using time-based default genre: ${actualGenre} for cache efficiency`);
     }
 
     const context: OptimizedContext = {
@@ -265,9 +267,9 @@ export class OptimizedContextService {
         rejector: reject
       });
       
-      // Process batch after 50ms or when it reaches 5 calls
+      // Process batch after 20ms or when it reaches 5 calls
       if (batch.calls.length >= 5 || !this.batchTimeout) {
-        this.batchTimeout = setTimeout(() => this.processBatch(serviceKey), 50);
+        this.batchTimeout = setTimeout(() => this.processBatch(serviceKey), 20);
       }
     });
   }
@@ -329,7 +331,7 @@ export class OptimizedContextService {
   }
 
   private getCacheTTL(priority: 'speed' | 'quality'): number {
-    return priority === 'speed' ? 5 * 60 * 1000 : 2 * 60 * 1000; // 5min vs 2min
+    return priority === 'speed' ? 30 * 60 * 1000 : 15 * 60 * 1000; // 30min vs 15min
   }
 
   private cleanExpiredCache(): void {
@@ -389,6 +391,18 @@ export class OptimizedContextService {
       word.length > 3 && 
       !['music', 'song', 'band', 'artist'].includes(word.toLowerCase())
     ).slice(0, 4);
+  }
+
+  hasCachedContext(cacheKey: string): boolean {
+    const cached = this.contextCache.get(cacheKey);
+    if (!cached) return false;
+    
+    if (Date.now() - cached.timestamp > cached.ttl) {
+      this.contextCache.delete(cacheKey);
+      return false;
+    }
+    
+    return true;
   }
 
   getStats() {

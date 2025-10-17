@@ -13,7 +13,7 @@ export class CacheService<T = any> {
     sets: 0
   };
 
-  constructor(defaultTTLSeconds: number = 3600, maxSize: number = 1000) {
+  constructor(defaultTTLSeconds: number = 1800, maxSize: number = 1000) { // 30 minutes default
     this.cache = new Map();
     this.defaultTTL = defaultTTLSeconds * 1000; // Convert to milliseconds
     this.maxSize = maxSize;
@@ -208,6 +208,6 @@ export class CacheService<T = any> {
 }
 
 // Singleton instances for different cache purposes
-export const apiContextCache = new CacheService(3600, 100); // 1 hour TTL, max 100 entries
-export const genreSeedCache = new CacheService(86400, 50); // 24 hour TTL, max 50 entries
+export const apiContextCache = new CacheService(1800, 100); // 30 minutes TTL, max 100 entries
+export const genreSeedCache = new CacheService(3600, 50); // 1 hour TTL, max 50 entries
 export const lyricGenerationCache = new CacheService(1800, 200); // 30 min TTL, max 200 entries

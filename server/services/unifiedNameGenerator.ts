@@ -676,19 +676,17 @@ export class UnifiedNameGeneratorService {
       // 3. Apply repetition filtering and ensure we have enough names - OPTIMIZED
       let filteredNames = this.applyRepetitionFiltering(names, generationId, type);
       
-      // OPTIMIZED: Use circuit breaker with intelligent bulk generation instead of retry loops
+      // OPTIMIZED: Generate 2x names upfront to reduce retry loops
       if (filteredNames.length < count) {
         const needed = count - filteredNames.length;
         secureLog.info(`Need ${needed} more names after filtering, using optimized bulk generation`);
         
         await this.filteringCircuitBreaker.attempt(
           async () => {
-            // OPTIMIZATION: Smart generation count based on filtering efficiency
-            const filteringEfficiency = this.calculateFilteringEfficiency(filteredNames.length, names.length);
-            const smartMultiplier = this.calculateSmartMultiplier(needed, filteringEfficiency, type, genre);
-            const generateCount = Math.max(needed * smartMultiplier, count * 1.5);
+            // OPTIMIZATION: Generate 2x needed names upfront for better variety and fewer retries
+            const generateCount = Math.max(needed * 2, count * 2);
             
-            secureLog.debug(`Smart generation: needed=${needed}, efficiency=${filteringEfficiency.toFixed(2)}, multiplier=${smartMultiplier.toFixed(1)}, generating=${generateCount}`);
+            secureLog.debug(`Bulk generation: needed=${needed}, generating=${generateCount} for better variety`);
             
             let additionalNames: string[];
             if (strategy.useAI) {

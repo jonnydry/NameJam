@@ -22,7 +22,18 @@ import { ErrorHandler, ERROR_CODES, apiErrorSchema } from "@shared/errorSchemas"
 import { validationRules, handleValidationErrors } from "./security";
 import { performanceCache } from "./services/performanceCache";
 import { performanceMonitor } from "./services/performanceMonitor";
+import { optimizedContextService } from "./services/optimizedContextService";
 import { secureLog, sanitizeApiResponse } from "./utils/secureLogger";
+import { NameGenerationHandler } from "./api/handlers/NameGenerationHandler";
+import { VerificationHandler } from "./api/handlers/VerificationHandler";
+import { UserHandler } from "./api/handlers/UserHandler";
+import { FeedbackHandler } from "./api/handlers/FeedbackHandler";
+import { BandBioHandler } from "./api/handlers/BandBioHandler";
+import { LyricHandler } from "./api/handlers/LyricHandler";
+import { StashHandler } from "./api/handlers/StashHandler";
+import { ErrorLoggingHandler } from "./api/handlers/ErrorLoggingHandler";
+import { requestDeduplicationMiddleware } from "./api/middleware/requestDeduplication";
+import { initializeContainer, getService } from "./di/container";
 import type { Request, Response, NextFunction } from "express";
 import { InputSanitizer } from "./utils/inputSanitizer";
 
@@ -33,7 +44,26 @@ import {
   responseTimeMiddleware 
 } from "./middleware/performanceOptimization";
 
-// Helper functions for intelligent ranking
+// Helper functions for intelligent ranking and adaptive strategy selection
+function determineAdaptiveStrategy(request: any, userPreferences: any, contextCacheHit: boolean): string {
+  // Adaptive strategy selection based on performance factors
+  const sessionId = request.sessionId || 'anonymous';
+  const recentRequests = getRecentRequestCount(sessionId);
+  
+  // Speed mode after 5+ generations in same session
+  if (recentRequests >= 5) {
+    return 'SPEED';
+  }
+  
+  // Quality mode if context is cached (fast context gathering)
+  if (contextCacheHit) {
+    return 'QUALITY';
+  }
+  
+  // Balanced mode for first-time requests or cache misses
+  return 'BALANCED';
+}
+
 function determineRankingMode(request: any, userPreferences: any): string {
   // Determine ranking mode based on request parameters and user preferences
   if (userPreferences?.preferredRankingMode) {
@@ -54,6 +84,30 @@ function determineRankingMode(request: any, userPreferences: any): string {
   }
   
   return 'balanced'; // Default to balanced mode
+}
+
+// Track recent requests per session for adaptive strategy
+const sessionRequestCounts = new Map<string, { count: number; lastRequest: number }>();
+
+function getRecentRequestCount(sessionId: string): number {
+  const now = Date.now();
+  const sessionData = sessionRequestCounts.get(sessionId);
+  
+  // Reset count if more than 10 minutes since last request
+  if (!sessionData || (now - sessionData.lastRequest) > 10 * 60 * 1000) {
+    sessionRequestCounts.set(sessionId, { count: 0, lastRequest: now });
+    return 0;
+  }
+  
+  return sessionData.count;
+}
+
+function incrementRequestCount(sessionId: string): void {
+  const now = Date.now();
+  const sessionData = sessionRequestCounts.get(sessionId) || { count: 0, lastRequest: now };
+  sessionData.count++;
+  sessionData.lastRequest = now;
+  sessionRequestCounts.set(sessionId, sessionData);
 }
 
 function getQualityThreshold(request: any, userPreferences: any): number {
@@ -127,250 +181,37 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     middleware?.auth || ((req: Request, res: Response, next: NextFunction) => next()), 
     isAuthenticated, 
     async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      secureLog.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
+    await userHandler.handleGetUser(req, res);
   });
+
+  // Initialize dependency injection container
+  initializeContainer();
+  
+  // Get handlers from DI container
+  const nameGenerationHandler = getService<NameGenerationHandler>('nameGenerationHandler');
+  const verificationHandler = new VerificationHandler();
+  const userHandler = new UserHandler();
+  const feedbackHandler = new FeedbackHandler();
+  const bandBioHandler = new BandBioHandler();
+  const lyricHandler = new LyricHandler();
+  const stashHandler = new StashHandler();
+  const errorLoggingHandler = new ErrorLoggingHandler();
 
   // Generate names endpoint (public with optional auth for saving)
   app.post("/api/generate-names", 
+    requestDeduplicationMiddleware,
     middleware?.generation || ((req: Request, res: Response, next: NextFunction) => next()), 
     middleware?.csrf?.validateToken || ((req: Request, res: Response, next: NextFunction) => next()),
     validationRules.generateNames, 
     handleValidationErrors, 
     async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
-    let hasResponded = false;
-    
-    const sendResponse = (statusCode: number, data: any) => {
-      if (!hasResponded && !res.headersSent) {
-        hasResponded = true;
-        res.status(statusCode).json(data);
-      }
-    };
+      await nameGenerationHandler.handleGenerateNames(req, res);
+    });
 
-    try {
-      // Sanitize inputs
-      const sanitizedBody = {
-        ...req.body,
-        type: req.body.type,
-        wordCount: req.body.wordCount,
-        count: req.body.count,
-        mood: req.body.mood ? InputSanitizer.sanitizeMoodInput(req.body.mood) : undefined,
-        genre: req.body.genre ? InputSanitizer.sanitizeGenreInput(req.body.genre) : undefined
-      };
-      
-      const request = generateNameRequestSchema.parse(sanitizedBody);
-      
-      // Generate names using unified service with quality strategy (default)
-      const names = await nameGenerator.generateNames(request, GENERATION_STRATEGIES.QUALITY);
-      
-      // Check if response was already sent (due to timeout)
-      if (hasResponded || res.headersSent) {
-        secureLog.debug('Response already sent, skipping verification');
-        return;
-      }
-      
-      // Apply intelligent quality ranking system
-      let intelligentlyRankedNames = names;
-      let rankingMetadata = null;
-      
-      try {
-        secureLog.info('Applying full comparative quality ranking system');
-        
-        // Determine ranking mode based on request context and user preferences
-        const userPreferences = req.user ? await storage.getUserPreferences(req.user.claims.sub).catch(() => null) : null;
-        const rankingMode = determineRankingMode(request, userPreferences);
-        const qualityThreshold = getQualityThreshold(request, userPreferences);
-        
-        // Prepare quality ranking request
-        const qualityRankingRequest = {
-          names: names.map(n => n.name),
-          context: {
-            genre: request.genre,
-            mood: request.mood,
-            type: request.type,
-            targetAudience: 'mainstream' as const // Default to mainstream for now
-          },
-          rankingMode: rankingMode as any,
-          qualityThreshold,
-          maxResults: request.count,
-          diversityTarget: 0.7, // Encourage diversity
-          adaptiveLearning: true
-        };
-        
-        // Apply quality ranking system
-        const rankingResult = await qualityRankingSystem.rankNames(qualityRankingRequest);
-        
-        // Extract top ranked names up to requested count
-        const topRankedNames = rankingResult.rankedNames.slice(0, request.count);
-        
-        // Map ranked names back to original format with quality information
-        intelligentlyRankedNames = topRankedNames.map(rankedName => {
-          const originalName = names.find(n => n.name === rankedName.name);
-          if (!originalName) {
-            throw new Error(`Original name not found for ranked name: ${rankedName.name}`);
-          }
-          return {
-            name: originalName.name,
-            isAiGenerated: originalName.isAiGenerated,
-            source: originalName.source,
-            qualityScore: rankedName.qualityScore,
-            rank: rankedName.rank,
-            strengthProfile: rankedName.strengthProfile,
-            marketPosition: rankedName.marketPosition
-          };
-        });
-        
-        // Extract ranking metadata
-        rankingMetadata = {
-          totalAnalyzed: rankingResult.analytics.totalAnalyzed,
-          qualifiedNames: rankingResult.analytics.passingThreshold,
-          averageQuality: rankingResult.analytics.averageQuality,
-          rankingMode: rankingMode,
-          diversityIndex: rankingResult.analytics.diversityIndex,
-          adaptiveLearning: true,
-          recommendations: rankingResult.recommendations.strategicAdvice,
-          qualityDistribution: {
-            excellent: rankingResult.qualityDistribution.excellent.length,
-            good: rankingResult.qualityDistribution.good.length,
-            fair: rankingResult.qualityDistribution.fair.length,
-            poor: rankingResult.qualityDistribution.poor.length
-          },
-          dimensionalAverages: rankingResult.analytics.dimensionalAverages
-        };
-        
-        secureLog.info(`Quality ranking applied: ${names.length} names → ${intelligentlyRankedNames.length} served (mode: ${rankingMode}, avg quality: ${rankingResult.analytics.averageQuality.toFixed(3)})`);
-        
-      } catch (filterError) {
-        secureLog.error('Quality ranking failed, falling back to basic filtering:', filterError);
-        // Fallback to basic approach if quality ranking fails
-        intelligentlyRankedNames = names.slice(0, request.count);
-        rankingMetadata = {
-          totalAnalyzed: names.length,
-          qualifiedNames: intelligentlyRankedNames.length,
-          averageQuality: 0.6, // Conservative fallback
-          rankingMode: 'fallback-basic',
-          diversityIndex: 0.5,
-          adaptiveLearning: false,
-          recommendations: [],
-          error: 'Quality ranking system unavailable, using basic fallback'
-        };
-      }
-      
-      // Optimized parallel verification and storage
-      
-      // Batch verification for better performance - use faster approach
-      const { parallelVerificationService } = await import('./services/parallelVerification');
-      const namesToVerify = intelligentlyRankedNames.map(nameResult => ({
-        name: nameResult.name,
-        type: request.type as 'band' | 'song'
-      }));
-      
-      // Verify all names in parallel with caching (reduced timeout for faster response)
-      const verificationResults = await parallelVerificationService.verifyNamesInParallel(namesToVerify);
-      
-      // Check again before processing results
-      if (hasResponded || res.headersSent) {
-        return;
-      }
-      
-      // Process results and handle database storage
-      const results = await Promise.all(
-        intelligentlyRankedNames.map(async (nameResult, index) => {
-          const verification = verificationResults[index];
-          let storedName = null;
-          
-          // Only store in database if user is authenticated (non-blocking)
-          if (req.user && req.user.claims && req.user.claims.sub && !hasResponded && !res.headersSent) {
-            const userId = req.user.claims.sub;
-            
-            try {
-              // Make database storage non-blocking to speed up response
-              const dbWordCount = typeof request.wordCount === 'string' && request.wordCount === '4+' 
-                ? 4 
-                : (typeof request.wordCount === 'number' ? request.wordCount : nameResult.name.split(/\s+/).length);
-              
-              storage.createGeneratedName({
-                name: nameResult.name,
-                type: request.type,
-                wordCount: dbWordCount, // Ensure integer for database storage
-                verificationStatus: verification.status,
-                verificationDetails: verification.details || null,
-                isAiGenerated: nameResult.isAiGenerated,
-                userId: userId,
-              }).catch(error => {
-                secureLog.error("Database storage error (non-blocking):", error);
-              });
-            } catch (error) {
-              secureLog.error("Database storage error:", error);
-            }
-          }
-
-          return {
-            id: null, // Skip ID for faster response since storage is async
-            name: nameResult.name,
-            type: request.type,
-            wordCount: nameResult.name.split(/\s+/).length, // Use actual word count instead of requested
-            isAiGenerated: nameResult.isAiGenerated,
-            verification
-          };
-        })
-      );
-
-      // Include ranking metadata in response for enhanced user experience
-      const responseData = {
-        results,
-        ...(rankingMetadata && {
-          ranking: {
-            metadata: rankingMetadata,
-            intelligentRankingApplied: true,
-            enhancedQualityData: true
-          }
-        })
-      };
-      
-      sendResponse(200, responseData);
-    } catch (error) {
-      secureLog.error("Error generating names:", error);
-      if (error instanceof z.ZodError) {
-        sendResponse(400, { error: "Invalid request parameters", details: error.errors });
-      } else {
-        const errorMessage = error instanceof Error ? error.message : "Failed to generate names";
-        sendResponse(500, { 
-          error: errorMessage,
-          suggestion: "Please try again with different settings or a smaller word count." 
-        });
-      }
-    }
-  });
 
   // Get recent generated names (protected)
   app.get("/api/recent-names", isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      const type = req.query.type as string;
-      const limit = parseInt(req.query.limit as string) || 20;
-
-      let names;
-      if (type && (type === 'band' || type === 'song')) {
-        names = await storage.getGeneratedNamesByType(type, userId, limit);
-      } else {
-        names = await storage.getGeneratedNames(userId, limit);
-      }
-
-      res.json({ names });
-    } catch (error) {
-      secureLog.error("Error fetching recent names:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch recent names",
-        suggestion: "The database service may be temporarily unavailable. Please refresh the page." 
-      });
-    }
+    await userHandler.handleGetRecentNames(req, res);
   });
 
   // Verify specific name (with validation)
@@ -378,36 +219,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     validationRules.verifyName, 
     handleValidationErrors, 
     async (req: Request, res: Response) => {
-    try {
-      // Sanitize inputs
-      const sanitizedName = InputSanitizer.sanitizeNameInput(req.body.name);
-      const type = req.body.type;
-      
-      if (!sanitizedName || !type || !['band', 'song'].includes(type)) {
-        return res.status(400).json({ error: "Name and valid type (band/song) are required" });
-      }
-
-      // Check cache first
-      const cached = performanceCache.getCachedVerification(sanitizedName, type);
-      if (cached) {
-        secureLog.debug(`Cache hit for ${type}: ${sanitizedName}`);
-        return res.json({ verification: cached });
-      }
-
-      // If not cached, verify normally
-      const verification = await nameVerifier.verifyName(sanitizedName, type);
-      
-      // Store in cache
-      performanceCache.setCachedVerification(sanitizedName, type, verification);
-      
-      res.json({ verification });
-    } catch (error) {
-      secureLog.error("Error verifying name:", error);
-      res.status(500).json({ 
-        error: "Failed to verify name",
-        suggestion: "The verification service may be temporarily unavailable. Please try again later." 
-      });
-    }
+    await verificationHandler.handleVerifyName(req, res);
   });
 
   // Generate band bio endpoint (public with rate limiting and validation)
@@ -417,44 +229,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     validationRules.generateBandBio, 
     handleValidationErrors, 
     async (req: Request & { user?: any; isAuthenticated?: () => boolean }, res: Response) => {
-    try {
-      const { bandName, genre, mood } = req.body;
-      
-      if (!bandName || typeof bandName !== 'string') {
-        return res.status(400).json({ error: "Band name is required" });
-      }
-
-      const bioResponse = await bandBioGenerator.generateBandBio(bandName, genre, mood);
-      
-      // Parse the JSON response from the bio generator
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(bioResponse);
-      } catch (error) {
-        // Fallback for legacy string responses
-        parsedResponse = {
-          bio: bioResponse,
-          model: 'unknown',
-          source: 'legacy'
-        };
-      }
-      
-      secureLog.debug("Bio generated for", bandName, ":", parsedResponse.bio);
-      
-      res.json({ 
-        bandName,
-        bio: parsedResponse.bio,
-        model: parsedResponse.model,
-        source: parsedResponse.source,
-        generatedAt: new Date().toISOString()
-      });
-    } catch (error) {
-      secureLog.error("Error generating band bio:", error);
-      res.status(500).json({ 
-        error: "Failed to generate band biography",
-        suggestion: "The AI service may be temporarily unavailable. Please try again later."
-      });
-    }
+    await bandBioHandler.handleGenerateBandBio(req, res);
   });
 
   // Generate lyric starter endpoint (public with optional auth for saving)  
@@ -464,79 +239,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     validationRules.generateLyricStarter, 
     handleValidationErrors, 
     async (req: Request, res: Response) => {
-    try {
-      const { genre } = req.body;
-      
-      const lyricResult = await lyricOrchestrator.generateLyricStarter(genre);
-      
-      // Apply quality scoring to evaluate the generated lyric
-      let finalLyricResult = lyricResult;
-      let qualityScore = null;
-      try {
-        const lyricRequest = {
-          lyric: lyricResult.lyric,
-          genre: genre,
-          songSection: lyricResult.songSection,
-          model: lyricResult.model
-        };
-        
-        const qualityResult = await qualityScoring.scoreLyric(lyricRequest, 'moderate');
-        
-        if (qualityResult.success && qualityResult.data) {
-          qualityScore = qualityResult.data.score;
-          
-          // Log quality information
-          secureLog.info(`Lyric quality scored: ${Math.round(qualityScore.overall * 100)}%`, {
-            genre: genre || 'unknown',
-            songSection: lyricResult.songSection,
-            model: lyricResult.model,
-            passedThreshold: qualityResult.data.passesThreshold,
-            breakdown: {
-              creativity: Math.round(qualityScore.breakdown.creativity * 100),
-              appropriateness: Math.round(qualityScore.breakdown.appropriateness * 100),
-              quality: Math.round(qualityScore.breakdown.quality * 100),
-              memorability: Math.round(qualityScore.breakdown.memorability * 100)
-            }
-          });
-          
-          // If quality is very low and we're not already generating a fallback, 
-          // we could attempt regeneration but for now just serve with quality info
-          if (!qualityResult.data.passesThreshold) {
-            secureLog.warn('Generated lyric below quality threshold', {
-              score: Math.round(qualityScore.overall * 100),
-              threshold: 'moderate',
-              recommendations: qualityResult.data.recommendations
-            });
-          }
-        } else {
-          secureLog.warn('Lyric quality scoring failed:', qualityResult.error);
-        }
-      } catch (qualityError) {
-        secureLog.error('Lyric quality scoring error:', qualityError);
-      }
-      
-      res.json({ 
-        id: Date.now(), // Simple ID generation
-        lyric: finalLyricResult.lyric,
-        genre: genre || null,
-        songSection: finalLyricResult.songSection,
-        model: finalLyricResult.model,
-        generatedAt: new Date().toISOString(),
-        // Include quality info if available (for debugging/analytics)
-        ...(qualityScore && { 
-          qualityScore: {
-            overall: Math.round(qualityScore.overall * 100) / 100,
-            passedThreshold: qualityScore.overall >= 0.60 // moderate threshold
-          }
-        })
-      });
-    } catch (error) {
-      secureLog.error("Error generating lyric spark:", error);
-      res.status(500).json({ 
-        error: "Failed to generate lyric spark",
-        suggestion: "The AI service may be temporarily unavailable. Please try again later."
-      });
-    }
+    await lyricHandler.handleGenerateLyricStarter(req, res);
   });
 
   // CSRF token endpoint for client requests
@@ -892,174 +595,44 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
 
   // Error logging endpoint
   app.post("/api/log-error", async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const { message, stack, componentStack, userAgent, url } = req.body;
-      const userId = req.user?.claims?.sub || null;
-      
-      await db.insert(errorLogs).values({
-        message: message || "Unknown error",
-        stack,
-        componentStack,
-        userAgent,
-        url,
-        userId,
-      });
-      
-      res.json({ success: true });
-    } catch (error) {
-      // Silently fail - don't break the app if error logging fails
-      res.status(200).json({ success: false });
-    }
+    await errorLoggingHandler.handleLogError(req, res);
   });
 
   // Enhanced client error tracking endpoint
   app.post("/api/client-errors", async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const { errors } = req.body;
-      
-      if (!Array.isArray(errors)) {
-        return res.status(400).json(
-          ErrorHandler.createApiError(
-            "Invalid request format",
-            ERROR_CODES.VALIDATION_ERROR,
-            "Errors must be provided as an array"
-          )
-        );
-      }
-      
-      // Process each error and store in database
-      const errorPromises = errors.map(async (error: any) => {
-        try {
-          await db.insert(errorLogs).values({
-            message: error.message,
-            stack: error.stack,
-            componentStack: error.componentStack,
-            userAgent: error.userAgent,
-            url: error.url,
-            userId: error.userId || (req.user?.claims?.sub),
-          });
-        } catch (dbError) {
-          secureLog.warn('Failed to store client error:', dbError);
-        }
-      });
-      
-      await Promise.allSettled(errorPromises);
-      
-      res.json({ 
-        success: true, 
-        processed: errors.length,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      secureLog.error('Client error reporting failed:', error);
-      res.status(200).json({ success: false });
-    }
+    await errorLoggingHandler.handleClientErrors(req, res);
   });
 
   // Stash API routes for authenticated users
   
   // Get user's stash items
   app.get('/api/stash', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      const type = req.query.type as string;
-      const stashItems = await storage.getStashItems(userId, type);
-      res.json({ stashItems });
-    } catch (error) {
-      secureLog.error("Error fetching stash:", error);
-      res.status(500).json({ message: "Failed to fetch stash" });
-    }
+    await stashHandler.handleGetStash(req, res);
   });
 
   // Add item to stash
   app.post('/api/stash', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      const item = req.body;
-      
-      // Check if item already exists
-      const exists = await storage.isInStash(userId, item.name, item.type);
-      if (exists) {
-        return res.status(409).json({ message: "Item already in stash" });
-      }
-      
-      const stashItem = await storage.addToStash(userId, item);
-      res.json({ stashItem, success: true });
-    } catch (error) {
-      secureLog.error("Error adding to stash:", error);
-      res.status(500).json({ message: "Failed to add to stash" });
-    }
+    await stashHandler.handleAddToStash(req, res);
   });
 
   // Remove item from stash
   app.delete('/api/stash/:itemId', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { itemId } = req.params;
-      
-      const success = await storage.removeFromStash(userId, itemId);
-      if (!success) {
-        return res.status(404).json({ message: "Item not found" });
-      }
-      
-      res.json({ success: true });
-    } catch (error) {
-      secureLog.error("Error removing from stash:", error);
-      res.status(500).json({ message: "Failed to remove from stash" });
-    }
+    await stashHandler.handleRemoveFromStash(req, res);
   });
 
   // Update stash item rating
   app.patch('/api/stash/:itemId/rating', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { itemId } = req.params;
-      const { rating } = req.body;
-      
-      if (!rating || rating < 1 || rating > 5) {
-        return res.status(400).json({ message: "Rating must be between 1 and 5" });
-      }
-      
-      const success = await storage.updateStashRating(userId, itemId, rating);
-      if (!success) {
-        return res.status(404).json({ message: "Item not found" });
-      }
-      
-      res.json({ success: true });
-    } catch (error) {
-      secureLog.error("Error updating stash rating:", error);
-      res.status(500).json({ message: "Failed to update rating" });
-    }
+    await stashHandler.handleUpdateStashRating(req, res);
   });
 
   // Clear user's stash
   app.delete('/api/stash', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      await storage.clearUserStash(userId);
-      res.json({ success: true });
-    } catch (error) {
-      secureLog.error("Error clearing stash:", error);
-      res.status(500).json({ message: "Failed to clear stash" });
-    }
+    await stashHandler.handleClearStash(req, res);
   });
 
   // Check if item is in stash
   app.get('/api/stash/check', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { name, type } = req.query as { name: string, type: string };
-      
-      if (!name || !type) {
-        return res.status(400).json({ message: "Name and type are required" });
-      }
-      
-      const inStash = await storage.isInStash(userId, name, type);
-      res.json({ inStash });
-    } catch (error) {
-      secureLog.error("Error checking stash:", error);
-      res.status(500).json({ message: "Failed to check stash" });
-    }
+    await stashHandler.handleCheckStash(req, res);
   });
 
   // Test endpoint for phonetic analysis caching (for testing/monitoring)
