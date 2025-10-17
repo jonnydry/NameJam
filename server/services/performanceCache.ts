@@ -31,11 +31,13 @@ class PerformanceCache {
 
   // Verification caching
   getCachedVerification(name: string, type: string): any {
+    if (!name || typeof name !== 'string') return null;
     const key = `${name.toLowerCase()}_${type}`;
     return this.verificationCache.get(key);
   }
 
   setCachedVerification(name: string, type: string, result: any): void {
+    if (!name || typeof name !== 'string') return;
     const key = `${name.toLowerCase()}_${type}`;
     this.verificationCache.set(key, result);
   }

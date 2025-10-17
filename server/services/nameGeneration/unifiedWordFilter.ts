@@ -1,5 +1,6 @@
 // Unified word filtering system for maximum variety across all generation methods
 import { secureLog } from '../../utils/secureLogger';
+import { CacheService } from '../cacheService';
 import { MAX_RECENT_WORDS_FILTER, WORD_MEMORY_TIMEOUT, VERY_RECENT_WORD_TIMEOUT, RECENT_WORD_TIMEOUT } from './constants';
 
 interface WordTrackingEntry {
@@ -16,6 +17,7 @@ export class UnifiedWordFilter {
   private currentGenerationWords: Set<string> = new Set(); // Track words in current generation
   private generationId = 0; // Track generation sessions
   private cleanupInterval: NodeJS.Timeout | null = null;
+  private sessionCache: CacheService<{ recentWords: Map<string, WordTrackingEntry>, generationId: number }>;
 
   static getInstance(): UnifiedWordFilter {
     if (!UnifiedWordFilter.instance) {
@@ -24,6 +26,11 @@ export class UnifiedWordFilter {
       UnifiedWordFilter.instance.startPeriodicCleanup();
     }
     return UnifiedWordFilter.instance;
+  }
+
+  constructor() {
+    // Initialize session cache with 10 minute TTL for filter state persistence
+    this.sessionCache = new CacheService<{ recentWords: Map<string, WordTrackingEntry>, generationId: number }>(600, 100);
   }
 
   private startPeriodicCleanup(): void {
@@ -36,12 +43,18 @@ export class UnifiedWordFilter {
   }
 
   // Start a new generation session
-  startNewGeneration(): string {
+  startNewGeneration(sessionId?: string): string {
     this.generationId++;
     this.currentGenerationWords.clear();
     this.cleanupOldWords();
     const genId = `gen_${this.generationId}_${Date.now()}`;
-    secureLog.debug(`🎯 Starting new generation: ${genId}`);
+    
+    // Load session state if sessionId provided
+    if (sessionId) {
+      this.loadSessionState(sessionId);
+    }
+    
+    secureLog.debug(`🎯 Starting new generation: ${genId}${sessionId ? ` (session: ${sessionId})` : ''}`);
     return genId;
   }
 
@@ -134,7 +147,7 @@ export class UnifiedWordFilter {
   }
 
   // Accept a name and track its words
-  acceptName(name: string, generationId: string, nameType?: string): void {
+  acceptName(name: string, generationId: string, nameType?: string, sessionId?: string): void {
     const words = this.extractWords(name);
     const stems = words.map(w => this.getWordStem(w));
     const timestamp = Date.now();
@@ -161,6 +174,11 @@ export class UnifiedWordFilter {
         nameType
       });
     });
+    
+    // Save session state if sessionId provided
+    if (sessionId) {
+      this.saveSessionState(sessionId);
+    }
     
     // Cleanup if needed
     if (this.recentWords.size > MAX_RECENT_WORDS_FILTER) {
@@ -327,11 +345,40 @@ export class UnifiedWordFilter {
     };
   }
 
+  // Save session state to cache
+  private saveSessionState(sessionId: string): void {
+    try {
+      const sessionData = {
+        recentWords: new Map(this.recentWords),
+        generationId: this.generationId
+      };
+      this.sessionCache.set(`session_${sessionId}`, sessionData);
+      secureLog.debug(`💾 Saved session state for ${sessionId}`);
+    } catch (error) {
+      secureLog.debug(`Failed to save session state for ${sessionId}:`, error);
+    }
+  }
+
+  // Load session state from cache
+  private loadSessionState(sessionId: string): void {
+    try {
+      const cached = this.sessionCache.get(`session_${sessionId}`);
+      if (cached) {
+        this.recentWords = new Map(cached.recentWords);
+        this.generationId = cached.generationId;
+        secureLog.debug(`📂 Loaded session state for ${sessionId} (${this.recentWords.size} words)`);
+      }
+    } catch (error) {
+      secureLog.debug(`Failed to load session state for ${sessionId}:`, error);
+    }
+  }
+
   // Force reset (for testing or manual cleanup)
   reset(): void {
     this.recentWords.clear();
     this.currentGenerationWords.clear();
     this.generationId = 0;
+    this.sessionCache.clear();
     secureLog.info(`🔄 Word filter reset`);
   }
 }

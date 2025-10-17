@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { setupSecurity } from "./security";
 import { validateEnvironment, getEnvSummary } from "./utils/envValidation";
 import { secureLog } from "./utils/secureLogger";
+import { optimizedContextService } from "./services/optimizedContextService";
 
 // Validate environment variables at startup
 try {
@@ -55,8 +56,58 @@ app.use((req, res, next) => {
   next();
 });
 
+// Pre-warm cache with common genre/mood combinations
+async function preWarmCache(): Promise<void> {
+  const commonCombinations = [
+    { genre: 'rock', mood: 'energetic' },
+    { genre: 'pop', mood: 'upbeat' },
+    { genre: 'electronic', mood: 'futuristic' },
+    { genre: 'jazz', mood: 'smooth' },
+    { genre: 'folk', mood: 'melancholic' },
+    { genre: 'metal', mood: 'aggressive' },
+    { genre: 'indie', mood: 'dreamy' },
+    { genre: 'blues', mood: 'soulful' },
+    { genre: 'country', mood: 'nostalgic' },
+    { genre: 'hip-hop', mood: 'confident' },
+    { genre: 'classical', mood: 'dramatic' },
+    { genre: 'reggae', mood: 'laid-back' }
+  ];
+
+  // Pre-warm context cache with common combinations
+  const preWarmPromises = commonCombinations.map(async (combo) => {
+    try {
+      await optimizedContextService.getContext(combo.genre, combo.mood, 'quality');
+      secureLog.debug(`🔥 Pre-warmed cache for ${combo.genre}/${combo.mood}`);
+    } catch (error) {
+      secureLog.debug(`Failed to pre-warm ${combo.genre}/${combo.mood}:`, error);
+    }
+  });
+
+  // Also pre-warm some genre-only contexts
+  const genreOnlyPromises = ['rock', 'pop', 'electronic', 'jazz', 'indie'].map(async (genre) => {
+    try {
+      await optimizedContextService.getContext(genre, undefined, 'quality');
+      secureLog.debug(`🔥 Pre-warmed cache for ${genre} (no mood)`);
+    } catch (error) {
+      secureLog.debug(`Failed to pre-warm ${genre}:`, error);
+    }
+  });
+
+  // Run all pre-warming in parallel
+  await Promise.allSettled([...preWarmPromises, ...genreOnlyPromises]);
+}
+
 (async () => {
   const server = await registerRoutes(app, securityMiddleware);
+
+  // Pre-warm cache with common genre/mood combinations
+  try {
+    secureLog.info('🔥 Starting cache pre-warming...');
+    await preWarmCache();
+    secureLog.info('✅ Cache pre-warming completed');
+  } catch (error) {
+    secureLog.warn('⚠️ Cache pre-warming failed (non-critical):', error);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

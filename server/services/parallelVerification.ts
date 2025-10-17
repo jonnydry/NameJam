@@ -114,6 +114,8 @@ export class ParallelVerificationService {
   }
 
   private isEasterEgg(name: string): boolean {
+    if (!name || typeof name !== 'string') return false;
+    
     const normalizedName = name.toLowerCase().replace(/[^a-z]/g, '');
     if (normalizedName === 'namejam') return true;
     

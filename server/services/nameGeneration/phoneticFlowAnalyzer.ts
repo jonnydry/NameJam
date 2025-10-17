@@ -34,14 +34,21 @@ export class PhoneticFlowAnalyzer {
   private cache: CacheService<PhoneticScore>;
   private warmingComplete: boolean = false;
   
-  // Common musical words for cache warming
+  // Common musical words for cache warming (expanded for better coverage)
   private readonly commonWords = [
     'music', 'sound', 'beat', 'rhythm', 'melody', 'harmony', 'song', 'band',
     'rock', 'jazz', 'blues', 'soul', 'funk', 'metal', 'punk', 'folk',
     'dream', 'shadow', 'light', 'fire', 'storm', 'echo', 'wave', 'flow',
     'heart', 'mind', 'spirit', 'love', 'hope', 'fear', 'rage', 'joy',
     'electric', 'cosmic', 'neon', 'dark', 'bright', 'wild', 'free', 'lost',
-    'black', 'white', 'red', 'blue', 'gold', 'silver', 'green', 'purple'
+    'black', 'white', 'red', 'blue', 'gold', 'silver', 'green', 'purple',
+    'crystal', 'diamond', 'emerald', 'ruby', 'sapphire', 'amber', 'jade',
+    'midnight', 'dawn', 'sunset', 'twilight', 'aurora', 'starlight', 'moonlight',
+    'thunder', 'lightning', 'rainbow', 'cloud', 'sky', 'ocean', 'mountain',
+    'valley', 'river', 'forest', 'desert', 'canyon', 'island', 'bridge',
+    'castle', 'tower', 'temple', 'palace', 'garden', 'meadow', 'field',
+    'crimson', 'azure', 'violet', 'scarlet', 'emerald', 'amber', 'coral',
+    'steel', 'iron', 'copper', 'bronze', 'platinum', 'titanium', 'chrome'
   ];
   
   // Consonant clusters that are hard to pronounce
@@ -67,8 +74,8 @@ export class PhoneticFlowAnalyzer {
   };
   
   constructor() {
-    // Initialize cache with 1 hour TTL and max 5000 entries for phonetic analysis
-    this.cache = new CacheService<PhoneticScore>(3600, 5000);
+    // Initialize cache with 2 hour TTL and max 10000 entries for phonetic analysis
+    this.cache = new CacheService<PhoneticScore>(7200, 10000);
     
     // Start cache warming in background
     this.warmCache();
@@ -466,12 +473,59 @@ export class PhoneticFlowAnalyzer {
         this.cache.set(cacheKey, this.performPhoneticAnalysis(word));
       }
       
-      // Common two-word combinations
+      // Common two-word combinations (expanded for better coverage)
       const sampleCombinations = [
         'dark shadow', 'electric storm', 'neon dream', 'cosmic wave',
         'fire heart', 'silver moon', 'black rose', 'wild spirit',
         'lost soul', 'bright light', 'deep blue', 'golden hour',
-        'metal storm', 'jazz fusion', 'rock solid', 'folk tale'
+        'metal storm', 'jazz fusion', 'rock solid', 'folk tale',
+        'crystal vision', 'diamond dust', 'emerald city', 'ruby red',
+        'sapphire sky', 'amber glow', 'jade wind', 'crimson tide',
+        'azure wave', 'violet storm', 'scarlet fire', 'coral reef',
+        'steel thunder', 'iron will', 'copper sun', 'bronze age',
+        'platinum dreams', 'titanium soul', 'chrome heart', 'midnight echo',
+        'dawn breaker', 'sunset rider', 'twilight zone', 'aurora borealis',
+        'starlight symphony', 'moonlight sonata', 'thunder strike', 'lightning bolt',
+        'rainbow bridge', 'cloud nine', 'sky high', 'ocean deep',
+        'mountain peak', 'valley low', 'river flow', 'forest green',
+        'desert storm', 'canyon echo', 'island breeze', 'bridge over',
+        'castle rock', 'tower high', 'temple bell', 'palace guard',
+        'garden party', 'meadow song', 'field of dreams', 'crystal clear',
+        'diamond hard', 'emerald eyes', 'ruby lips', 'sapphire tears',
+        'amber waves', 'jade stone', 'crimson dawn', 'azure sky',
+        'violet night', 'scarlet letter', 'coral reef', 'steel resolve',
+        'iron maiden', 'copper penny', 'bronze medal', 'platinum blonde',
+        'titanium strength', 'chrome dome', 'midnight oil', 'dawn patrol',
+        'sunset boulevard', 'twilight princess', 'aurora australis', 'starlight express',
+        'moonlight serenade', 'thunder road', 'lightning rod', 'rainbow connection',
+        'cloud atlas', 'sky fall', 'ocean drive', 'mountain top',
+        'valley girl', 'river song', 'forest gump', 'desert rose',
+        'canyon road', 'island time', 'bridge to nowhere', 'castle in the sky',
+        'tower of power', 'temple of doom', 'palace intrigue', 'garden variety',
+        'meadow lark', 'field marshal', 'crystal ball', 'diamond in the rough',
+        'emerald isle', 'ruby slippers', 'sapphire blue', 'amber alert',
+        'jade empire', 'crimson tide', 'azure dragon', 'violet hour',
+        'scarlet fever', 'coral snake', 'steel magnolia', 'iron butterfly',
+        'copper kettle', 'bronze age', 'platinum record', 'titanium white',
+        'chrome yellow', 'midnight express', 'dawn of the dead', 'sunset strip',
+        'twilight zone', 'aurora borealis', 'starlight hotel', 'moonlight mile',
+        'thunder bay', 'lightning bug', 'rainbow warrior', 'cloud nine',
+        'sky blue', 'ocean pearl', 'mountain dew', 'valley forge',
+        'river phoenix', 'forest fire', 'desert storm', 'canyon country',
+        'island nation', 'bridge city', 'castle rock', 'tower bridge',
+        'temple bar', 'palace hotel', 'garden state', 'meadow brook',
+        'field of honor', 'crystal palace', 'diamond head', 'emerald coast',
+        'ruby mountain', 'sapphire sea', 'amber waves', 'jade mountain',
+        'crimson king', 'azure coast', 'violet crown', 'scarlet letter',
+        'coral sea', 'steel city', 'iron mountain', 'copper mountain',
+        'bronze star', 'platinum coast', 'titanium valley', 'chrome city',
+        'midnight sun', 'dawn patrol', 'sunset beach', 'twilight zone',
+        'aurora sky', 'starlight drive', 'moonlight bay', 'thunder mountain',
+        'lightning ridge', 'rainbow mountain', 'cloud peak', 'sky island',
+        'ocean view', 'mountain view', 'valley view', 'river view',
+        'forest view', 'desert view', 'canyon view', 'island view',
+        'bridge view', 'castle view', 'tower view', 'temple view',
+        'palace view', 'garden view', 'meadow view', 'field view'
       ];
       
       for (const combination of sampleCombinations) {
