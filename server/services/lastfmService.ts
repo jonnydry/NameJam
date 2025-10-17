@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { secureLog } from '../utils/secureLogger';
 
 interface LastFmTag {
