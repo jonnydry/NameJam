@@ -1,50 +1,78 @@
 # NameJam - Band & Song Name Generator
 
 ## Overview
-NameJam is a web application designed to generate unique band names and song titles. It integrates creative name generation with real-time availability verification, primarily using Spotify, to help musicians and artists find distinctive names. The project aims to provide a comprehensive tool for creative naming with a focus on humor, wordplay, and contextual relevance, offering both algorithmic and AI-powered generation.
+NameJam is a web application designed to generate unique band names and song titles with real-time availability verification against music databases. The project aims to provide a creative tool that also ensures the practical usability of generated names, combining creative name generation with web-powered checking for musicians and artists.
+
+## Recent Changes (January 2025)
+- **Upgraded to Grok-3**: Updated all AI services (lyric generation, band bio generation, name generation) to use XAI's Grok-3 model for best quality and performance.
+- **Comprehensive Bug Fixes**: Fixed critical TypeScript errors, improved input validation, enhanced auth token handling, and strengthened database integrity with foreign key constraints.
+- **Enhanced Error Handling**: Added robust validation for user inputs, auth tokens, and AI response parsing to prevent runtime errors.
+- **Creative Generation Enhancement**: Updated both band and song generation to use humorous, punny, and entertaining prompts with clean JSON output format.
+- **Result Caching Between Tabs**: Implemented separate caching for band and song results. Users can now switch between tabs without losing their generated results - cached results persist until new generation is made for that specific type.
+- **UI Simplification**: Removed brain icons since all generation is now AI-powered, creating a cleaner interface.
+- **Lyric Generator Fix**: Fixed capitalization issue where lyrics were showing syllable stress patterns - now outputs lyrics with normal capitalization.
+- **Enhanced Stash Sidebar**: Complete redesign with search functionality, bulk selection/operations, visual categorization with icons/colors, collapsible categories, improved animations, enhanced item cards with preview information, and glass-like transparent effect matching the main interface.
+- **Alliteration Fix**: Updated AI prompts to explicitly avoid excessive alliteration in band and song name generation, especially for 4+ word names, creating more natural and varied results.
+- **Added Jam Band Genre**: Added "Jam Band" as a selectable genre option with appropriate vocabulary (groove, cosmic, festival, journey) and context for bands like Phish, Grateful Dead, etc. Works with Spotify API for contextual generation.
+- **Band Bio Generation Refactoring**: Complete architectural overhaul of band bio generation system with modular design pattern. Extracted configuration constants, created dedicated utility functions, implemented proper TypeScript interfaces, and separated fallback generation logic. This mirrors the successful lyric generation architecture for improved maintainability, testability, and code quality while maintaining all existing creative features.
+- **Lyric Typing Animation**: Implemented smooth AI chat-style typing animation for lyric results using custom React hooks with requestAnimationFrame. Features character-by-character reveal, blinking cursor, click-to-complete functionality, multi-line support, intersection observer optimization, and accessibility compliance with reduced motion preferences. Enhances user experience with engaging visual feedback while maintaining performance.
+- **Name Verification System Refactoring**: Complete architectural transformation from monolithic 700-line file to modular pipeline architecture. Implemented 11 specialized TypeScript interfaces, 12 dedicated components with Strategy Pattern for platform verifiers, Pipeline Pattern for sequential processing, and comprehensive error handling. Reduced main verification method from 355 lines to 57 lines while preserving all functionality including easter eggs, famous artists, and platform verification. Fixed critical production issues including timeout race conditions, platform attribution mismatches, and precedence bugs. Achieved production-ready status with architect approval.
+- **Repetition Filtering Fix**: Fixed critical bug where repetition filtering could result in fewer than requested results (e.g., generating only 3 instead of 4 band names). Implemented intelligent retry logic that generates fresh alternatives when names are filtered out, ensuring users always receive the full requested count. System now attempts up to 3 additional generations when filtering reduces results below target, maintaining quality while guaranteeing complete result sets.
+- **Last.fm API Removal (October 2025)**: Completely removed Last.fm API integration due to rate limiting issues. System now relies on Spotify + Datamuse + XAI for context generation, maintaining quality while eliminating the strictest rate-limited service. Removed Last.fm from all services, rate limiters, circuit breakers, and fallback configurations. Fixed TypeScript errors and cleaned up all references across the codebase.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+Authentication approach: Non-authenticated users have full access to all features except server-side stash persistence. Only the stash feature requires login for server storage.
+Name generation approach: Dynamic API-driven context (no static lists) feeding structured prompts to XAI for creative, contextual results.
 
 ## System Architecture
 
 ### Frontend
 - **Framework**: React with TypeScript
 - **Styling**: Tailwind CSS with shadcn/ui components
-- **State Management**: React Query for server state, React Context for local state (Stash)
+- **State Management**: React Query
 - **Routing**: Wouter
 - **Build Tool**: Vite
 
 ### Backend
 - **Runtime**: Node.js with Express.js
 - **Language**: TypeScript with ES modules
-- **Database**: PostgreSQL with Drizzle ORM (Neon Database for serverless)
-- **Session Management**: PostgreSQL-based sessions with `connect-pg-simple`
+- **Database**: PostgreSQL with Drizzle ORM
+- **Session Management**: PostgreSQL-based sessions
 
-### Core Features
-- **Name Generation**: Generates band and song names using advanced grammatical patterns, poetic structures, and thematic moods. Supports precise word counts (1-3 words) and dynamic "4+" option (4-7 words) with enhanced humor and wordplay.
-- **AI Name Generation**: Integrates XAI's Grok models (grok-2-1212, grok-2-vision-1212, grok-3-mini) for creative name suggestions, with an intelligent fallback system to algorithmic generation.
-- **Set List Generation**: Creates organized 8 or 16-song set lists for performances, utilizing the same name generation algorithms and including Spotify verification for each song.
-- **Lyric Generation**: Generates lyrical starters enhanced with Datamuse API for genre-appropriate vocabulary, emotional words, rhymes, and sensory terms.
-- **Name Verification**: Prioritizes Spotify Web API for real-time availability checking, followed by Spotify Similar Matches, a Famous Names Database, Last.fm, and MusicBrainz for comprehensive results. Provides detailed status, popularity, genres, and direct Spotify links.
-- **ConceptNet Integration**: Enhances name generation with semantic knowledge, emotional, genre, and cultural associations for richer vocabulary and contextual understanding.
-- **Stash Management**: Allows users to save favorite names, set lists, and band bios with 1-5 star ratings, sorting options, and local storage persistence.
-- **User Authentication**: Implements Replit OpenID Connect for user login, enabling personalized stash and features. Basic generation features are accessible to guest users.
+### Project Structure
+- `client/`: React frontend
+- `server/`: Express.js backend API
+- `shared/`: Shared TypeScript schemas and types
+- `migrations/`: Database migration files
 
-### UI/UX Decisions
-- **Typography**: JetBrains Mono for a futuristic monospace aesthetic.
-- **Visual Design**: Dark grayscale theme with animated gradient buttons, consistent card gradients, and visual indicators for AI-generated results (purple brain icon).
-- **Responsiveness**: Optimized for mobile with collapsible sidebars, larger touch targets, and dynamic text scaling.
-- **Loading Animations**: Dynamic sound wave/equalizer visualizations that reflect actual API response times.
+### Key Features & Design Patterns
+- **Intelligent Name Generation Service**: API-driven name generation using dynamic context from Datamuse (word associations) and Spotify (genre artists) feeding into structured XAI prompts. Eliminates static word lists in favor of live API data for fresh, contextual results.
+- **Legacy AI Name Generation Service**: Provides fallback AI-powered name generation using XAI's Grok 2 model with minimal context.
+- **Enhanced AI Lyric Generation Service**: Generates diverse lyrical starters with variable length, poetic meter, and authentic genre vocabulary, utilizing a hybrid approach with Datamuse API and AI for enriched context.
+- **Flexible Word Count System**: "4+" option now generates names ranging from 4-10 words with proper distribution across the full range, using structured prompts to ensure both shorter (4-6 words) and longer (7-10 words) name variations.
+- **Creative AI Band Name Generation Service**: Uses humorous, entertaining prompts focused on puns, wordplay, and whimsy. Generates 8 creative names, evaluates them on originality and entertainment value, then selects top 4. Returns JSON format {"band_names": []} for easy parsing.
+- **Creative AI Song Title Generation Service**: Uses humorous, entertaining prompts focused on clever, punny, and unexpected song titles. Generates 8 creative titles, evaluates them on originality and entertainment value, then selects top 4. Returns JSON format {"song_titles": []} for easy parsing.
+- **Name Verification Service**: Verifies name availability prioritizing Spotify, then Spotify Similar Matches, Famous Names Database, and other APIs like MusicBrainz, returning detailed availability with popularity scores and genre info.
+- **ConceptNet Integration Service**: Enhances name generation with semantic knowledge, emotional, genre, and cultural associations.
+- **UI Components**: Includes Generator Interface, Result Display, Loading Animations, and Stash Management with rating and sorting.
+- **State Management**: Uses React Context for stash management and local storage for persistence.
+- **Performance Optimization**: Implemented parallel verification, intelligent caching, non-blocking database storage, response compression, and optimized frontend with debouncing. Achieved sub-10 second response times through architectural changes including optimized context aggregation, reduced AI generation retries, and pre-generated fallback names. Added periodic word filter cleanup (every 2 minutes), API retry logic with exponential backoff, and rate limiting for verification services.
+- **Security & Authentication**: Comprehensive user authentication/authorization via Replit OpenID Connect, user-specific data isolation, API rate limiting, CORS, Helmet security headers, input sanitization, and express-validator. Supports mixed authentication (guest/authenticated users). Enhanced with session secret rotation (24-hour interval), distributed rate limiting protection, and comprehensive input sanitization for all endpoints.
+- **UI/UX Decisions**: Dark grayscale theme, animated gradient buttons, custom fermata logo, monospace typography (JetBrains Mono), dynamic loading progress (equalizer visualization), responsive design, and enhanced mobile text scaling. Result cards feature a single-column layout with consistent dark gradients and color-coded borders for AI vs. traditional results. Added React error boundaries, offline indicator, loading state components, and user-friendly error messages throughout the application.
 
 ## External Dependencies
 
-- **Database Provider**: Neon Database (serverless PostgreSQL)
-- **AI/ML**: XAI's Grok models (grok-2-1212, grok-2-vision-1212, grok-3-mini)
-- **Linguistic Data**: Datamuse API
-- **Music Data**: Spotify Web API, Last.fm API, MusicBrainz API
-- **Semantic Knowledge**: ConceptNet API
-- **UI Components**: Radix UI primitives, shadcn/ui
-- **Icons**: Lucide React
+- **Database**: Neon Database (serverless PostgreSQL)
+- **APIs**:
+    - Spotify Web API
+    - Datamuse API
+    - MusicBrainz API
+    - ConceptNet API
+    - PoetryDB API
+    - XAI Grok-3 model (latest generation model for enhanced quality)
+- **UI Libraries**: Radix UI, shadcn/ui
 - **Forms**: React Hook Form with Zod validation
-- **Authentication**: Replit OpenID Connect
+- **Icons**: Lucide React
+- **Build Tools**: Vite, esbuild
+- **Database ORM**: Drizzle ORM, Drizzle Kit

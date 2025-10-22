@@ -13,6 +13,7 @@ import { createMutationErrorHandler } from "@/lib/api-error-handler";
 import { useKeyboardShortcuts, KeyboardHint } from "@/hooks/use-keyboard-shortcuts";
 import { useDebouncedCallback } from "@/hooks/use-debounce";
 import { useLoadingProgress } from "@/hooks/use-loading-progress";
+import { ButtonLoader, InlineLoader, CardSkeleton } from "@/components/loading-states";
 
 interface GenerationResult {
   id: number;
@@ -31,16 +32,29 @@ interface GenerationResult {
   };
 }
 
-export function NameGenerator() {
+interface NameGeneratorProps {
+  bandResults: GenerationResult[];
+  setBandResults: (results: GenerationResult[]) => void;
+  songResults: GenerationResult[];
+  setSongResults: (results: GenerationResult[]) => void;
+}
+
+export function NameGenerator({ bandResults, setBandResults, songResults, setSongResults }: NameGeneratorProps) {
   const [nameType, setNameType] = useState<'band' | 'song'>('band');
-  const [wordCount, setWordCount] = useState(2);
+  const [wordCount, setWordCount] = useState<number | '4+'>(2);
   const [mood, setMood] = useState<string>('none');
   const [genre, setGenre] = useState<string>('none');
-  const [results, setResults] = useState<GenerationResult[]>([]);
+  
+  // Note: bandResults and songResults are now passed as props from parent component
+  // This ensures state persists when switching between tabs
+  
   const [searchInput, setSearchInput] = useState('');
   const [searchResult, setSearchResult] = useState<GenerationResult | null>(null);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Computed property to show the right cached results
+  const currentResults = nameType === 'band' ? bandResults : songResults;
 
   const { toast } = useToast();
   const { copyToClipboard } = useClipboard();
@@ -49,7 +63,7 @@ export function NameGenerator() {
   
   // Dynamic loading progress tracking
   const generateProgress = useLoadingProgress({ 
-    estimatedDuration: 4000, // Estimate 4 seconds for generation
+    estimatedDuration: (wordCount === '4+' || (typeof wordCount === 'number' && wordCount >= 4)) ? 12000 : 4000, // Longer for 4+ words
     onComplete: () => {
       // Progress animation complete
     }
@@ -68,7 +82,7 @@ export function NameGenerator() {
       const response = await apiRequest('POST', '/api/generate-names', {
         type: nameType,
         wordCount,
-        count: 4,
+        count: 4, // Reduced from 8 to 4 for better speed and quality
         ...(mood && mood !== 'none' && { mood }),
         ...(genre && genre !== 'none' && { genre })
       });
@@ -80,7 +94,14 @@ export function NameGenerator() {
     },
     onSuccess: (data) => {
       generateProgress.completeLoading(); // Complete progress
-      setResults(data.results);
+      
+      // Store results in the appropriate cache based on current nameType
+      if (nameType === 'band') {
+        setBandResults(data.results);
+      } else {
+        setSongResults(data.results);
+      }
+      
       setSearchResult(null); // Clear search result when generating new names
       setIsGenerating(false); // Reset generating state
       
@@ -129,7 +150,12 @@ export function NameGenerator() {
         verification: data.verification
       };
       setSearchResult(searchResult);
-      setResults([]); // Clear generated results when searching
+      // Clear the appropriate cached results when searching
+      if (nameType === 'band') {
+        setBandResults([]);
+      } else {
+        setSongResults([]);
+      }
       toast({
         title: "Name verified!",
         description: `Checked availability of "${searchInput.trim()}".`,
@@ -205,15 +231,15 @@ export function NameGenerator() {
   return (
     <div className="space-y-6">
       {/* Controls Panel */}
-      <div className="bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 rounded-xl shadow-sm border p-6">
+      <div className="bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20 rounded-xl shadow-sm border p-6 control-panel-mobile">
         {/* Type Toggle */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-6 type-toggle-container-mobile">
           <div className="inline-flex rounded-lg bg-muted p-1">
             <Button
               variant={nameType === 'band' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setNameType('band')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 type-toggle-mobile ${
                 nameType === 'band'
                   ? 'btn-gradient text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-primary'
@@ -228,7 +254,7 @@ export function NameGenerator() {
               variant={nameType === 'song' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setNameType('song')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 type-toggle-mobile ${
                 nameType === 'song'
                   ? 'btn-gradient text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-primary'
@@ -243,31 +269,43 @@ export function NameGenerator() {
         </div>
 
         {/* Word Count Selector */}
-        <div className="flex items-center justify-center space-x-4 mb-6">
+        <div className="flex items-center justify-center space-x-4 mb-6 form-row-mobile">
           <label htmlFor="wordCount" className="text-responsive-sm font-medium text-muted-foreground">
             Number of words:
           </label>
-          <Select value={wordCount.toString()} onValueChange={(value) => setWordCount(parseInt(value))}>
-            <SelectTrigger className="w-32">
+          <Select value={wordCount === 4.1 ? '4+' : wordCount.toString()} onValueChange={(value) => {
+            if (value === '4+') {
+              setWordCount('4+' as any); // Handle 4+ as special case
+            } else {
+              const parsedValue = parseInt(value, 10);
+              if (!isNaN(parsedValue) && parsedValue >= 1 && parsedValue <= 3) {
+                setWordCount(parsedValue);
+              } else {
+                console.warn('Invalid word count value:', value);
+                setWordCount(2); // Default fallback
+              }
+            }
+          }}>
+            <SelectTrigger className="w-32 select-mobile select-trigger-mobile select-container-mobile">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="1">1 word</SelectItem>
               <SelectItem value="2">2 words</SelectItem>
               <SelectItem value="3">3 words</SelectItem>
-              <SelectItem value="4">4+ words</SelectItem>
+              <SelectItem value="4+">4+ words</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Mood Selector */}
-        <div className="flex items-center justify-center space-x-4 mb-4">
+        <div className="flex items-center justify-center space-x-4 mb-4 form-row-mobile selector-group-mobile">
           <label htmlFor="mood" className="text-responsive-sm font-medium text-muted-foreground flex items-center">
             <Palette className="w-4 h-4 mr-2" />
             Mood:
           </label>
           <Select value={mood} onValueChange={setMood}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 select-mobile select-trigger-mobile select-container-mobile">
               <SelectValue placeholder="Any mood" />
             </SelectTrigger>
             <SelectContent>
@@ -289,13 +327,13 @@ export function NameGenerator() {
         </div>
 
         {/* Genre Selector */}
-        <div className="flex items-center justify-center space-x-4 mb-6">
+        <div className="flex items-center justify-center space-x-4 mb-6 form-row-mobile selector-group-mobile">
           <label htmlFor="genre" className="text-responsive-sm font-medium text-muted-foreground flex items-center">
             <Music className="w-4 h-4 mr-2" />
             Genre:
           </label>
           <Select value={genre} onValueChange={setGenre}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 select-mobile select-trigger-mobile select-container-mobile">
               <SelectValue placeholder="Any genre" />
             </SelectTrigger>
             <SelectContent>
@@ -314,6 +352,7 @@ export function NameGenerator() {
               <SelectItem value="indie">🎨 Indie</SelectItem>
               <SelectItem value="pop">💫 Pop</SelectItem>
               <SelectItem value="alternative">🌀 Alternative</SelectItem>
+              <SelectItem value="jam band">🪐 Jam Band</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -323,11 +362,15 @@ export function NameGenerator() {
           <Button
             onClick={handleGenerate}
             disabled={generateMutation.isPending || isGenerating}
-            className="inline-flex items-center px-8 py-3 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            className="inline-flex items-center px-8 py-3 btn-gradient text-primary-foreground font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-primary generate-button-mobile"
             aria-label="Generate band or song names"
           >
-            <Lightbulb className="w-4 h-4 mr-2" />
-            Generate Names
+            <ButtonLoader isLoading={generateMutation.isPending || isGenerating}>
+              <>
+                <Lightbulb className="w-4 h-4 mr-2" />
+                Generate Names
+              </>
+            </ButtonLoader>
           </Button>
           <div className="mt-2 flex items-center justify-center gap-4 text-xs text-muted-foreground">
             <KeyboardHint keys={['Space']} />
@@ -340,7 +383,7 @@ export function NameGenerator() {
 
       {/* Search Section */}
       <div 
-        className={`rounded-xl shadow-sm transition-all duration-300 border p-6 ${
+        className={`rounded-xl shadow-sm transition-all duration-300 border p-6 search-section-mobile ${
           isSearchActive ? 'bg-gradient-to-r from-black/90 to-gray-900/90 border-blue-500/20' : 'bg-card border-border'
         }`}
         onMouseEnter={() => setIsSearchActive(true)}
@@ -359,12 +402,12 @@ export function NameGenerator() {
             onChange={(e) => setSearchInput(e.target.value)}
             onFocus={() => setIsSearchActive(true)}
             onBlur={() => setIsSearchActive(false)}
+            className="flex-1 search-input-mobile"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !searchMutation.isPending && searchInput.trim()) {
                 handleSearch();
               }
             }}
-            className="flex-1"
             disabled={searchMutation.isPending}
             maxLength={100}
             aria-label={`Enter ${nameType} name to verify`}
@@ -372,20 +415,15 @@ export function NameGenerator() {
           <Button
             onClick={handleSearch}
             disabled={searchMutation.isPending || !searchInput.trim()}
-            className="inline-flex items-center btn-gradient text-primary-foreground font-medium"
+            className="inline-flex items-center btn-gradient text-primary-foreground font-medium search-button-mobile"
             aria-label="Check name availability"
           >
-            {searchMutation.isPending ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Checking...
-              </>
-            ) : (
+            <ButtonLoader isLoading={searchMutation.isPending}>
               <>
                 <Search className="w-4 h-4 mr-2" />
-                Check
+                {searchMutation.isPending ? 'Checking...' : 'Check'}
               </>
-            )}
+            </ButtonLoader>
           </Button>
         </div>
       </div>
@@ -419,10 +457,10 @@ export function NameGenerator() {
 
 
       {/* Generated Results */}
-      {results.length > 0 && !generateMutation.isPending && (
+      {currentResults.length > 0 && !generateMutation.isPending && (
         <div className="space-y-4" aria-live="polite" aria-atomic="true">
           <div className="flex flex-col gap-4">
-            {results.map((result, index) => (
+            {currentResults.map((result, index) => (
               <div
                 key={`result-${index}-${result.name.replace(/\s+/g, '-').toLowerCase()}`}
                 className="animate-slide-up"
@@ -455,7 +493,7 @@ export function NameGenerator() {
       )}
 
       {/* Empty State */}
-      {results.length === 0 && !searchResult && !generateMutation.isPending && !searchMutation.isPending && (
+      {currentResults.length === 0 && !searchResult && !generateMutation.isPending && !searchMutation.isPending && (
         <div className="text-center py-12">
           <div className="text-neutral-600 mb-4">
             <Music className="w-16 h-16 text-neutral-200 mx-auto" />

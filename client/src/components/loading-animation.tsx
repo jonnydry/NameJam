@@ -12,7 +12,7 @@ export function LoadingAnimation({ stage, actualProgress, estimatedDuration = 30
   const [barPattern, setBarPattern] = useState<Array<{x: number, baseHeight: number, frequency: number, amplitude: number, delay: number}>>([]);
   const [startTime] = useState(Date.now());
 
-  // Generate unique random bar pattern on mount
+  // Generate unique random bar pattern on mount only
   useEffect(() => {
     const barCount = 40;
     const bars = [];
@@ -27,7 +27,7 @@ export function LoadingAnimation({ stage, actualProgress, estimatedDuration = 30
       });
     }
     setBarPattern(bars);
-  }, [stage]); // Regenerate pattern when stage changes
+  }, []); // Only generate once on mount to prevent flickering
 
   useEffect(() => {
     // Use actual progress if provided, otherwise use time-based estimation

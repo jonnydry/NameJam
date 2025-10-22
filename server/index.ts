@@ -10,6 +10,7 @@ try {
   validateEnvironment();
   secureLog.info('🔒 Security: Environment validation passed');
   secureLog.info('📊 Environment Summary:', getEnvSummary());
+  secureLog.info('⚡ Performance Mode: Quality checks optimized for speed');
 } catch (error) {
   secureLog.error('❌ Critical Security Error - Environment validation failed:', error);
   process.exit(1);
@@ -17,8 +18,8 @@ try {
 
 const app = express();
 
-// Security middleware first
-const rateLimiters = setupSecurity(app);
+// Security middleware first (includes CSRF protection)
+const securityMiddleware = setupSecurity(app);
 
 // Body parsing with size limits for security
 app.use(express.json({ limit: '10mb' }));
@@ -55,7 +56,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app, rateLimiters);
+  const server = await registerRoutes(app, securityMiddleware);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

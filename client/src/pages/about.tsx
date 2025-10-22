@@ -33,9 +33,9 @@ export default function About() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-muted-foreground">
-                <p>I made this app because I thought my musician friends and I would have had fun with it in the practice room and when hanging around discussing ideas.</p>
+                <p>I made this app imagining having fun with my friends. Jamming in basements, writing poems or lyrics, discussing fun ideas: There is a special energy in considering possibilities. Hold your creative spark close and turn it into something uniquely yours. Name_Jam is designed to be a novelty that helps you free associate ideas and images. Name your Jam! Name your art! Be yourself!</p>
                 <br />
-                <p>Use NAME_JAM to find inspiration, generate performance set lists, create lyrical sparks, or just jam around to brainstorm ideas and spark your next project!</p>
+                <p>Use NAME_JAM to find inspiration, create lyrical sparks, or just jam around to brainstorm ideas and spark your next project!</p>
               </div>
               
               {/* Placeholder sections */}
@@ -52,19 +52,15 @@ export default function About() {
                 <div className="p-4 border border-solid border-border/30 rounded-lg bg-card/60 backdrop-blur-sm">
                   <h3 className="font-medium mb-3">Key Features</h3>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• <strong>Datamuse-Powered Generation:</strong> Revolutionary replacement of static vocabulary with Datamuse API providing authentic linguistic relationships from 300,000+ word database for contextual word pairing</li>
-                    <li>• <strong>Hybrid AI Integration:</strong> XAI Grok 3/4 models with custom JSON prompts for 50% AI + 50% Datamuse generation split, complete with anti-repetition filtering and model attribution</li>
-                    <li>• <strong>Advanced Customization:</strong> Choose 1-6 word combinations, 12 mood themes, 14 musical genres with precise linguistic filtering and contextual word selection</li>
-                    <li>• <strong>Spotify-Priority Verification:</strong> Real-time availability checking with Spotify Web API as primary source, enhanced with popularity scores, genres, and direct search links</li>
-                    <li>• <strong>Professional Set Lists:</strong> Generate organized performance sets (8/16 songs) with intelligent word count variation and comprehensive Spotify verification</li>
-                    <li>• <strong>Enhanced Lyric Generation:</strong> Datamuse-enriched lyrical starters using genre-specific vocabulary, emotional words, rhymes, and sensory terms for authentic results</li>
-                    <li>• <strong>Advanced Stash System:</strong> Save names, setlists, lyrics, and band bios with 5-star ratings, category filtering, and comprehensive export options (text/JSON/print)</li>
-                    <li>• <strong>Pure Linguistic Intelligence:</strong> Datamuse API eliminates static vocabulary for authentic language patterns with grammatical consistency and natural flow</li>
-                    <li>• <strong>AI Band Bio Generator:</strong> Create hilarious, edgy R-rated band biographies with sophisticated humor and anti-formulaic storytelling using production logger system</li>
-                    <li>• <strong>Performance Optimization:</strong> Major codebase cleanup removing 49 packages (~36MB), unified caching system, custom date utilities, and production-ready logging</li>
-                    <li>• <strong>Dynamic Loading System:</strong> Real-time progress tracking with intelligent estimation curves that match actual API response times</li>
-                    <li>• <strong>Anti-Repetition Technology:</strong> Cross-generation word tracking preventing repeated words across multiple generations with 100-word memory system</li>
-                    <li>• <strong>Modern Typography:</strong> Optimized monospace design with JetBrains Mono font, typing animations, and responsive text scaling using CSS clamp() functions</li>
+                    <li>• <strong>AI-Powered Name Generation:</strong> XAI Grok-3 model generates creative band and song names with humor, wordplay, and genre-specific context</li>
+                    <li>• <strong>Real-Time Music Verification:</strong> Spotify integration checks name availability and provides popularity scores with direct search links</li>
+                    <li>• <strong>Multi-API Context System:</strong> Combines Spotify, Last.fm, Datamuse, ConceptNet, and PoetryDB for rich, genre-authentic vocabulary</li>
+                    <li>• <strong>Lyric Generation:</strong> AI-powered lyrical starters with genre-specific vocabulary, poetic themes, and variable length options</li>
+                    <li>• <strong>Band Biography Generator:</strong> Creates entertaining band backstories with humor and genre-appropriate narratives</li>
+                    <li>• <strong>Enhanced Stash System:</strong> Save and organize your favorites with ratings, search, bulk operations, and export options</li>
+                    <li>• <strong>Jam Band Genre Support:</strong> Specialized vocabulary and context for jam band, psychedelic, and improvisational music styles</li>
+                    <li>• <strong>Reliable Performance:</strong> Circuit breaker patterns, memory caching, and fallback systems ensure consistent results</li>
+                    <li>• <strong>Guest-Friendly Design:</strong> Full functionality available without login, with optional account features for enhanced stash management</li>
                   </ul>
                 </div>
                 
@@ -74,53 +70,46 @@ export default function About() {
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Frontend</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• React 18 with TypeScript for complete type safety and modern development</li>
-                        <li>• Tailwind CSS with shadcn/ui components, optimized CSS clamp() responsive scaling</li>
-                        <li>• JetBrains Mono typography with custom formatting utilities</li>
-                        <li>• Wouter for lightweight client-side routing</li>
-                        <li>• TanStack React Query v5 with intelligent caching and error handling</li>
-                        <li>• Vite with optimized build process, hot reload, and Service Worker caching</li>
-                        <li>• React Context for global stash state with local storage persistence</li>
-                        <li>• Custom hooks for clipboard operations, loading progress, and debounced callbacks</li>
+                        <li>• React 18 with TypeScript for type safety and modern development</li>
+                        <li>• Tailwind CSS with shadcn/ui components for responsive design</li>
+                        <li>• TanStack React Query v5 for state management and caching</li>
+                        <li>• Vite for fast development and optimized builds</li>
+                        <li>• JetBrains Mono typography for clean monospace aesthetics</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Backend</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• Node.js 20 with Express.js, ES modules, and production-optimized logging</li>
-                        <li>• PostgreSQL with Drizzle ORM for type-safe database operations and migrations</li>
-                        <li>• Neon Database serverless PostgreSQL with edge compatibility and WebSocket support</li>
-                        <li>• Unified performance caching system with NodeCache for intelligent data storage</li>
-                        <li>• Comprehensive security with rate limiting, CORS, Helmet headers, and input sanitization</li>
-                        <li>• TSX for TypeScript execution, parallel verification services, and timeout handling</li>
-                        <li>• Authentication system with mixed approach supporting guest users and signed-in features</li>
+                        <li>• Node.js with Express.js and TypeScript for robust API development</li>
+                        <li>• PostgreSQL with Drizzle ORM for type-safe database operations</li>
+                        <li>• Neon Database for serverless PostgreSQL hosting</li>
+                        <li>• Memory caching with TTL for optimized API performance</li>
+                        <li>• Security features including rate limiting, CORS, and input sanitization</li>
+                        <li>• Replit OpenID Connect for optional user authentication</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">AI & External APIs</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• XAI Grok 3, Grok 4, and Grok 3-mini with custom JSON prompts and intelligent parameter configuration</li>
-                        <li>• Datamuse API integration for authentic linguistic relationships and contextual word pairing (300,000+ words)</li>
-                        <li>• Spotify Web API (priority) for authoritative music verification with popularity scores and genre data</li>
-                        <li>• Last.fm API and MusicBrainz API for comprehensive music database coverage</li>
-                        <li>• Famous Names Database with 60+ well-known artists for easter easter egg trolling</li>
-                        <li>• Advanced rate limiting with intelligent retry mechanisms and graceful degradation</li>
-                        <li>• Cross-generation anti-repetition system tracking 100+ recent words for unique results</li>
+                        <li>• XAI Grok-3 model for creative name and lyric generation with reliability patterns</li>
+                        <li>• Spotify Web API for music verification, popularity scoring, and genre data</li>
+                        <li>• Last.fm API for genre vocabulary and music metadata</li>
+                        <li>• Datamuse API for linguistic relationships and word associations</li>
+                        <li>• ConceptNet API for semantic knowledge and cultural context</li>
+                        <li>• PoetryDB API for classical poetry vocabulary and thematic content</li>
+                        <li>• Intelligent caching system with configurable timeouts for optimal performance</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-1">Core Architecture</h4>
                       <ul className="space-y-1 ml-2">
-                        <li>• Revolutionary Datamuse API integration replacing all static vocabulary with authentic linguistic data</li>
-                        <li>• Advanced grammatical consistency engine with singular/plural agreement and natural flow optimization</li>
-                        <li>• Real-time name verification with Spotify-priority checking, popularity scoring, and direct search links</li>
-                        <li>• Comprehensive stash system supporting names, setlists, lyrics, and band bios with 5-star ratings</li>
-                        <li>• Enhanced lyric generation using Datamuse context for genre-specific vocabulary and rhyme patterns</li>
-                        <li>• Production-ready codebase with major cleanup removing 49 packages and 36MB bundle reduction</li>
-                        <li>• Unified caching system with NodeCache replacing duplicate verification systems</li>
-                        <li>• Custom lightweight utilities replacing heavy libraries (date-fns → 1KB custom formatter)</li>
-                        <li>• Dynamic loading progress system with real-time API response tracking</li>
-                        <li>• Complete TypeScript error resolution and production logging optimization</li>
+                        <li>• Modular service architecture with clean separation of concerns</li>
+                        <li>• Circuit breaker patterns for reliable external API integration</li>
+                        <li>• Memory caching with TTL for performance optimization</li>
+                        <li>• TypeScript throughout for complete type safety</li>
+                        <li>• Parallel processing for sub-10 second response times</li>
+                        <li>• Retry mechanisms with fallback generation ensuring consistent results</li>
+                        <li>• Centralized configuration management for easy maintenance</li>
                       </ul>
                     </div>
                   </div>
@@ -129,12 +118,15 @@ export default function About() {
                 <div className="p-4 border border-solid border-border/30 rounded-lg bg-card/60 backdrop-blur-sm">
                   <h3 className="font-medium mb-2">Credits & Acknowledgments</h3>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Replit</li>
-                    <li>• xAI</li>
-                    <li>• Anthropic</li>
-                    <li>• Spotify</li>
-                    <li>• Last.fm</li>
-                    <li>• my incredibly intelligent cat, Marci ♥</li>
+                    <li>• Replit - Development platform and deployment</li>
+                    <li>• xAI - Grok AI models for creative name and bio generation</li>
+                    <li>• PoetryDB API - Classical poetry context and literary vocabulary</li>
+                    <li>• Datamuse API - Linguistic relationships and word associations</li>
+                    <li>• Spotify Web API - Music verification and artist data</li>
+                    <li>• Last.fm API - Genre intelligence and music metadata</li>
+                    <li>• ConceptNet API - Semantic knowledge and conceptual relationships</li>
+                    <li>• MusicBrainz API - Additional music database coverage</li>
+                    <li>• My incredibly intelligent cat, Marci ♥</li>
                     <li>• My beautiful and wonderful girlfriend Sam, who knows me better than anyone ever will ❤</li>
                   </ul>
                 </div>
@@ -143,7 +135,6 @@ export default function About() {
           </Card>
         </div>
       </main>
-
       {/* Simple Footer */}
       <footer className="py-6">
         <div className="text-center">

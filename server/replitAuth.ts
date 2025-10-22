@@ -7,6 +7,8 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { secureLog } from "./utils/secureLogger";
+import { SessionSecretManager } from "./utils/sessionSecretRotation";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -22,6 +24,9 @@ const getOidcConfig = memoize(
   { maxAge: 3600 * 1000 }
 );
 
+// Initialize session secret manager
+const sessionSecretManager = new SessionSecretManager(process.env.SESSION_SECRET);
+
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
@@ -31,17 +36,24 @@ export function getSession() {
     ttl: sessionTtl,
     tableName: "sessions",
   });
+  
+  const secrets = sessionSecretManager.getSecrets();
+  const sessionSecrets = secrets.previous 
+    ? [secrets.current, secrets.previous] 
+    : [secrets.current];
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: sessionSecrets, // Support both new and old secrets during rotation
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // Always false for Replit development
+      secure: isProduction,
       maxAge: sessionTtl,
-      sameSite: 'lax', // More permissive for dev
-      // Remove domain restriction for development
+      sameSite: isProduction ? 'strict' : 'lax',
     },
     rolling: true, // Reset expiration on activity
     name: 'namejam.session', // Custom session name
@@ -52,22 +64,41 @@ function updateUserSession(
   user: any,
   tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
 ) {
-  user.claims = tokens.claims();
-  user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
+  try {
+    const claims = tokens.claims();
+    if (!claims || typeof claims !== 'object') {
+      throw new Error('Invalid or missing claims in token response');
+    }
+    
+    user.claims = claims;
+    user.access_token = tokens.access_token;
+    user.refresh_token = tokens.refresh_token;
+    user.expires_at = claims.exp;
+  } catch (error) {
+    secureLog.error('Error updating user session:', error);
+    throw new Error('Failed to process authentication tokens');
+  }
 }
 
 async function upsertUser(
   claims: any,
 ) {
-  await storage.upsertUser({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
-  });
+  try {
+    if (!claims || typeof claims !== 'object' || !claims.sub) {
+      throw new Error('Invalid claims object - missing required fields');
+    }
+    
+    await storage.upsertUser({
+      id: claims["sub"],
+      email: claims["email"] || null,
+      firstName: claims["first_name"] || null,
+      lastName: claims["last_name"] || null,
+      profileImageUrl: claims["profile_image_url"] || null,
+    });
+  } catch (error) {
+    secureLog.error('Error upserting user:', error);
+    throw new Error('Failed to save user data');
+  }
 }
 
 export async function setupAuth(app: Express) {
@@ -92,12 +123,14 @@ export async function setupAuth(app: Express) {
   const domains = process.env.REPLIT_DOMAINS!.split(",");
   
   for (const domain of domains) {
+    // Use the current protocol and domain for callback URL
+    const protocol = domain.includes('replit.dev') ? 'https' : 'http';
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
         config,
         scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
+        callbackURL: `${protocol}://${domain}/api/callback`,
       },
       verify,
     );
@@ -108,36 +141,83 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    // Use the first configured domain for authentication
-    const domains = process.env.REPLIT_DOMAINS!.split(",");
-    const authDomain = domains[0]; // Use first domain as primary
-    
-    passport.authenticate(`replitauth:${authDomain}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    try {
+      // Use the current request's host to determine the correct auth domain
+      const requestHost = req.get('host');
+      const domains = process.env.REPLIT_DOMAINS!.split(",");
+      
+      // Find the matching domain or fall back to the first one
+      const authDomain = domains.find(domain => 
+        requestHost?.includes(domain.replace(/^https?:\/\//, ''))
+      ) || domains[0];
+      
+      secureLog.info("Starting authentication for domain:", authDomain, "from request host:", requestHost);
+      
+      passport.authenticate(`replitauth:${authDomain}`, {
+        prompt: "login consent",
+        scope: ["openid", "email", "profile", "offline_access"],
+      })(req, res, next);
+    } catch (error) {
+      secureLog.error("Login error:", error);
+      res.status(500).json({ message: "Authentication failed" });
+    }
   });
 
   app.get("/api/callback", (req, res, next) => {
-    // Use the first configured domain for callback
-    const domains = process.env.REPLIT_DOMAINS!.split(",");
-    const authDomain = domains[0];
-    
-    passport.authenticate(`replitauth:${authDomain}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    })(req, res, next);
+    try {
+      // Use the first configured domain for callback
+      const domains = process.env.REPLIT_DOMAINS!.split(",");
+      const authDomain = domains[0];
+      
+      secureLog.info("Processing callback for domain:", authDomain);
+      secureLog.debug("Callback query params:", req.query);
+      
+      passport.authenticate(`replitauth:${authDomain}`, {
+        successReturnToOrRedirect: "/",
+        failureRedirect: "/auth-error",
+        failureFlash: false
+      })(req, res, next);
+    } catch (error) {
+      secureLog.error("Callback error:", error);
+      res.redirect("/auth-error");
+    }
   });
 
-  app.get("/api/logout", (req, res) => {
-    req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
-    });
+  app.get("/api/logout", async (req, res) => {
+    try {
+      const config = await getOidcConfig();
+      req.logout(() => {
+        // Fix hostname deprecation warning and use proper domain
+        const domains = process.env.REPLIT_DOMAINS!.split(",");
+        const domain = domains[0];
+        const protocol = domain.includes('replit.dev') ? 'https' : 'http';
+        const logoutUri = `${protocol}://${domain}`;
+        
+        res.redirect(
+          client.buildEndSessionUrl(config, {
+            client_id: process.env.REPL_ID!,
+            post_logout_redirect_uri: logoutUri,
+          }).href
+        );
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.redirect("/");
+    }
+  });
+
+  // Add auth error route
+  app.get("/auth-error", (req, res) => {
+    res.status(401).send(`
+      <html>
+        <head><title>Authentication Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h1>Authentication Failed</h1>
+          <p>Sorry, there was a problem signing you in.</p>
+          <a href="/" style="color: #007bff; text-decoration: none;">← Back to NameJam</a>
+        </body>
+      </html>
+    `);
   });
 }
 

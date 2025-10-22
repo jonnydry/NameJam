@@ -48,6 +48,7 @@ export function BandBioModal({
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ bandName, genre, mood }),
       });
 
