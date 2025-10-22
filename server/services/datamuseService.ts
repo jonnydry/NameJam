@@ -1,3 +1,4 @@
+// Using native fetch API (available in Node.js 18+)
 import { xaiFallbackService } from './xaiFallbackService';
 import { secureLog } from '../utils/secureLogger';
 

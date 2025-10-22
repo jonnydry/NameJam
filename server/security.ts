@@ -5,6 +5,10 @@ import { body, validationResult, param, query } from 'express-validator';
 import type { Request, Response, NextFunction, Express } from 'express';
 import CryptoJS from 'crypto-js';
 import bcrypt from 'bcryptjs';
+import { DistributedRateLimiter } from './utils/sessionSecretRotation';
+import { InputSanitizer } from './utils/inputSanitizer';
+import { csrfService, createCSRFMiddleware } from './services/csrfService';
+import crypto from 'crypto';
 // Server-side HTML sanitization (simplified approach for security)
 const sanitizeHtml = (input: string): string => {
   if (!input || typeof input !== 'string') return '';
@@ -15,28 +19,66 @@ const sanitizeHtml = (input: string): string => {
     .trim();
 };
 
-// Encryption key from environment or generate one
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'name-jam-default-key-2025';
+let cachedEncryptionKey: string | null = null;
+
+const resolveEncryptionKey = (): string => {
+  if (cachedEncryptionKey) {
+    return cachedEncryptionKey;
+  }
+
+  let key = process.env.ENCRYPTION_KEY;
+  if (!key) {
+    if (process.env.NODE_ENV === 'development') {
+      key = crypto.randomBytes(48).toString('hex');
+      process.env.ENCRYPTION_KEY = key;
+      console.warn('⚠️  ENCRYPTION_KEY was missing. Generated a temporary development key. Add ENCRYPTION_KEY to Replit Secrets for consistent encryption.');
+    } else {
+      throw new Error('ENCRYPTION_KEY must be provided. Set it in Replit Secrets before starting the server.');
+    }
+  }
+
+  if (key.length < 32) {
+    throw new Error('ENCRYPTION_KEY must be at least 32 characters long.');
+  }
+
+  cachedEncryptionKey = key;
+  return cachedEncryptionKey;
+};
 
 /**
  * API Rate Limiting Configuration
  */
 export const createRateLimiters = () => {
-  // General API rate limiter - 100 requests per 15 minutes
+  // General API rate limiter - 1000 requests per 15 minutes (temporarily increased)
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,
+    max: 1000, // Temporarily increased for debugging
     message: {
       error: 'Too many requests from this IP, please try again later.',
       retryAfter: '15 minutes'
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Skip rate limiting for health checks and static assets
+    // Only apply rate limiting to API routes
     skip: (req) => {
-      return req.path.startsWith('/api/health') || 
+      return !req.path.startsWith('/api/') || 
+             req.path.startsWith('/api/health') || 
              req.path.startsWith('/assets/') ||
              req.path.startsWith('/favicon');
+    }
+  });
+
+  // Distributed rate limiter for better protection
+  const distributedLimiter = new DistributedRateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    maxRequests: 100,
+    skipSuccessfulRequests: false,
+    keyGenerator: (req) => {
+      // Combine multiple factors for better distributed protection
+      const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      const fingerprint = req.headers['x-fingerprint'] || '';
+      return `${ip}-${userAgent}-${fingerprint}`;
     }
   });
 
@@ -134,7 +176,6 @@ export const createHelmetOptions = () => {
           "https://api.x.ai", // XAI API
           "https://api.spotify.com", // Spotify API
           "https://api.datamuse.com", // Datamuse API
-          "https://ws.audioscrobbler.com", // Last.fm API
           "https://musicbrainz.org", // MusicBrainz API
         ],
         objectSrc: ["'none'"],
@@ -199,7 +240,16 @@ export const validationRules = {
   // Name generation request validation
   generateNames: [
     body('type').isIn(['band', 'song']).withMessage('Type must be band or song'),
-    body('wordCount').isInt({ min: 1, max: 6 }).withMessage('Word count must be 1-6'),
+    body('wordCount').custom((value) => {
+      // Allow numbers 1-3 or the special "4+" string
+      if (typeof value === 'number' && value >= 1 && value <= 3) {
+        return true;
+      }
+      if (value === '4+') {
+        return true;
+      }
+      throw new Error('Word count must be 1, 2, 3, or "4+"');
+    }),
     body('count').optional().isInt({ min: 1, max: 10 }).withMessage('Count must be 1-10'),
     body('mood').optional().isIn([
       'dark', 'bright', 'mysterious', 'energetic', 'melancholy', 'ethereal',
@@ -207,7 +257,7 @@ export const validationRules = {
     ]).withMessage('Invalid mood'),
     body('genre').optional().isIn([
       'rock', 'metal', 'jazz', 'electronic', 'folk', 'classical', 'hip-hop',
-      'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative'
+      'country', 'blues', 'reggae', 'punk', 'indie', 'pop', 'alternative', 'jam band'
     ]).withMessage('Invalid genre'),
   ],
 
@@ -310,14 +360,16 @@ export const encryption = {
   // Encrypt sensitive data
   encrypt: (text: string): string => {
     if (!text) return '';
-    return CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
+    const key = resolveEncryptionKey();
+    return CryptoJS.AES.encrypt(text, key).toString();
   },
 
   // Decrypt sensitive data
   decrypt: (encryptedText: string): string => {
     if (!encryptedText) return '';
     try {
-      const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
+      const key = resolveEncryptionKey();
+      const bytes = CryptoJS.AES.decrypt(encryptedText, key);
       return bytes.toString(CryptoJS.enc.Utf8);
     } catch (error) {
       console.error('Decryption failed:', error);
@@ -368,6 +420,7 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
  */
 export const setupSecurity = (app: Express) => {
   const rateLimiters = createRateLimiters();
+  const csrfMiddleware = createCSRFMiddleware(csrfService);
   
   // Apply security middleware in order
   app.use(createHelmetOptions());
@@ -376,5 +429,8 @@ export const setupSecurity = (app: Express) => {
   app.use(rateLimiters.general);
   app.use(sanitizeRequestData);
   
-  return rateLimiters;
+  // Add CSRF token generation to all routes (after session is available)
+  app.use(csrfMiddleware.generateToken);
+  
+  return { ...rateLimiters, csrf: csrfMiddleware };
 };

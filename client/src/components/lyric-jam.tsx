@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { NotebookPen, RefreshCw, Heart, Brain, Music } from "lucide-react";
+import LyricTypewriter from "./lyric-typewriter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,10 +20,14 @@ interface LyricResponse {
   generatedAt: string;
 }
 
-export function LyricJam() {
+interface LyricJamProps {
+  lyricResult: LyricResponse | null;
+  setLyricResult: (lyric: LyricResponse | null) => void;
+}
+
+export function LyricJam({ lyricResult, setLyricResult }: LyricJamProps) {
   const [genre, setGenre] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentLyric, setCurrentLyric] = useState<LyricResponse | null>(null);
   const { addToStash } = useStash();
   const loadingRef = useRef<HTMLDivElement>(null);
   const generateButtonRef = useRef<HTMLButtonElement>(null);
@@ -38,8 +43,35 @@ export function LyricJam() {
   const genres = [
     "rock", "pop", "country", "hip-hop", "indie", "folk", 
     "metal", "jazz", "electronic", "blues", "punk", 
-    "alternative", "reggae", "classical"
+    "alternative", "reggae", "classical", "jam band"
   ];
+
+  const getGenreEmoji = (genre: string): string => {
+    const emojiMap: Record<string, string> = {
+      rock: "🎸",
+      pop: "💫", 
+      country: "🤠",
+      "hip-hop": "🎤",
+      indie: "🎨",
+      folk: "🪕",
+      metal: "🤘",
+      jazz: "🎺",
+      electronic: "🎛️",
+      blues: "🎵",
+      punk: "⚡",
+      alternative: "🌀",
+      reggae: "🌴",
+      classical: "🎼",
+      "jam band": "🪐"
+    };
+    return emojiMap[genre] || "🎵";
+  };
+
+  const formatGenreName = (genre: string): string => {
+    return genre.split('-').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join('-');
+  };
 
   const loadingMessages = [
     "One sec...",
@@ -85,7 +117,7 @@ export function LyricJam() {
       // Complete loading progress (removed artificial delay)
       lyricProgress.completeLoading();
       
-      setCurrentLyric(data);
+      setLyricResult(data);
     } catch (error) {
       lyricProgress.completeLoading(); // Complete progress even on error
       handleApiError(error, {
@@ -98,15 +130,15 @@ export function LyricJam() {
   };
 
   const handleAddToStash = () => {
-    if (currentLyric) {
+    if (lyricResult) {
       addToStash({
-        name: currentLyric.lyric,
+        name: lyricResult.lyric,
         type: 'lyricJam',
-        wordCount: currentLyric.lyric.split(' ').length,
+        wordCount: lyricResult.lyric.split(' ').length,
         genre: genre === "all" ? undefined : genre,
         metadata: {
-          songSection: currentLyric.songSection,
-          model: currentLyric.model
+          songSection: lyricResult.songSection,
+          model: lyricResult.model
         }
       });
       toast({
@@ -118,13 +150,15 @@ export function LyricJam() {
 
   const getSectionColor = (section?: string) => {
     const colors: Record<string, string> = {
-      verse: "bg-blue-600",
-      chorus: "bg-purple-600",
-      bridge: "bg-green-600",
-      "pre-chorus": "bg-orange-600",
-      outro: "bg-red-600"
+      intro: "bg-gradient-to-r from-blue-500 to-blue-600",
+      verse: "bg-gradient-to-r from-green-500 to-green-600",
+      chorus: "bg-gradient-to-r from-purple-500 to-purple-600",
+      bridge: "bg-gradient-to-r from-orange-500 to-orange-600",
+      "pre-chorus": "bg-gradient-to-r from-yellow-500 to-yellow-600",
+      outro: "bg-gradient-to-r from-red-500 to-red-600",
+      hook: "bg-gradient-to-r from-pink-500 to-pink-600"
     };
-    return colors[section || ""] || "bg-gray-600";
+    return colors[section?.toLowerCase() || ""] || "bg-gradient-to-r from-gray-500 to-gray-600";
   };
 
   return (
@@ -149,20 +183,11 @@ export function LyricJam() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Any genre</SelectItem>
-                  <SelectItem value="rock">🎸 Rock</SelectItem>
-                  <SelectItem value="pop">💫 Pop</SelectItem>
-                  <SelectItem value="country">🤠 Country</SelectItem>
-                  <SelectItem value="hip-hop">🎤 Hip-Hop</SelectItem>
-                  <SelectItem value="indie">🎨 Indie</SelectItem>
-                  <SelectItem value="folk">🪕 Folk</SelectItem>
-                  <SelectItem value="metal">🤘 Metal</SelectItem>
-                  <SelectItem value="jazz">🎺 Jazz</SelectItem>
-                  <SelectItem value="electronic">🎛️ Electronic</SelectItem>
-                  <SelectItem value="blues">🎵 Blues</SelectItem>
-                  <SelectItem value="punk">⚡ Punk</SelectItem>
-                  <SelectItem value="alternative">🌀 Alternative</SelectItem>
-                  <SelectItem value="reggae">🌴 Reggae</SelectItem>
-                  <SelectItem value="classical">🎼 Classical</SelectItem>
+                  {genres.map((genreOption) => (
+                    <SelectItem key={genreOption} value={genreOption}>
+                      {getGenreEmoji(genreOption)} {formatGenreName(genreOption)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -203,55 +228,64 @@ export function LyricJam() {
               </div>
             )}
 
-            {currentLyric && !isLoading && (
-              <Card className="border-2">
-                <CardHeader className="space-y-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-2 flex-1 min-w-0">
-                      {currentLyric.songSection && (
-                        <Badge className={`${getSectionColor(currentLyric.songSection)} text-white`}>
-                          {currentLyric.songSection.toUpperCase()}
-                        </Badge>
-                      )}
-                      <p className="text-lg sm:text-xl font-medium italic leading-relaxed break-words">
-                        "{currentLyric.lyric}"
-                      </p>
+            {lyricResult && !isLoading && (
+              <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 shadow-xl hover:shadow-2xl transition-all duration-300">
+                {/* Background gradient effect */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-black/20" />
+                
+                <CardHeader className="relative space-y-6 p-6 sm:p-8">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-4 flex-1 min-w-0">
+                      <div className="space-y-2">
+                        <LyricTypewriter 
+                          text={lyricResult.lyric}
+                          speed={50}
+                          className="transition-opacity duration-200"
+                        />
+                      </div>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={handleAddToStash}
-                      className="hover:text-red-500 shrink-0"
+                      className="hover:text-red-500 hover:bg-white/10 transition-all duration-200 shrink-0"
                     >
                       <Heart className="w-5 h-5" />
                     </Button>
                   </div>
-                  {currentLyric.model && currentLyric.model !== 'fallback' && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Brain className="w-4 h-4 text-purple-500" />
-                      <span>Generated by {currentLyric.model}</span>
+                  
+                  {/* Bottom metadata section */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
+                    <div className="flex flex-col gap-2">
+                      {lyricResult.model && lyricResult.model !== 'fallback' && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Brain className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-300">Generated by {lyricResult.model}</span>
+                        </div>
+                      )}
+                      {genre !== "all" && (
+                        <div className="text-sm text-gray-400">
+                          Genre: <span className="text-gray-300 font-medium">{genre}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </CardHeader>
-                <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                  <div className="text-sm text-muted-foreground">
-                    {genre !== "all" && <span>Genre: {genre}</span>}
                   </div>
+                </CardHeader>
+                
+                <CardFooter className="relative border-t border-white/10 bg-black/20 p-4 sm:p-6">
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={generateLyric}
-                    className="gap-2 w-full sm:w-auto"
+                    className="w-full sm:w-auto gap-2 bg-white/5 border-white/20 hover:border-white/40 hover:bg-white/10 text-white transition-all duration-200"
                   >
                     <RefreshCw className="w-4 h-4" />
-                    <span className="hidden sm:inline">Generate Another</span>
-                    <span className="sm:hidden">Another</span>
+                    Generate Another
                   </Button>
                 </CardFooter>
               </Card>
             )}
 
-            {!currentLyric && !isLoading && (
+            {!lyricResult && !isLoading && (
               <div className="text-center py-12 text-muted-foreground">
                 <NotebookPen className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Click "Generate Lyric Spark" to begin your songwriting journey</p>

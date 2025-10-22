@@ -7,9 +7,9 @@ interface StashContextType {
   stash: StashItem[];
   addToStash: (item: Omit<StashItem, 'id' | 'savedAt'>) => boolean;
   removeFromStash: (id: string) => void;
-  removeFromStashByName: (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam') => void;
+  removeFromStashByName: (name: string, type: 'band' | 'song' | 'bandLore' | 'lyricJam') => void;
   clearStash: () => void;
-  isInStash: (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam') => boolean;
+  isInStash: (name: string, type: 'band' | 'song' | 'bandLore' | 'lyricJam') => boolean;
   stashCount: number;
   toggleStashItem: (item: Omit<StashItem, 'id' | 'savedAt'>) => { action: 'added' | 'removed'; success: boolean };
   updateRating: (id: string, rating: number) => void;
@@ -65,7 +65,7 @@ export function StashProvider({ children }: { children: ReactNode }) {
     setStash(prev => prev.filter(item => item.id !== id));
   };
 
-  const removeFromStashByName = (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam') => {
+  const removeFromStashByName = (name: string, type: 'band' | 'song' | 'bandLore' | 'lyricJam') => {
     setStash(prev => prev.filter(item => !(item.name === name && item.type === type)));
   };
 
@@ -73,7 +73,7 @@ export function StashProvider({ children }: { children: ReactNode }) {
     setStash([]);
   };
 
-  const isInStash = (name: string, type: 'band' | 'song' | 'setlist' | 'bandLore' | 'lyricJam') => {
+  const isInStash = (name: string, type: 'band' | 'song' | 'bandLore' | 'lyricJam') => {
     return stash.some(item => item.name === name && item.type === type);
   };
 

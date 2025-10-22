@@ -1,6 +1,8 @@
 import { spotifyRateLimiter, withRetry } from '../utils/rateLimiter';
 import { xaiFallbackService } from './xaiFallbackService';
 import { secureLog } from '../utils/secureLogger';
+import { phoneticMatchingService } from './phoneticMatchingService';
+import { withApiRetry, apiRetryConfigs } from '../utils/apiRetry';
 
 interface SpotifyTokenResponse {
   access_token: string;
@@ -61,18 +63,21 @@ export class SpotifyService {
     }
 
     try {
-      const response = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`
-        },
-        body: 'grant_type=client_credentials'
-      });
+      const response = await withApiRetry(async () => {
+        const res = await fetch('https://accounts.spotify.com/api/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`
+          },
+          body: 'grant_type=client_credentials'
+        });
 
-      if (!response.ok) {
-        throw new Error(`Spotify auth failed: ${response.status}`);
-      }
+        if (!res.ok) {
+          throw new Error(`Spotify auth failed: ${res.status}`);
+        }
+        return res;
+      }, apiRetryConfigs.spotify);
 
       const data: SpotifyTokenResponse = await response.json();
       this.accessToken = data.access_token;
@@ -185,6 +190,17 @@ export class SpotifyService {
     });
   }
 
+  // Map non-standard genres to Spotify genre seeds
+  private mapGenreToSpotifySeeds(genre: string): string {
+    const genreMap: Record<string, string> = {
+      'jam band': 'jam funk psychedelic',
+      'hip-hop': 'hip hop',
+      // Add more mappings as needed
+    };
+    
+    return genreMap[genre.toLowerCase()] || genre;
+  }
+
   // Get genre-specific artists for vocabulary inspiration
   async getGenreArtists(genre: string, limit: number = 50): Promise<SpotifyArtist[]> {
     const token = await this.getAccessToken();
@@ -192,10 +208,13 @@ export class SpotifyService {
       return [];
     }
 
+    // Map genre to Spotify-compatible search terms
+    const mappedGenre = this.mapGenreToSpotifySeeds(genre);
+
     return spotifyRateLimiter.execute(async () => {
       return withRetry(async () => {
         // Search for artists by genre
-        const encodedGenre = encodeURIComponent(`genre:"${genre}"`);
+        const encodedGenre = encodeURIComponent(`genre:"${mappedGenre}"`);
         const response = await fetch(
           `https://api.spotify.com/v1/search?q=${encodedGenre}&type=artist&limit=${limit}`,
           {
@@ -206,9 +225,9 @@ export class SpotifyService {
         );
 
         if (!response.ok) {
-          // Fallback to searching by genre name
+          // Fallback to searching by mapped genre name
           const fallbackResponse = await fetch(
-            `https://api.spotify.com/v1/search?q=${encodeURIComponent(genre)}&type=artist&limit=${limit}`,
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(mappedGenre)}&type=artist&limit=${limit}`,
             {
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -430,15 +449,9 @@ export class SpotifyService {
   }
 
   private calculateSimilarity(str1: string, str2: string): number {
-    const longer = str1.length > str2.length ? str1 : str2;
-    const shorter = str1.length > str2.length ? str2 : str1;
-    
-    if (longer.length === 0) {
-      return 1.0;
-    }
-    
-    const editDistance = this.levenshteinDistance(longer, shorter);
-    return (longer.length - editDistance) / longer.length;
+    // Enhanced similarity calculation using phonetic matching
+    const phoneticMatch = phoneticMatchingService.calculateSimilarity(str1, str2);
+    return phoneticMatch.similarity;
   }
 
   private levenshteinDistance(str1: string, str2: string): number {

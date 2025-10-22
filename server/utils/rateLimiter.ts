@@ -1,7 +1,13 @@
+import { secureLog } from './secureLogger';
+
 interface RateLimiterOptions {
   maxRequests: number;
   windowMs: number;
   delayMs?: number;
+  // Creative optimizations
+  adaptiveDelay?: boolean;
+  baseDelay?: number;
+  peakHours?: string;
 }
 
 interface QueuedRequest {
@@ -99,7 +105,7 @@ export async function withRetry<T>(
       
       if (attempt < maxRetries - 1 && isRateLimitError) {
         const delay = initialDelay * Math.pow(2, attempt);
-        console.log(`Rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        secureLog.info(`Rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, delay));
       } else {
         throw error;
@@ -117,16 +123,21 @@ export const spotifyRateLimiter = new RateLimiter({
   delayMs: 100       // 100ms between requests
 });
 
+// Optimized XAI rate limiter - higher throughput for creative tasks
 export const xaiRateLimiter = new RateLimiter({
-  maxRequests: 60,   // Conservative estimate for XAI
+  maxRequests: 80,   // Increased for creative bursts
   windowMs: 60000,   // 1 minute
-  delayMs: 200       // 200ms between requests
+  adaptiveDelay: true, // NEW: adapt delay based on response times
+  baseDelay: 150      // Faster base delay for creativity
 });
 
-export const lastFmRateLimiter = new RateLimiter({
-  maxRequests: 5,    // Last.fm has strict limits: 5 requests per second
-  windowMs: 1000,    // 1 second
-  delayMs: 50        // 50ms between requests
+// Creative burst rate limiter for peak nighttime creative sessions
+export const xaiCreativeBurstRateLimiter = new RateLimiter({
+  maxRequests: 100,  // Highest throughput during creative hours
+  windowMs: 60000,
+  adaptiveDelay: true,
+  baseDelay: 100,
+  peakHours: '18:00-02:00' // Nighttime creative sessions
 });
 
 export const musicBrainzRateLimiter = new RateLimiter({
