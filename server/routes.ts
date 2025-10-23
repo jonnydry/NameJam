@@ -2,35 +2,32 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { UnifiedNameGeneratorService, GENERATION_STRATEGIES } from "./services/unifiedNameGenerator";
+import { nameGenerator } from "./services/nameGenerator";
+import { lyricGenerator } from "./services/lyricGenerator";
+import { db } from "./db";
+import { CacheService } from "./services/cacheService";
 import { NameVerifierService } from "./services/nameVerifier";
 import { BandBioGenerator } from "./services/bandBio/bandBioGenerator";
-import { lyricOrchestrator } from "./services/lyric/lyricOrchestrator";
-import { qualityScoring } from "./services/qualityScoring";
-import { QualityRankingSystem } from "./services/qualityScoring/qualityRankingSystem";
-import { db } from "./db";
+import { performanceMonitor } from "./services/performanceMonitor";
 import { users, errorLogs, userFeedback, userPreferences, feedbackAnalytics } from "@shared/schema";
 
-import { 
-  generateNameRequestSchema, 
-  userFeedbackRequestSchema, 
-  userPreferencesUpdateSchema 
+import {
+  generateNameRequestSchema,
+  userFeedbackRequestSchema,
+  userPreferencesUpdateSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { ErrorHandler, ERROR_CODES, apiErrorSchema } from "@shared/errorSchemas";
 
 import { validationRules, handleValidationErrors } from "./security";
-import { performanceCache } from "./services/performanceCache";
-import { performanceMonitor } from "./services/performanceMonitor";
-import { secureLog, sanitizeApiResponse } from "./utils/secureLogger";
+import { secureLog } from "./utils/secureLogger";
 import type { Request, Response, NextFunction } from "express";
 import { InputSanitizer } from "./utils/inputSanitizer";
 
-import { cacheHeaders } from "./middleware/cacheHeaders";
-import { 
-  compressionMiddleware, 
-  timeoutMiddleware, 
-  responseTimeMiddleware 
+import {
+  compressionMiddleware,
+  timeoutMiddleware,
+  responseTimeMiddleware
 } from "./middleware/performanceOptimization";
 
 // Helper functions for intelligent ranking
@@ -76,51 +73,18 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
   app.use(compressionMiddleware);
   app.use(responseTimeMiddleware);
   app.use(timeoutMiddleware(50000)); // 50 second timeout for complex generations
-  app.use(cacheHeaders);
   
   // Auth middleware
   await setupAuth(app);
 
   secureLog.info("Initializing services...");
-  
-  let nameGenerator: UnifiedNameGeneratorService;
-  let nameVerifier: NameVerifierService;
-  let bandBioGenerator: BandBioGenerator;
-  let qualityRankingSystem: QualityRankingSystem;
 
-  try {
-    nameGenerator = new UnifiedNameGeneratorService();
-    secureLog.info("✓ NameGeneratorService initialized");
-  } catch (error) {
-    secureLog.error("✗ Failed to initialize NameGeneratorService:", error);
-    throw error;
-  }
+  // Initialize required services
+  const cacheService = new CacheService();
+  const nameVerifierService = new NameVerifierService();
+  const bandBioGenerator = new BandBioGenerator();
 
-  try {
-    nameVerifier = new NameVerifierService();
-    secureLog.info("✓ NameVerifierService initialized");
-  } catch (error) {
-    secureLog.error("✗ Failed to initialize NameVerifierService:", error);
-    throw error;
-  }
-
-  try {
-    bandBioGenerator = new BandBioGenerator();
-    secureLog.info("✓ BandBioGenerator initialized");
-  } catch (error) {
-    secureLog.error("✗ Failed to initialize BandBioGenerator:", error);
-    throw error;
-  }
-
-  try {
-    qualityRankingSystem = new QualityRankingSystem();
-    secureLog.info("✓ QualityRankingSystem initialized");
-  } catch (error) {
-    secureLog.error("✗ Failed to initialize QualityRankingSystem:", error);
-    throw error;
-  }
-
-  // lyricOrchestrator is already initialized as a singleton
+  secureLog.info("✓ NameJam services ready");
 
   // Auth routes (with rate limiting)
   app.get('/api/auth/user', 
@@ -165,176 +129,21 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
       };
       
       const request = generateNameRequestSchema.parse(sanitizedBody);
-      
-      // Generate names using unified service with quality strategy (default)
-      const names = await nameGenerator.generateNames(request, GENERATION_STRATEGIES.QUALITY);
-      
-      // Check if response was already sent (due to timeout)
-      if (hasResponded || res.headersSent) {
-        secureLog.debug('Response already sent, skipping verification');
-        return;
-      }
-      
-      // Apply intelligent quality ranking system
-      let intelligentlyRankedNames = names;
-      let rankingMetadata = null;
-      
-      try {
-        secureLog.info('Applying full comparative quality ranking system');
-        
-        // Determine ranking mode based on request context and user preferences
-        const userPreferences = req.user ? await storage.getUserPreferences(req.user.claims.sub).catch(() => null) : null;
-        const rankingMode = determineRankingMode(request, userPreferences);
-        const qualityThreshold = getQualityThreshold(request, userPreferences);
-        
-        // Prepare quality ranking request
-        const qualityRankingRequest = {
-          names: names.map(n => n.name),
-          context: {
-            genre: request.genre,
-            mood: request.mood,
-            type: request.type,
-            targetAudience: 'mainstream' as const // Default to mainstream for now
-          },
-          rankingMode: rankingMode as any,
-          qualityThreshold,
-          maxResults: request.count,
-          diversityTarget: 0.7, // Encourage diversity
-          adaptiveLearning: true
-        };
-        
-        // Apply quality ranking system
-        const rankingResult = await qualityRankingSystem.rankNames(qualityRankingRequest);
-        
-        // Extract top ranked names up to requested count
-        const topRankedNames = rankingResult.rankedNames.slice(0, request.count);
-        
-        // Map ranked names back to original format with quality information
-        intelligentlyRankedNames = topRankedNames.map(rankedName => {
-          const originalName = names.find(n => n.name === rankedName.name);
-          if (!originalName) {
-            throw new Error(`Original name not found for ranked name: ${rankedName.name}`);
-          }
-          return {
-            name: originalName.name,
-            isAiGenerated: originalName.isAiGenerated,
-            source: originalName.source,
-            qualityScore: rankedName.qualityScore,
-            rank: rankedName.rank,
-            strengthProfile: rankedName.strengthProfile,
-            marketPosition: rankedName.marketPosition
-          };
-        });
-        
-        // Extract ranking metadata
-        rankingMetadata = {
-          totalAnalyzed: rankingResult.analytics.totalAnalyzed,
-          qualifiedNames: rankingResult.analytics.passingThreshold,
-          averageQuality: rankingResult.analytics.averageQuality,
-          rankingMode: rankingMode,
-          diversityIndex: rankingResult.analytics.diversityIndex,
-          adaptiveLearning: true,
-          recommendations: rankingResult.recommendations.strategicAdvice,
-          qualityDistribution: {
-            excellent: rankingResult.qualityDistribution.excellent.length,
-            good: rankingResult.qualityDistribution.good.length,
-            fair: rankingResult.qualityDistribution.fair.length,
-            poor: rankingResult.qualityDistribution.poor.length
-          },
-          dimensionalAverages: rankingResult.analytics.dimensionalAverages
-        };
-        
-        secureLog.info(`Quality ranking applied: ${names.length} names → ${intelligentlyRankedNames.length} served (mode: ${rankingMode}, avg quality: ${rankingResult.analytics.averageQuality.toFixed(3)})`);
-        
-      } catch (filterError) {
-        secureLog.error('Quality ranking failed, falling back to basic filtering:', filterError);
-        // Fallback to basic approach if quality ranking fails
-        intelligentlyRankedNames = names.slice(0, request.count);
-        rankingMetadata = {
-          totalAnalyzed: names.length,
-          qualifiedNames: intelligentlyRankedNames.length,
-          averageQuality: 0.6, // Conservative fallback
-          rankingMode: 'fallback-basic',
-          diversityIndex: 0.5,
-          adaptiveLearning: false,
-          recommendations: [],
-          error: 'Quality ranking system unavailable, using basic fallback'
-        };
-      }
-      
-      // Optimized parallel verification and storage
-      
-      // Batch verification for better performance - use faster approach
-      const { parallelVerificationService } = await import('./services/parallelVerification');
-      const namesToVerify = intelligentlyRankedNames.map(nameResult => ({
+
+      // Generate names using simplified service
+      const generatedNames = await nameGenerator.generateNames(request);
+
+      // Simple response format
+      const results = generatedNames.map(nameResult => ({
         name: nameResult.name,
-        type: request.type as 'band' | 'song'
+        type: request.type,
+        wordCount: nameResult.name.split(' ').length,
+        isAiGenerated: nameResult.isAiGenerated,
+        source: nameResult.source
       }));
-      
-      // Verify all names in parallel with caching (reduced timeout for faster response)
-      const verificationResults = await parallelVerificationService.verifyNamesInParallel(namesToVerify);
-      
-      // Check again before processing results
-      if (hasResponded || res.headersSent) {
-        return;
-      }
-      
-      // Process results and handle database storage
-      const results = await Promise.all(
-        intelligentlyRankedNames.map(async (nameResult, index) => {
-          const verification = verificationResults[index];
-          let storedName = null;
-          
-          // Only store in database if user is authenticated (non-blocking)
-          if (req.user && req.user.claims && req.user.claims.sub && !hasResponded && !res.headersSent) {
-            const userId = req.user.claims.sub;
-            
-            try {
-              // Make database storage non-blocking to speed up response
-              const dbWordCount = typeof request.wordCount === 'string' && request.wordCount === '4+' 
-                ? 4 
-                : (typeof request.wordCount === 'number' ? request.wordCount : nameResult.name.split(/\s+/).length);
-              
-              storage.createGeneratedName({
-                name: nameResult.name,
-                type: request.type,
-                wordCount: dbWordCount, // Ensure integer for database storage
-                verificationStatus: verification.status,
-                verificationDetails: verification.details || null,
-                isAiGenerated: nameResult.isAiGenerated,
-                userId: userId,
-              }).catch(error => {
-                secureLog.error("Database storage error (non-blocking):", error);
-              });
-            } catch (error) {
-              secureLog.error("Database storage error:", error);
-            }
-          }
 
-          return {
-            id: null, // Skip ID for faster response since storage is async
-            name: nameResult.name,
-            type: request.type,
-            wordCount: nameResult.name.split(/\s+/).length, // Use actual word count instead of requested
-            isAiGenerated: nameResult.isAiGenerated,
-            verification
-          };
-        })
-      );
+      sendResponse(200, { results });
 
-      // Include ranking metadata in response for enhanced user experience
-      const responseData = {
-        results,
-        ...(rankingMetadata && {
-          ranking: {
-            metadata: rankingMetadata,
-            intelligentRankingApplied: true,
-            enhancedQualityData: true
-          }
-        })
-      };
-      
-      sendResponse(200, responseData);
     } catch (error) {
       secureLog.error("Error generating names:", error);
       if (error instanceof z.ZodError) {
@@ -388,17 +197,18 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
       }
 
       // Check cache first
-      const cached = performanceCache.getCachedVerification(sanitizedName, type);
+      const cacheKey = `${sanitizedName}:${type}`;
+      const cached = cacheService.get(cacheKey);
       if (cached) {
         secureLog.debug(`Cache hit for ${type}: ${sanitizedName}`);
         return res.json({ verification: cached });
       }
 
       // If not cached, verify normally
-      const verification = await nameVerifier.verifyName(sanitizedName, type);
-      
-      // Store in cache
-      performanceCache.setCachedVerification(sanitizedName, type, verification);
+      const verification = await nameVerifierService.verifyName(sanitizedName, type);
+
+      // Store in cache for 30 minutes (1800 seconds)
+      cacheService.set(cacheKey, verification, 1800);
       
       res.json({ verification });
     } catch (error) {
@@ -467,69 +277,9 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     try {
       const { genre } = req.body;
       
-      const lyricResult = await lyricOrchestrator.generateLyricStarter(genre);
-      
-      // Apply quality scoring to evaluate the generated lyric
-      let finalLyricResult = lyricResult;
-      let qualityScore = null;
-      try {
-        const lyricRequest = {
-          lyric: lyricResult.lyric,
-          genre: genre,
-          songSection: lyricResult.songSection,
-          model: lyricResult.model
-        };
-        
-        const qualityResult = await qualityScoring.scoreLyric(lyricRequest, 'moderate');
-        
-        if (qualityResult.success && qualityResult.data) {
-          qualityScore = qualityResult.data.score;
-          
-          // Log quality information
-          secureLog.info(`Lyric quality scored: ${Math.round(qualityScore.overall * 100)}%`, {
-            genre: genre || 'unknown',
-            songSection: lyricResult.songSection,
-            model: lyricResult.model,
-            passedThreshold: qualityResult.data.passesThreshold,
-            breakdown: {
-              creativity: Math.round(qualityScore.breakdown.creativity * 100),
-              appropriateness: Math.round(qualityScore.breakdown.appropriateness * 100),
-              quality: Math.round(qualityScore.breakdown.quality * 100),
-              memorability: Math.round(qualityScore.breakdown.memorability * 100)
-            }
-          });
-          
-          // If quality is very low and we're not already generating a fallback, 
-          // we could attempt regeneration but for now just serve with quality info
-          if (!qualityResult.data.passesThreshold) {
-            secureLog.warn('Generated lyric below quality threshold', {
-              score: Math.round(qualityScore.overall * 100),
-              threshold: 'moderate',
-              recommendations: qualityResult.data.recommendations
-            });
-          }
-        } else {
-          secureLog.warn('Lyric quality scoring failed:', qualityResult.error);
-        }
-      } catch (qualityError) {
-        secureLog.error('Lyric quality scoring error:', qualityError);
-      }
-      
-      res.json({ 
-        id: Date.now(), // Simple ID generation
-        lyric: finalLyricResult.lyric,
-        genre: genre || null,
-        songSection: finalLyricResult.songSection,
-        model: finalLyricResult.model,
-        generatedAt: new Date().toISOString(),
-        // Include quality info if available (for debugging/analytics)
-        ...(qualityScore && { 
-          qualityScore: {
-            overall: Math.round(qualityScore.overall * 100) / 100,
-            passedThreshold: qualityScore.overall >= 0.60 // moderate threshold
-          }
-        })
-      });
+      const lyricResult = await lyricGenerator.generateLyricStarter(genre);
+
+      res.json(lyricResult);
     } catch (error) {
       secureLog.error("Error generating lyric spark:", error);
       res.status(500).json({ 
@@ -1062,47 +812,7 @@ export async function registerRoutes(app: Express, middleware?: any): Promise<Se
     }
   });
 
-  // Test endpoint for phonetic analysis caching (for testing/monitoring)
-  app.get('/api/test/phonetic-cache', async (req: Request, res: Response) => {
-    try {
-      const { phoneticFlowAnalyzer } = await import('./services/nameGeneration/phoneticFlowAnalyzer');
-      
-      // Test cache functionality
-      const testName = req.query.name as string || 'electric storm';
-      
-      // First analysis (may be cache miss)
-      const start1 = Date.now();
-      const result1 = phoneticFlowAnalyzer.analyzePhoneticFlow(testName);
-      const time1 = Date.now() - start1;
-      
-      // Second analysis (should be cache hit)
-      const start2 = Date.now();
-      const result2 = phoneticFlowAnalyzer.analyzePhoneticFlow(testName);
-      const time2 = Date.now() - start2;
-      
-      // Get cache statistics
-      const stats = phoneticFlowAnalyzer.getCacheStats();
-      
-      res.json({
-        success: true,
-        testName,
-        analysisResult: result1,
-        performance: {
-          firstAnalysis: `${time1}ms`,
-          secondAnalysis: `${time2}ms`,
-          improvement: time1 > time2 ? `${((time1 - time2) / time1 * 100).toFixed(1)}%` : 'N/A'
-        },
-        cacheStats: stats
-      });
-    } catch (error) {
-      secureLog.error("Error in phonetic cache test:", error);
-      res.status(500).json({ 
-        success: false,
-        message: "Failed to test phonetic cache",
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
+
 
   const httpServer = createServer(app);
   return httpServer;
