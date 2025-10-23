@@ -107,7 +107,7 @@ export class CSRFService {
 
   private generateSecret(): string {
     const secret = randomBytes(32).toString('hex');
-    secureLog.warn('No CSRF_SECRET provided, generated random secret (not suitable for production)');
+    secureLog.warn('No CSRF_SECRET provided, generated random secret. Use Replit Secrets for consistency.');
     return secret;
   }
 
@@ -168,36 +168,24 @@ export function createCSRFMiddleware(csrfService: CSRFService) {
       }
 
       const sessionId = req.session?.id || req.sessionID || 'anonymous';
-      const token = req.headers['x-csrf-token'] as string || 
-                   req.body._csrf || 
+      const token = req.headers['x-csrf-token'] as string ||
+                   req.body._csrf ||
                    req.query._csrf as string;
 
-      // In development mode, be more lenient with CSRF validation
-      if (process.env.NODE_ENV === 'development') {
-        if (!token) {
-          secureLog.warn('CSRF token missing in development mode - allowing request');
-          return next();
-        }
-        
-        if (!csrfService.validateToken(token, sessionId)) {
-          secureLog.warn('CSRF token validation failed in development mode - allowing request');
-          return next();
-        }
-      } else {
-        // Production mode - strict validation
-        if (!csrfService.validateToken(token, sessionId)) {
-          secureLog.warn(`CSRF attack attempt detected from ${req.ip}`, {
-            method: req.method,
-            url: req.url,
-            userAgent: req.headers['user-agent'],
-            sessionId: sessionId.substring(0, 8)
-          });
-          
-          return res.status(403).json({ 
-            error: 'Invalid CSRF token',
-            code: 'CSRF_VALIDATION_FAILED'
-          });
-        }
+      // Strict validation for all environments
+      if (!csrfService.validateToken(token, sessionId)) {
+        secureLog.warn(`CSRF validation failed from ${req.ip}`, {
+          method: req.method,
+          url: req.url,
+          userAgent: req.headers['user-agent'],
+          sessionId: sessionId.substring(0, 8),
+          hasToken: !!token
+        });
+
+        return res.status(403).json({
+          error: 'Invalid CSRF token',
+          code: 'CSRF_VALIDATION_FAILED'
+        });
       }
 
       next();

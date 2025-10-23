@@ -28,13 +28,10 @@ const resolveEncryptionKey = (): string => {
 
   let key = process.env.ENCRYPTION_KEY;
   if (!key) {
-    if (process.env.NODE_ENV === 'development') {
-      key = crypto.randomBytes(48).toString('hex');
-      process.env.ENCRYPTION_KEY = key;
-      console.warn('⚠️  ENCRYPTION_KEY was missing. Generated a temporary development key. Add ENCRYPTION_KEY to Replit Secrets for consistent encryption.');
-    } else {
-      throw new Error('ENCRYPTION_KEY must be provided. Set it in Replit Secrets before starting the server.');
-    }
+    // Generate temporary key for both dev and prod if not set
+    key = crypto.randomBytes(48).toString('hex');
+    process.env.ENCRYPTION_KEY = key;
+    console.warn('⚠️  ENCRYPTION_KEY was missing. Generated a temporary key. Add ENCRYPTION_KEY to Replit Secrets for consistent encryption.');
   }
 
   if (key.length < 32) {
@@ -117,17 +114,13 @@ export const createRateLimiters = () => {
  * CORS Configuration
  */
 export const createCorsOptions = () => {
-  const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? [
-        // Production domains - will be updated when deployed
-        /\.replit\.app$/,
-        /\.repl\.co$/,
-      ]
-    : [
-        'http://localhost:5000',
-        'http://127.0.0.1:5000',
-        /\.replit\.dev$/,
-      ];
+  const allowedOrigins = [
+      'http://localhost:5000',
+      'http://127.0.0.1:5000',
+      /\.replit\.dev$/,
+      /\.replit\.app$/,
+      /\.repl\.co$/,
+    ];
 
   return cors({
     origin: (origin, callback) => {

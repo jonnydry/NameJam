@@ -4,8 +4,8 @@ import ws from "ws";
 import * as schema from "@shared/schema";
 import { secureLog } from "./utils/secureLogger";
 
-// Configure WebSocket only in development
-if (process.env.NODE_ENV === "development") {
+// Configure WebSocket for local development (not needed in Replit)
+if (process.env.REPL_ID === undefined && process.env.NODE_ENV === "development") {
   neonConfig.webSocketConstructor = ws;
 }
 
@@ -15,9 +15,10 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ 
+export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
+  // Replit's Neon database always needs SSL override
+  ssl: { rejectUnauthorized: false },
   // Add connection resilience
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000,

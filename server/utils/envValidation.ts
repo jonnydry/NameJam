@@ -12,7 +12,7 @@ export interface EnvConfig {
   XAI_API_KEY: string;
   REPL_ID: string;
   REPLIT_DOMAINS: string;
-  NODE_ENV: 'development' | 'production';
+  NODE_ENV?: 'development' | 'production';
   ISSUER_URL?: string;
 }
 
@@ -32,12 +32,6 @@ export function validateEnvironment(): EnvConfig {
 
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
 
-  // Validate NODE_ENV
-  const nodeEnv = process.env.NODE_ENV;
-  if (nodeEnv !== 'development' && nodeEnv !== 'production') {
-    throw new Error('NODE_ENV must be either "development" or "production"');
-  }
-
   if (missingVars.length > 0) {
     const missingWithoutEncryption = missingVars.filter(name => name !== 'ENCRYPTION_KEY');
 
@@ -48,13 +42,10 @@ export function validateEnvironment(): EnvConfig {
       );
     }
 
-    if (nodeEnv === 'development') {
-      const devKey = crypto.randomBytes(48).toString('hex');
-      process.env.ENCRYPTION_KEY = devKey;
-      console.warn('⚠️  ENCRYPTION_KEY was not set. Generated a temporary development key. Add ENCRYPTION_KEY to Replit Secrets for consistent encryption.');
-    } else {
-      throw new Error('Missing required environment variables: ENCRYPTION_KEY');
-    }
+    // Generate temporary encryption key for any missing ENCRYPTION_KEY
+    const tempKey = crypto.randomBytes(48).toString('hex');
+    process.env.ENCRYPTION_KEY = tempKey;
+    console.warn('⚠️  ENCRYPTION_KEY was not set. Generated a temporary key. Add ENCRYPTION_KEY to Replit Secrets for consistent encryption.');
   }
 
   // Validate DATABASE_URL format
@@ -86,7 +77,7 @@ export function validateEnvironment(): EnvConfig {
     XAI_API_KEY: process.env.XAI_API_KEY!,
     REPL_ID: process.env.REPL_ID!,
     REPLIT_DOMAINS: process.env.REPLIT_DOMAINS!,
-    NODE_ENV: nodeEnv as 'development' | 'production',
+    NODE_ENV: (process.env.NODE_ENV as 'development' | 'production') || undefined,
     ISSUER_URL: process.env.ISSUER_URL
   };
 }
